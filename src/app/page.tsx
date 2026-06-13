@@ -311,7 +311,7 @@ export default function Home() {
             </div>
             <h4 className="heading-sm feature-title">Elite Holographic Passes</h4>
             <p className="feature-desc">
-              Complete your reservation using screenshot-backed UPI credentials. Once validated by the operations desk, download a premium "Elite Pass" holographic ticket with full security clearance metadata.
+              Complete your reservation using screenshot-backed UPI credentials. Once validated by the operations desk, download a premium &quot;Elite Pass&quot; holographic ticket with full security clearance metadata.
             </p>
           </div>
         </div>
