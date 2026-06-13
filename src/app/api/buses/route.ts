@@ -64,10 +64,10 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json({ buses: busesWithAvailability });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Buses GET error:', error);
     return NextResponse.json(
-      { error: 'An error occurred fetching buses' },
+      { error: error?.message || 'An error occurred fetching buses' },
       { status: 500 }
     );
   }

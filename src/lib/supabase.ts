@@ -22,30 +22,33 @@ function createLazyClient(factory: () => SupabaseClient): SupabaseClient {
  * Public client — uses anon key.
  * Safe to use in browser-side code.
  */
-export const supabase = createLazyClient(() =>
-  createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-);
+export const supabase = createLazyClient(() => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    throw new Error('Supabase configuration error: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not defined in your environment variables.');
+  }
+  return createClient(url, key);
+});
 
 /**
  * Admin/server client — uses service_role key.
  * MUST only be used in API routes (server-side).
  * This bypasses Row Level Security.
  */
-export const supabaseAdmin = createLazyClient(() =>
-  createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  )
-);
+export const supabaseAdmin = createLazyClient(() => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error('Supabase configuration error: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not defined in your environment variables.');
+  }
+  return createClient(url, key, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+});
 
 // ── TypeScript Types matching the Supabase schema ─────────────
 export interface DbUser {

@@ -67,10 +67,10 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ user: newUser }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Registration error:', error);
     return NextResponse.json(
-      { error: 'An error occurred during registration' },
+      { error: error?.message || 'An error occurred during registration' },
       { status: 500 }
     );
   }
