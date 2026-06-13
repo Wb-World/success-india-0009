@@ -1,26 +1,51 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+/**
+ * Creates a lazy Proxy-based Supabase client.
+ * The real client is only instantiated on first method access (at request time),
+ * NOT at module import time. This prevents build failures when env vars are absent.
+ */
+function createLazyClient(factory: () => SupabaseClient): SupabaseClient {
+  let instance: SupabaseClient | null = null;
+  return new Proxy({} as SupabaseClient, {
+    get(_, prop: string | symbol) {
+      if (!instance) {
+        instance = factory();
+      }
+      const value = (instance as any)[prop];
+      return typeof value === 'function' ? value.bind(instance) : value;
+    },
+  });
+}
 
 /**
  * Public client — uses anon key.
  * Safe to use in browser-side code.
  */
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createLazyClient(() =>
+  createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+);
 
 /**
  * Admin/server client — uses service_role key.
  * MUST only be used in API routes (server-side).
  * This bypasses Row Level Security.
  */
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
+export const supabaseAdmin = createLazyClient(() =>
+  createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  )
+);
 
 // ── TypeScript Types matching the Supabase schema ─────────────
 export interface DbUser {
