@@ -1,20 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, Phone, MapPin, Send, HelpCircle, CheckCircle2, ChevronDown } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, HelpCircle, CheckCircle2, ChevronDown, Terminal } from 'lucide-react';
 
 const FAQS = [
   {
-    q: 'How does the booking manual approval work?',
-    a: 'Once you select your bus route and seat numbers, the system displays our reservation QR code. You can make the transfer for the exact amount using any UPI app (like GPay, PhonePe, Paytm, or BHIM) or net banking. Capture a screenshot of the transaction receipt showing the UTR/Reference number, and upload it. Our audit team reviews approvals continuously, usually confirming your seats within 10-30 minutes.'
+    q: 'How does the pass manual verification work?',
+    a: 'Once you select your session track, timing, and terminal desk numbers, the system displays our reservation QR code. You can make the transfer for the exact amount using any UPI app (like GPay, PhonePe, Paytm, or BHIM) or net banking. Capture a screenshot of the transaction receipt showing the UTR/Reference number, and upload it. Our operations desk reviews approvals continuously, usually confirming your passes within 10-20 minutes.'
   },
   {
-    q: 'How long does payment approval take?',
-    a: 'Helpline administrators process receipts 24/7. Approvals are typically completed within 15 minutes. During late-night hours or heavy travel seasons, it might take up to 1 hour. You can check the real-time status of your ticket under the "Travel Bookings" table on your Profile page.'
+    q: 'How long does decryption verification take?',
+    a: 'Helpline administrators process receipts 24/7. Approvals are typically completed within 15 minutes. During peak hours, it might take up to 45 minutes. You can check the real-time status of your ticket under the "Control Deck" on your Profile page.'
   },
   {
-    q: 'Can I cancel or reschedule my ticket?',
-    a: 'Yes. Tickets can be cancelled or rescheduled up to 12 hours before departure. To request a reschedule or refund, please dial our toll-free customer helpline (+91 80 4567 8900) or email support@greenwheels.in with your Booking reference number.'
+    q: 'Can I cancel or reconfigure my terminal pass?',
+    a: 'Yes. Passes can be reconfigured or cancelled up to 24 hours before the summit commencement. To request a reschedule or credit refund, please email ops@cyberstrike.io with your pass reference ID.'
   },
   {
     q: 'What happens if my receipt upload is denied?',
@@ -40,13 +40,13 @@ export default function Contact() {
   };
 
   return (
-    <div className="contact-page animate-fade-in">
+    <div className="contact-page animate-fade-in scanlines">
       {/* Mini Hero */}
       <section className="contact-hero">
         <div className="container">
-          <h1 className="heading-xl hero-title">Customer Care & Support</h1>
+          <h1 className="heading-xl hero-title glow-text">OPERATIONS HELP DESK</h1>
           <p className="hero-subtitle">
-            Have questions about your bus ticket, route departure times, or manual receipt validation? We are here to help.
+            Have questions about session tracks, terminal allocations, or manual receipt decryption? Submit your packet transmission.
           </p>
         </div>
       </section>
@@ -58,17 +58,17 @@ export default function Contact() {
           {submitted ? (
             <div className="success-card glass-card animate-scale-in">
               <CheckCircle2 size={56} className="success-icon" />
-              <h3 className="heading-md">Inquiry Received!</h3>
+              <h3 className="heading-md">Packet Received!</h3>
               <p>
-                Thank you for contacting GreenWheels support. A passenger relations representative has been assigned to your ticket and will reply via email within the next 2 hours.
+                Thank you for contacting CyberStrike operations. A support representative has been assigned to your ticket and will reply via email within the next 2 hours.
               </p>
               <button onClick={() => setSubmitted(false)} className="btn btn-primary">
-                Send Another Message
+                Send Another Packet
               </button>
             </div>
           ) : (
             <div className="form-card glass-card animate-slide-up">
-              <h3 className="heading-sm form-card-title">Send Us a Message</h3>
+              <h3 className="heading-sm form-card-title" style={{ color: 'white' }}>TRANSMIT SECURITY ENQUIRY</h3>
               <form onSubmit={handleSubmit}>
                 <div className="form-row">
                   <div className="form-group flex-1">
@@ -77,18 +77,18 @@ export default function Contact() {
                       type="text" 
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="John Doe" 
+                      placeholder="Richard Hendricks" 
                       className="form-control" 
                       required 
                     />
                   </div>
                   <div className="form-group flex-1">
-                    <label className="form-label">Email Address</label>
+                    <label className="form-label">Secure Email Address</label>
                     <input 
                       type="email" 
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="john@example.com" 
+                      placeholder="richard@hooli.xyz" 
                       className="form-control" 
                       required 
                     />
@@ -101,18 +101,18 @@ export default function Contact() {
                     type="text" 
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    placeholder="E.g., Booking assistance, Refund status, Route enquiry..." 
+                    placeholder="E.g., Ticket verification, desk allocation assistance..." 
                     className="form-control" 
                     required 
                   />
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Message Details</label>
+                  <label className="form-label">Packet Details</label>
                   <textarea 
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    placeholder="Write the details of your enquiry here..." 
+                    placeholder="Write the details of your inquiry here..." 
                     rows={5} 
                     className="form-control textarea-field" 
                     required 
@@ -120,7 +120,7 @@ export default function Contact() {
                 </div>
 
                 <button type="submit" className="btn btn-primary submit-btn">
-                  <Send size={16} /> Send Message
+                  <Send size={16} /> Send Packet
                 </button>
               </form>
             </div>
@@ -132,8 +132,8 @@ export default function Contact() {
           <div className="info-card info-card-hover">
             <Phone size={22} className="info-card-icon" />
             <div>
-              <h4 className="info-card-title">Call Helpline</h4>
-              <p className="info-card-detail">+91 80 4567 8900</p>
+              <h4 className="info-card-title">Secure Voice Helpline</h4>
+              <p className="info-card-detail">+1 (800) 555-INIT</p>
               <p className="info-card-sub">Mon-Sun, 24 Hours Active</p>
             </div>
           </div>
@@ -141,8 +141,8 @@ export default function Contact() {
           <div className="info-card info-card-hover">
             <Mail size={22} className="info-card-icon" />
             <div>
-              <h4 className="info-card-title">Email Desk</h4>
-              <p className="info-card-detail">support@greenwheels.in</p>
+              <h4 className="info-card-title">Ops Email</h4>
+              <p className="info-card-detail">ops@cyberstrike.io</p>
               <p className="info-card-sub">Response within 2 hours</p>
             </div>
           </div>
@@ -150,9 +150,9 @@ export default function Contact() {
           <div className="info-card info-card-hover">
             <MapPin size={22} className="info-card-icon" />
             <div>
-              <h4 className="info-card-title">Main Terminal Head Office</h4>
-              <p className="info-card-detail">100, Green City Plaza</p>
-              <p className="info-card-sub">MG Road, Bangalore, KA - 560001</p>
+              <h4 className="info-card-title">Mainframe Headquarters</h4>
+              <p className="info-card-detail">Grid Node 404, Sandbox Plaza</p>
+              <p className="info-card-sub">Cyber City, Sandbox Grid</p>
             </div>
           </div>
         </div>
@@ -162,8 +162,8 @@ export default function Contact() {
       <section className="faq-section bg-light">
         <div className="container faq-container">
           <div className="faq-header animate-slide-up">
-            <HelpCircle size={32} className="faq-header-icon animate-bounce" />
-            <h2 className="heading-lg">Frequently Asked Questions</h2>
+            <HelpCircle size={32} className="faq-header-icon" />
+            <h2 className="heading-lg glow-text">Frequently Asked Questions</h2>
             <p className="section-subtitle">Quick answers regarding bookings, refunds, and UPI screenshot validation</p>
           </div>
 
@@ -189,25 +189,27 @@ export default function Contact() {
       <style jsx>{`
         .contact-page {
           background-color: var(--background);
+          padding-bottom: 5rem;
         }
 
         /* Hero */
         .contact-hero {
-          background: linear-gradient(135deg, #022c22 0%, #064e3b 100%);
+          background: linear-gradient(135deg, #040914 0%, #0c1831 100%);
           color: white;
           padding: 6rem 0;
           text-align: center;
+          border-bottom: 1px solid var(--border);
         }
 
         .hero-title {
           color: white;
           margin-bottom: 1.25rem;
-          font-weight: 800;
+          font-weight: 900;
         }
 
         .hero-subtitle {
           font-size: 1.25rem;
-          color: #a7f3d0;
+          color: #94a3b8;
           max-width: 650px;
           margin: 0 auto;
           line-height: 1.65;
@@ -230,14 +232,14 @@ export default function Contact() {
         .form-card {
           padding: 2.5rem;
           border-radius: var(--radius-2xl);
-          background: white;
+          background: rgba(12, 17, 29, 0.75);
           border: 1px solid var(--border);
           box-shadow: var(--shadow-sm);
         }
 
         .form-card-title {
           font-weight: 700;
-          color: var(--primary-dark);
+          color: white;
           margin-bottom: 1.75rem;
           font-size: 1.25rem;
         }
@@ -274,7 +276,7 @@ export default function Contact() {
         .success-card {
           padding: 3.5rem 2.25rem;
           text-align: center;
-          background: white;
+          background: rgba(8, 12, 22, 0.85);
           border: 1px solid var(--border);
           border-radius: var(--radius-2xl);
           display: flex;
@@ -303,7 +305,7 @@ export default function Contact() {
         }
 
         .info-card {
-          background: white;
+          background: rgba(12, 17, 29, 0.65);
           border: 1px solid var(--border);
           border-radius: var(--radius-xl);
           padding: 1.75rem;
@@ -317,14 +319,15 @@ export default function Contact() {
         .info-card-hover:hover {
           transform: translateY(-2px);
           box-shadow: var(--shadow-md);
-          border-color: var(--primary-light);
+          border-color: var(--primary);
         }
 
         .info-card-icon {
           color: var(--primary);
-          background: var(--primary-light);
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.25);
           padding: 0.6rem;
-          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15);
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
           border-radius: var(--radius-xl);
           box-sizing: content-box;
         }
@@ -333,13 +336,13 @@ export default function Contact() {
           font-family: var(--font-heading);
           font-size: 1.1rem;
           font-weight: 700;
-          color: var(--foreground);
+          color: white;
           margin-bottom: 0.35rem;
         }
 
         .info-card-detail {
           font-weight: 700;
-          color: var(--foreground);
+          color: white;
           font-size: 1.05rem;
         }
 
@@ -356,7 +359,7 @@ export default function Contact() {
         }
 
         .bg-light {
-          background-color: #f8fafc;
+          background-color: rgba(8, 12, 22, 0.3);
         }
 
         .faq-container {
@@ -374,6 +377,7 @@ export default function Contact() {
         .faq-header-icon {
           color: var(--primary);
           margin-bottom: 0.875rem;
+          filter: drop-shadow(0 0 5px var(--primary-glow));
         }
 
         .faq-accordion-list {
@@ -383,7 +387,7 @@ export default function Contact() {
         }
 
         .accordion-item {
-          background: white;
+          background: rgba(12, 17, 29, 0.7);
           border: 1px solid var(--border);
           border-radius: var(--radius-xl);
           overflow: hidden;
@@ -407,12 +411,12 @@ export default function Contact() {
           font-family: var(--font-sans);
           font-weight: 600;
           font-size: 1.05rem;
-          color: var(--foreground);
+          color: white;
           text-align: left;
         }
 
         .accordion-trigger:hover {
-          color: var(--primary-dark);
+          color: var(--primary);
         }
 
         .arrow-icon {
@@ -429,7 +433,7 @@ export default function Contact() {
           max-height: 0;
           overflow: hidden;
           transition: max-height var(--transition-normal) ease-out;
-          background-color: var(--background);
+          background-color: rgba(3, 7, 18, 0.3);
         }
 
         .accordion-item.open .accordion-content {

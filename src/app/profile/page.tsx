@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Mail, Phone, Calendar, MapPin, Edit2, ShieldAlert, CheckCircle, Clock, Save, Lock } from 'lucide-react';
+import { User, Mail, Phone, Calendar, Compass, Edit2, ShieldAlert, CheckCircle, Clock, Save, Lock, Terminal, ShieldCheck } from 'lucide-react';
 
 export default function Profile() {
   const router = useRouter();
@@ -39,7 +39,6 @@ export default function Profile() {
 
     try {
       const parsed = JSON.parse(storedUser);
-      // Fetch fresh profile and bookings history from API
       const res = await fetch('/api/profile', {
         headers: {
           'x-user-id': parsed.id,
@@ -55,10 +54,8 @@ export default function Profile() {
           email: data.user.email,
           phone: data.user.phone,
         });
-        // Keep localStorage updated with fresh details
         localStorage.setItem('user', JSON.stringify(data.user));
       } else {
-        // Session might be stale, clear it
         localStorage.removeItem('user');
         setCurrentUser(null);
       }
@@ -86,7 +83,6 @@ export default function Profile() {
       if (res.ok) {
         localStorage.setItem('user', JSON.stringify(data.user));
         setCurrentUser(data.user);
-        // Dispatch custom auth event to update Navbar
         window.dispatchEvent(new Event('auth-change'));
         
         if (data.user.role === 'admin') {
@@ -95,10 +91,10 @@ export default function Profile() {
           fetchProfileData();
         }
       } else {
-        setAuthError(data.error || 'Login failed');
+        setAuthError(data.error || 'Identity authentication failed');
       }
     } catch (err) {
-      setAuthError('An network error occurred');
+      setAuthError('An database network error occurred');
     } finally {
       setAuthLoading(false);
     }
@@ -124,10 +120,10 @@ export default function Profile() {
         window.dispatchEvent(new Event('auth-change'));
         fetchProfileData();
       } else {
-        setAuthError(data.error || 'Registration failed');
+        setAuthError(data.error || 'Operative credentials registration failed');
       }
     } catch (err) {
-      setAuthError('An network error occurred');
+      setAuthError('A transmission network error occurred');
     } finally {
       setAuthLoading(false);
     }
@@ -155,10 +151,10 @@ export default function Profile() {
         setCurrentUser(data.user);
         localStorage.setItem('user', JSON.stringify(data.user));
         window.dispatchEvent(new Event('auth-change'));
-        setUpdateSuccess('Profile details updated successfully!');
+        setUpdateSuccess('Operative credentials updated in main grid database!');
         setIsEditing(false);
       } else {
-        setUpdateError(data.error || 'Failed to update profile');
+        setUpdateError(data.error || 'Failed to update credentials');
       }
     } catch (err) {
       setUpdateError('A connection error occurred');
@@ -173,7 +169,7 @@ export default function Profile() {
     return (
       <div className="loading-container container">
         <div className="spinner"></div>
-        <p>Retrieving your account profile...</p>
+        <p style={{ color: '#10b981', fontFamily: 'var(--font-mono)' }}>CONNECTING SECURE MAIN INFRASTRUCTURE...</p>
         <style jsx>{`
           .loading-container {
             display: flex;
@@ -184,16 +180,14 @@ export default function Profile() {
             gap: 1rem;
           }
           .spinner {
-            border: 4px solid rgba(16, 185, 129, 0.1);
+            border: 3px solid rgba(16, 185, 129, 0.1);
             border-left-color: var(--primary);
             width: 40px;
             height: 40px;
             border-radius: 50%;
             animation: spin 1s linear infinite;
           }
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
+          @keyframes spin { to { transform: rotate(360deg); } }
         `}</style>
       </div>
     );
@@ -215,7 +209,7 @@ export default function Profile() {
               className={`auth-tab-btn ${!isLoginTab ? 'active' : ''}`}
               onClick={() => { setIsLoginTab(false); setAuthError(''); }}
             >
-              Create Account
+              Register Operative
             </button>
           </div>
 
@@ -234,7 +228,7 @@ export default function Profile() {
                     type="text"
                     value={loginForm.username}
                     onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-                    placeholder="Enter your username (e.g. user)" 
+                    placeholder="Enter database username (e.g. user)" 
                     className="form-control" 
                     required 
                   />
@@ -245,35 +239,35 @@ export default function Profile() {
                     type="password"
                     value={loginForm.password}
                     onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                    placeholder="Enter your password (e.g. password)" 
+                    placeholder="Enter security key (e.g. password)" 
                     className="form-control" 
                     required 
                   />
                 </div>
                 <button type="submit" className="btn btn-primary auth-submit-btn" disabled={authLoading}>
-                  {authLoading ? 'Signing In...' : 'Access My Account'}
+                  {authLoading ? 'Decrypting credentials...' : 'Establish Session'}
                 </button>
               </form>
             ) : (
               <form onSubmit={handleRegisterSubmit}>
                 <div className="form-group">
-                  <label className="form-label">Username</label>
+                  <label className="form-label">Database Username</label>
                   <input 
                     type="text" 
                     value={registerForm.username}
                     onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })}
-                    placeholder="Select a username" 
+                    placeholder="Select coordinate codename" 
                     className="form-control" 
                     required 
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Password</label>
+                  <label className="form-label">Security Key (Password)</label>
                   <input 
                     type="password" 
                     value={registerForm.password}
                     onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                    placeholder="Choose a strong password" 
+                    placeholder="Select cryptographic key" 
                     className="form-control" 
                     required 
                   />
@@ -284,35 +278,35 @@ export default function Profile() {
                     type="text" 
                     value={registerForm.name}
                     onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
-                    placeholder="John Doe" 
+                    placeholder="E.g. Richard Hendricks" 
                     className="form-control" 
                     required 
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Email Address</label>
+                  <label className="form-label">Secure Email Address</label>
                   <input 
                     type="email" 
                     value={registerForm.email}
                     onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                    placeholder="john@example.com" 
+                    placeholder="operative@protonmail.com" 
                     className="form-control" 
                     required 
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Phone Number</label>
+                  <label className="form-label">Mobile Contact Line</label>
                   <input 
                     type="text" 
                     value={registerForm.phone}
                     onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
-                    placeholder="+91 98765 43210" 
+                    placeholder="E.g. +91 9988776655" 
                     className="form-control" 
                     required 
                   />
                 </div>
                 <button type="submit" className="btn btn-primary auth-submit-btn" disabled={authLoading}>
-                  {authLoading ? 'Creating Account...' : 'Register Profile'}
+                  {authLoading ? 'Registering operative...' : 'Initialize Operative Node'}
                 </button>
               </form>
             )}
@@ -325,7 +319,7 @@ export default function Profile() {
             padding: 5rem 1.5rem;
           }
           .auth-card {
-            background: white;
+            background: rgba(12, 17, 29, 0.85);
             border: 1px solid var(--border);
             border-radius: var(--radius-2xl);
             overflow: hidden;
@@ -349,16 +343,16 @@ export default function Profile() {
             transition: all var(--transition-fast);
           }
           .auth-tab-btn.active {
-            background: white;
-            color: var(--primary-dark);
+            background: rgba(12, 17, 29, 0.85);
+            color: var(--primary);
             box-shadow: 0 -2px 0 0 var(--primary) inset;
           }
           .auth-form-content {
             padding: 2.5rem 2rem;
           }
           .auth-error {
-            background: #fee2e2;
-            color: #b91c1c;
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
             padding: 0.75rem 1rem;
             border-radius: var(--radius-md);
             margin-bottom: 1.5rem;
@@ -367,6 +361,7 @@ export default function Profile() {
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            border: 1px solid rgba(239, 68, 68, 0.2);
           }
           .auth-submit-btn {
             width: 100%;
@@ -391,24 +386,24 @@ export default function Profile() {
   return (
     <div className="profile-dashboard container animate-fade-in">
       <div className="dashboard-welcome-banner animate-slide-down">
-        <h1 className="welcome-title">Welcome back, {currentUser.name}! 👋</h1>
-        <p className="welcome-subtitle">Here is your passenger dashboard where you can check booking approvals and update account details.</p>
+        <h1 className="welcome-title">Operative Control Deck // {currentUser.name.toUpperCase()}</h1>
+        <p className="welcome-subtitle">Credentials verified. Accessing main-grid booking histories and security codes.</p>
       </div>
 
       <div className="dashboard-grid">
         
         {/* Left Side: Profile Info Card */}
         <div className="profile-info-column">
-          <div className="info-card glass-card hover-lift">
+          <div className="info-card glass-card">
             <div className="avatar-section">
               <div className="avatar-circle">
-                <User size={36} />
+                <Terminal size={36} />
               </div>
-              <h2 className="heading-md user-fullname">{currentUser.name}</h2>
-              <span className="user-role-badge">Member Passenger</span>
+              <h2 className="heading-md user-fullname" style={{ color: 'white' }}>{currentUser.name}</h2>
+              <span className="user-role-badge">Level 5 Operative</span>
             </div>
 
-            <hr className="card-divider" />
+            <hr className="card-divider" style={{ border: '0', borderTop: '1px solid var(--border)', margin: '2rem 0' }} />
 
             {updateSuccess && (
               <div className="update-success-alert animate-slide-up">
@@ -453,12 +448,12 @@ export default function Profile() {
                     required 
                   />
                 </div>
-                <div className="form-actions">
+                <div className="form-actions" style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
                   <button type="button" onClick={() => setIsEditing(false)} className="btn btn-secondary btn-sm">
                     Cancel
                   </button>
                   <button type="submit" className="btn btn-primary btn-sm" disabled={updateLoading}>
-                    <Save size={14} /> {updateLoading ? 'Saving...' : 'Save Changes'}
+                    <Save size={14} /> {updateLoading ? 'Saving...' : 'Commit Changes'}
                   </button>
                 </div>
               </form>
@@ -467,7 +462,7 @@ export default function Profile() {
                 <div className="detail-row">
                   <Mail size={18} className="detail-icon" />
                   <div>
-                    <span className="detail-label">Email ID</span>
+                    <span className="detail-label">Secure Contact Email</span>
                     <p className="detail-val">{currentUser.email}</p>
                   </div>
                 </div>
@@ -475,89 +470,127 @@ export default function Profile() {
                 <div className="detail-row">
                   <Phone size={18} className="detail-icon" />
                   <div>
-                    <span className="detail-label">Phone Number</span>
+                    <span className="detail-label">Secured Phone line</span>
                     <p className="detail-val">{currentUser.phone}</p>
                   </div>
                 </div>
 
                 <button onClick={() => { setIsEditing(true); setUpdateSuccess(''); setUpdateError(''); }} className="btn btn-secondary edit-profile-btn">
-                  <Edit2 size={14} /> Edit Contact Profile
+                  <Edit2 size={14} /> Reconfigure Credentials
                 </button>
               </div>
             )}
           </div>
         </div>
 
-        {/* Right Side: Travel Bookings History */}
+        {/* Right Side: Travel Bookings History (SHOWCASE AS PREMIUM ELITE STICKER PASSES GALLERY) */}
         <div className="bookings-history-column">
-          <div className="history-card glass-card hover-lift">
-            <h2 className="heading-md history-card-title">My Travel Bookings</h2>
+          <div className="history-card glass-card" style={{ padding: '2.5rem' }}>
+            <h2 className="heading-md history-card-title" style={{ color: 'white', marginBottom: '2rem' }}>
+              Reserved Access Passes
+            </h2>
             
             {bookings.length === 0 ? (
               <div className="empty-bookings">
                 <Calendar size={48} className="empty-icon" />
-                <h4 className="heading-sm">No Tickets Booked Yet</h4>
-                <p>Ready to travel? Select a destination route and lock in your seats now.</p>
+                <h4 className="heading-sm" style={{ color: '#94a3b8' }}>NO ACTIVE COORDINATES</h4>
+                <p>Ready to deploy? Choose your track modules and lock down target seats.</p>
                 <button onClick={() => router.push('/book')} className="btn btn-primary">
-                  Book A Ticket Now
+                  Reserve Access Passes
                 </button>
               </div>
             ) : (
-              <div className="bookings-table-wrapper">
-                <table className="bookings-table">
-                  <thead>
-                    <tr>
-                      <th>Booking Ref</th>
-                      <th>Route Info</th>
-                      <th>Seats</th>
-                      <th>Departure</th>
-                      <th>Total Cost</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bookings.map((booking) => (
-                      <tr key={booking.id}>
-                        <td className="booking-ref-cell">
-                          <span className="booking-id-tag">{booking.id.toUpperCase()}</span>
-                          <span className="booking-created-date">
-                            {new Date(booking.createdAt).toLocaleDateString()}
+              <div className="passes-grid-layout" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '2rem' }}>
+                {bookings.map((booking) => (
+                  <div key={booking.id} className="elite-pass-sticker-wrapper">
+                    <div className={`elite-pass-sticker ${booking.status}`} style={{ padding: '1.75rem 1.25rem' }}>
+                      <div className="hologram-shimmer"></div>
+                      <div className="pass-watermark-stamp">{booking.status.toUpperCase()}</div>
+                      
+                      {/* Header */}
+                      <div className="pass-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <div className="pass-branding" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontFamily: 'var(--font-heading)', fontSize: '0.85rem', fontWeight: '900', color: '#fff' }}>
+                          <Terminal size={14} className="pass-logo-icon" style={{ color: booking.status === 'approved' ? '#10b981' : booking.status === 'pending' ? '#f59e0b' : '#ef4444' }} />
+                          <span>CYBER<span style={{ color: '#10b981' }}>_STRIKE</span></span>
+                        </div>
+                        <div className="pass-tier" style={{ 
+                          fontSize: '0.6rem', 
+                          fontWeight: '800', 
+                          border: `1px solid ${booking.status === 'approved' ? 'rgba(16, 185, 129, 0.4)' : booking.status === 'pending' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`, 
+                          padding: '0.1rem 0.4rem', 
+                          borderRadius: '4px', 
+                          background: booking.status === 'approved' ? 'rgba(16, 185, 129, 0.1)' : booking.status === 'pending' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                          color: booking.status === 'approved' ? '#34d399' : booking.status === 'pending' ? '#fbbf24' : '#fca5a5'
+                        }}>
+                          ELITE PASS
+                        </div>
+                      </div>
+
+                      {/* Content Body */}
+                      <div className="pass-body ticket-cutout" style={{ borderTop: '1px dashed rgba(255,255,255,0.08)', borderBottom: '1px dashed rgba(255,255,255,0.08)', padding: '1rem 0', margin: '0 0 1rem 0' }}>
+                        <div className="pass-qr-row" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem' }}>
+                          <div className="pass-profile-image" style={{ width: '48px', height: '48px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" style={{ margin: '0 auto' }}>
+                              <path d="M18 21a6 6 0 0 0-12 0" />
+                              <circle cx="12" cy="10" r="4" />
+                            </svg>
+                          </div>
+                          <div className="pass-main-details" style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', flex: 1, minWidth: 0 }}>
+                            <span className="pass-label" style={{ fontSize: '0.55rem', color: 'var(--muted)', fontWeight: '700' }}>OPERATIVE</span>
+                            <span className="pass-value highlight-cyan" style={{ fontSize: '0.85rem', fontWeight: '800', color: '#06b6d4', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentUser.name.toUpperCase()}</span>
+                            <span className="pass-value highlight-green" style={{ fontSize: '0.75rem', fontWeight: '800', color: '#10b981', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{booking.busName}</span>
+                          </div>
+                        </div>
+
+                        <div className="pass-meta-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+                          <div className="pass-meta-item" style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span className="pass-label" style={{ fontSize: '0.5rem', color: 'var(--muted)', fontWeight: '700' }}>SECTOR AREA</span>
+                            <span className="pass-value" style={{ fontSize: '0.7rem', fontWeight: '600', color: '#cbd5e1' }}>{booking.source}</span>
+                          </div>
+                          <div className="pass-meta-item" style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span className="pass-label" style={{ fontSize: '0.5rem', color: 'var(--muted)', fontWeight: '700' }}>ARENA VENUE</span>
+                            <span className="pass-value" style={{ fontSize: '0.7rem', fontWeight: '600', color: '#cbd5e1' }}>{booking.destination}</span>
+                          </div>
+                          <div className="pass-meta-item" style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span className="pass-label" style={{ fontSize: '0.5rem', color: 'var(--muted)', fontWeight: '700' }}>ACCESS DATE</span>
+                            <span className="pass-value" style={{ fontSize: '0.7rem', fontWeight: '600', color: '#cbd5e1' }}>{booking.date}</span>
+                          </div>
+                          <div className="pass-meta-item" style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span className="pass-label" style={{ fontSize: '0.5rem', color: 'var(--muted)', fontWeight: '700' }}>DESK NODES</span>
+                            <span className="pass-value highlight-green" style={{ fontSize: '0.7rem', fontWeight: '800', color: '#10b981' }}>{booking.seats.join(', ')}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="pass-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                        <div className="pass-status-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                          <span className="pass-label" style={{ fontSize: '0.5rem', color: 'var(--muted)', fontWeight: '700' }}>STATUS CODE</span>
+                          <span className={`pass-status-badge ${booking.status}`} style={{ 
+                            fontSize: '0.65rem', 
+                            fontWeight: '900', 
+                            color: booking.status === 'approved' ? '#10b981' : booking.status === 'pending' ? '#fbbf24' : '#ef4444'
+                          }}>
+                            {booking.status === 'approved' ? 'ACCESS GRANTED' : booking.status === 'pending' ? 'PENDING AUDIT' : 'ACCESS DENIED'}
                           </span>
-                        </td>
-                        <td>
-                          <div className="route-cell">
-                            <span className="route-cities">{booking.source} &rarr; {booking.destination}</span>
-                            <span className="route-bus-name">{booking.busName}</span>
+                        </div>
+                        
+                        <div className="barcode-container" style={{ margin: '0' }}>
+                          <div className="barcode-lines" style={{ height: '18px', width: '70px', padding: '1px' }}>
+                            <span style={{ width: '1px', background: '#475569' }}></span>
+                            <span style={{ width: '2px', background: '#475569' }}></span>
+                            <span style={{ width: '1px', background: '#475569' }}></span>
+                            <span style={{ width: '3px', background: '#475569' }}></span>
+                            <span style={{ width: '1px', background: '#475569' }}></span>
+                            <span style={{ width: '4px', background: '#475569' }}></span>
+                            <span style={{ width: '1px', background: '#475569' }}></span>
                           </div>
-                        </td>
-                        <td>
-                          <div className="seats-cell">
-                            {booking.seats.map((seat: string) => (
-                              <span key={seat} className="seat-item-tag">{seat}</span>
-                            ))}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="date-cell">
-                            <span className="date-text"><Calendar size={12} className="inline-icon" /> {booking.date}</span>
-                            <span className="time-text"><Clock size={12} className="inline-icon" /> {booking.time}</span>
-                          </div>
-                        </td>
-                        <td className="price-cell">
-                          ₹{booking.totalPrice}
-                        </td>
-                        <td>
-                          <span className={`badge badge-${booking.status}`}>
-                            {booking.status === 'pending' && <Clock size={12} className="badge-icon" />}
-                            {booking.status === 'approved' && <CheckCircle size={12} className="badge-icon" />}
-                            {booking.status === 'denied' && <ShieldAlert size={12} className="badge-icon" />}
-                            {booking.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          <span style={{ fontSize: '0.5rem', color: 'var(--muted-light)', fontFamily: 'var(--font-mono)' }}>#{booking.id.substring(3, 9).toUpperCase()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -572,7 +605,7 @@ export default function Profile() {
 
         .dashboard-welcome-banner {
           margin-bottom: 2.5rem;
-          background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
           border: 1px solid rgba(16, 185, 129, 0.25);
           padding: 2rem 2.5rem;
           border-radius: var(--radius-2xl);
@@ -580,15 +613,16 @@ export default function Profile() {
         }
         .welcome-title {
           font-family: var(--font-heading);
-          font-size: 2.2rem;
-          font-weight: 800;
-          color: var(--primary-dark);
+          font-size: 2rem;
+          font-weight: 900;
+          color: var(--primary);
           margin-bottom: 0.5rem;
           line-height: 1.2;
+          text-shadow: 0 0 10px var(--primary-glow);
         }
         .welcome-subtitle {
-          color: #065f46;
-          font-size: 1.05rem;
+          color: #94a3b8;
+          font-size: 1rem;
           font-weight: 500;
         }
 
@@ -608,7 +642,7 @@ export default function Profile() {
         /* Profile Left Card */
         .info-card {
           padding: 2.5rem 2rem;
-          background: white;
+          background: rgba(8, 12, 22, 0.85);
           border: 1px solid var(--border);
           border-radius: var(--radius-2xl);
         }
@@ -630,13 +664,13 @@ export default function Profile() {
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 2px solid rgba(16, 185, 129, 0.2);
-          box-shadow: var(--shadow-sm);
+          border: 1px solid rgba(16, 185, 129, 0.25);
+          box-shadow: 0 0 15px var(--primary-glow);
         }
 
         .user-fullname {
           font-weight: 700;
-          color: var(--foreground);
+          color: white;
         }
 
         .user-role-badge {
@@ -644,16 +678,11 @@ export default function Profile() {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 1px;
-          color: var(--primary-dark);
-          background: #d1fae5;
+          color: var(--primary);
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.2);
           padding: 0.25rem 0.625rem;
           border-radius: 9999px;
-        }
-
-        .card-divider {
-          border: 0;
-          border-top: 1px solid var(--border);
-          margin: 2rem 0;
         }
 
         .profile-details {
@@ -669,13 +698,13 @@ export default function Profile() {
         }
 
         .detail-icon {
-          color: var(--muted-light);
+          color: var(--primary);
           margin-top: 0.125rem;
         }
 
         .detail-label {
           font-size: 0.75rem;
-          font-weight: 600;
+          font-weight: 700;
           color: var(--muted);
           text-transform: uppercase;
           letter-spacing: 0.5px;
@@ -683,7 +712,7 @@ export default function Profile() {
 
         .detail-val {
           font-weight: 600;
-          color: var(--foreground);
+          color: white;
           font-size: 1rem;
         }
 
@@ -711,24 +740,15 @@ export default function Profile() {
           gap: 0.25rem;
         }
 
-        .form-actions {
-          display: flex;
-          gap: 0.75rem;
-          margin-top: 0.5rem;
-        }
-
-        .form-actions button {
-          flex: 1;
-        }
-
         .btn-sm {
           padding: 0.5rem 1rem;
           font-size: 0.85rem;
         }
 
         .update-success-alert {
-          background: var(--primary-light);
-          color: var(--primary-dark);
+          background: rgba(16, 185, 129, 0.1);
+          color: var(--primary);
+          border: 1px solid rgba(16, 185, 129, 0.25);
           padding: 0.75rem;
           border-radius: var(--radius-md);
           font-size: 0.85rem;
@@ -740,8 +760,9 @@ export default function Profile() {
         }
 
         .update-error-alert {
-          background: #fee2e2;
-          color: #b91c1c;
+          background: rgba(239, 68, 68, 0.1);
+          color: #fca5a5;
+          border: 1px solid rgba(239, 68, 68, 0.25);
           padding: 0.75rem;
           border-radius: var(--radius-md);
           font-size: 0.85rem;
@@ -754,16 +775,9 @@ export default function Profile() {
 
         /* Bookings Right Card */
         .history-card {
-          padding: 2.5rem 2rem;
-          background: white;
+          background: rgba(8, 12, 22, 0.85);
           border: 1px solid var(--border);
           border-radius: var(--radius-2xl);
-        }
-
-        .history-card-title {
-          font-weight: 700;
-          color: var(--foreground);
-          margin-bottom: 2rem;
         }
 
         .empty-bookings {
@@ -784,115 +798,6 @@ export default function Profile() {
           max-width: 320px;
           line-height: 1.5;
           margin-bottom: 0.5rem;
-        }
-
-        /* Bookings Table */
-        .bookings-table-wrapper {
-          width: 100%;
-          overflow-x: auto;
-        }
-
-        .bookings-table {
-          width: 100%;
-          border-collapse: collapse;
-          text-align: left;
-          font-size: 0.95rem;
-        }
-
-        .bookings-table th {
-          padding: 1rem;
-          border-bottom: 2px solid var(--border);
-          color: var(--muted);
-          font-weight: 600;
-          font-size: 0.8rem;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .bookings-table td {
-          padding: 1.25rem 1rem;
-          border-bottom: 1px solid var(--border);
-          vertical-align: middle;
-        }
-
-        .booking-id-tag {
-          font-family: var(--font-heading);
-          font-weight: 700;
-          font-size: 0.85rem;
-          color: var(--foreground);
-          display: block;
-        }
-
-        .booking-created-date {
-          font-size: 0.75rem;
-          color: var(--muted);
-          display: block;
-          margin-top: 0.125rem;
-        }
-
-        .route-cell {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .route-cities {
-          font-weight: 600;
-          color: var(--foreground);
-        }
-
-        .route-bus-name {
-          font-size: 0.75rem;
-          color: var(--muted);
-          margin-top: 0.125rem;
-        }
-
-        .seats-cell {
-          display: flex;
-          gap: 0.25rem;
-          flex-wrap: wrap;
-        }
-
-        .seat-item-tag {
-          font-size: 0.75rem;
-          font-weight: 700;
-          background: var(--input);
-          color: var(--foreground);
-          padding: 0.125rem 0.375rem;
-          border-radius: var(--radius-sm);
-          border: 1px solid var(--border);
-        }
-
-        .date-cell {
-          display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-          font-size: 0.85rem;
-        }
-
-        .inline-icon {
-          vertical-align: middle;
-          margin-top: -2px;
-          margin-right: 2px;
-        }
-
-        .date-text {
-          font-weight: 500;
-          color: var(--foreground);
-        }
-
-        .time-text {
-          color: var(--muted);
-        }
-
-        .price-cell {
-          font-family: var(--font-heading);
-          font-weight: 800;
-          color: var(--primary-dark);
-          font-size: 1.05rem;
-        }
-
-        .badge-icon {
-          margin-right: 0.25rem;
         }
       `}</style>
     </div>

@@ -4,9 +4,9 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 export const metadata: Metadata = {
-  title: 'GreenWheels | Premium Bus Ticket Booking',
-  description: 'Book premium and luxury bus tickets online with ease. Select your favorite seats, make instant payments, and enjoy a safe journey with GreenWheels.',
-  keywords: 'bus ticket, online booking, luxury travel, bus seating map, green wheels, fast transit',
+  title: 'CyberStrike 2026 | Global Cyber Exploitation & Defense Summit',
+  description: 'Secure your access coordinates for CyberStrike 2026. Select session tracks, allocate terminal slots, and join the elite CTF cyber defense networks.',
+  keywords: 'hacker summit, cyber security conference, zero-day, ctf, cryptanalysis, offensive ai, hardware hacking',
 };
 
 export default function RootLayout({
