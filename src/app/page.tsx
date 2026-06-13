@@ -29,11 +29,6 @@ export default function Home() {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
-    const particles: Particle[] = [];
-    const maxParticles = 90;
-    const connectionDistance = 120;
-    const mouse = { x: -1000, y: -1000, active: false };
-
     class Particle {
       x: number;
       y: number;
@@ -95,6 +90,11 @@ export default function Home() {
         }
       }
     }
+
+    const particles: Particle[] = [];
+    const maxParticles = 90;
+    const connectionDistance = 120;
+    const mouse = { x: -1000, y: -1000, active: false };
 
     // Initialize particles
     for (let i = 0; i < maxParticles; i++) {

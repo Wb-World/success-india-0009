@@ -703,7 +703,7 @@ function BookingEngine() {
                 {/* Main Pass Content */}
                 <div className="pass-body ticket-cutout" style={{ borderTop: '1px dashed rgba(255,255,255,0.08)', borderBottom: '1px dashed rgba(255,255,255,0.08)', padding: '1.5rem 0', margin: '0 0 1.25rem 0' }}>
                   <div className="pass-qr-row" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.25rem' }}>
-                    <div className="pass-profile-image" style={{ width: '56px', height: '56px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifycontent: 'center', color: '#64748b' }}>
+                    <div className="pass-profile-image" style={{ width: '56px', height: '56px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
                       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" style={{ margin: '0 auto' }}>
                         <path d="M18 21a6 6 0 0 0-12 0" />
                         <circle cx="12" cy="10" r="4" />
