@@ -45,7 +45,7 @@ export default function AdminLogin() {
 
       if (res.ok) {
         if (data.user.role !== 'admin') {
-          setErrorMsg('Access denied. Administrative privileges required.');
+          setErrorMsg('Access denied. Administrative node privileges required.');
           setLoading(false);
           return;
         }
@@ -54,10 +54,10 @@ export default function AdminLogin() {
         window.dispatchEvent(new Event('auth-change'));
         router.push('/admin/dashboard');
       } else {
-        setErrorMsg(data.error || 'Authentication failed. Please check credentials.');
+        setErrorMsg(data.error || 'Authentication failed. Incorrect console credentials.');
       }
     } catch (err) {
-      setErrorMsg('Server connection failed. Please try again.');
+      setErrorMsg('Mainframe connection failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -66,11 +66,10 @@ export default function AdminLogin() {
   if (!mounted) return null;
 
   return (
-    <div className="admin-login-page animate-fade-in">
+    <div className="admin-login-page animate-fade-in scanlines">
       {/* Decorative floating blur circles */}
       <div className="blur-circle circle-1"></div>
       <div className="blur-circle circle-2"></div>
-      <div className="blur-circle circle-3"></div>
 
       <div className="container login-container">
         
@@ -83,8 +82,8 @@ export default function AdminLogin() {
             <div className="shield-icon-wrapper animate-pulse-green">
               <Shield size={34} className="shield-icon" />
             </div>
-            <h2 className="heading-md admin-title">Operations Console</h2>
-            <p className="card-subtitle">Authorize administrative credentials to access command hub.</p>
+            <h2 className="heading-md admin-title">Operations Console Login</h2>
+            <p className="card-subtitle">Authorize administrative credentials to access command deck hub.</p>
           </div>
 
           {errorMsg && (
@@ -95,7 +94,7 @@ export default function AdminLogin() {
 
           <form onSubmit={handleSubmit} className="login-form">
             <div className="form-group">
-              <label className="form-label font-label-custom">Admin Username</label>
+              <label className="form-label font-label-custom">Admin Codename</label>
               <div className="input-with-icon">
                 <User size={18} className="input-field-icon" />
                 <input 
@@ -110,7 +109,7 @@ export default function AdminLogin() {
             </div>
 
             <div className="form-group">
-              <label className="form-label font-label-custom">Security Key / Password</label>
+              <label className="form-label font-label-custom">Security Key (Password)</label>
               <div className="input-with-icon">
                 <Lock size={18} className="input-field-icon" />
                 <input 
@@ -124,22 +123,21 @@ export default function AdminLogin() {
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary login-btn hover-glow" disabled={loading}>
+            <button type="submit" className="btn btn-primary login-btn" disabled={loading}>
               <Key size={16} />
-              <span>{loading ? 'Verifying console keys...' : 'Establish Secure Connection'}</span>
+              <span>{loading ? 'Decrypting keys...' : 'Connect to Mainframe'}</span>
             </button>
           </form>
 
           <div className="login-footer-info">
-            <span>Demo Console: <strong>admin</strong> / <strong>admin123</strong></span>
+            <span>Access Credentials: <strong>admin</strong> / <strong>admin123</strong></span>
           </div>
         </div>
       </div>
 
       <style jsx>{`
         .admin-login-page {
-          background-color: #021e17;
-          background: radial-gradient(circle at center, #063c2c 0%, #01140f 100%);
+          background-color: var(--background);
           min-height: 100vh;
           display: flex;
           align-items: center;
@@ -155,14 +153,14 @@ export default function AdminLogin() {
           border-radius: 50%;
           filter: blur(120px);
           z-index: 1;
-          opacity: 0.15;
+          opacity: 0.1;
           animation: float 12s infinite alternate ease-in-out;
         }
         
         .circle-1 {
           width: 350px;
           height: 350px;
-          background: #10b981;
+          background: var(--primary);
           top: -100px;
           left: -100px;
         }
@@ -170,19 +168,10 @@ export default function AdminLogin() {
         .circle-2 {
           width: 400px;
           height: 400px;
-          background: #0d9488;
+          background: var(--secondary);
           bottom: -150px;
           right: -100px;
           animation-delay: -4s;
-        }
-
-        .circle-3 {
-          width: 300px;
-          height: 300px;
-          background: #047857;
-          top: 40%;
-          left: 60%;
-          animation-delay: -7s;
         }
 
         @keyframes float {
@@ -204,37 +193,36 @@ export default function AdminLogin() {
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
-          color: #a7f3d0;
-          font-weight: 600;
-          font-size: 0.9rem;
+          color: var(--primary);
+          font-weight: 700;
+          font-size: 0.85rem;
           align-self: flex-start;
           transition: all 0.3s ease;
           padding: 0.5rem 1rem;
-          border-radius: var(--radius-lg);
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: var(--radius-md);
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid var(--border);
           backdrop-filter: blur(10px);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
 
         .back-home-link:hover {
           color: white;
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(16, 185, 129, 0.1);
           transform: translateX(-4px);
         }
 
         .login-card {
-          background: rgba(5, 25, 20, 0.7);
+          background: rgba(8, 12, 22, 0.85);
           border-radius: var(--radius-2xl);
-          border: 1px solid rgba(16, 185, 129, 0.15);
-          box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7);
-          backdrop-filter: blur(25px);
-          -webkit-backdrop-filter: blur(25px);
+          border: 1px solid var(--border);
+          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
           padding: 3.5rem 2.5rem;
-          transition: border-color 0.3s;
         }
         
         .login-card:hover {
-          border-color: rgba(16, 185, 129, 0.3);
+          border-color: var(--primary-glow);
         }
 
         .card-header {
@@ -254,13 +242,13 @@ export default function AdminLogin() {
           height: 72px;
           background: rgba(16, 185, 129, 0.1);
           color: var(--primary);
-          border-radius: 20px;
-          border: 1px solid rgba(16, 185, 129, 0.3);
-          box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15);
+          border-radius: 12px;
+          border: 1px solid rgba(16, 185, 129, 0.25);
+          box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
         }
 
         .shield-icon {
-          filter: drop-shadow(0 4px 10px rgba(16, 185, 129, 0.4));
+          filter: drop-shadow(0 0 8px var(--primary-glow));
         }
 
         .admin-title {
@@ -273,15 +261,14 @@ export default function AdminLogin() {
 
         .card-subtitle {
           font-size: 0.85rem;
-          color: #a7f3d0;
+          color: var(--muted);
           line-height: 1.6;
-          opacity: 0.8;
           max-width: 290px;
         }
 
         .font-label-custom {
-          color: #a7f3d0;
-          font-weight: 600;
+          color: var(--primary);
+          font-weight: 700;
           font-size: 0.8rem;
           text-transform: uppercase;
           letter-spacing: 1px;
@@ -302,19 +289,18 @@ export default function AdminLogin() {
         }
 
         .custom-input-style {
-          background: rgba(0, 0, 0, 0.3);
-          border: 1px solid rgba(16, 185, 129, 0.2);
+          background: var(--input);
+          border: 1px solid var(--border);
           color: white;
           height: 46px;
-          font-weight: 500;
+          font-weight: 550;
           border-radius: var(--radius-lg);
           transition: all 0.3s;
         }
 
         .custom-input-style:focus {
           border-color: var(--primary);
-          background: rgba(0, 0, 0, 0.5);
-          box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
         }
         
         .custom-input-style:focus + .input-field-icon {
@@ -338,17 +324,17 @@ export default function AdminLogin() {
           align-items: center;
           justify-content: center;
           gap: 0.5rem;
-          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          color: #022c22;
         }
 
         .login-btn:hover {
+          background: var(--primary-hover);
           transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
         }
 
         .error-alert {
-          background: rgba(239, 68, 68, 0.15);
-          border: 1px solid rgba(239, 68, 68, 0.3);
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.25);
           color: #fca5a5;
           padding: 0.875rem;
           border-radius: var(--radius-lg);
@@ -363,20 +349,10 @@ export default function AdminLogin() {
         .login-footer-info {
           text-align: center;
           font-size: 0.8rem;
-          color: #a7f3d0;
-          opacity: 0.7;
+          color: var(--muted);
           margin-top: 2rem;
-          border-top: 1px solid rgba(16, 185, 129, 0.1);
+          border-top: 1px solid var(--border);
           padding-top: 1.25rem;
-        }
-
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          20%, 60% { transform: translateX(-4px); }
-          40%, 80% { transform: translateX(4px); }
-        }
-        .animate-shake {
-          animation: shake 0.4s ease;
         }
       `}</style>
     </div>

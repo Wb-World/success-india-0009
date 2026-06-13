@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Bus, User, LogOut, Menu, X } from 'lucide-react';
+import { Terminal, Cpu, User, LogOut, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // ALL hooks must be at the top — never after a conditional return
   const [sessionUser, setSessionUser] = useState<{ name: string; role: string } | null>(null);
   const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -33,7 +32,6 @@ export default function Navbar() {
     return () => window.removeEventListener('auth-change', checkAuth);
   }, [pathname]);
 
-  // Conditionals AFTER all hooks
   const isAdminRoute = pathname.startsWith('/admin');
   if (isAdminRoute) return null;
 
@@ -50,8 +48,8 @@ export default function Navbar() {
       <header className="nav-header">
         <div className="nav-container">
           <div className="nav-logo">
-            <Bus size={26} className="logo-icon" />
-            <span>Green<span className="text-primary">Wheels</span></span>
+            <Terminal size={24} className="logo-icon" />
+            <span>CYBER<span className="text-primary">_STRIKE</span></span>
           </div>
         </div>
       </header>
@@ -65,23 +63,23 @@ export default function Navbar() {
     <header className="nav-header animate-slide-down">
       <div className="nav-container">
         <Link href="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
-          <Bus size={28} className="logo-icon" />
-          <span>Green<span className="text-primary">Wheels</span></span>
+          <Terminal size={26} className="logo-icon" />
+          <span>CYBER<span className="text-primary">_STRIKE</span></span>
         </Link>
 
         {/* Desktop Nav Links */}
         <nav className="nav-links-desktop">
           {!isLoggedIn && (
             <>
-              <Link href="/" className={`nav-link ${pathname === '/' ? 'active' : ''}`}>Home</Link>
-              <Link href="/about" className={`nav-link ${pathname === '/about' ? 'active' : ''}`}>About</Link>
-              <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`}>Contact</Link>
+              <Link href="/" className={`nav-link ${pathname === '/' ? 'active' : ''}`}>Summit</Link>
+              <Link href="/about" className={`nav-link ${pathname === '/about' ? 'active' : ''}`}>Arenas & Tech</Link>
+              <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`}>Intel Desk</Link>
             </>
           )}
           {isLoggedIn && !isAdmin && (
             <>
-              <Link href="/profile" className={`nav-link ${pathname === '/profile' ? 'active' : ''}`}>Dashboard</Link>
-              <Link href="/book" className={`nav-link ${pathname === '/book' ? 'active' : ''}`}>Bus Booking</Link>
+              <Link href="/profile" className={`nav-link ${pathname === '/profile' ? 'active' : ''}`}>Control Deck</Link>
+              <Link href="/book" className={`nav-link ${pathname === '/book' ? 'active' : ''}`}>Reserve Passes</Link>
             </>
           )}
         </nav>
@@ -92,24 +90,24 @@ export default function Navbar() {
             <div className="user-profile-controls">
               {!isAdmin && (
                 <Link href="/profile" className="profile-btn-nav">
-                  <User size={16} />
+                  <User size={14} />
                   <span>{sessionUser!.name.split(' ')[0]}</span>
                 </Link>
               )}
-              <button onClick={handleLogout} className="btn-logout" title="Log Out">
-                <LogOut size={18} />
+              <button onClick={handleLogout} className="btn-logout" title="Disconnect Session">
+                <LogOut size={16} />
               </button>
             </div>
           ) : (
             <div className="nav-auth-buttons">
-              <Link href="/profile" className="btn btn-primary nav-login-btn">Login / Sign Up</Link>
+              <Link href="/profile" className="btn btn-primary nav-login-btn">Initialize Session</Link>
             </div>
           )}
         </div>
 
         {/* Mobile Toggle */}
         <button className="mobile-menu-toggle" onClick={() => setMenuOpen(!menuOpen)}>
-          {menuOpen ? <X size={24} /> : <Menu size={24} />}
+          {menuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
@@ -119,15 +117,15 @@ export default function Navbar() {
           <nav className="mobile-drawer-links">
             {!isLoggedIn && (
               <>
-                <Link href="/" className={`mobile-link ${pathname === '/' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Home</Link>
-                <Link href="/about" className={`mobile-link ${pathname === '/about' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>About Us</Link>
-                <Link href="/contact" className={`mobile-link ${pathname === '/contact' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Contact Us</Link>
+                <Link href="/" className={`mobile-link ${pathname === '/' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Summit</Link>
+                <Link href="/about" className={`mobile-link ${pathname === '/about' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Arenas & Tech</Link>
+                <Link href="/contact" className={`mobile-link ${pathname === '/contact' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Intel Desk</Link>
               </>
             )}
             {isLoggedIn && !isAdmin && (
               <>
-                <Link href="/profile" className={`mobile-link ${pathname === '/profile' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Dashboard</Link>
-                <Link href="/book" className={`mobile-link ${pathname === '/book' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Bus Booking</Link>
+                <Link href="/profile" className={`mobile-link ${pathname === '/profile' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Control Deck</Link>
+                <Link href="/book" className={`mobile-link ${pathname === '/book' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Reserve Passes</Link>
               </>
             )}
             <hr className="mobile-divider" />
@@ -135,17 +133,17 @@ export default function Navbar() {
               <div className="mobile-user-info">
                 {!isAdmin && (
                   <Link href="/profile" className="mobile-profile-link" onClick={() => setMenuOpen(false)}>
-                    <User size={18} /> View Dashboard ({sessionUser!.name})
+                    <User size={16} /> Control Deck ({sessionUser!.name})
                   </Link>
                 )}
                 <button onClick={handleLogout} className="btn btn-secondary mobile-logout-btn">
-                  <LogOut size={16} /> Log Out
+                  <LogOut size={14} /> Disconnect
                 </button>
               </div>
             ) : (
               <div className="mobile-auth-actions">
                 <Link href="/profile" className="btn btn-primary mobile-login-btn" onClick={() => setMenuOpen(false)}>
-                  Login / Sign Up
+                  Initialize Session
                 </Link>
               </div>
             )}
@@ -160,15 +158,15 @@ export default function Navbar() {
           left: 0;
           right: 0;
           height: 70px;
-          background: rgba(255, 255, 255, 0.92);
+          background: rgba(3, 7, 18, 0.85);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
           border-bottom: 1px solid var(--border);
           z-index: 100;
           display: flex;
           align-items: center;
-          box-shadow: 0 1px 8px rgba(0,0,0,0.04);
-          transition: box-shadow var(--transition-normal);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          transition: all var(--transition-normal);
         }
 
         .nav-container {
@@ -184,38 +182,40 @@ export default function Navbar() {
         .nav-logo {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.625rem;
           font-family: var(--font-heading);
-          font-size: 1.5rem;
-          font-weight: 800;
-          letter-spacing: -0.5px;
+          font-size: 1.4rem;
+          font-weight: 900;
+          letter-spacing: 0.5px;
           color: var(--foreground);
           transition: transform var(--transition-fast), opacity var(--transition-fast);
         }
-        .nav-logo:hover { transform: scale(1.03); opacity: 0.9; }
+        .nav-logo:hover { transform: scale(1.02); opacity: 0.95; }
 
         .logo-icon {
           color: var(--primary);
-          filter: drop-shadow(0 2px 6px rgba(16, 185, 129, 0.25));
+          filter: drop-shadow(0 0 8px var(--primary-glow));
           transition: transform var(--transition-fast);
         }
-        .nav-logo:hover .logo-icon { transform: rotate(-8deg); }
+        .nav-logo:hover .logo-icon { transform: rotate(-10deg); }
 
         .text-primary { color: var(--primary); }
 
         .nav-links-desktop {
           display: none;
-          gap: 2rem;
+          gap: 2.25rem;
           align-items: center;
         }
 
         .nav-link {
-          font-size: 0.95rem;
-          font-weight: 500;
+          font-size: 0.9rem;
+          font-weight: 600;
           color: var(--muted);
           position: relative;
           padding: 0.3rem 0;
           transition: color var(--transition-fast);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
         .nav-link::after {
           content: '';
@@ -231,7 +231,7 @@ export default function Navbar() {
         }
         .nav-link:hover { color: var(--foreground); }
         .nav-link:hover::after { width: 100%; }
-        .nav-link.active { color: var(--primary); font-weight: 600; }
+        .nav-link.active { color: var(--primary); font-weight: 700; text-shadow: 0 0 10px var(--primary-glow); }
         .nav-link.active::after { width: 100%; left: 50%; }
 
         .nav-actions-desktop {
@@ -252,25 +252,28 @@ export default function Navbar() {
           gap: 0.45rem;
           padding: 0.45rem 1rem;
           background: var(--primary-light);
-          color: var(--primary-dark);
+          color: var(--primary);
           border-radius: var(--radius-lg);
-          font-size: 0.875rem;
-          font-weight: 600;
+          font-size: 0.85rem;
+          font-weight: 700;
           transition: all var(--transition-fast);
-          border: 1px solid rgba(16, 185, 129, 0.2);
+          border: 1px solid rgba(16, 185, 129, 0.25);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
         .profile-btn-nav:hover {
-          background: #d1fae5;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(16,185,129,0.2);
+          background: rgba(16, 185, 129, 0.25);
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-primary);
         }
 
         .btn-logout {
-          background: none;
-          border: none;
-          color: var(--muted);
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          color: var(--danger);
           cursor: pointer;
-          padding: 0.45rem;
+          width: 32px;
+          height: 32px;
           border-radius: var(--radius-md);
           transition: all var(--transition-fast);
           display: flex;
@@ -278,22 +281,17 @@ export default function Navbar() {
           justify-content: center;
         }
         .btn-logout:hover {
-          color: var(--danger);
-          background: #fee2e2;
-          transform: scale(1.1);
+          color: white;
+          background: var(--danger);
+          transform: scale(1.05);
         }
 
         .nav-auth-buttons { display: flex; align-items: center; gap: 1rem; }
 
         .nav-login-btn {
           padding: 0.5rem 1.25rem;
-          font-size: 0.9rem;
+          font-size: 0.85rem;
           border-radius: var(--radius-lg);
-          transition: all var(--transition-fast) !important;
-        }
-        .nav-login-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 14px rgba(16,185,129,0.3);
         }
 
         .mobile-menu-toggle {
@@ -304,11 +302,10 @@ export default function Navbar() {
           cursor: pointer;
           padding: 0.5rem;
           border-radius: var(--radius-md);
-          transition: background-color var(--transition-fast), transform var(--transition-fast);
+          transition: background-color var(--transition-fast);
         }
         .mobile-menu-toggle:hover {
-          background-color: var(--input);
-          transform: scale(1.05);
+          background-color: var(--border);
         }
 
         .mobile-drawer {
@@ -316,10 +313,9 @@ export default function Navbar() {
           top: 70px;
           left: 0;
           right: 0;
-          background: rgba(255,255,255,0.98);
-          backdrop-filter: blur(16px);
+          background: rgba(3, 7, 18, 0.98);
           border-bottom: 1px solid var(--border);
-          box-shadow: var(--shadow-lg);
+          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
           padding: 1.5rem;
           z-index: 99;
         }
@@ -331,14 +327,16 @@ export default function Navbar() {
         }
 
         .mobile-link {
-          font-size: 1.05rem;
-          font-weight: 500;
+          font-size: 1rem;
+          font-weight: 600;
           color: var(--muted);
           padding: 0.25rem 0;
           transition: color var(--transition-fast), padding-left var(--transition-fast);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
         .mobile-link:hover { color: var(--primary); padding-left: 0.5rem; }
-        .mobile-link.active { color: var(--primary); font-weight: 600; }
+        .mobile-link.active { color: var(--primary); font-weight: 700; }
 
         .mobile-divider { border: 0; border-top: 1px solid var(--border); margin: 0.25rem 0; }
 
@@ -348,12 +346,11 @@ export default function Navbar() {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          font-size: 1rem;
+          font-size: 0.95rem;
           color: var(--foreground);
-          font-weight: 500;
-          transition: color var(--transition-fast);
+          font-weight: 600;
+          text-transform: uppercase;
         }
-        .mobile-profile-link:hover { color: var(--primary); }
 
         .mobile-logout-btn { width: 100%; justify-content: center; padding: 0.625rem; }
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bus, Mail, Phone, MapPin, Send } from 'lucide-react';
+import { Terminal, Mail, Phone, MapPin, Send } from 'lucide-react';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -33,7 +33,6 @@ export default function Footer() {
 
   if (!mounted) return null;
 
-  // Suppress footer completely on admin pages
   if (pathname.startsWith('/admin')) {
     return null;
   }
@@ -46,47 +45,47 @@ export default function Footer() {
       <div className="container footer-grid">
         <div className="footer-brand-col">
           <Link href="/" className="footer-logo">
-            <Bus size={28} className="footer-logo-icon" />
-            <span>Green<span className="text-primary">Wheels</span></span>
+            <Terminal size={26} className="footer-logo-icon" />
+            <span>CYBER<span className="text-primary">_STRIKE</span></span>
           </Link>
           <p className="footer-desc">
-            Experience premium bus travel across major metropolitan routes. Combining top-tier safety, comfort, and seamless scheduling since 2020.
+            The premier global cyber exploitation & defense summit. Conjoining elite white-hat collectives, security researchers, and defense operatives since 2020.
           </p>
           <div className="footer-contact-info">
             <div className="contact-item">
-              <Phone size={16} />
-              <span>+91 80 4567 8900 (Toll Free)</span>
+              <Phone size={14} />
+              <span>+1 (800) 555-INIT (Secure Line)</span>
             </div>
             <div className="contact-item">
-              <Mail size={16} />
-              <span>support@greenwheels.in</span>
+              <Mail size={14} />
+              <span>ops@cyberstrike.io</span>
             </div>
             <div className="contact-item">
-              <MapPin size={16} />
-              <span>100, Green City Plaza, MG Road, Bangalore, KA, India</span>
+              <MapPin size={14} />
+              <span>Grid Node 404, Sandbox Plaza, Cyber City</span>
             </div>
           </div>
         </div>
 
         <div className="footer-links-col">
-          <h4 className="footer-title">Quick Links</h4>
+          <h4 className="footer-title">Console Directories</h4>
           <ul className="footer-links">
             {!isLoggedIn ? (
               <>
-                <li><Link href="/">Home Page</Link></li>
-                <li><Link href="/about">About Our Fleet</Link></li>
-                <li><Link href="/contact">Contact Support</Link></li>
-                <li><Link href="/book">Reserve Ticket</Link></li>
+                <li><Link href="/">Summit Briefing</Link></li>
+                <li><Link href="/about">Arenas & Tech</Link></li>
+                <li><Link href="/contact">Intel Desk</Link></li>
+                <li><Link href="/book">Reserve Passes</Link></li>
               </>
             ) : (
               <>
                 {!isAdmin ? (
                   <>
-                    <li><Link href="/profile">Dashboard</Link></li>
-                    <li><Link href="/book">Bus Booking</Link></li>
+                    <li><Link href="/profile">Control Deck</Link></li>
+                    <li><Link href="/book">Reserve Passes</Link></li>
                   </>
                 ) : (
-                  <li><Link href="/admin/dashboard">Operations Console</Link></li>
+                  <li><Link href="/admin/dashboard">Decryption Operations</Link></li>
                 )}
               </>
             )}
@@ -94,29 +93,29 @@ export default function Footer() {
         </div>
 
         <div className="footer-links-col">
-          <h4 className="footer-title">Top Routes</h4>
+          <h4 className="footer-title">Popular Tracks</h4>
           <ul className="footer-links">
-            <li><Link href="/book?source=Bangalore&destination=Chennai">Bangalore to Chennai</Link></li>
-            <li><Link href="/book?source=Chennai&destination=Bangalore">Chennai to Bangalore</Link></li>
-            <li><Link href="/book?source=Mumbai&destination=Pune">Mumbai to Pune</Link></li>
-            <li><Link href="/book?source=Delhi&destination=Jaipur">Delhi to Jaipur</Link></li>
+            <li><Link href="/book?source=Offensive+AI&destination=Nexus+Room+(Hall+A)">Offensive AI Arena</Link></li>
+            <li><Link href="/book?source=Reverse+Engineering&destination=Sandbox+Lab+(Suite+404)">Reverse Engineering Lab</Link></li>
+            <li><Link href="/book?source=Web3+%26+Cryptography&destination=Black+Box+Room+(Hall+B)">Web3 & Cryptography Stage</Link></li>
+            <li><Link href="/book?source=Hardware+%26+IoT&destination=Silicon+Sandbox+(Lab+C)">Hardware & IoT Lab</Link></li>
           </ul>
         </div>
 
         <div className="footer-newsletter-col">
-          <h4 className="footer-title">Stay Updated</h4>
+          <h4 className="footer-title">Intel Dispatch</h4>
           <p className="newsletter-text">
-            Subscribe to receive travel advisories, seasonal discount promo codes, and fleet updates.
+            Subscribe to secure communication feeds for emergency patch releases, Zero-Day advisories, and elite pass updates.
           </p>
           <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>
             <input 
               type="email" 
-              placeholder="Enter your email" 
+              placeholder="operative@domain.xyz" 
               className="newsletter-input" 
               required 
             />
             <button type="submit" className="newsletter-btn">
-              <Send size={16} />
+              <Send size={14} />
             </button>
           </form>
         </div>
@@ -125,24 +124,24 @@ export default function Footer() {
       <div className="footer-bottom">
         <div className="container footer-bottom-flex">
           <p className="copyright-text">
-            &copy; {currentYear} GreenWheels Transport Systems Inc. All rights reserved.
+            &copy; {currentYear} CyberStrike Operations. Securing the global grid. All rights reserved.
           </p>
           <div className="footer-legal-links">
-            <Link href="/contact">Privacy Policy</Link>
+            <Link href="/contact">Encryption Protocol</Link>
             <span className="bullet-dot"></span>
-            <Link href="/contact">Terms & Conditions</Link>
+            <Link href="/contact">Code of Conduct</Link>
             <span className="bullet-dot"></span>
-            <Link href="/contact">Refund Guidelines</Link>
+            <Link href="/contact">Zero-Day Disclosure</Link>
           </div>
         </div>
       </div>
 
       <style jsx>{`
         .site-footer {
-          background: #0b1329;
+          background: #040811;
           color: #94a3b8;
           padding: 4.5rem 0 1.5rem 0;
-          border-top: 4px solid var(--primary);
+          border-top: 2px solid var(--primary);
           font-size: 0.9rem;
         }
 
@@ -171,13 +170,14 @@ export default function Footer() {
           align-items: center;
           gap: 0.5rem;
           font-family: var(--font-heading);
-          font-size: 1.5rem;
-          font-weight: 800;
+          font-size: 1.4rem;
+          font-weight: 900;
           color: white;
         }
 
         .footer-logo-icon {
           color: var(--primary);
+          filter: drop-shadow(0 0 5px var(--primary-glow));
         }
 
         .footer-desc {
@@ -201,7 +201,7 @@ export default function Footer() {
         .footer-title {
           font-family: var(--font-heading);
           color: white;
-          font-size: 1rem;
+          font-size: 0.95rem;
           font-weight: 700;
           margin-bottom: 1.25rem;
           letter-spacing: 0.03em;
@@ -231,11 +231,13 @@ export default function Footer() {
         .footer-links a {
           transition: all var(--transition-fast);
           display: inline-block;
+          font-weight: 500;
         }
 
         .footer-links a:hover {
           color: var(--primary);
           transform: translateX(3px);
+          text-shadow: 0 0 5px var(--primary-glow);
         }
 
         .footer-newsletter-col {
@@ -252,30 +254,33 @@ export default function Footer() {
           display: flex;
           border-radius: var(--radius-lg);
           overflow: hidden;
-          border: 1px solid #334155;
+          border: 1px solid var(--border);
           transition: border-color var(--transition-fast);
         }
 
         .newsletter-form:focus-within {
           border-color: var(--primary);
+          box-shadow: 0 0 10px var(--primary-glow);
         }
 
         .newsletter-input {
           flex: 1;
-          background: #1e293b;
+          background: #0b111e;
           border: none;
           color: white;
           padding: 0.75rem 1rem;
-          font-size: 0.9rem;
+          font-size: 0.85rem;
         }
 
         .newsletter-btn {
           background: var(--primary);
-          color: white;
+          color: #022c22;
           border: none;
           padding: 0 1.25rem;
           cursor: pointer;
           transition: background var(--transition-fast);
+          display: flex;
+          align-items: center;
         }
 
         .newsletter-btn:hover {
@@ -283,7 +288,7 @@ export default function Footer() {
         }
 
         .footer-bottom {
-          border-top: 1px solid #1e293b;
+          border-top: 1px solid var(--border);
           padding-top: 1.5rem;
           font-size: 0.8rem;
         }

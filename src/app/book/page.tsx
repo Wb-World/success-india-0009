@@ -2,11 +2,11 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { MapPin, Calendar, Search, ShieldCheck, CheckCircle2, ChevronRight, Upload, AlertCircle, Clock } from 'lucide-react';
+import { Compass, Calendar, Search, ShieldCheck, CheckCircle2, ChevronRight, Upload, AlertCircle, Clock, Terminal, Cpu } from 'lucide-react';
 
 export default function BookPage() {
   return (
-    <Suspense fallback={<div className="loading-fallback">Loading booking engine...</div>}>
+    <Suspense fallback={<div className="loading-fallback">INITIALIZING CYBERSTRIKE ENGINE...</div>}>
       <BookingEngine />
     </Suspense>
   );
@@ -17,8 +17,8 @@ function BookingEngine() {
   const searchParams = useSearchParams();
 
   // Search parameters states
-  const [source, setSource] = useState('Bangalore');
-  const [destination, setDestination] = useState('Chennai');
+  const [source, setSource] = useState('Offensive AI');
+  const [destination, setDestination] = useState('Nexus Room (Hall A)');
   const [date, setDate] = useState(() => {
     const today = new Date();
     today.setDate(today.getDate() + 7);
@@ -32,7 +32,7 @@ function BookingEngine() {
   const [searchTriggered, setSearchTriggered] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Selected bus and schedule states
+  // Selected session and schedule states
   const [selectedBus, setSelectedBus] = useState<any>(null);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
@@ -71,7 +71,7 @@ function BookingEngine() {
 
   const handleSearchBuses = async (srcVal = source, destVal = destination, dateVal = date) => {
     if (srcVal === destVal) {
-      setErrorMsg('Departure and Destination locations cannot be the same.');
+      setErrorMsg('Sector and Arena destination cannot be the same.');
       return;
     }
     setErrorMsg('');
@@ -86,7 +86,7 @@ function BookingEngine() {
       if (res.ok) {
         setBuses(data.buses || []);
       } else {
-        setErrorMsg(data.error || 'Failed to fetch buses');
+        setErrorMsg(data.error || 'Failed to fetch active tracks');
       }
     } catch (err) {
       setErrorMsg('A connection error occurred while searching routes.');
@@ -116,7 +116,7 @@ function BookingEngine() {
       setSelectedSeats(selectedSeats.filter((s) => s !== seatId));
     } else {
       if (selectedSeats.length >= 6) {
-        alert('Maximum of 6 seats can be reserved per transaction.');
+        alert('Maximum of 6 desk slots can be reserved per session.');
         return;
       }
       setSelectedSeats([...selectedSeats, seatId]);
@@ -202,10 +202,10 @@ function BookingEngine() {
       <div className="guest-booking-container container animate-slide-up">
         <div className="guest-card glass-card">
           <AlertCircle size={48} className="guest-icon animate-bounce" />
-          <h2 className="heading-md">Sign In Required</h2>
-          <p>You must establish a passenger session to reserve seats and complete screenshot verification.</p>
+          <h2 className="heading-md" style={{ color: '#ef4444' }}>SECURE ACCESS DENIED</h2>
+          <p>You must establish an operative passenger session to reserve terminal slots and initiate credentials verification.</p>
           <button onClick={() => router.push('/profile')} className="btn btn-primary">
-            Sign In / Create Account
+            Initialize Session / Authenticate
           </button>
         </div>
         <style jsx>{`
@@ -214,7 +214,7 @@ function BookingEngine() {
             padding: 8rem 1.5rem;
           }
           .guest-card {
-            background: white;
+            background: rgba(12, 17, 29, 0.9);
             padding: 3rem 2rem;
             border-radius: var(--radius-2xl);
             border: 1px solid var(--border);
@@ -244,17 +244,17 @@ function BookingEngine() {
       <div className="booking-steps-timeline animate-slide-down">
         <div className={`step-node ${bookingStep === 'search' ? 'active' : ''} ${selectedBus ? 'completed' : ''}`} onClick={() => setBookingStep('search')}>
           <span className="step-num">{selectedBus ? '✓' : '1'}</span>
-          <span className="step-txt">Search Routes</span>
+          <span className="step-txt">Identify Tracks</span>
         </div>
         <ChevronRight size={16} className="timeline-arrow" />
         <div className={`step-node ${bookingStep === 'seats' ? 'active' : ''} ${bookingStep === 'payment' || bookingStep === 'success' ? 'completed' : ''}`} onClick={() => { if (selectedBus) setBookingStep('seats'); }}>
           <span className="step-num">{bookingStep === 'payment' || bookingStep === 'success' ? '✓' : '2'}</span>
-          <span className="step-txt">Select Seats</span>
+          <span className="step-txt">Select Terminals</span>
         </div>
         <ChevronRight size={16} className="timeline-arrow" />
         <div className={`step-node ${bookingStep === 'payment' ? 'active' : ''} ${bookingStep === 'success' ? 'completed' : ''}`}>
           <span className="step-num">{bookingStep === 'success' ? '✓' : '3'}</span>
-          <span className="step-txt">Upload UPI Receipt</span>
+          <span className="step-txt">Generate Elite Pass</span>
         </div>
       </div>
 
@@ -271,31 +271,27 @@ function BookingEngine() {
           <div className="search-bar-widget glass-card animate-slide-up">
             <form onSubmit={(e) => { e.preventDefault(); handleSearchBuses(); }} className="search-form-inline">
               <div className="inline-group">
-                <label className="inline-label">From Terminal</label>
+                <label className="inline-label">Access Sector</label>
                 <select value={source} onChange={(e) => setSource(e.target.value)} className="form-control select-control">
-                  <option value="Bangalore">Bengaluru (Bangalore)</option>
-                  <option value="Chennai">Chennai</option>
-                  <option value="Mumbai">Mumbai</option>
-                  <option value="Pune">Pune</option>
-                  <option value="Delhi">Delhi (NCR)</option>
-                  <option value="Hyderabad">Hyderabad</option>
-                  <option value="Jaipur">Jaipur</option>
+                  <option value="Offensive AI">Offensive AI & ML Fuzzing</option>
+                  <option value="Reverse Engineering">Reverse Engineering & Kernel Exploits</option>
+                  <option value="Web3 & Cryptography">Web3, Cryptography & Blockchain</option>
+                  <option value="Hardware & IoT">Hardware, IoT & Firmware Fuzzing</option>
+                  <option value="Defensive AI">Defensive AI & Threat Intel</option>
                 </select>
               </div>
               <div className="inline-group">
-                <label className="inline-label">To Terminal</label>
+                <label className="inline-label">Arena Room</label>
                 <select value={destination} onChange={(e) => setDestination(e.target.value)} className="form-control select-control">
-                  <option value="Chennai">Chennai</option>
-                  <option value="Bangalore">Bengaluru (Bangalore)</option>
-                  <option value="Mumbai">Mumbai</option>
-                  <option value="Pune">Pune</option>
-                  <option value="Delhi">Delhi (NCR)</option>
-                  <option value="Hyderabad">Hyderabad</option>
-                  <option value="Jaipur">Jaipur</option>
+                  <option value="Nexus Room (Hall A)">Nexus Stage (Hall A)</option>
+                  <option value="Sandbox Lab (Suite 404)">Sandbox Lab (Suite 404)</option>
+                  <option value="Black Box Room (Hall B)">Black Box (Hall B)</option>
+                  <option value="Silicon Sandbox (Lab C)">Silicon Sandbox (Lab C)</option>
+                  <option value="War Room (Room 101)">Operations War Room (101)</option>
                 </select>
               </div>
               <div className="inline-group">
-                <label className="inline-label">Date of Travel</label>
+                <label className="inline-label">Access Date</label>
                 <input 
                   type="date" 
                   value={date} 
@@ -306,7 +302,7 @@ function BookingEngine() {
                 />
               </div>
               <button type="submit" className="btn btn-primary search-submit-btn">
-                <Search size={16} /> Find Buses
+                <Search size={16} /> Scan Grid
               </button>
             </form>
           </div>
@@ -315,25 +311,27 @@ function BookingEngine() {
             {loadingBuses ? (
               <div className="spinner-center">
                 <div className="spinner"></div>
-                <p>Loading scheduled bus lines...</p>
+                <p style={{ color: '#94a3b8' }}>Scanning encrypted session logs...</p>
               </div>
             ) : buses.length === 0 ? (
               searchTriggered ? (
                 <div className="empty-results glass-card animate-scale-in">
-                  <AlertCircle size={40} className="empty-icon" />
-                  <h3 className="heading-sm">No Coach Scheduled</h3>
-                  <p>There are no direct routes scheduled between {source} and {destination} on {date}. Modify your filter tags or try reversing the terminal cities.</p>
+                  <AlertCircle size={40} className="empty-icon text-amber" />
+                  <h3 className="heading-sm" style={{ color: '#f59e0b' }}>NO ACTIVE TARGETS FOUND</h3>
+                  <p>There are no session modules scheduled between {source} and {destination} on {date}. Modify your sector tags and filter parameters.</p>
                 </div>
               ) : (
                 <div className="welcome-search-callout glass-card animate-scale-in">
-                  <MapPin size={40} className="callout-icon" />
-                  <h3 className="heading-sm">Plan Your Commute</h3>
-                  <p>Input departure location, destination location, and date above to pull up schedule listings and lock seats.</p>
+                  <Compass size={40} className="callout-icon text-cyan" />
+                  <h3 className="heading-sm">INITIALIZE ENCRYPTED TRACK INDEX</h3>
+                  <p>Input sector parameters, venue room coordinates, and dates above to pull active session streams and allocate terminal passes.</p>
                 </div>
               )
             ) : (
               <div className="buses-list animate-slide-up">
-                <h3 className="heading-sm list-title">Active Routes & Coach Timings for {date}</h3>
+                <h3 className="heading-sm list-title" style={{ color: '#10b981', fontFamily: 'var(--font-heading)' }}>
+                  ACTIVE TRACK MODULES & SCHEDULES FOR {date}
+                </h3>
                 {buses.map((bus) => (
                   <div key={bus.id} className="bus-card-item hover-glow-card">
                     <div className="bus-card-main">
@@ -356,12 +354,12 @@ function BookingEngine() {
                       </div>
 
                       <div className="bus-pricing">
-                        <span className="price-label">Ticket Fare</span>
-                        <span className="price-value">₹{bus.price} <span className="seat-label">/ seat</span></span>
+                        <span className="price-label">Credential Cost</span>
+                        <span className="price-value">₹{bus.price} <span className="seat-label">/ slot</span></span>
                       </div>
 
                       <button onClick={() => handleBusSelect(bus)} className="btn btn-primary select-bus-btn">
-                        Select Seats
+                        Select Terminals
                       </button>
                     </div>
                   </div>
@@ -372,82 +370,16 @@ function BookingEngine() {
         </div>
       )}
 
-      {/* STEP 2: DYNAMIC SEAT MAP AND SCHEDULE TIMING */}
+      {/* STEP 2: DYNAMIC SEAT MAP AND SCHEDULE TIMING (SIDE BY SIDE: LEFT SEATS, RIGHT GREETING & DETAILS) */}
       {bookingStep === 'seats' && selectedBus && (
         <div className="seats-step-layout animate-slide-up">
-          <div className="seats-control-sidebar">
-            <div className="sidebar-card glass-card">
-              <h3 className="heading-sm sidebar-title">Coach Selection</h3>
-              <div className="summary-detail-row">
-                <span className="summary-label">Corridor</span>
-                <span className="summary-val">{selectedBus.source} &rarr; {selectedBus.destination}</span>
-              </div>
-              <div className="summary-detail-row">
-                <span className="summary-label">Coach Name</span>
-                <span className="summary-val">{selectedBus.name}</span>
-              </div>
-              <div className="summary-detail-row">
-                <span className="summary-label">Travel Date</span>
-                <span className="summary-val">{date}</span>
-              </div>
-
-              <hr className="card-divider" />
-
-              {/* Time Selection */}
-              <div className="time-selection-section">
-                <label className="form-label font-bold"><Clock size={12} className="inline-icon" /> Departure Timing</label>
-                <div className="time-chips-grid">
-                  {selectedBus.times.map((time: string) => (
-                    <button 
-                      key={time} 
-                      onClick={() => handleTimeChange(time)} 
-                      className={`time-chip ${selectedTime === time ? 'active' : ''}`}
-                    >
-                      {time}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <hr className="card-divider" />
-
-              {/* Seat Details */}
-              <div className="seat-stats-detail">
-                <div className="selected-seats-row">
-                  <span className="summary-label">Selected Seats</span>
-                  <div className="selected-seats-list">
-                    {selectedSeats.length === 0 ? (
-                      <span className="no-seats-placeholder">None Selected</span>
-                    ) : (
-                      selectedSeats.map((s) => <span key={s} className="seat-summary-tag animate-scale-in">{s}</span>)
-                    )}
-                  </div>
-                </div>
-                <div className="total-price-row">
-                  <span className="summary-label">Total Fare</span>
-                  <span className="total-price-val">₹{totalPrice}</span>
-                </div>
-              </div>
-
-              <button 
-                onClick={() => setBookingStep('payment')} 
-                className="btn btn-primary checkout-btn" 
-                disabled={selectedSeats.length === 0}
-              >
-                Proceed to UPI Payment (₹{totalPrice})
-              </button>
-              <button onClick={() => setBookingStep('search')} className="btn btn-secondary back-btn">
-                Change Route / Date
-              </button>
-            </div>
-          </div>
-
-          {/* Seat Layout Graphics */}
+          
+          {/* Seat Layout Graphics (LEFT SIDE) */}
           <div className="seats-map-display glass-card">
             <div className="map-legend">
               <div className="legend-item">
                 <div className="legend-box available-box"></div>
-                <span>Available</span>
+                <span>Available Node</span>
               </div>
               <div className="legend-item">
                 <div className="legend-box selected-box animate-pulse-green"></div>
@@ -455,14 +387,14 @@ function BookingEngine() {
               </div>
               <div className="legend-item">
                 <div className="legend-box booked-box"></div>
-                <span>Booked</span>
+                <span>Reserved</span>
               </div>
             </div>
 
             {/* Premium Bus cabin outline */}
             <div className="bus-cabin-frame animate-scale-in">
               <div className="bus-front-cabin">
-                {/* Steering Wheel graphic */}
+                {/* Steering Wheel graphic renamed to main console deck */}
                 <div className="driver-dashboard-panel">
                   <div className="steering-wheel-vector">
                     <div className="wheel-rim">
@@ -471,9 +403,9 @@ function BookingEngine() {
                       <div className="wheel-center"></div>
                     </div>
                   </div>
-                  <div className="driver-suite-seat">Pilot Seat</div>
+                  <div className="driver-suite-seat">Admin Console</div>
                 </div>
-                <span className="cabin-label">Cockpit / Front windshield</span>
+                <span className="cabin-label">STAGE AREA / WINDSURF PANEL</span>
               </div>
 
               <div className="bus-seats-container">
@@ -489,7 +421,7 @@ function BookingEngine() {
                             key={seatId} 
                             onClick={() => handleSeatClick(seatId)}
                             className={`seat-button ${isBooked ? 'booked' : ''} ${isSelected ? 'selected' : ''}`}
-                            title={`Seat ${seatId} (${isBooked ? 'Booked' : 'Available'})`}
+                            title={`Terminal ${seatId} (${isBooked ? 'Reserved' : 'Available'})`}
                             disabled={isBooked}
                           >
                             <span className="seat-number">{seatId}</span>
@@ -516,7 +448,7 @@ function BookingEngine() {
                             key={seatId} 
                             onClick={() => handleSeatClick(seatId)}
                             className={`seat-button ${isBooked ? 'booked' : ''} ${isSelected ? 'selected' : ''}`}
-                            title={`Seat ${seatId} (${isBooked ? 'Booked' : 'Available'})`}
+                            title={`Terminal ${seatId} (${isBooked ? 'Reserved' : 'Available'})`}
                             disabled={isBooked}
                           >
                             <span className="seat-number">{seatId}</span>
@@ -531,10 +463,106 @@ function BookingEngine() {
                 ))}
               </div>
               <div className="bus-back-cabin">
-                <span className="cabin-label-back">Rear Row Limit</span>
+                <span className="cabin-label-back">SERVER RACK EDGE LIMIT</span>
               </div>
             </div>
           </div>
+
+          {/* Operative Greeting & Control Panel (RIGHT SIDE) */}
+          <div className="seats-control-sidebar">
+            <div className="sidebar-card glass-card">
+              
+              {/* Terminal Greeting Box */}
+              <div className="terminal-greeting-box" style={{ marginBottom: '1.5rem' }}>
+                <div className="terminal-header">
+                  <div className="terminal-dots">
+                    <span className="terminal-dot r"></span>
+                    <span className="terminal-dot y"></span>
+                    <span className="terminal-dot g"></span>
+                  </div>
+                  <span>CONSOLE://OPERATIVE_GREETING</span>
+                </div>
+                <p style={{ color: '#10b981', marginBottom: '0.4rem', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>&gt; INITIATING SECURITY CONTEXT...</p>
+                <p style={{ color: '#fff', fontWeight: 'bold', fontFamily: 'var(--font-mono)' }}>
+                  WELCOME BACK, OPERATIVE <span style={{ color: '#06b6d4' }}>{user.name.toUpperCase()}</span>!
+                </p>
+                <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '0.5rem', lineHeight: '1.45', fontFamily: 'var(--font-mono)' }}>
+                  Identity Verified: [ID: {user.id.toUpperCase()}] <br />
+                  Allocating terminal nodes for track: <span style={{ color: '#10b981' }}>{selectedBus.name}</span>.
+                  Designate your terminal desks on the left grid panel to initialize credentials.
+                </p>
+                <span className="terminal-blink">&gt;_</span>
+              </div>
+
+              <h3 className="heading-sm sidebar-title" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
+                Access Parameters
+              </h3>
+              <div className="summary-detail-row">
+                <span className="summary-label">Module Track</span>
+                <span className="summary-val" style={{ color: '#10b981' }}>{selectedBus.source} &rarr; {selectedBus.destination}</span>
+              </div>
+              <div className="summary-detail-row">
+                <span className="summary-label">Session Name</span>
+                <span className="summary-val">{selectedBus.name}</span>
+              </div>
+              <div className="summary-detail-row">
+                <span className="summary-label">Access Date</span>
+                <span className="summary-val">{date}</span>
+              </div>
+
+              <hr className="card-divider" style={{ border: '0', borderTop: '1px solid var(--border)', margin: '1.5rem 0' }} />
+
+              {/* Time Selection */}
+              <div className="time-selection-section" style={{ marginBottom: '1.5rem' }}>
+                <label className="form-label font-bold" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <Clock size={12} className="inline-icon" /> Session Timing Slot
+                </label>
+                <div className="time-chips-grid">
+                  {selectedBus.times.map((time: string) => (
+                    <button 
+                      key={time} 
+                      onClick={() => handleTimeChange(time)} 
+                      className={`time-chip ${selectedTime === time ? 'active' : ''}`}
+                    >
+                      {time}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <hr className="card-divider" style={{ border: '0', borderTop: '1px solid var(--border)', margin: '1.5rem 0' }} />
+
+              {/* Seat Details */}
+              <div className="seat-stats-detail">
+                <div className="selected-seats-row">
+                  <span className="summary-label">Allocated Desks</span>
+                  <div className="selected-seats-list">
+                    {selectedSeats.length === 0 ? (
+                      <span className="no-seats-placeholder">None Selected</span>
+                    ) : (
+                      selectedSeats.map((s) => <span key={s} className="seat-summary-tag animate-scale-in">{s}</span>)
+                    )}
+                  </div>
+                </div>
+                <div className="total-price-row">
+                  <span className="summary-label">Access Fee</span>
+                  <span className="total-price-val">₹{totalPrice}</span>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setBookingStep('payment')} 
+                className="btn btn-primary checkout-btn" 
+                disabled={selectedSeats.length === 0}
+              >
+                Proceed to Payment Console (₹{totalPrice})
+              </button>
+              <button onClick={() => setBookingStep('search')} className="btn btn-secondary back-btn">
+                Change Sector / Dates
+              </button>
+            </div>
+          </div>
+
         </div>
       )}
 
@@ -542,9 +570,9 @@ function BookingEngine() {
       {bookingStep === 'payment' && selectedBus && (
         <div className="payment-step-layout animate-slide-up">
           <div className="payment-card glass-card">
-            <h2 className="heading-md payment-title">Scan & Pay via UPI</h2>
+            <h2 className="heading-md payment-title" style={{ color: 'white' }}>SECURE UPI PAYMENT CONSOLE</h2>
             <p className="payment-desc">
-              Scan the transaction QR below with GPay, PhonePe, Paytm, or BHIM. complete the exact transfer, and upload your receipt screenshot for admin manual verification.
+              Scan the transaction QR below with GPay, PhonePe, Paytm, or BHIM. Complete the exact transfer, and upload your receipt screenshot for operations desk decryption and approval.
             </p>
 
             <div className="payment-split">
@@ -555,51 +583,51 @@ function BookingEngine() {
                   <svg width="220" height="220" viewBox="0 0 100 100" className="qr-svg">
                     <rect width="100" height="100" fill="white" />
                     {/* QR alignment markers */}
-                    <rect x="5" y="5" width="20" height="20" fill="#064e3b" />
+                    <rect x="5" y="5" width="20" height="20" fill="#040811" />
                     <rect x="8" y="8" width="14" height="14" fill="white" />
                     <rect x="11" y="11" width="8" height="8" fill="#10b981" />
 
-                    <rect x="75" y="5" width="20" height="20" fill="#064e3b" />
+                    <rect x="75" y="5" width="20" height="20" fill="#040811" />
                     <rect x="78" y="8" width="14" height="14" fill="white" />
                     <rect x="81" y="11" width="8" height="8" fill="#10b981" />
 
-                    <rect x="5" y="75" width="20" height="20" fill="#064e3b" />
+                    <rect x="5" y="75" width="20" height="20" fill="#040811" />
                     <rect x="8" y="78" width="14" height="14" fill="white" />
                     <rect x="11" y="81" width="8" height="8" fill="#10b981" />
 
                     {/* QR noise simulation */}
                     <rect x="35" y="5" width="5" height="15" fill="#10b981" />
-                    <rect x="45" y="15" width="15" height="5" fill="#064e3b" />
-                    <rect x="30" y="30" width="10" height="10" fill="#064e3b" />
+                    <rect x="45" y="15" width="15" height="5" fill="#040811" />
+                    <rect x="30" y="30" width="10" height="10" fill="#040811" />
                     <rect x="50" y="30" width="5" height="5" fill="#10b981" />
-                    <rect x="65" y="35" width="10" height="15" fill="#064e3b" />
+                    <rect x="65" y="35" width="10" height="15" fill="#040811" />
                     <rect x="30" y="50" width="15" height="5" fill="#10b981" />
-                    <rect x="55" y="45" width="5" height="10" fill="#064e3b" />
-                    <rect x="40" y="60" width="10" height="5" fill="#064e3b" />
-                    <rect x="75" y="55" width="20" height="20" fill="#064e3b" />
+                    <rect x="55" y="45" width="5" height="10" fill="#040811" />
+                    <rect x="40" y="60" width="10" height="5" fill="#040811" />
+                    <rect x="75" y="55" width="20" height="20" fill="#040811" />
                     <rect x="78" y="58" width="14" height="14" fill="white" />
                     <rect x="30" y="75" width="5" height="20" fill="#10b981" />
-                    <rect x="45" y="80" width="15" height="15" fill="#064e3b" />
+                    <rect x="45" y="80" width="15" height="15" fill="#040811" />
                   </svg>
                   <div className="qr-price-badge">₹{totalPrice.toFixed(2)}</div>
                 </div>
                 <div className="payment-summary-block">
                   <span className="pay-label">Transfer Amount:</span>
-                  <span className="pay-amount">₹{totalPrice}</span>
-                  <span className="pay-account">UPI ID: greenwheels@ybl</span>
-                  <span className="pay-account-sub">Ref: GW-{selectedSeats.join('-')}-{Date.now().toString().slice(-4)}</span>
+                  <span className="pay-amount" style={{ color: '#10b981' }}>₹{totalPrice}</span>
+                  <span className="pay-account">UPI ID: cyberstrike@ybl</span>
+                  <span className="pay-account-sub">Ref: CS-{selectedSeats.join('-')}-{Date.now().toString().slice(-4)}</span>
                 </div>
               </div>
 
               {/* Uploader section */}
               <div className="screenshot-uploader-section animate-scale-in">
                 <div className="booking-info-recap">
-                  <h4 className="heading-sm">Ticket Details</h4>
+                  <h4 className="heading-sm" style={{ color: 'white' }}>Credential Recap</h4>
                   <div className="recap-table">
-                    <div className="recap-row"><span>Passenger Name:</span><strong>{user.name}</strong></div>
-                    <div className="recap-row"><span>Coach:</span><strong>{selectedBus.name} ({selectedTime})</strong></div>
-                    <div className="recap-row"><span>Departure Date:</span><strong>{date}</strong></div>
-                    <div className="recap-row"><span>Allocated Seats:</span><strong>{selectedSeats.join(', ')}</strong></div>
+                    <div className="recap-row"><span>Operative Name:</span><strong>{user.name}</strong></div>
+                    <div className="recap-row"><span>Session:</span><strong>{selectedBus.name} ({selectedTime})</strong></div>
+                    <div className="recap-row"><span>Access Date:</span><strong>{date}</strong></div>
+                    <div className="recap-row"><span>Allocated Desks:</span><strong>{selectedSeats.join(', ')}</strong></div>
                   </div>
                 </div>
 
@@ -614,12 +642,12 @@ function BookingEngine() {
                     <Upload size={32} className="uploader-icon" />
                     {screenshot ? (
                       <div className="upload-preview-details">
-                        <span className="file-success">UPI Screenshot Added!</span>
+                        <span className="file-success" style={{ color: '#10b981' }}>UPI Screenshot Added!</span>
                         <span className="file-name">{screenshotName}</span>
                       </div>
                     ) : (
                       <div className="upload-prompt">
-                        <span className="upload-title">Click to Upload Transaction Screenshot</span>
+                        <span className="upload-title">Click to Upload Receipt Screenshot</span>
                         <span className="upload-sub">Supports PNG, JPG, or JPEG file structures</span>
                       </div>
                     )}
@@ -640,7 +668,7 @@ function BookingEngine() {
                     className="btn btn-primary flex-1 checkout-btn-submit" 
                     disabled={!screenshot || submittingBooking}
                   >
-                    {submittingBooking ? 'Submitting request...' : 'Confirm Transfer Receipt'}
+                    {submittingBooking ? 'Decrypting Receipt...' : 'Confirm Receipt Upload'}
                   </button>
                 </div>
               </div>
@@ -649,25 +677,121 @@ function BookingEngine() {
         </div>
       )}
 
-      {/* STEP 4: SUCCESS SUBMISSION PAGE */}
+      {/* STEP 4: SUCCESS SUBMISSION PAGE (FEATURING THE PREMIUM HOLOGRAPHIC ELITE HACKER PASS) */}
       {bookingStep === 'success' && selectedBus && (
         <div className="success-step-layout animate-scale-in">
-          <div className="success-card glass-card">
-            <CheckCircle2 size={64} className="success-check-icon animate-pulse-green" />
-            <h2 className="heading-lg success-title">Booking Ticket Submitted!</h2>
-            <p className="success-text">
-              Your request for seats <strong>{selectedSeats.join(', ')}</strong> on the <strong>{selectedBus.name}</strong> has been forwarded to our audit desk.
-            </p>
-            <div className="alert-notice-box">
-              <Clock size={18} className="notice-icon" />
-              <div>
-                <strong>Verification Status: Pending Approval</strong>
-                <p>Helpline administrators evaluate UPI transaction logs continuously. Your seats will turn active and locked once verified (usually takes 10-20 minutes).</p>
+          
+          <div className="success-container-centered" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem' }}>
+            
+            {/* Holographic Elite Hacker Pass Sticker */}
+            <div className="elite-pass-sticker-wrapper" style={{ width: '100%', maxWidth: '380px' }}>
+              <div className="elite-pass-sticker pending" style={{ padding: '2rem 1.50rem' }}>
+                <div className="hologram-shimmer"></div>
+                <div className="pass-watermark-stamp">PENDING</div>
+                
+                {/* Pass Header */}
+                <div className="pass-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                  <div className="pass-branding" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontFamily: 'var(--font-heading)', fontSize: '0.95rem', fontWeight: '900', color: '#fff' }}>
+                    <Terminal size={16} className="pass-logo-icon" style={{ color: '#10b981' }} />
+                    <span>CYBER<span style={{ color: '#10b981' }}>_STRIKE</span></span>
+                  </div>
+                  <div className="pass-tier" style={{ fontSize: '0.65rem', fontWeight: '800', border: '1px solid rgba(245, 158, 11, 0.4)', padding: '0.15rem 0.5rem', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.1)', color: '#fbbf24', letterSpacing: '0.5px' }}>
+                    ELITE PASS
+                  </div>
+                </div>
+
+                {/* Main Pass Content */}
+                <div className="pass-body ticket-cutout" style={{ borderTop: '1px dashed rgba(255,255,255,0.08)', borderBottom: '1px dashed rgba(255,255,255,0.08)', padding: '1.5rem 0', margin: '0 0 1.25rem 0' }}>
+                  <div className="pass-qr-row" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.25rem' }}>
+                    <div className="pass-profile-image" style={{ width: '56px', height: '56px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifycontent: 'center', color: '#64748b' }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" style={{ margin: '0 auto' }}>
+                        <path d="M18 21a6 6 0 0 0-12 0" />
+                        <circle cx="12" cy="10" r="4" />
+                        <path d="M12 2v2M4.9 4.9l1.4 1.4M2 12h2M19.1 4.9l-1.4 1.4M22 12h-2" strokeDasharray="2 2" />
+                      </svg>
+                    </div>
+                    
+                    <div className="pass-main-details" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
+                      <div className="pass-label-value" style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span className="pass-label" style={{ fontSize: '0.6rem', color: 'var(--muted)', fontWeight: '700', letterSpacing: '0.5px' }}>OPERATIVE NAME</span>
+                        <span className="pass-value highlight-cyan" style={{ fontSize: '0.95rem', fontWeight: '800', color: '#06b6d4', textShadow: '0 0 8px rgba(6,182,212,0.2)' }}>{user.name.toUpperCase()}</span>
+                      </div>
+                      <div className="pass-label-value" style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span className="pass-label" style={{ fontSize: '0.6rem', color: 'var(--muted)', fontWeight: '700', letterSpacing: '0.5px' }}>SESSION track</span>
+                        <span className="pass-value highlight-green" style={{ fontSize: '0.85rem', fontWeight: '800', color: '#10b981', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '220px' }}>{selectedBus.name}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pass-meta-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
+                    <div className="pass-meta-item" style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span className="pass-label" style={{ fontSize: '0.55rem', color: 'var(--muted)', fontWeight: '700', letterSpacing: '0.5px' }}>SECTOR AREA</span>
+                      <span className="pass-value" style={{ fontSize: '0.75rem', fontWeight: '600', color: '#cbd5e1' }}>{selectedBus.source}</span>
+                    </div>
+                    <div className="pass-meta-item" style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span className="pass-label" style={{ fontSize: '0.55rem', color: 'var(--muted)', fontWeight: '700', letterSpacing: '0.5px' }}>ARENA VENUE</span>
+                      <span className="pass-value" style={{ fontSize: '0.75rem', fontWeight: '600', color: '#cbd5e1' }}>{selectedBus.destination}</span>
+                    </div>
+                    <div className="pass-meta-item" style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span className="pass-label" style={{ fontSize: '0.55rem', color: 'var(--muted)', fontWeight: '700', letterSpacing: '0.5px' }}>ACCESS DATE</span>
+                      <span className="pass-value" style={{ fontSize: '0.75rem', fontWeight: '600', color: '#cbd5e1' }}>{date}</span>
+                    </div>
+                    <div className="pass-meta-item" style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span className="pass-label" style={{ fontSize: '0.55rem', color: 'var(--muted)', fontWeight: '700', letterSpacing: '0.5px' }}>ACCESS SLOTS</span>
+                      <span className="pass-value highlight-green" style={{ fontSize: '0.75rem', fontWeight: '800', color: '#10b981' }}>{selectedSeats.join(', ')}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pass Footer */}
+                <div className="pass-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                  <div className="pass-status-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                    <span className="pass-label" style={{ fontSize: '0.55rem', color: 'var(--muted)', fontWeight: '700', letterSpacing: '0.5px' }}>GRID ACCESS CODE</span>
+                    <span className="pass-status-badge pending" style={{ fontSize: '0.65rem', fontWeight: '800', color: '#fbbf24', textShadow: '0 0 5px rgba(245,158,11,0.2)' }}>PENDING AUDIT</span>
+                  </div>
+                  
+                  {/* Barcode */}
+                  <div className="barcode-container" style={{ margin: '0' }}>
+                    <div className="barcode-lines" style={{ height: '24px', width: '90px' }}>
+                      <span style={{ width: '2px', background: '#94a3b8' }}></span>
+                      <span style={{ width: '3px', background: '#94a3b8' }}></span>
+                      <span style={{ width: '1px', background: '#94a3b8' }}></span>
+                      <span style={{ width: '2px', background: '#94a3b8' }}></span>
+                      <span style={{ width: '1px', background: '#94a3b8' }}></span>
+                      <span style={{ width: '5px', background: '#94a3b8' }}></span>
+                      <span style={{ width: '2px', background: '#94a3b8' }}></span>
+                      <span style={{ width: '3px', background: '#94a3b8' }}></span>
+                      <span style={{ width: '1px', background: '#94a3b8' }}></span>
+                      <span style={{ width: '2px', background: '#94a3b8' }}></span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <button onClick={() => router.push('/profile')} className="btn btn-primary go-profile-btn">
-              Go to Profile / Booking Logs
-            </button>
+
+            {/* Success details card */}
+            <div className="success-card glass-card" style={{ padding: '2.5rem 2rem', border: '1px solid var(--border)', background: 'rgba(8, 12, 22, 0.8)' }}>
+              <CheckCircle2 size={48} className="success-check-icon" style={{ color: '#10b981' }} />
+              <h2 className="heading-md success-title" style={{ color: 'white' }}>PASS RESERVATION SUBMITTED!</h2>
+              <p className="success-text" style={{ fontSize: '0.95rem', color: 'var(--muted)', lineHeight: '1.6' }}>
+                Your ticket credentials for nodes <strong>{selectedSeats.join(', ')}</strong> on the <strong>{selectedBus.name}</strong> has been logged to the audit mainframe database.
+              </p>
+              
+              <div className="alert-notice-box" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.2)', color: '#fbbf24', padding: '1rem', width: '100%' }}>
+                <Clock size={16} className="notice-icon" />
+                <div>
+                  <strong>Audit Status: PENDING DECISION</strong>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '0.25rem', lineHeight: '1.4' }}>
+                    Network moderators cross-reference UPI logs continuously. Once verified, your status stamp will update to GRANTED, enabling mainframe terminal access (takes 10-20 mins).
+                  </p>
+                </div>
+              </div>
+              
+              <button onClick={() => router.push('/profile')} className="btn btn-primary go-profile-btn">
+                GO TO OPERATIVE PROFILE
+              </button>
+            </div>
+
           </div>
         </div>
       )}
@@ -682,8 +806,9 @@ function BookingEngine() {
         .loading-fallback {
           padding: 10rem 0;
           text-align: center;
+          font-family: var(--font-mono);
           font-weight: 500;
-          color: var(--muted);
+          color: var(--primary);
         }
 
         /* Timeline */
@@ -705,7 +830,7 @@ function BookingEngine() {
         }
 
         .step-node.active, .step-node.completed {
-          color: var(--primary-dark);
+          color: var(--primary);
           cursor: pointer;
         }
 
@@ -730,14 +855,15 @@ function BookingEngine() {
 
         .step-node.active .step-num {
           background: var(--primary);
-          color: white;
+          color: #022c22;
           border-color: var(--primary);
+          box-shadow: 0 0 10px var(--primary-glow);
         }
 
         .step-node.completed .step-num {
           background: var(--primary-light);
-          color: var(--primary-dark);
-          border-color: var(--primary-dark);
+          color: var(--primary);
+          border-color: var(--primary);
         }
 
         .timeline-arrow {
@@ -745,8 +871,9 @@ function BookingEngine() {
         }
 
         .error-alert {
-          background: #fee2e2;
-          color: #b91c1c;
+          background: rgba(239, 68, 68, 0.1);
+          color: #fca5a5;
+          border: 1px solid rgba(239, 68, 68, 0.25);
           padding: 0.75rem 1rem;
           border-radius: var(--radius-md);
           margin-bottom: 2rem;
@@ -759,7 +886,7 @@ function BookingEngine() {
 
         /* Search Layout */
         .search-bar-widget {
-          background: white;
+          background: rgba(8, 12, 22, 0.8);
           padding: 1.5rem;
           border-radius: var(--radius-xl);
           border: 1px solid var(--border);
@@ -788,8 +915,8 @@ function BookingEngine() {
 
         .inline-label {
           font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--muted);
+          font-weight: 700;
+          color: var(--primary);
           text-transform: uppercase;
           letter-spacing: 0.5px;
         }
@@ -797,12 +924,18 @@ function BookingEngine() {
         .select-control, .date-control {
           background: var(--input);
           border-color: var(--border);
+          color: white;
           font-weight: 600;
           cursor: pointer;
         }
 
+        .select-control option {
+          background-color: #0c111d;
+          color: white;
+        }
+
         .search-submit-btn {
-          height: 43px;
+          height: 44px;
           padding: 0 1.5rem;
           font-size: 0.95rem;
         }
@@ -830,7 +963,7 @@ function BookingEngine() {
         .empty-results, .welcome-search-callout {
           padding: 4rem 2rem;
           text-align: center;
-          background: white;
+          background: rgba(8, 12, 22, 0.6);
           border: 1px solid var(--border);
           border-radius: var(--radius-xl);
           display: flex;
@@ -857,12 +990,12 @@ function BookingEngine() {
 
         .list-title {
           font-weight: 700;
-          color: var(--primary-dark);
+          color: var(--primary);
           margin-bottom: 0.5rem;
         }
 
         .bus-card-item {
-          background: white;
+          background: rgba(8, 12, 22, 0.75);
           border: 1px solid var(--border);
           border-radius: var(--radius-xl);
           padding: 1.5rem;
@@ -872,7 +1005,7 @@ function BookingEngine() {
 
         .bus-card-item:hover {
           border-color: var(--primary);
-          box-shadow: var(--shadow-md);
+          box-shadow: 0 5px 15px rgba(16, 185, 129, 0.15);
         }
 
         .bus-card-main {
@@ -900,7 +1033,7 @@ function BookingEngine() {
           font-family: var(--font-heading);
           font-size: 1.15rem;
           font-weight: 700;
-          color: var(--foreground);
+          color: white;
         }
 
         .bus-type-badge {
@@ -911,6 +1044,7 @@ function BookingEngine() {
           padding: 0.125rem 0.5rem;
           border-radius: var(--radius-sm);
           align-self: flex-start;
+          border: 1px solid var(--border);
         }
 
         /* Bus Timeline */
@@ -924,7 +1058,7 @@ function BookingEngine() {
         .timeline-city {
           font-weight: 700;
           font-size: 0.95rem;
-          color: var(--foreground);
+          color: white;
         }
 
         .timeline-connector {
@@ -940,7 +1074,7 @@ function BookingEngine() {
           font-size: 0.75rem;
           color: var(--muted);
           font-weight: 600;
-          background: white;
+          background: #080c16;
           padding: 0 0.5rem;
           position: relative;
           z-index: 2;
@@ -997,13 +1131,13 @@ function BookingEngine() {
 
         @media (min-width: 992px) {
           .seats-step-layout {
-            grid-template-columns: 0.8fr 1.2fr;
+            grid-template-columns: 1.1fr 0.9fr;
           }
         }
 
         .sidebar-card {
           padding: 2rem;
-          background: white;
+          background: rgba(8, 12, 22, 0.85);
           border-radius: var(--radius-2xl);
           border: 1px solid var(--border);
           box-shadow: var(--shadow-md);
@@ -1011,7 +1145,7 @@ function BookingEngine() {
 
         .sidebar-title {
           font-weight: 700;
-          color: var(--primary-dark);
+          color: white;
           margin-bottom: 1.5rem;
         }
 
@@ -1030,7 +1164,7 @@ function BookingEngine() {
 
         .summary-val {
           font-weight: 600;
-          color: var(--foreground);
+          color: white;
         }
 
         .time-chips-grid {
@@ -1053,13 +1187,15 @@ function BookingEngine() {
         }
 
         .time-chip:hover {
-          background: #e2e8f0;
+          background: var(--border);
+          color: white;
         }
 
         .time-chip.active {
           background: var(--primary);
-          color: white;
+          color: #022c22;
           border-color: var(--primary);
+          box-shadow: 0 0 10px var(--primary-glow);
         }
 
         .seat-stats-detail {
@@ -1091,10 +1227,10 @@ function BookingEngine() {
           font-size: 0.75rem;
           font-weight: 700;
           background: var(--primary-light);
-          color: var(--primary-dark);
+          color: var(--primary);
           padding: 0.25rem 0.5rem;
           border-radius: var(--radius-sm);
-          border: 1px solid rgba(16, 185, 129, 0.2);
+          border: 1px solid rgba(16, 185, 129, 0.3);
         }
 
         .total-price-row {
@@ -1127,7 +1263,7 @@ function BookingEngine() {
 
         /* Seating Display Grid */
         .seats-map-display {
-          background: white;
+          background: rgba(8, 12, 22, 0.75);
           padding: 2.5rem 2rem;
           border-radius: var(--radius-2xl);
           border: 1px solid var(--border);
@@ -1157,26 +1293,26 @@ function BookingEngine() {
           border: 1px solid var(--border);
         }
 
-        .available-box { background: white; border-color: var(--muted-light); }
+        .available-box { background: rgba(3, 7, 18, 0.6); border-color: var(--muted-light); }
         .selected-box { background: var(--primary); border-color: var(--primary); }
-        .booked-box { background: #cbd5e1; border-color: #cbd5e1; }
+        .booked-box { background: #1e2937; border-color: #374151; }
 
         /* Cabin frame */
         .bus-cabin-frame {
-          border: 4px solid #475569;
+          border: 3px solid var(--border);
           border-radius: 24px 24px 12px 12px;
-          background: #f8fafc;
+          background: rgba(3, 7, 18, 0.6);
           padding: 2rem 1.25rem;
           width: 100%;
           max-width: 320px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), inset 0 2px 8px rgba(0,0,0,0.05);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 2px 8px rgba(0,0,0,0.4);
         }
 
         .bus-front-cabin {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          border-bottom: 3px double #cbd5e1;
+          border-bottom: 2px dashed var(--border);
           padding-bottom: 1.5rem;
           margin-bottom: 2rem;
           position: relative;
@@ -1194,12 +1330,12 @@ function BookingEngine() {
           width: 34px;
           height: 34px;
           border-radius: 50%;
-          border: 3px solid #334155;
+          border: 3px solid var(--border);
           position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #f1f5f9;
+          background: var(--input);
         }
 
         .wheel-rim {
@@ -1210,7 +1346,7 @@ function BookingEngine() {
 
         .wheel-spoke {
           position: absolute;
-          background: #334155;
+          background: var(--border);
         }
 
         .spoke-h {
@@ -1232,7 +1368,7 @@ function BookingEngine() {
           position: absolute;
           width: 8px;
           height: 8px;
-          background: #334155;
+          background: var(--primary);
           border-radius: 50%;
           top: 50%;
           left: 50%;
@@ -1240,14 +1376,13 @@ function BookingEngine() {
         }
 
         .driver-suite-seat {
-          font-size: 0.7rem;
+          font-size: 0.65rem;
           font-weight: 700;
-          color: #64748b;
+          color: var(--primary);
           padding: 0.35rem 0.6rem;
-          border: 2px solid #e2e8f0;
-          background: #ffffff;
+          border: 1px solid rgba(16, 185, 129, 0.25);
+          background: var(--primary-light);
           border-radius: 6px;
-          box-shadow: var(--shadow-sm);
         }
 
         .cabin-label {
@@ -1294,15 +1429,14 @@ function BookingEngine() {
           transform: translateX(-50%);
           width: 2px;
           background: repeating-linear-gradient(to bottom, #10b981 0, #10b981 6px, transparent 6px, transparent 12px);
-          opacity: 0.3;
+          opacity: 0.2;
         }
 
-        /* Bus Seat Button styling (leather look) */
         .seat-button {
           width: 44px;
           height: 44px;
-          background: white;
-          border: 1px solid #cbd5e1;
+          background: rgba(12, 17, 29, 0.8);
+          border: 1px solid var(--border);
           border-radius: 8px;
           position: relative;
           cursor: pointer;
@@ -1310,10 +1444,9 @@ function BookingEngine() {
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+          color: white;
         }
 
-        /* Headrest mockups */
         .seat-button::before {
           content: '';
           position: absolute;
@@ -1322,8 +1455,8 @@ function BookingEngine() {
           transform: translateX(-50%);
           width: 22px;
           height: 6px;
-          background: #e2e8f0;
-          border: 1px solid #cbd5e1;
+          background: rgba(31, 41, 55, 0.8);
+          border: 1px solid var(--border);
           border-radius: 3px;
           transition: all var(--transition-fast);
         }
@@ -1331,14 +1464,14 @@ function BookingEngine() {
         .seat-button:hover:not(:disabled) {
           border-color: var(--primary);
           transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(16, 185, 129, 0.15);
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
         }
 
         .seat-button.selected {
           background: var(--primary);
           border-color: var(--primary);
-          color: white;
-          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+          color: #022c22;
+          box-shadow: 0 0 15px var(--primary-glow);
         }
 
         .seat-button.selected::before {
@@ -1347,16 +1480,16 @@ function BookingEngine() {
         }
 
         .seat-button.booked {
-          background: #cbd5e1;
-          border-color: #cbd5e1;
-          color: #94a3b8;
+          background: #111827;
+          border-color: #1f2937;
+          color: #374151;
           cursor: not-allowed;
           box-shadow: none;
         }
 
         .seat-button.booked::before {
-          background: #94a3b8;
-          border-color: #94a3b8;
+          background: #1f2937;
+          border-color: #1f2937;
         }
 
         .seat-number {
@@ -1372,7 +1505,7 @@ function BookingEngine() {
           right: 4px;
           height: 18px;
           border-radius: 4px;
-          background: rgba(0, 0, 0, 0.03);
+          background: rgba(0, 0, 0, 0.2);
           z-index: 1;
         }
 
@@ -1384,20 +1517,20 @@ function BookingEngine() {
           position: absolute;
           width: 3px;
           height: 28px;
-          background: rgba(0, 0, 0, 0.05);
+          background: rgba(255, 255, 255, 0.05);
           top: 8px;
           border-radius: 1px;
         }
 
         .seat-button.selected .seat-armrest {
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(0, 0, 0, 0.15);
         }
 
         .arm-l { left: 2px; }
         .arm-r { right: 2px; }
 
         .bus-back-cabin {
-          border-top: 3px double #cbd5e1;
+          border-top: 2px dashed var(--border);
           padding-top: 1.5rem;
           margin-top: 2rem;
           text-align: center;
@@ -1416,7 +1549,7 @@ function BookingEngine() {
         .payment-card {
           max-width: 800px;
           margin: 0 auto;
-          background: white;
+          background: rgba(8, 12, 22, 0.85);
           padding: 2.5rem;
           border-radius: var(--radius-2xl);
           border: 1px solid var(--border);
@@ -1425,7 +1558,6 @@ function BookingEngine() {
 
         .payment-title {
           font-weight: 700;
-          color: var(--primary-dark);
           text-align: center;
           margin-bottom: 0.5rem;
         }
@@ -1479,7 +1611,7 @@ function BookingEngine() {
         .qr-price-badge {
           margin-top: -12px;
           background: var(--primary);
-          color: white;
+          color: #022c22;
           font-weight: 800;
           font-size: 0.95rem;
           padding: 0.375rem 0.875rem;
@@ -1506,13 +1638,13 @@ function BookingEngine() {
           font-family: var(--font-heading);
           font-size: 2.2rem;
           font-weight: 800;
-          color: var(--primary-dark);
+          color: var(--primary);
           line-height: 1.1;
         }
 
         .pay-account {
           font-size: 0.85rem;
-          color: var(--foreground);
+          color: white;
           font-weight: 700;
           margin-top: 0.25rem;
         }
@@ -1526,10 +1658,11 @@ function BookingEngine() {
           font-weight: 500;
           margin-top: 0.25rem;
           word-break: break-all;
+          border: 1px solid var(--border);
         }
 
         .booking-info-recap {
-          background: var(--background);
+          background: var(--input);
           padding: 1.25rem;
           border-radius: var(--radius-xl);
           border: 1px solid var(--border);
@@ -1537,7 +1670,7 @@ function BookingEngine() {
         }
 
         .booking-info-recap h4 {
-          color: var(--primary-dark);
+          color: white;
           font-weight: 700;
           margin-bottom: 0.75rem;
         }
@@ -1559,7 +1692,7 @@ function BookingEngine() {
         }
 
         .recap-row strong {
-          color: var(--foreground);
+          color: white;
         }
 
         .uploader-container {
@@ -1570,7 +1703,7 @@ function BookingEngine() {
         }
 
         .uploader-box {
-          border: 2px dashed var(--muted-light);
+          border: 2px dashed var(--border);
           border-radius: var(--radius-xl);
           padding: 2rem 1rem;
           text-align: center;
@@ -1580,12 +1713,12 @@ function BookingEngine() {
           flex-direction: column;
           align-items: center;
           gap: 0.75rem;
-          background: var(--background);
+          background: var(--input);
         }
 
         .uploader-box:hover {
           border-color: var(--primary);
-          background: var(--primary-light);
+          background: rgba(16, 185, 129, 0.03);
         }
 
         .hidden-file-input {
@@ -1610,7 +1743,7 @@ function BookingEngine() {
         .upload-title {
           font-weight: 600;
           font-size: 0.95rem;
-          color: var(--foreground);
+          color: white;
         }
 
         .upload-sub {
@@ -1620,7 +1753,7 @@ function BookingEngine() {
 
         .file-success {
           font-weight: 700;
-          color: var(--primary-dark);
+          color: var(--primary);
           font-size: 0.95rem;
         }
 
@@ -1639,7 +1772,7 @@ function BookingEngine() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #f8fafc;
+          background: var(--input);
         }
 
         .screenshot-preview-thumb img {
@@ -1658,46 +1791,20 @@ function BookingEngine() {
           margin: 4rem auto;
         }
 
-        .success-card {
-          background: white;
-          padding: 4rem 2rem;
-          text-align: center;
-          border: 1px solid var(--border);
-          border-radius: var(--radius-2xl);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 1.5rem;
-          box-shadow: var(--shadow-xl);
-        }
-
         .success-check-icon {
           color: var(--primary);
         }
 
         .success-title {
           font-weight: 800;
-          color: var(--primary-dark);
+          color: white;
         }
 
         .success-text {
-          color: var(--foreground);
+          color: var(--muted);
           line-height: 1.6;
           font-size: 1.05rem;
           max-width: 450px;
-        }
-
-        .alert-notice-box {
-          background: #fef3c7;
-          border: 1px solid #fde68a;
-          color: #92400e;
-          padding: 1.25rem;
-          border-radius: var(--radius-xl);
-          font-size: 0.875rem;
-          text-align: left;
-          display: flex;
-          gap: 0.75rem;
-          line-height: 1.5;
         }
 
         .notice-icon {
