@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { MapPin, Calendar, Search, ShieldCheck, CheckCircle2, ChevronRight, Upload, AlertCircle, Clock } from 'lucide-react';
+import { MapPin, Calendar, Search, ShieldCheck, CheckCircle2, ChevronRight, Upload, AlertCircle, Clock, Lock } from 'lucide-react';
 
 export default function BookPage() {
   return (
@@ -44,6 +44,7 @@ function BookingEngine() {
   const [screenshotName, setScreenshotName] = useState<string>('');
   const [submittingBooking, setSubmittingBooking] = useState(false);
   const [paymentError, setPaymentError] = useState('');
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -110,7 +111,41 @@ function BookingEngine() {
     setSelectedSeats([]);
   };
 
+  const getActiveSessionUser = () => {
+    if (user?.id) return user;
+
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) return null;
+
+    try {
+      const parsed = JSON.parse(storedUser);
+      if (parsed?.id) {
+        setUser(parsed);
+        return parsed;
+      }
+    } catch (e) {
+      localStorage.removeItem('user');
+    }
+
+    return null;
+  };
+
+  const requireBookingAuth = () => {
+    if (getActiveSessionUser()) return true;
+
+    setPaymentError('Authentication Required: Please login to your Success India account to book seminar seats.');
+    setAuthModalOpen(true);
+    return false;
+  };
+
+  const redirectToLoginWithCallback = () => {
+    const callbackUrl = `${window.location.pathname}${window.location.search}`;
+    setAuthModalOpen(false);
+    router.push(`/profile?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+  };
+
   const handleSeatClick = (seatId: string) => {
+    if (!requireBookingAuth()) return;
     if (bookedSeats.includes(seatId)) return;
 
     if (selectedSeats.includes(seatId)) {
@@ -140,6 +175,13 @@ function BookingEngine() {
   };
 
   const submitBookingRequest = async () => {
+    const sessionUser = getActiveSessionUser();
+    if (!sessionUser) {
+      setPaymentError('Authentication Required: Please login to your Success India account to book seminar seats.');
+      setAuthModalOpen(true);
+      return;
+    }
+
     if (!screenshot) {
       setPaymentError('Please upload your UPI payment receipt screenshot before verification.');
       return;
@@ -166,7 +208,7 @@ function BookingEngine() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user.id,
+          'x-user-id': sessionUser.id,
         },
         body: JSON.stringify(payload),
       });
@@ -197,47 +239,6 @@ function BookingEngine() {
   const eventSeats = Array.from({ length: 60 }, (_, index) => `S${index + 1}`);
 
   const totalPrice = selectedSeats.length * (selectedBus?.price || 0);
-
-  // Enforce member login
-  if (!user) {
-    return (
-      <div className="guest-booking-container container animate-slide-up">
-        <div className="guest-card glass-card">
-          <AlertCircle size={48} className="guest-icon animate-bounce" />
-          <h2 className="heading-md">Sign In Required</h2>
-          <p>Please sign in to reserve seminar seats and complete screenshot verification.</p>
-          <button onClick={() => router.push('/profile')} className="btn btn-primary">
-            Sign In / Create Account
-          </button>
-        </div>
-        <style jsx>{`
-          .guest-booking-container {
-            max-width: 500px;
-            padding: 8rem 1.5rem;
-          }
-          .guest-card {
-            background: white;
-            padding: 3rem 2rem;
-            border-radius: var(--radius-2xl);
-            border: 1px solid var(--border);
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1.25rem;
-            box-shadow: var(--shadow-xl);
-          }
-          .guest-icon {
-            color: var(--warning);
-          }
-          .guest-card p {
-            color: var(--muted);
-            line-height: 1.6;
-          }
-        `}</style>
-      </div>
-    );
-  }
 
   return (
     <div className="booking-page container animate-fade-in">
@@ -454,6 +455,12 @@ function BookingEngine() {
               <div className="state-content summary-state animate-fade-in">
                 <span className="panel-kicker">Seat Summary</span>
                 <h2 className="heading-md">Review Your Reservation</h2>
+                {!user && (
+                  <div className="auth-hint-badge">
+                    <Lock size={14} />
+                    <span>Log in to reserve your seat</span>
+                  </div>
+                )}
                 <div className="summary-box">
                   <span className="summary-label">Selected Seats</span>
                   <div className="selected-seats-list">
@@ -466,8 +473,13 @@ function BookingEngine() {
                   <span>Total Fare</span>
                   <strong>₹{totalPrice}</strong>
                 </div>
-                <button onClick={() => setBookingStep('payment')} className="btn btn-primary state-primary-btn">
-                  Proceed to UPI Payment
+                <button
+                  onClick={() => {
+                    if (requireBookingAuth()) setBookingStep('payment');
+                  }}
+                  className="btn btn-primary state-primary-btn"
+                >
+                  {!user && <Lock size={16} />} Proceed to UPI Payment
                 </button>
               </div>
             )}
@@ -830,6 +842,26 @@ function BookingEngine() {
             <button onClick={() => router.push('/profile')} className="btn btn-primary go-profile-btn">
               Go to Profile / Booking Logs
             </button>
+          </div>
+        </div>
+      )}
+
+      {authModalOpen && (
+        <div className="auth-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+          <div className="auth-modal-card animate-scale-in">
+            <div className="auth-modal-icon">
+              <Lock size={28} />
+            </div>
+            <h2 id="auth-modal-title" className="heading-md">Authentication Required</h2>
+            <p>Please login to your Success India account to book seminar seats.</p>
+            <div className="auth-modal-actions">
+              <button onClick={redirectToLoginWithCallback} className="btn btn-secondary">
+                Close
+              </button>
+              <button onClick={redirectToLoginWithCallback} className="btn btn-primary">
+                Login to Continue
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1395,6 +1427,20 @@ function BookingEngine() {
           padding: 1rem;
         }
 
+        .auth-hint-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          align-self: flex-start;
+          color: #92400e;
+          background: #fef3c7;
+          border: 1px solid #fde68a;
+          border-radius: 999px;
+          padding: 0.35rem 0.7rem;
+          font-size: 0.82rem;
+          font-weight: 800;
+        }
+
         .summary-total-row {
           display: flex;
           align-items: center;
@@ -1529,6 +1575,61 @@ function BookingEngine() {
           padding: 0.35rem 0.65rem;
           font-size: 0.78rem;
           font-weight: 800;
+        }
+
+        .auth-modal-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1.25rem;
+          background: rgba(15, 23, 42, 0.58);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+        }
+
+        .auth-modal-card {
+          width: 100%;
+          max-width: 430px;
+          background: white;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-xl);
+          box-shadow: var(--shadow-xl);
+          padding: 2rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+          text-align: center;
+        }
+
+        .auth-modal-icon {
+          width: 58px;
+          height: 58px;
+          border-radius: 50%;
+          background: #fef3c7;
+          color: #92400e;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .auth-modal-card p {
+          color: var(--muted);
+          line-height: 1.6;
+        }
+
+        .auth-modal-actions {
+          display: flex;
+          gap: 0.75rem;
+          width: 100%;
+          margin-top: 0.25rem;
+        }
+
+        .auth-modal-actions .btn {
+          flex: 1;
         }
 
         /* STEP 2 STYLES */
