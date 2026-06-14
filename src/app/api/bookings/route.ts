@@ -73,9 +73,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create booking
+    // Create booking. Prefer the new seminar columns, but fall back to the
+    // legacy buses/bookings shape if the deployed database has not been migrated.
     const newId = `bk_${Date.now()}`;
-    const { data: newBooking, error: insertError } = await supabaseAdmin
+    let { data: newBooking, error: insertError } = await supabaseAdmin
       .from('bookings')
       .insert({
         id: newId,
@@ -96,6 +97,53 @@ export async function POST(request: Request) {
       })
       .select('*')
       .single();
+
+    if (insertError || !newBooking) {
+      console.error('Modern seminar booking insert failed, retrying legacy-compatible insert:', insertError);
+
+      const { error: legacyEventError } = await supabaseAdmin
+        .from('buses')
+        .upsert(
+          {
+            id: resolvedSeminarId,
+            name: resolvedSeminarName,
+            type: destination,
+            source,
+            destination,
+            price: Number(totalPrice) || 0,
+            duration: 'Seminar session',
+            times: [time],
+          },
+          { onConflict: 'id' }
+        );
+
+      if (legacyEventError) {
+        console.error('Legacy seminar compatibility upsert error:', legacyEventError);
+      }
+
+      const legacyInsert = await supabaseAdmin
+        .from('bookings')
+        .insert({
+          id: newId,
+          user_id: userId,
+          bus_id: resolvedSeminarId,
+          bus_name: resolvedSeminarName,
+          source,
+          destination,
+          date,
+          time,
+          seats,
+          total_price: totalPrice,
+          screenshot,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+        })
+        .select('*')
+        .single();
+
+      newBooking = legacyInsert.data;
+      insertError = legacyInsert.error;
+    }
 
     if (insertError || !newBooking) {
       console.error('Booking insert error:', insertError);
