@@ -4,9 +4,14 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 export const metadata: Metadata = {
-  title: 'Success India | Seminar & Chapter Meetup Booking Portal',
+  title: 'Success India - Official Seminar & Leadership Portal',
   description: 'Reserve seats for Success India leadership development seminars, recruitment training, weekly strategy sessions, and local Tamil Nadu chapter meetups.',
   keywords: 'Success India, seminar booking, leadership development, chapter meetups, Tamil Nadu, Chromepet Chennai, direct selling workshops',
+  openGraph: {
+    title: 'Success India - Official Seminar & Leadership Portal',
+    description: 'Official seminar registration, leadership development, and chapter meetup portal for Success India.',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({

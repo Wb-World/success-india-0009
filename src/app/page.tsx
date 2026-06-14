@@ -43,15 +43,15 @@ type SeminarEvent = {
   price: number;
   totalSeats?: number;
   name?: string;
-  source?: string;
-  destination?: string;
+  legacySource?: string;
+  legacyDestination?: string;
 };
 
 export default function Home() {
   const router = useRouter();
   const [events, setEvents] = useState<SeminarEvent[]>([]);
-  const [source, setSource] = useState(fallbackLocations[0]);
-  const [destination, setDestination] = useState(fallbackEventCategories[0]);
+  const [venue, setVenue] = useState(fallbackLocations[0]);
+  const [seminar, setSeminar] = useState(fallbackEventCategories[0]);
   const [selectedEventId, setSelectedEventId] = useState('');
   const [date, setDate] = useState(() => {
     const d = new Date();
@@ -66,14 +66,18 @@ export default function Home() {
         const data = await res.json();
         if (!res.ok) return;
 
-        const fetchedEvents: SeminarEvent[] = data.events || [];
+        const fetchedEvents: SeminarEvent[] = (data.events || []).map((event: any) => ({
+          ...event,
+          legacySource: event.venue || event.source,
+          legacyDestination: event.title || event.destination,
+        }));
         setEvents(fetchedEvents);
 
         if (fetchedEvents.length > 0) {
           const firstEvent = fetchedEvents[0];
           setSelectedEventId(firstEvent.id);
-          setSource(firstEvent.venue || firstEvent.source || fallbackLocations[0]);
-          setDestination(firstEvent.title || firstEvent.name || fallbackEventCategories[0]);
+          setVenue(firstEvent.venue || firstEvent.legacySource || fallbackLocations[0]);
+          setSeminar(firstEvent.title || firstEvent.name || fallbackEventCategories[0]);
           if (firstEvent.eventDate) setDate(firstEvent.eventDate);
         }
       } catch (error) {
@@ -85,11 +89,11 @@ export default function Home() {
   }, []);
 
   const eventLocations = events.length
-    ? Array.from(new Set(events.map((event) => event.venue || event.source).filter(Boolean))) as string[]
+    ? Array.from(new Set(events.map((event) => event.venue || event.legacySource).filter(Boolean))) as string[]
     : fallbackLocations;
 
   const visibleEvents = events.length
-    ? events.filter((event) => (event.venue || event.source) === source)
+    ? events.filter((event) => (event.venue || event.legacySource) === venue)
     : [];
 
   const eventOptions = visibleEvents.length ? visibleEvents : events;
@@ -98,22 +102,22 @@ export default function Home() {
     const event = events.find((item) => item.id === eventIdOrTitle);
     if (!event) {
       setSelectedEventId('');
-      setDestination(eventIdOrTitle);
+      setSeminar(eventIdOrTitle);
       return;
     }
 
     setSelectedEventId(event.id);
-    setSource(event.venue || event.source || source);
-    setDestination(event.title || event.name || destination);
+    setVenue(event.venue || event.legacySource || venue);
+    setSeminar(event.title || event.name || seminar);
     if (event.eventDate) setDate(event.eventDate);
   };
 
   const handleLocationSelect = (location: string) => {
-    setSource(location);
-    const firstMatchingEvent = events.find((event) => (event.venue || event.source) === location);
+    setVenue(location);
+    const firstMatchingEvent = events.find((event) => (event.venue || event.legacySource) === location);
     if (firstMatchingEvent) {
       setSelectedEventId(firstMatchingEvent.id);
-      setDestination(firstMatchingEvent.title || firstMatchingEvent.name || destination);
+      setSeminar(firstMatchingEvent.title || firstMatchingEvent.name || seminar);
       if (firstMatchingEvent.eventDate) setDate(firstMatchingEvent.eventDate);
     } else {
       setSelectedEventId('');
@@ -123,7 +127,7 @@ export default function Home() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const eventParam = selectedEventId ? `&eventId=${encodeURIComponent(selectedEventId)}` : '';
-    router.push(`/book?source=${encodeURIComponent(source)}&destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(date)}${eventParam}`);
+    router.push(`/book?venue=${encodeURIComponent(venue)}&seminar=${encodeURIComponent(seminar)}&date=${encodeURIComponent(date)}${eventParam}`);
   };
 
   return (
@@ -171,7 +175,7 @@ export default function Home() {
                     <MapPin size={14} className="input-label-icon" /> Location Selection
                   </label>
                   <select
-                    value={source}
+                    value={venue}
                     onChange={(e) => handleLocationSelect(e.target.value)}
                     className="form-control select-field"
                   >
@@ -186,7 +190,7 @@ export default function Home() {
                     <BriefcaseBusiness size={14} className="input-label-icon" /> Seminar Event
                   </label>
                   <select
-                    value={selectedEventId || destination}
+                    value={selectedEventId || seminar}
                     onChange={(e) => handleEventSelect(e.target.value)}
                     className="form-control select-field"
                   >
@@ -221,7 +225,7 @@ export default function Home() {
                 </button>
               </form>
               <p className="registration-note">
-                Program details are based on the Success Team operations described in the provided source text.
+                Program details are based on the Success Team operations described in the provided business context.
               </p>
             </div>
           </div>
@@ -264,7 +268,7 @@ export default function Home() {
             </div>
             <h4 className="heading-sm feature-title">Chapter Networking</h4>
             <p className="feature-desc">
-              Local meetup access for chapter networks, including BOSS Agro Hub style chapter gatherings noted in the source material.
+              Local meetup access for chapter networks, including BOSS Agro Hub style chapter gatherings noted in the business context.
             </p>
           </div>
         </div>
@@ -276,7 +280,7 @@ export default function Home() {
             <span className="section-eyebrow">Trust & Due Diligence</span>
             <h2 className="heading-lg">Clear information before every registration</h2>
             <p>
-              The source text notes mixed consumer reviews and recommends careful due diligence. This portal presents seminar categories, locations, dates, and official resources plainly so attendees can review details before reserving seats.
+              The provided context notes mixed consumer reviews and recommends careful due diligence. This portal presents seminar categories, locations, dates, and official resources plainly so attendees can review details before reserving seats.
             </p>
           </div>
           <div className="trust-list">
@@ -300,26 +304,26 @@ export default function Home() {
         <div className="section-header">
           <span className="section-eyebrow">Popular Seminar Tracks</span>
           <h2 className="heading-lg">Reserve seats for the next Success India session</h2>
-          <p className="section-subtitle">Quick access to the most relevant registration paths from the source business profile.</p>
+          <p className="section-subtitle">Quick access to the most relevant registration paths from the business profile.</p>
         </div>
 
         <div className="routes-grid">
           {(events.length ? events.slice(0, 3) : fallbackEventCategories.slice(0, 3)).map((item, index) => {
             const event = typeof item === 'string' ? null : item;
             const category = event ? event.title || event.name || fallbackEventCategories[index] : String(item);
-            const location = event ? event.venue || event.source || fallbackLocations[index] : fallbackLocations[index];
+            const location = event ? event.venue || event.legacySource || fallbackLocations[index] : fallbackLocations[index];
             const eventParam = event ? `&eventId=${encodeURIComponent(event.id)}` : '';
             return (
             <div
               key={category}
-              className="route-card"
-              onClick={() => router.push(`/book?source=${encodeURIComponent(location)}&destination=${encodeURIComponent(category)}${eventParam}`)}
+              className="seminar-track-card"
+              onClick={() => router.push(`/book?venue=${encodeURIComponent(location)}&seminar=${encodeURIComponent(category)}${eventParam}`)}
             >
-              <div className="route-info">
-                <div className="route-cities">{category}</div>
-                <div className="route-details">{location} <ArrowRight size={13} /> Seat registration</div>
+              <div className="seminar-track-info">
+                <div className="seminar-track-title">{category}</div>
+                <div className="seminar-track-details">{location} <ArrowRight size={13} /> Seat registration</div>
               </div>
-              <div className="route-price-tag">
+              <div className="seminar-fee-tag">
                 <span>{event ? 'Fee' : 'Track'}</span>
                 <span className="price-num">{event ? `₹${event.price}` : `0${index + 1}`}</span>
               </div>
@@ -681,7 +685,7 @@ export default function Home() {
           }
         }
 
-        .route-card {
+        .seminar-track-card {
           background: white;
           border: 1px solid var(--border);
           border-radius: var(--radius-lg);
@@ -695,18 +699,18 @@ export default function Home() {
           gap: 1rem;
         }
 
-        .route-card:hover {
+        .seminar-track-card:hover {
           border-color: var(--primary);
           transform: translateY(-4px);
           box-shadow: var(--shadow-lg);
         }
 
-        .route-info {
+        .seminar-track-info {
           flex: 1;
           min-width: 0;
         }
 
-        .route-cities {
+        .seminar-track-title {
           font-family: var(--font-heading);
           font-size: 1.03rem;
           font-weight: 800;
@@ -714,7 +718,7 @@ export default function Home() {
           margin-bottom: 0.55rem;
         }
 
-        .route-details {
+        .seminar-track-details {
           font-size: 0.85rem;
           color: var(--muted);
           display: inline-flex;
@@ -722,7 +726,7 @@ export default function Home() {
           gap: 0.35rem;
         }
 
-        .route-price-tag {
+        .seminar-fee-tag {
           display: flex;
           flex-direction: column;
           align-items: flex-end;
@@ -730,7 +734,7 @@ export default function Home() {
           flex-shrink: 0;
         }
 
-        .route-price-tag span:first-child {
+        .seminar-fee-tag span:first-child {
           font-size: 0.7rem;
           color: var(--muted);
           font-weight: 700;

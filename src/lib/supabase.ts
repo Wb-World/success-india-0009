@@ -62,7 +62,7 @@ export interface DbUser {
   created_at?: string;
 }
 
-export interface DbBus {
+export interface DbSeminarCompatibilityRow {
   id: string;
   name: string;
   type: string;

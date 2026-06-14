@@ -537,9 +537,9 @@ export default function Profile() {
                           </span>
                         </td>
                         <td>
-                          <div className="route-cell">
-                            <span className="route-cities">{booking.source} &rarr; {booking.destination}</span>
-                            <span className="route-bus-name">{booking.busName}</span>
+                          <div className="seminar-cell">
+                            <span className="seminar-venue-topic">{booking.venue || booking.source} &rarr; {booking.seminar || booking.destination}</span>
+                            <span className="seminar-program-name">{booking.seminarName || booking.eventName}</span>
                           </div>
                         </td>
                         <td>
@@ -849,17 +849,17 @@ export default function Profile() {
           margin-top: 0.125rem;
         }
 
-        .route-cell {
+        .seminar-cell {
           display: flex;
           flex-direction: column;
         }
 
-        .route-cities {
+        .seminar-venue-topic {
           font-weight: 600;
           color: var(--foreground);
         }
 
-        .route-bus-name {
+        .seminar-program-name {
           font-size: 0.75rem;
           color: var(--muted);
           margin-top: 0.125rem;
