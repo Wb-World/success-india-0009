@@ -59,6 +59,24 @@ export default function Home() {
     return d.toISOString().split('T')[0];
   });
 
+  const [showSplash, setShowSplash] = useState(true);
+  const [fadeSplash, setFadeSplash] = useState(false);
+
+  useEffect(() => {
+    const fadeTimer = setTimeout(() => {
+      setFadeSplash(true);
+    }, 1200);
+
+    const removeTimer = setTimeout(() => {
+      setShowSplash(false);
+    }, 1600);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(removeTimer);
+    };
+  }, []);
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -132,6 +150,112 @@ export default function Home() {
 
   return (
     <div className="landing-page">
+      {showSplash && (
+        <div className={`splash-loader ${fadeSplash ? 'fade-out' : ''}`}>
+          <div className="splash-content">
+            <img src="/success-india-logo.jpeg" alt="Success India" className="splash-logo" />
+            <h1 className="splash-title">
+              <span className="char char-1">S</span>
+              <span className="char char-2">u</span>
+              <span className="char char-3">c</span>
+              <span className="char char-4">c</span>
+              <span className="char char-5">e</span>
+              <span className="char char-6">s</span>
+              <span className="char char-7">s</span>
+              <span className="char space">&nbsp;</span>
+              <span className="char char-8 text-green">I</span>
+              <span className="char char-9 text-green">n</span>
+              <span className="char char-10 text-green">d</span>
+              <span className="char char-11 text-green">i</span>
+              <span className="char char-12 text-green">a</span>
+            </h1>
+          </div>
+          <style jsx>{`
+            .splash-loader {
+              position: fixed;
+              inset: 0;
+              background: #ffffff;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              z-index: 9999;
+              transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            }
+            .splash-loader.fade-out {
+              opacity: 0;
+              pointer-events: none;
+              transform: scale(1.05);
+            }
+            .splash-content {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 1.5rem;
+            }
+            .splash-logo {
+              width: 80px;
+              height: 80px;
+              border-radius: 50%;
+              object-fit: cover;
+              border: 2px solid #16a34a;
+              box-shadow: 0 10px 25px rgba(22, 163, 74, 0.2);
+              animation: logoScale 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            }
+            .splash-title {
+              font-family: 'Outfit', sans-serif;
+              font-size: 3rem;
+              font-weight: 800;
+              letter-spacing: -1px;
+              display: flex;
+              align-items: center;
+              color: #111827;
+            }
+            .text-green {
+              color: #16a34a;
+            }
+            .char {
+              display: inline-block;
+              opacity: 0;
+              transform: translateY(20px) scale(0.8);
+              animation: charReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            }
+            .char-1 { animation-delay: 0.1s; }
+            .char-2 { animation-delay: 0.15s; }
+            .char-3 { animation-delay: 0.2s; }
+            .char-4 { animation-delay: 0.25s; }
+            .char-5 { animation-delay: 0.3s; }
+            .char-6 { animation-delay: 0.35s; }
+            .char-7 { animation-delay: 0.4s; }
+            .char-8 { animation-delay: 0.5s; }
+            .char-9 { animation-delay: 0.55s; }
+            .char-10 { animation-delay: 0.6s; }
+            .char-11 { animation-delay: 0.65s; }
+            .char-12 { animation-delay: 0.7s; }
+
+            @keyframes logoScale {
+              0% {
+                transform: scale(0) rotate(-45deg);
+                opacity: 0;
+              }
+              100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+              }
+            }
+
+            @keyframes charReveal {
+              0% {
+                opacity: 0;
+                transform: translateY(20px) scale(0.8);
+              }
+              100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+              }
+            }
+          `}</style>
+        </div>
+      )}
       <section className="hero-section">
         <div className="container hero-container">
           <div className="hero-text-col animate-slide-up">
