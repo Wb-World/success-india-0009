@@ -65,17 +65,28 @@ export default function Home() {
   useEffect(() => {
     const fadeTimer = setTimeout(() => {
       setFadeSplash(true);
-    }, 1200) as any;
+    }, 2000) as any;
 
     const removeTimer = setTimeout(() => {
       setShowSplash(false);
-    }, 1600) as any;
+    }, 2500) as any;
 
     return () => {
       clearTimeout(fadeTimer);
       clearTimeout(removeTimer);
     };
   }, []);
+
+  useEffect(() => {
+    if (showSplash) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showSplash]);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -152,27 +163,32 @@ export default function Home() {
     <div className="landing-page">
       {showSplash && (
         <div className={`splash-loader ${fadeSplash ? 'fade-out' : ''}`}>
-          <div className="splash-content">
-            <img src="/success-india-logo.jpeg" alt="Success India" className="splash-logo" />
-            <h1 className="splash-title">
-              <span className="char char-1">S</span>
-              <span className="char char-2">u</span>
-              <span className="char char-3">c</span>
-              <span className="char char-4">c</span>
-              <span className="char char-5">e</span>
-              <span className="char char-6">s</span>
-              <span className="char char-7">s</span>
-              <span className="char space">&nbsp;</span>
-              <span className="char char-8 text-green">I</span>
-              <span className="char char-9 text-green">n</span>
-              <span className="char char-10 text-green">d</span>
-              <span className="char char-11 text-green">i</span>
-              <span className="char char-12 text-green">a</span>
-            </h1>
+          <div className="splash-container">
+            <div className="splash-logo-wrapper">
+              <img src="/success-india-logo.jpeg" alt="Success India Logo" className="splash-logo-large" />
+            </div>
+            <div className="splash-text-wrapper">
+              <h1 className="splash-title-large">
+                SUCCESS <span className="text-primary-green">INDIA</span>
+              </h1>
+              <div className="sparkle-container">
+                <svg className="sparkle sparkle-1" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0L14.6 9.4L24 12L14.6 14.6L12 24L9.4 14.6L0 12L9.4 9.4Z" />
+                </svg>
+                <svg className="sparkle sparkle-2" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0L14.6 9.4L24 12L14.6 14.6L12 24L9.4 14.6L0 12L9.4 9.4Z" />
+                </svg>
+                <svg className="sparkle sparkle-3" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0L14.6 9.4L24 12L14.6 14.6L12 24L9.4 14.6L0 12L9.4 9.4Z" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       )}
-      <section className="hero-section">
+      
+      <div className={`landing-page-content ${showSplash ? 'blur-active' : ''} ${fadeSplash ? 'blur-fading' : ''}`}>
+        <section className="hero-section">
         <div className="container hero-container">
           <div className="hero-text-col animate-slide-up">
             <span className="hero-tagline">
@@ -383,6 +399,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </div>
 
       <style jsx>{`
         .landing-page {
@@ -859,78 +876,121 @@ export default function Home() {
           justify-content: center;
           align-items: center;
           z-index: 9999;
-          transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+          transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1), transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
         }
         .splash-loader.fade-out {
           opacity: 0;
           pointer-events: none;
           transform: scale(1.05);
         }
-        .splash-content {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 1.5rem;
+        .landing-page-content {
+          transition: filter 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+          width: 100%;
         }
-        .splash-logo {
-          width: 80px;
-          height: 80px;
+        .landing-page-content.blur-active {
+          filter: blur(12px);
+          pointer-events: none;
+        }
+        .landing-page-content.blur-fading {
+          filter: blur(0px);
+        }
+        .splash-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 1rem;
+          animation: fadeInUpScale 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .splash-logo-wrapper {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .splash-logo-large {
+          width: 90px;
+          height: 90px;
           border-radius: 50%;
           object-fit: cover;
           border: 2px solid #16a34a;
           box-shadow: 0 10px 25px rgba(22, 163, 74, 0.2);
-          animation: logoScale 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
-        .splash-title {
-          font-family: 'Outfit', sans-serif;
-          font-size: 3rem;
-          font-weight: 800;
-          letter-spacing: -1px;
+        .splash-text-wrapper {
+          position: relative;
           display: flex;
-          align-items: center;
-          color: #111827;
+          flex-direction: column;
         }
-        .text-green {
-          color: #16a34a;
+        .splash-title-large {
+          font-family: var(--font-heading);
+          font-size: 3.8rem;
+          font-weight: 800;
+          color: #000000;
+          letter-spacing: -0.5px;
+          text-shadow: 0 0 20px rgba(22, 163, 74, 0.15), 0 0 40px rgba(22, 163, 74, 0.08);
+          margin: 0;
+          line-height: 1;
         }
-        .char {
-          display: inline-block;
+        .splash-title-large .text-primary-green {
+          color: var(--primary);
+        }
+        .sparkle-container {
+          position: absolute;
+          top: -20px;
+          right: -35px;
+          width: 45px;
+          height: 45px;
+          pointer-events: none;
+        }
+        .sparkle {
+          position: absolute;
+          color: var(--primary);
+          filter: drop-shadow(0 0 6px rgba(22, 163, 74, 0.5));
           opacity: 0;
-          transform: translateY(20px) scale(0.8);
-          animation: charReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          animation-fill-mode: both !important;
         }
-        .char-1 { animation-delay: 0.1s; }
-        .char-2 { animation-delay: 0.15s; }
-        .char-3 { animation-delay: 0.2s; }
-        .char-4 { animation-delay: 0.25s; }
-        .char-5 { animation-delay: 0.3s; }
-        .char-6 { animation-delay: 0.35s; }
-        .char-7 { animation-delay: 0.4s; }
-        .char-8 { animation-delay: 0.5s; }
-        .char-9 { animation-delay: 0.55s; }
-        .char-10 { animation-delay: 0.6s; }
-        .char-11 { animation-delay: 0.65s; }
-        .char-12 { animation-delay: 0.7s; }
-
-        @keyframes logoScale {
-          0% {
-            transform: scale(0) rotate(-45deg);
-            opacity: 0;
-          }
-          100% {
-            transform: scale(1) rotate(0deg);
-            opacity: 1;
-          }
+        .sparkle-1 {
+          width: 22px;
+          height: 22px;
+          top: 0px;
+          right: 18px;
+          animation: sparkleTwinkle 1.5s ease-in-out infinite;
+          animation-delay: 1.2s;
+        }
+        .sparkle-2 {
+          width: 14px;
+          height: 14px;
+          top: 18px;
+          right: 4px;
+          animation: sparkleTwinkle 1.8s ease-in-out infinite;
+          animation-delay: 1.4s;
+        }
+        .sparkle-3 {
+          width: 10px;
+          height: 10px;
+          top: 6px;
+          right: 0px;
+          animation: sparkleTwinkle 1.3s ease-in-out infinite;
+          animation-delay: 1.6s;
         }
 
-        @keyframes charReveal {
+        @keyframes fadeInUpScale {
           0% {
             opacity: 0;
-            transform: translateY(20px) scale(0.8);
+            transform: translateY(30px) scale(0.95);
           }
           100% {
             opacity: 1;
             transform: translateY(0) scale(1);
+          }
+        }
+
+        @keyframes sparkleTwinkle {
+          0%, 100% {
+            opacity: 0.2;
+            transform: scale(0.6) rotate(-15deg);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.2) rotate(45deg);
           }
         }
       `}</style>
