@@ -42,8 +42,10 @@ ALTER TABLE public.buses
 CREATE TABLE IF NOT EXISTS public.bookings (
   id          TEXT        PRIMARY KEY DEFAULT 'bk_' || extract(epoch from now())::bigint::text,
   user_id     TEXT        NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-  bus_id      TEXT        NOT NULL REFERENCES public.buses(id) ON DELETE CASCADE,
-  bus_name    TEXT        NOT NULL,
+  seminar_id  TEXT,
+  seminar_name TEXT,
+  bus_id      TEXT,
+  bus_name    TEXT,
   source      TEXT        NOT NULL,
   destination TEXT        NOT NULL,
   date        TEXT        NOT NULL,
@@ -55,9 +57,21 @@ CREATE TABLE IF NOT EXISTS public.bookings (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Migration for Success India seminar bookings:
+-- remove the legacy FK to public.buses so seminar IDs can be stored as plain text.
+ALTER TABLE public.bookings
+  DROP CONSTRAINT IF EXISTS bookings_bus_id_fkey;
+
+ALTER TABLE public.bookings
+  ALTER COLUMN bus_id DROP NOT NULL,
+  ALTER COLUMN bus_name DROP NOT NULL,
+  ADD COLUMN IF NOT EXISTS seminar_id TEXT,
+  ADD COLUMN IF NOT EXISTS seminar_name TEXT;
+
 -- ── 3. INDEXES ────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_bookings_user_id   ON public.bookings(user_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_bus_id    ON public.bookings(bus_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_seminar_id ON public.bookings(seminar_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_status    ON public.bookings(status);
 CREATE INDEX IF NOT EXISTS idx_bookings_date      ON public.bookings(date);
 CREATE INDEX IF NOT EXISTS idx_buses_source_dest  ON public.buses(source, destination);

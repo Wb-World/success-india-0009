@@ -145,6 +145,8 @@ function BookingEngine() {
 
     try {
       const payload = {
+        seminarId: selectedBus.id,
+        seminarName: selectedBus.name,
         busId: selectedBus.id,
         busName: selectedBus.name,
         source: selectedBus.source,

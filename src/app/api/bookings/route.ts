@@ -13,6 +13,8 @@ export async function POST(request: Request) {
     const {
       busId,
       busName,
+      seminarId,
+      seminarName,
       source,
       destination,
       date,
@@ -22,11 +24,14 @@ export async function POST(request: Request) {
       screenshot,
     } = await request.json();
 
+    const resolvedSeminarId = seminarId || busId;
+    const resolvedSeminarName = seminarName || busName;
+
     // Validation
     if (
-      !busId || !busName || !source || !destination || !date || !time ||
+      !resolvedSeminarId || !resolvedSeminarName || !source || !destination || !date || !time ||
       !seats || !Array.isArray(seats) || seats.length === 0 ||
-      !totalPrice || !screenshot
+      totalPrice === undefined || totalPrice === null || !screenshot
     ) {
       return NextResponse.json(
         { error: 'All booking fields, seats, and payment screenshot are required' },
@@ -49,7 +54,7 @@ export async function POST(request: Request) {
     const { data: conflicting, error: conflictError } = await supabaseAdmin
       .from('bookings')
       .select('seats')
-      .eq('bus_id', busId)
+      .or(`seminar_id.eq.${resolvedSeminarId},bus_id.eq.${resolvedSeminarId}`)
       .eq('date', date)
       .eq('time', time)
       .eq('status', 'approved');
@@ -75,8 +80,10 @@ export async function POST(request: Request) {
       .insert({
         id: newId,
         user_id: userId,
-        bus_id: busId,
-        bus_name: busName,
+        seminar_id: resolvedSeminarId,
+        seminar_name: resolvedSeminarName,
+        bus_id: null,
+        bus_name: null,
         source,
         destination,
         date,
@@ -102,8 +109,10 @@ export async function POST(request: Request) {
     const booking = {
       id: newBooking.id,
       userId: newBooking.user_id,
-      busId: newBooking.bus_id,
-      busName: newBooking.bus_name,
+      seminarId: newBooking.seminar_id,
+      seminarName: newBooking.seminar_name,
+      busId: newBooking.seminar_id || newBooking.bus_id,
+      busName: newBooking.seminar_name || newBooking.bus_name,
       source: newBooking.source,
       destination: newBooking.destination,
       date: newBooking.date,

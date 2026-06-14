@@ -26,8 +26,10 @@ export interface Bus {
 export interface Booking {
   id: string;
   userId: string;
-  busId: string;
-  busName: string;
+  seminarId?: string;
+  seminarName?: string;
+  busId?: string;
+  busName?: string;
   source: string;
   destination: string;
   date: string;

@@ -77,8 +77,10 @@ export interface DbBus {
 export interface DbBooking {
   id: string;
   user_id: string;
-  bus_id: string;
-  bus_name: string;
+  seminar_id?: string | null;
+  seminar_name?: string | null;
+  bus_id?: string | null;
+  bus_name?: string | null;
   source: string;
   destination: string;
   date: string;

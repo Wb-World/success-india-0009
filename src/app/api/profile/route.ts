@@ -36,8 +36,10 @@ export async function GET(request: Request) {
     const bookings = (rawBookings || []).map((bk) => ({
       id: bk.id,
       userId: bk.user_id,
-      busId: bk.bus_id,
-      busName: bk.bus_name,
+      seminarId: bk.seminar_id,
+      seminarName: bk.seminar_name,
+      busId: bk.seminar_id || bk.bus_id,
+      busName: bk.seminar_name || bk.bus_name,
       source: bk.source,
       destination: bk.destination,
       date: bk.date,
