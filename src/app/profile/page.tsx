@@ -30,6 +30,14 @@ export default function Profile() {
     fetchProfileData();
   }, []);
 
+  const getSafeCallbackUrl = () => {
+    const callbackUrl = new URLSearchParams(window.location.search).get('callbackUrl');
+    if (callbackUrl && callbackUrl.startsWith('/') && !callbackUrl.startsWith('//')) {
+      return callbackUrl;
+    }
+    return '';
+  };
+
   const fetchProfileData = async () => {
     const storedUser = localStorage.getItem('user');
     if (!storedUser) {
@@ -93,6 +101,8 @@ export default function Profile() {
           router.push('/admin/dashboard');
         } else {
           fetchProfileData();
+          const callbackUrl = getSafeCallbackUrl();
+          if (callbackUrl) router.push(callbackUrl);
         }
       } else {
         setAuthError(data.error || 'Login failed');
@@ -123,6 +133,8 @@ export default function Profile() {
         setCurrentUser(data.user);
         window.dispatchEvent(new Event('auth-change'));
         fetchProfileData();
+        const callbackUrl = getSafeCallbackUrl();
+        if (callbackUrl) router.push(callbackUrl);
       } else {
         setAuthError(data.error || 'Registration failed');
       }
