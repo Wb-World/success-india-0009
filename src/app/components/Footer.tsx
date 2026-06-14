@@ -137,10 +137,10 @@ export default function Footer() {
 
       <style jsx>{`
         .site-footer {
-          background: #f0fdf4;
-          color: #374151;
+          background: #16a34a;
+          color: #ffffff;
           padding: 4.5rem 0 1.5rem 0;
-          border-top: 4px solid var(--primary);
+          border-top: 4px solid #15803d;
           font-size: 0.9rem;
         }
 
@@ -171,7 +171,6 @@ export default function Footer() {
           font-family: var(--font-heading);
           font-size: 1.5rem;
           font-weight: 800;
-          color: var(--primary-dark);
           white-space: nowrap;
         }
         .footer-logo > span {
@@ -186,13 +185,13 @@ export default function Footer() {
           height: 34px;
           border-radius: 50%;
           object-fit: cover;
-          border: 1px solid rgba(22, 163, 74, 0.24);
+          border: 2px solid rgba(255,255,255,0.5);
           flex-shrink: 0;
         }
 
         .footer-desc {
           line-height: 1.6;
-          color: #4b5563;
+          color: rgba(255,255,255,0.85);
         }
 
         .footer-contact-info {
@@ -206,10 +205,10 @@ export default function Footer() {
           display: flex;
           align-items: flex-start;
           gap: 0.625rem;
-          color: #374151;
+          color: rgba(255,255,255,0.9);
           line-height: 1.45;
         }
-        
+
         .contact-item :global(svg) {
           flex-shrink: 0;
           margin-top: 3px;
@@ -217,7 +216,7 @@ export default function Footer() {
 
         .footer-title {
           font-family: var(--font-heading);
-          color: var(--primary-dark);
+          color: #ffffff;
           font-size: 1rem;
           font-weight: 700;
           margin-bottom: 1.25rem;
@@ -234,7 +233,7 @@ export default function Footer() {
           left: 0;
           width: 28px;
           height: 2px;
-          background: var(--primary);
+          background: rgba(255,255,255,0.6);
           border-radius: 999px;
         }
 
@@ -246,13 +245,13 @@ export default function Footer() {
         }
 
         .footer-links a {
-          color: #4b5563;
+          color: rgba(255,255,255,0.85);
           transition: all var(--transition-fast);
           display: inline-block;
         }
 
         .footer-links a:hover {
-          color: var(--primary);
+          color: #ffffff;
           transform: translateX(3px);
         }
 
@@ -264,37 +263,37 @@ export default function Footer() {
 
         .newsletter-text {
           line-height: 1.5;
-          color: #4b5563;
+          color: rgba(255,255,255,0.85);
         }
 
         .newsletter-form {
           display: flex;
           border-radius: var(--radius-lg);
           overflow: hidden;
-          border: 1px solid #cbd5e1;
+          border: 1px solid rgba(255,255,255,0.35);
           transition: border-color var(--transition-fast);
         }
 
         .newsletter-form:focus-within {
-          border-color: var(--primary);
+          border-color: #ffffff;
         }
 
         .newsletter-input {
           flex: 1;
-          background: #ffffff;
+          background: rgba(255,255,255,0.15);
           border: none;
-          color: #111827;
+          color: #ffffff;
           padding: 0.75rem 1rem;
           font-size: 0.9rem;
         }
 
         .newsletter-input::placeholder {
-          color: #9ca3af;
+          color: rgba(255,255,255,0.6);
         }
 
         .newsletter-btn {
-          background: var(--primary);
-          color: white;
+          background: #ffffff;
+          color: #16a34a;
           border: none;
           padding: 0 1.25rem;
           cursor: pointer;
@@ -302,14 +301,14 @@ export default function Footer() {
         }
 
         .newsletter-btn:hover {
-          background: var(--primary-hover);
+          background: #dcfce7;
         }
 
         .footer-bottom {
-          border-top: 1px solid #d1fae5;
+          border-top: 1px solid rgba(255,255,255,0.25);
           padding-top: 1.5rem;
           font-size: 0.8rem;
-          color: #6b7280;
+          color: rgba(255,255,255,0.75);
         }
 
         .footer-bottom-flex {
@@ -341,17 +340,17 @@ export default function Footer() {
         }
 
         .footer-legal-links a {
-          color: #6b7280;
+          color: rgba(255,255,255,0.75);
         }
 
         .footer-legal-links a:hover {
-          color: var(--primary);
+          color: #ffffff;
         }
 
         .bullet-dot {
           width: 4px;
           height: 4px;
-          background-color: #94a3b8;
+          background-color: rgba(255,255,255,0.5);
           border-radius: 50%;
         }
       `}</style>

@@ -666,10 +666,10 @@ export default function Home() {
         }
 
         .feature-card {
-          background: white;
+          background: #ffffff;
           padding: 2.25rem 1.75rem;
           border-radius: var(--radius-lg);
-          border: 1px solid var(--border);
+          border: 1px solid #bbf7d0;
           box-shadow: var(--shadow-sm);
           transition: all var(--transition-normal);
         }
@@ -677,7 +677,7 @@ export default function Home() {
         .feature-card:hover {
           transform: translateY(-6px);
           box-shadow: var(--shadow-xl);
-          border-color: rgba(16, 185, 129, 0.28);
+          border-color: var(--primary);
         }
 
         .feature-icon-wrapper {
@@ -706,7 +706,7 @@ export default function Home() {
         }
 
         .stats-section {
-          background: #022c22;
+          background: #16a34a;
           color: white;
           padding: 5rem 2rem;
         }
@@ -743,16 +743,16 @@ export default function Home() {
           display: flex;
           align-items: center;
           gap: 0.75rem;
-          background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.3);
           padding: 1rem;
           border-radius: var(--radius-md);
           font-weight: 650;
-          color: #eff6ff;
+          color: #ffffff;
         }
 
         .trust-item svg {
-          color: #a7f3d0;
+          color: #bbf7d0;
           flex-shrink: 0;
         }
 
@@ -769,8 +769,8 @@ export default function Home() {
         }
 
         .seminar-track-card {
-          background: white;
-          border: 1px solid var(--border);
+          background: #ffffff;
+          border: 1.5px solid #bbf7d0;
           border-radius: var(--radius-lg);
           padding: 1.5rem;
           display: flex;
@@ -786,6 +786,7 @@ export default function Home() {
           border-color: var(--primary);
           transform: translateY(-4px);
           box-shadow: var(--shadow-lg);
+          background: #f0fdf4;
         }
 
         .seminar-track-info {
@@ -848,14 +849,14 @@ export default function Home() {
           gap: 1rem;
           align-items: flex-start;
           padding: 1.25rem 1.5rem;
-          background: #ecfdf5;
-          border: 1px solid #a7f3d0;
+          background: #16a34a;
+          border: 1px solid #15803d;
           border-radius: var(--radius-lg);
-          color: #064e3b;
+          color: #ffffff;
         }
 
         .office-card svg {
-          color: var(--primary);
+          color: #bbf7d0;
           flex-shrink: 0;
         }
 
@@ -863,11 +864,12 @@ export default function Home() {
           display: block;
           font-weight: 800;
           margin-bottom: 0.25rem;
-          color: #065f46;
+          color: #ffffff;
         }
 
         .office-card p {
           line-height: 1.6;
+          color: rgba(255,255,255,0.9);
         }
 
         @media (max-width: 640px) {
