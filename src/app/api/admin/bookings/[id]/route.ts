@@ -55,8 +55,10 @@ export async function PATCH(
     const mappedBooking = {
       id: updatedBooking.id,
       userId: updatedBooking.user_id,
-      busId: updatedBooking.bus_id,
-      busName: updatedBooking.bus_name,
+      seminarId: updatedBooking.seminar_id,
+      seminarName: updatedBooking.seminar_name,
+      busId: updatedBooking.seminar_id || updatedBooking.bus_id,
+      busName: updatedBooking.seminar_name || updatedBooking.bus_name,
       source: updatedBooking.source,
       destination: updatedBooking.destination,
       date: updatedBooking.date,

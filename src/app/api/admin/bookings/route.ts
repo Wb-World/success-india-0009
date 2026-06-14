@@ -54,8 +54,10 @@ export async function GET(request: Request) {
       return {
         id: b.id,
         userId: b.user_id,
-        busId: b.bus_id,
-        busName: b.bus_name,
+        seminarId: b.seminar_id,
+        seminarName: b.seminar_name,
+        busId: b.seminar_id || b.bus_id,
+        busName: b.seminar_name || b.bus_name,
         source: b.source,
         destination: b.destination,
         date: b.date,
