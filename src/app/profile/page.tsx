@@ -538,7 +538,7 @@ export default function Profile() {
                         </td>
                         <td>
                           <div className="seminar-cell">
-                            <span className="seminar-venue-topic">{booking.venue || booking.source} &rarr; {booking.seminar || booking.destination}</span>
+                            <span className="seminar-venue-topic">{booking.venue} &rarr; {booking.seminar}</span>
                             <span className="seminar-program-name">{booking.seminarName || booking.eventName}</span>
                           </div>
                         </td>

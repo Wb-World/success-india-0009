@@ -89,8 +89,8 @@ function BookingEngine() {
       const data = await res.json();
       const fetchedEvents = res.ok ? (data.events || []).map((event: any) => ({
         ...event,
-        legacySource: event.venue || event.source,
-        legacyDestination: event.title || event.destination,
+        legacySource: event.venue,
+        legacyDestination: event.title,
       })) : [];
       setEvents(fetchedEvents);
 
@@ -175,10 +175,10 @@ function BookingEngine() {
       const res = await fetch(`/api/events?venue=${encodeURIComponent(venueVal)}&seminar=${encodeURIComponent(seminarVal)}&date=${encodeURIComponent(dateVal)}${eventParam}`);
       const data = await res.json();
       if (res.ok) {
-        const fetchedSeminars = (data.events || data.seminars || data.buses || []).map((event: any) => ({
+        const fetchedSeminars = (data.events || data.seminars || []).map((event: any) => ({
           ...event,
-          legacySource: event.venue || event.source,
-          legacyDestination: event.title || event.destination,
+          legacySource: event.venue,
+          legacyDestination: event.title,
         }));
         setSeminars(fetchedSeminars);
       } else {

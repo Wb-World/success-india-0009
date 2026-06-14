@@ -392,7 +392,7 @@ export default function AdminDashboard() {
                         <h4 className="group-title">Seminar Details & Seat Allocation</h4>
                         <div className="info-grid">
                           <div className="info-row"><span>Seminar Program:</span><strong>{b.seminarName || b.eventName}</strong></div>
-                          <div className="info-row"><span>Venue / Seminar:</span><strong>{b.venue || b.source} <ArrowRight size={12} className="inline-arrow" /> {b.seminar || b.destination}</strong></div>
+                          <div className="info-row"><span>Venue / Seminar:</span><strong>{b.venue} <ArrowRight size={12} className="inline-arrow" /> {b.seminar}</strong></div>
                           <div className="info-row"><span>Seminar Date & Time:</span><strong>{b.date} &bull; {b.time}</strong></div>
                           <div className="info-row"><span>Allocated Seats:</span><span className="seats-span">{b.seats.join(', ')}</span></div>
                         </div>
@@ -536,7 +536,7 @@ export default function AdminDashboard() {
                     <div key={event.id} className="event-row">
                       <div>
                         <strong>{event.title || event.name}</strong>
-                        <span>{event.venue || event.source}</span>
+                        <span>{event.venue}</span>
                       </div>
                       <div className="event-row-meta">
                         <span>{event.eventDate || 'Scheduled'}</span>

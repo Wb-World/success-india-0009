@@ -45,11 +45,9 @@ function normalizeEvent(event: any, bookedSeatsByTime: Record<string, string[]> 
     totalSeats: Number(event.total_seats || event.totalSeats || DEFAULT_TOTAL_SEATS),
     status: event.status === 'inactive' ? 'Inactive' : DEFAULT_STATUS,
 
-    // Compatibility shape consumed by the current booking page.
+    // Compatibility shape consumed by existing seat selection components.
     name: event.title,
     type: 'Success India Seminar Event',
-    source: event.venue,
-    destination: event.title,
     duration: 'Scheduled Program',
     times: [eventTime],
     bookedSeatsByTime: {
@@ -127,14 +125,14 @@ export async function GET(request: Request) {
         }));
 
       const fallbackEvents = localEvents.map((event) => normalizeEvent(event));
-      return NextResponse.json({ events: fallbackEvents, buses: fallbackEvents });
+      return NextResponse.json({ events: fallbackEvents });
     }
 
     const eventIds = (data || []).map((event) => event.id);
     const seatMap = await getApprovedSeatMap(eventIds, date);
     const events = (data || []).map((event) => normalizeEvent(event, seatMap[event.id] || {}));
 
-    return NextResponse.json({ events, buses: events });
+    return NextResponse.json({ events });
   } catch (error: any) {
     console.error('Events GET error:', error);
     return NextResponse.json(
