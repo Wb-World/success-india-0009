@@ -176,6 +176,12 @@ export default function Footer() {
           color: var(--primary-dark);
           white-space: nowrap;
         }
+        .footer-logo > span {
+          display: inline-flex;
+          align-items: center;
+          line-height: 1;
+          margin-top: -2px;
+        }
 
         .footer-logo-img {
           width: 34px;

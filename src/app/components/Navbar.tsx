@@ -193,6 +193,12 @@ export default function Navbar() {
           transition: transform var(--transition-fast), opacity var(--transition-fast);
           white-space: nowrap;
         }
+        .nav-logo > span {
+          display: inline-flex;
+          align-items: center;
+          line-height: 1;
+          margin-top: -2px;
+        }
         .nav-logo:hover { transform: scale(1.03); opacity: 0.9; }
 
         .brand-logo-img {
