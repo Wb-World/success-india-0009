@@ -4,6 +4,22 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MapPin, Calendar, Search, ShieldCheck, CheckCircle2, ChevronRight, Upload, AlertCircle, Clock, Lock } from 'lucide-react';
 
+const fallbackLocations = [
+  'Chromepet, Chennai',
+  'Chennai Central Region',
+  'South Chennai',
+  'Tambaram',
+  'Pallavaram',
+  'Tamil Nadu Chapter Network',
+];
+
+const fallbackEventCategories = [
+  'Leadership Development Seminars',
+  'Weekly Income-Generation Systems',
+  'BOSS Agro Hub Chapter Meetups',
+  'Digital Marketing & Direct-Selling Workshops',
+];
+
 export default function BookPage() {
   return (
     <Suspense fallback={<div className="loading-fallback">Loading booking engine...</div>}>
@@ -19,6 +35,7 @@ function BookingEngine() {
   // Search parameters states
   const [source, setSource] = useState('Chromepet, Chennai');
   const [destination, setDestination] = useState('Leadership Development Seminars');
+  const [selectedEventId, setSelectedEventId] = useState('');
   const [date, setDate] = useState(() => {
     const today = new Date();
     today.setDate(today.getDate() + 7);
@@ -27,6 +44,7 @@ function BookingEngine() {
 
   // Flow control states
   const [user, setUser] = useState<any>(null);
+  const [events, setEvents] = useState<any[]>([]);
   const [buses, setBuses] = useState<any[]>([]);
   const [loadingBuses, setLoadingBuses] = useState(false);
   const [searchTriggered, setSearchTriggered] = useState(false);
@@ -57,21 +75,87 @@ function BookingEngine() {
       }
     }
 
-    // Read initial params
+    initializeBookingSearch();
+  }, [searchParams]);
+
+  const initializeBookingSearch = async () => {
     const sParam = searchParams.get('source');
     const dParam = searchParams.get('destination');
     const tParam = searchParams.get('date');
+    const eParam = searchParams.get('eventId');
 
-    if (sParam) setSource(sParam);
-    if (dParam) setDestination(dParam);
-    if (tParam) setDate(tParam);
+    try {
+      const res = await fetch('/api/events');
+      const data = await res.json();
+      const fetchedEvents = res.ok ? data.events || [] : [];
+      setEvents(fetchedEvents);
 
-    if (sParam && dParam && tParam) {
-      handleSearchBuses(sParam, dParam, tParam);
+      const matchedEvent = eParam
+        ? fetchedEvents.find((event: any) => event.id === eParam)
+        : fetchedEvents.find((event: any) =>
+            (!sParam || event.venue === sParam || event.source === sParam) &&
+            (!dParam || event.title === dParam || event.destination === dParam)
+          );
+
+      const resolvedSource = sParam || matchedEvent?.venue || matchedEvent?.source || source;
+      const resolvedDestination = dParam || matchedEvent?.title || matchedEvent?.destination || destination;
+      const resolvedDate = tParam || matchedEvent?.eventDate || date;
+      const resolvedEventId = eParam || matchedEvent?.id || '';
+
+      setSource(resolvedSource);
+      setDestination(resolvedDestination);
+      setDate(resolvedDate);
+      setSelectedEventId(resolvedEventId);
+
+      if (resolvedEventId || (sParam && dParam && resolvedDate)) {
+        handleSearchBuses(resolvedSource, resolvedDestination, resolvedDate, resolvedEventId);
+      }
+    } catch (error) {
+      console.error('Unable to initialize seminar events:', error);
+      if (sParam) setSource(sParam);
+      if (dParam) setDestination(dParam);
+      if (tParam) setDate(tParam);
+      if (sParam && dParam && tParam) {
+        handleSearchBuses(sParam, dParam, tParam, eParam || '');
+      }
     }
-  }, [searchParams]);
+  };
 
-  const handleSearchBuses = async (srcVal = source, destVal = destination, dateVal = date) => {
+  const handleEventSelect = (eventIdOrTitle: string) => {
+    const event = events.find((item) => item.id === eventIdOrTitle);
+    if (!event) {
+      setSelectedEventId('');
+      setDestination(eventIdOrTitle);
+      return;
+    }
+
+    setSelectedEventId(event.id);
+    setSource(event.venue || event.source || source);
+    setDestination(event.title || event.destination || destination);
+    if (event.eventDate) setDate(event.eventDate);
+  };
+
+  const handleLocationSelect = (location: string) => {
+    setSource(location);
+    const firstMatchingEvent = events.find((event) => (event.venue || event.source) === location);
+    if (firstMatchingEvent) {
+      setSelectedEventId(firstMatchingEvent.id);
+      setDestination(firstMatchingEvent.title || firstMatchingEvent.destination || destination);
+      if (firstMatchingEvent.eventDate) setDate(firstMatchingEvent.eventDate);
+    } else {
+      setSelectedEventId('');
+    }
+  };
+
+  const eventLocations = events.length
+    ? Array.from(new Set(events.map((event) => event.venue || event.source).filter(Boolean))) as string[]
+    : fallbackLocations;
+
+  const eventOptions = events.length
+    ? events.filter((event) => (event.venue || event.source) === source)
+    : [];
+
+  const handleSearchBuses = async (srcVal = source, destVal = destination, dateVal = date, eventIdVal = selectedEventId) => {
     if (srcVal === destVal) {
       setErrorMsg('Please choose a valid seminar location and category.');
       return;
@@ -83,10 +167,11 @@ function BookingEngine() {
     setSelectedSeats([]);
 
     try {
-      const res = await fetch(`/api/buses?source=${encodeURIComponent(srcVal)}&destination=${encodeURIComponent(destVal)}&date=${encodeURIComponent(dateVal)}`);
+      const eventParam = eventIdVal ? `&eventId=${encodeURIComponent(eventIdVal)}` : '';
+      const res = await fetch(`/api/events?source=${encodeURIComponent(srcVal)}&destination=${encodeURIComponent(destVal)}&date=${encodeURIComponent(dateVal)}${eventParam}`);
       const data = await res.json();
       if (res.ok) {
-        setBuses(data.buses || []);
+        setBuses(data.events || data.buses || []);
       } else {
         setErrorMsg(data.error || 'Failed to fetch seminar listings');
       }
@@ -99,8 +184,9 @@ function BookingEngine() {
 
   const handleBusSelect = (bus: any) => {
     setSelectedBus(bus);
-    setSelectedTime(bus.times[0]); // Default to first time
-    setBookedSeats(bus.bookedSeatsByTime[bus.times[0]] || []);
+    const firstTime = bus.times?.[0] || bus.eventTime || '10:00 AM';
+    setSelectedTime(firstTime);
+    setBookedSeats(bus.bookedSeatsByTime?.[firstTime] || []);
     setSelectedSeats([]);
     setBookingStep('seats');
   };
@@ -275,22 +361,26 @@ function BookingEngine() {
             <form onSubmit={(e) => { e.preventDefault(); handleSearchBuses(); }} className="search-form-inline">
               <div className="inline-group">
                 <label className="inline-label">Location</label>
-                <select value={source} onChange={(e) => setSource(e.target.value)} className="form-control select-control">
-                  <option value="Chromepet, Chennai">Chromepet, Chennai</option>
-                  <option value="Chennai Central Region">Chennai Central Region</option>
-                  <option value="South Chennai">South Chennai</option>
-                  <option value="Tambaram">Tambaram</option>
-                  <option value="Pallavaram">Pallavaram</option>
-                  <option value="Tamil Nadu Chapter Network">Tamil Nadu Chapter Network</option>
+                <select value={source} onChange={(e) => handleLocationSelect(e.target.value)} className="form-control select-control">
+                  {eventLocations.map((location) => (
+                    <option key={location} value={location}>{location}</option>
+                  ))}
                 </select>
               </div>
               <div className="inline-group">
-                <label className="inline-label">Event Category</label>
-                <select value={destination} onChange={(e) => setDestination(e.target.value)} className="form-control select-control">
-                  <option value="Leadership Development Seminars">Leadership Development Seminars</option>
-                  <option value="Weekly Income-Generation Systems">Weekly Income-Generation Systems</option>
-                  <option value="BOSS Agro Hub Chapter Meetups">BOSS Agro Hub Chapter Meetups</option>
-                  <option value="Digital Marketing & Direct-Selling Workshops">Digital Marketing & Direct-Selling Workshops</option>
+                <label className="inline-label">Seminar Event</label>
+                <select value={selectedEventId || destination} onChange={(e) => handleEventSelect(e.target.value)} className="form-control select-control">
+                  {eventOptions.length > 0 ? (
+                    eventOptions.map((event) => (
+                      <option key={event.id} value={event.id}>
+                        {event.title || event.name} • ₹{event.price}
+                      </option>
+                    ))
+                  ) : (
+                    fallbackEventCategories.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))
+                  )}
                 </select>
               </div>
               <div className="inline-group">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -18,7 +18,7 @@ import {
   Users,
 } from 'lucide-react';
 
-const locations = [
+const fallbackLocations = [
   'Chromepet, Chennai',
   'Chennai Central Region',
   'South Chennai',
@@ -27,26 +27,103 @@ const locations = [
   'Tamil Nadu Chapter Network',
 ];
 
-const eventCategories = [
+const fallbackEventCategories = [
   'Leadership Development Seminars',
   'Weekly Income-Generation Systems',
   'BOSS Agro Hub Chapter Meetups',
   'Digital Marketing & Direct-Selling Workshops',
 ];
 
+type SeminarEvent = {
+  id: string;
+  title: string;
+  venue: string;
+  eventDate?: string;
+  eventTime?: string;
+  price: number;
+  totalSeats?: number;
+  name?: string;
+  source?: string;
+  destination?: string;
+};
+
 export default function Home() {
   const router = useRouter();
-  const [source, setSource] = useState(locations[0]);
-  const [destination, setDestination] = useState(eventCategories[0]);
+  const [events, setEvents] = useState<SeminarEvent[]>([]);
+  const [source, setSource] = useState(fallbackLocations[0]);
+  const [destination, setDestination] = useState(fallbackEventCategories[0]);
+  const [selectedEventId, setSelectedEventId] = useState('');
   const [date, setDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() + 7);
     return d.toISOString().split('T')[0];
   });
 
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await fetch('/api/events');
+        const data = await res.json();
+        if (!res.ok) return;
+
+        const fetchedEvents: SeminarEvent[] = data.events || [];
+        setEvents(fetchedEvents);
+
+        if (fetchedEvents.length > 0) {
+          const firstEvent = fetchedEvents[0];
+          setSelectedEventId(firstEvent.id);
+          setSource(firstEvent.venue || firstEvent.source || fallbackLocations[0]);
+          setDestination(firstEvent.title || firstEvent.name || fallbackEventCategories[0]);
+          if (firstEvent.eventDate) setDate(firstEvent.eventDate);
+        }
+      } catch (error) {
+        console.error('Unable to fetch seminar events:', error);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  const eventLocations = events.length
+    ? Array.from(new Set(events.map((event) => event.venue || event.source).filter(Boolean))) as string[]
+    : fallbackLocations;
+
+  const visibleEvents = events.length
+    ? events.filter((event) => (event.venue || event.source) === source)
+    : [];
+
+  const eventOptions = visibleEvents.length ? visibleEvents : events;
+
+  const handleEventSelect = (eventIdOrTitle: string) => {
+    const event = events.find((item) => item.id === eventIdOrTitle);
+    if (!event) {
+      setSelectedEventId('');
+      setDestination(eventIdOrTitle);
+      return;
+    }
+
+    setSelectedEventId(event.id);
+    setSource(event.venue || event.source || source);
+    setDestination(event.title || event.name || destination);
+    if (event.eventDate) setDate(event.eventDate);
+  };
+
+  const handleLocationSelect = (location: string) => {
+    setSource(location);
+    const firstMatchingEvent = events.find((event) => (event.venue || event.source) === location);
+    if (firstMatchingEvent) {
+      setSelectedEventId(firstMatchingEvent.id);
+      setDestination(firstMatchingEvent.title || firstMatchingEvent.name || destination);
+      if (firstMatchingEvent.eventDate) setDate(firstMatchingEvent.eventDate);
+    } else {
+      setSelectedEventId('');
+    }
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(`/book?source=${encodeURIComponent(source)}&destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(date)}`);
+    const eventParam = selectedEventId ? `&eventId=${encodeURIComponent(selectedEventId)}` : '';
+    router.push(`/book?source=${encodeURIComponent(source)}&destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(date)}${eventParam}`);
   };
 
   return (
@@ -95,10 +172,10 @@ export default function Home() {
                   </label>
                   <select
                     value={source}
-                    onChange={(e) => setSource(e.target.value)}
+                    onChange={(e) => handleLocationSelect(e.target.value)}
                     className="form-control select-field"
                   >
-                    {locations.map((location) => (
+                    {eventLocations.map((location) => (
                       <option key={location} value={location}>{location}</option>
                     ))}
                   </select>
@@ -106,16 +183,22 @@ export default function Home() {
 
                 <div className="form-group">
                   <label className="form-label">
-                    <BriefcaseBusiness size={14} className="input-label-icon" /> Event Category
+                    <BriefcaseBusiness size={14} className="input-label-icon" /> Seminar Event
                   </label>
                   <select
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
+                    value={selectedEventId || destination}
+                    onChange={(e) => handleEventSelect(e.target.value)}
                     className="form-control select-field"
                   >
-                    {eventCategories.map((category) => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
+                    {eventOptions.length > 0
+                      ? eventOptions.map((event) => (
+                          <option key={event.id} value={event.id}>
+                            {event.title || event.name} • ₹{event.price}
+                          </option>
+                        ))
+                      : fallbackEventCategories.map((category) => (
+                          <option key={category} value={category}>{category}</option>
+                        ))}
                   </select>
                 </div>
 
@@ -221,22 +304,27 @@ export default function Home() {
         </div>
 
         <div className="routes-grid">
-          {eventCategories.slice(0, 3).map((category, index) => (
+          {(events.length ? events.slice(0, 3) : fallbackEventCategories.slice(0, 3)).map((item, index) => {
+            const event = typeof item === 'string' ? null : item;
+            const category = event ? event.title || event.name || fallbackEventCategories[index] : String(item);
+            const location = event ? event.venue || event.source || fallbackLocations[index] : fallbackLocations[index];
+            const eventParam = event ? `&eventId=${encodeURIComponent(event.id)}` : '';
+            return (
             <div
               key={category}
               className="route-card"
-              onClick={() => router.push(`/book?source=${encodeURIComponent(locations[index])}&destination=${encodeURIComponent(category)}`)}
+              onClick={() => router.push(`/book?source=${encodeURIComponent(location)}&destination=${encodeURIComponent(category)}${eventParam}`)}
             >
               <div className="route-info">
                 <div className="route-cities">{category}</div>
-                <div className="route-details">{locations[index]} <ArrowRight size={13} /> Seat registration</div>
+                <div className="route-details">{location} <ArrowRight size={13} /> Seat registration</div>
               </div>
               <div className="route-price-tag">
-                <span>Track</span>
-                <span className="price-num">0{index + 1}</span>
+                <span>{event ? 'Fee' : 'Track'}</span>
+                <span className="price-num">{event ? `₹${event.price}` : `0${index + 1}`}</span>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       </section>
 
@@ -261,8 +349,8 @@ export default function Home() {
           position: relative;
           padding: 6rem 0 7rem;
           background:
-            linear-gradient(135deg, rgba(5, 25, 55, 0.98) 0%, rgba(7, 47, 104, 0.96) 58%, rgba(234, 88, 12, 0.92) 100%),
-            radial-gradient(circle at top right, rgba(245, 158, 11, 0.24), transparent 34%);
+            linear-gradient(135deg, rgba(2, 44, 34, 0.98) 0%, rgba(6, 78, 59, 0.96) 62%, rgba(16, 185, 129, 0.88) 100%),
+            radial-gradient(circle at top right, rgba(167, 243, 208, 0.2), transparent 34%);
           color: white;
           overflow: hidden;
           min-height: 640px;
@@ -336,13 +424,13 @@ export default function Home() {
         }
 
         .text-highlight {
-          color: #fbbf24;
+          color: #bbf7d0;
         }
 
         .hero-subtitle {
           font-size: 1.08rem;
           line-height: 1.75;
-          color: #dbeafe;
+          color: #d1fae5;
           max-width: 680px;
           margin: 0;
         }
@@ -502,7 +590,7 @@ export default function Home() {
         .feature-card:hover {
           transform: translateY(-6px);
           box-shadow: var(--shadow-xl);
-          border-color: rgba(8, 68, 153, 0.28);
+          border-color: rgba(16, 185, 129, 0.28);
         }
 
         .feature-icon-wrapper {
@@ -531,7 +619,7 @@ export default function Home() {
         }
 
         .stats-section {
-          background: #082f61;
+          background: #022c22;
           color: white;
           padding: 5rem 2rem;
         }
@@ -554,7 +642,7 @@ export default function Home() {
         }
 
         .trust-copy p {
-          color: #dbeafe;
+          color: #d1fae5;
           line-height: 1.75;
           max-width: 690px;
         }
@@ -577,7 +665,7 @@ export default function Home() {
         }
 
         .trust-item svg {
-          color: #fbbf24;
+          color: #a7f3d0;
           flex-shrink: 0;
         }
 
@@ -673,10 +761,10 @@ export default function Home() {
           gap: 1rem;
           align-items: flex-start;
           padding: 1.25rem 1.5rem;
-          background: #fff7ed;
-          border: 1px solid #fed7aa;
+          background: #ecfdf5;
+          border: 1px solid #a7f3d0;
           border-radius: var(--radius-lg);
-          color: #7c2d12;
+          color: #064e3b;
         }
 
         .office-card svg {
@@ -688,7 +776,7 @@ export default function Home() {
           display: block;
           font-weight: 800;
           margin-bottom: 0.25rem;
-          color: #9a3412;
+          color: #065f46;
         }
 
         .office-card p {

@@ -74,6 +74,17 @@ export interface DbBus {
   created_at?: string;
 }
 
+export interface DbEvent {
+  id: string;
+  title: string;
+  venue: string;
+  event_datetime: string;
+  price: number;
+  total_seats: number;
+  status: 'active' | 'inactive';
+  created_at?: string;
+}
+
 export interface DbBooking {
   id: string;
   user_id: string;
