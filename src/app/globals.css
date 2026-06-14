@@ -443,6 +443,11 @@ button, input, select, textarea {
   align-items: center !important;
   line-height: 1 !important;
   margin-top: -3.5px !important; /* Perfect visual correction nudge */
+  color: #000000 !important; /* "Success" in pure black */
+}
+
+.nav-logo .text-primary, .footer-logo .text-primary {
+  color: var(--primary) !important; /* "India" in green */
 }
 
 .brand-logo-img, .footer-logo-img {
