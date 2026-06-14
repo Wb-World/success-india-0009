@@ -68,8 +68,8 @@ export default function Home() {
 
         const fetchedEvents: SeminarEvent[] = (data.events || []).map((event: any) => ({
           ...event,
-          legacySource: event.venue || event.source,
-          legacyDestination: event.title || event.destination,
+          legacySource: event.venue,
+          legacyDestination: event.title,
         }));
         setEvents(fetchedEvents);
 

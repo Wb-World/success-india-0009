@@ -79,8 +79,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create booking. Prefer the new seminar columns, but fall back to the
-    // legacy buses/bookings shape if the deployed database has not been migrated.
+    // Create booking. Prefer the new seminar columns, then fall back to the
+    // legacy seminar compatibility shape if the deployed database has not been migrated.
     const newId = `bk_${Date.now()}`;
     let { data: newBooking, error: insertError } = await supabaseAdmin
       .from('bookings')
@@ -165,8 +165,6 @@ export async function POST(request: Request) {
       userId: newBooking.user_id,
       seminarId: newBooking.seminar_id,
       seminarName: newBooking.seminar_name,
-      busId: newBooking.seminar_id || newBooking.bus_id,
-      busName: newBooking.seminar_name || newBooking.bus_name,
       venue: newBooking.source,
       seminar: newBooking.destination,
       date: newBooking.date,
