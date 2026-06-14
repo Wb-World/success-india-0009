@@ -43,6 +43,7 @@ function BookingEngine() {
   const [screenshot, setScreenshot] = useState<string>('');
   const [screenshotName, setScreenshotName] = useState<string>('');
   const [submittingBooking, setSubmittingBooking] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
 
   useEffect(() => {
     // Check if user is logged in
@@ -116,9 +117,10 @@ function BookingEngine() {
       setSelectedSeats(selectedSeats.filter((s) => s !== seatId));
     } else {
       if (selectedSeats.length >= 6) {
-        alert('Maximum of 6 seats can be reserved per transaction.');
+        setPaymentError('Maximum of 6 seats can be reserved per transaction.');
         return;
       }
+      setPaymentError('');
       setSelectedSeats([...selectedSeats, seatId]);
     }
   };
@@ -127,6 +129,7 @@ function BookingEngine() {
   const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setPaymentError('');
       setScreenshotName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -138,9 +141,10 @@ function BookingEngine() {
 
   const submitBookingRequest = async () => {
     if (!screenshot) {
-      alert('Please upload a screenshot of your UPI/NetBanking transfer to proceed.');
+      setPaymentError('Please upload your UPI payment receipt screenshot before verification.');
       return;
     }
+    setPaymentError('');
     setSubmittingBooking(true);
 
     try {
@@ -172,10 +176,10 @@ function BookingEngine() {
         setBookingStep('success');
       } else {
         const data = await res.json();
-        alert(data.error || 'Failed to submit booking request.');
+        setPaymentError(data.error || 'We could not confirm your booking yet. Please try again in a moment.');
       }
     } catch (e) {
-      alert('Connection error submitting booking.');
+      setPaymentError('Connection error while submitting your booking. Please check your network and try again.');
     } finally {
       setSubmittingBooking(false);
     }
@@ -492,6 +496,12 @@ function BookingEngine() {
                   />
                 </label>
                 {screenshotName && <span className="file-name-inline">{screenshotName}</span>}
+                {paymentError && (
+                  <div className="payment-inline-error">
+                    <AlertCircle size={16} />
+                    <span>{paymentError}</span>
+                  </div>
+                )}
                 <button
                   onClick={submitBookingRequest}
                   className="btn btn-primary state-primary-btn"
@@ -1473,6 +1483,25 @@ function BookingEngine() {
           font-size: 0.85rem;
           font-weight: 800;
           word-break: break-word;
+        }
+
+        .payment-inline-error {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.55rem;
+          color: #991b1b;
+          background: #fee2e2;
+          border: 1px solid #fecaca;
+          border-radius: var(--radius-md);
+          padding: 0.75rem;
+          font-size: 0.88rem;
+          font-weight: 700;
+          line-height: 1.45;
+        }
+
+        .payment-inline-error svg {
+          flex-shrink: 0;
+          margin-top: 0.1rem;
         }
 
         .success-message-state {
