@@ -263,18 +263,18 @@ export default function Navbar() {
           align-items: center;
           gap: 0.45rem;
           padding: 0.45rem 1rem;
-          background: var(--primary-light);
-          color: var(--primary-dark);
+          background: var(--primary);
+          color: #ffffff;
           border-radius: var(--radius-lg);
           font-size: 0.875rem;
           font-weight: 600;
           transition: all var(--transition-fast);
-          border: 1px solid rgba(22, 163, 74, 0.18);
+          border: 1px solid var(--primary);
         }
         .profile-btn-nav:hover {
-          background: #d1fae5;
+          background: var(--primary-hover);
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(22,163,74,0.2);
+          box-shadow: var(--shadow-primary);
         }
 
         .btn-logout {
@@ -302,15 +302,15 @@ export default function Navbar() {
           font-size: 0.9rem;
           border-radius: var(--radius-lg);
           transition: all var(--transition-fast) !important;
-          background: var(--primary-light);
-          color: var(--primary-dark);
-          border: 1px solid rgba(22, 163, 74, 0.22);
+          background: var(--primary) !important;
+          color: #ffffff !important;
+          border: 1px solid var(--primary) !important;
         }
         .nav-login-btn:hover {
-          background: #d1fae5;
-          color: var(--primary-dark);
+          background: var(--primary-hover) !important;
+          color: #ffffff !important;
           transform: translateY(-2px);
-          box-shadow: 0 4px 14px rgba(22, 163, 74, 0.2);
+          box-shadow: var(--shadow-primary);
         }
 
         .mobile-menu-toggle {
@@ -379,12 +379,12 @@ export default function Navbar() {
           width: 100%;
           text-align: center;
           justify-content: center;
-          background: var(--primary-light) !important;
-          color: var(--primary-dark) !important;
-          border: 1px solid rgba(22, 163, 74, 0.22) !important;
+          background: var(--primary) !important;
+          color: #ffffff !important;
+          border: 1px solid var(--primary) !important;
         }
         .mobile-login-btn:hover {
-          background: #d1fae5 !important;
+          background: var(--primary-hover) !important;
         }
 
         @media (min-width: 768px) {

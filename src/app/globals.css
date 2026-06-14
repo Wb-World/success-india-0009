@@ -1,49 +1,50 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --primary: #16a34a;
-  --primary-hover: #15803d;
-  --primary-light: #f0fdf4;
-  --primary-dark: #14532d;
-  
-  --secondary: #10b981;
-  --secondary-hover: #059669;
-  
-  --background: #f9fafb;
-  --foreground: #0f172a;
-  
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  
-  --border: #e2e8f0;
-  --input: #f1f5f9;
-  
-  --muted: #64748b;
-  --muted-light: #94a3b8;
-  
-  --success: #10b981;
+  /* ── Medium Green + White Brand Palette ── */
+  --primary:        #16a34a;  /* medium green — main brand */
+  --primary-hover:  #15803d;  /* slightly darker green on hover */
+  --primary-light:  #dcfce7;  /* very light green for subtle fills */
+  --primary-dark:   #14532d;  /* deep green for headings / dark text */
+
+  --secondary:       #22c55e; /* lighter vivid green accent */
+  --secondary-hover: #16a34a;
+
+  --background:     #ffffff;  /* pure white page background */
+  --foreground:     #111827;  /* near-black text */
+
+  --card:           #ffffff;  /* white cards */
+  --card-foreground:#111827;
+
+  --border:         #bbf7d0;  /* light green border tint */
+  --input:          #f0fdf4;  /* pale green input background */
+
+  --muted:          #4b7c5a;  /* muted green for secondary text */
+  --muted-light:    #86efac;  /* lighter muted green */
+
+  --success: #16a34a;
   --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #0d9488;
+  --danger:  #ef4444;
+  --info:    #0d9488;
 
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
-  
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-heading: 'Outfit', 'Inter', sans-serif;
-  
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --shadow-primary: 0 10px 20px -6px rgba(22, 163, 74, 0.3);
-  
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --shadow-sm:      0 1px 2px 0 rgba(22, 163, 74, 0.08);
+  --shadow-md:      0 4px 6px -1px rgba(22, 163, 74, 0.12), 0 2px 4px -2px rgba(22, 163, 74, 0.08);
+  --shadow-lg:      0 10px 15px -3px rgba(22, 163, 74, 0.12), 0 4px 6px -4px rgba(22, 163, 74, 0.08);
+  --shadow-xl:      0 20px 25px -5px rgba(22, 163, 74, 0.15), 0 8px 10px -6px rgba(22, 163, 74, 0.1);
+  --shadow-primary: 0 10px 20px -6px rgba(22, 163, 74, 0.35);
+
+  --transition-fast:   150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow:   350ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -438,16 +439,28 @@ button, input, select, textarea {
   white-space: nowrap !important;
 }
 
-.nav-logo > span, .footer-logo > span {
+/* Navbar logo: Success=black, India=green */
+.nav-logo > span {
   display: inline-flex !important;
   align-items: center !important;
   line-height: 1 !important;
-  margin-top: -3.5px !important; /* Perfect visual correction nudge */
-  color: #000000 !important; /* "Success" in pure black */
+  margin-top: -3.5px !important;
+  color: #000000 !important;
+}
+.nav-logo .text-primary {
+  color: var(--primary) !important;
 }
 
-.nav-logo .text-primary, .footer-logo .text-primary {
-  color: var(--primary) !important; /* "India" in green */
+/* Footer logo: on green bg — Success=white, India=bright light green */
+.footer-logo > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1 !important;
+  margin-top: -3.5px !important;
+  color: #ffffff !important;
+}
+.footer-logo .text-primary {
+  color: #bbf7d0 !important;  /* bright mint — visible on dark green */
 }
 
 .brand-logo-img, .footer-logo-img {
@@ -457,4 +470,3 @@ button, input, select, textarea {
   object-fit: cover !important;
   flex-shrink: 0 !important;
 }
-
