@@ -166,6 +166,7 @@ function BookingEngine() {
       });
 
       if (res.ok) {
+        setBookedSeats((prev) => Array.from(new Set([...prev, ...selectedSeats])));
         setBookingStep('success');
       } else {
         const data = await res.json();
@@ -178,21 +179,16 @@ function BookingEngine() {
     }
   };
 
-  // 15 rows of 4 seats (A1, A2, corridor, A3, A4) = 60 seats
+  // 15 rows of 4 legacy seats kept for inactive fallback markup.
   const generateSeats = () => {
     const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'];
-    const layout = [];
-
-    for (let r = 0; r < rows.length; r++) {
-      const rowLetter = rows[r];
-      const rowSeats = [];
-      for (let s = 1; s <= 4; s++) {
-        rowSeats.push(`${rowLetter}${s}`);
-      }
-      layout.push({ rowLetter, seats: rowSeats });
-    }
-    return layout;
+    return rows.map((rowLetter) => ({
+      rowLetter,
+      seats: [1, 2, 3, 4].map((seatNumber) => `${rowLetter}${seatNumber}`),
+    }));
   };
+
+  const eventSeats = Array.from({ length: 60 }, (_, index) => `S${index + 1}`);
 
   const totalPrice = selectedSeats.length * (selectedBus?.price || 0);
 
@@ -371,8 +367,163 @@ function BookingEngine() {
         </div>
       )}
 
+      {/* STEP 2-4: EVENT SEAT GRID WITH DYNAMIC PAYMENT BOX */}
+      {(bookingStep === 'seats' || bookingStep === 'payment' || bookingStep === 'success') && selectedBus && (
+        <div className="reservation-workspace animate-slide-up">
+          <section className="event-seat-panel glass-card">
+            <div className="seat-panel-header">
+              <div>
+                <span className="panel-kicker">Interactive Seat Grid</span>
+                <h2 className="heading-md">Select Event Seats</h2>
+              </div>
+              <div className="seat-legend">
+                <span><i className="legend-dot available-dot"></i>Available</span>
+                <span><i className="legend-dot selected-dot"></i>Selected</span>
+                <span><i className="legend-dot booked-dot"></i>Booked</span>
+              </div>
+            </div>
+
+            <div className="session-strip">
+              <div>
+                <span className="strip-label">Program</span>
+                <strong>{selectedBus.name}</strong>
+              </div>
+              <div>
+                <span className="strip-label">Date</span>
+                <strong>{date}</strong>
+              </div>
+              <div>
+                <span className="strip-label">Timing</span>
+                <div className="compact-time-chips">
+                  {selectedBus.times.map((time: string) => (
+                    <button
+                      key={time}
+                      onClick={() => handleTimeChange(time)}
+                      className={`compact-time-chip ${selectedTime === time ? 'active' : ''}`}
+                      disabled={bookingStep === 'success'}
+                    >
+                      {time}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="event-seat-grid" aria-label="60 event seat selection grid">
+              {eventSeats.map((seatId) => {
+                const isBooked = bookedSeats.includes(seatId);
+                const isSelected = selectedSeats.includes(seatId);
+                return (
+                  <button
+                    key={seatId}
+                    type="button"
+                    onClick={() => handleSeatClick(seatId)}
+                    className={`event-seat ${isSelected ? 'selected' : ''} ${isBooked ? 'booked' : ''}`}
+                    title={`Seat ${seatId} (${isBooked ? 'Booked' : isSelected ? 'Selected' : 'Available'})`}
+                    disabled={isBooked || bookingStep === 'success'}
+                  >
+                    {seatId}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <aside className={`reservation-state-card glass-card ${bookingStep === 'success' ? 'success-state' : ''}`}>
+            {bookingStep === 'seats' && selectedSeats.length === 0 && (
+              <div className="state-content greeting-state animate-fade-in">
+                <div className="state-icon-wrap">
+                  <CheckCircle2 size={28} />
+                </div>
+                <span className="panel-kicker">Welcome</span>
+                <h2 className="heading-md">Welcome to Success India!</h2>
+                <p>Please select your preferred seats from the layout to proceed with your registration.</p>
+                <button onClick={() => setBookingStep('search')} className="btn btn-secondary state-secondary-btn">
+                  Change Seminar
+                </button>
+              </div>
+            )}
+
+            {bookingStep === 'seats' && selectedSeats.length > 0 && (
+              <div className="state-content summary-state animate-fade-in">
+                <span className="panel-kicker">Seat Summary</span>
+                <h2 className="heading-md">Review Your Reservation</h2>
+                <div className="summary-box">
+                  <span className="summary-label">Selected Seats</span>
+                  <div className="selected-seats-list">
+                    {selectedSeats.map((seat) => (
+                      <span key={seat} className="seat-summary-tag">{seat}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="summary-total-row">
+                  <span>Total Fare</span>
+                  <strong>₹{totalPrice}</strong>
+                </div>
+                <button onClick={() => setBookingStep('payment')} className="btn btn-primary state-primary-btn">
+                  Proceed to UPI Payment
+                </button>
+              </div>
+            )}
+
+            {bookingStep === 'payment' && (
+              <div className="state-content payment-state animate-fade-in">
+                <span className="panel-kicker">UPI Payment</span>
+                <h2 className="heading-md">Scan to Pay</h2>
+                <div className="dummy-qr-box">
+                  <div className="qr-grid-mark">
+                    <span></span><span></span><span></span><span></span>
+                    <span></span><span></span><span></span><span></span>
+                    <span></span><span></span><span></span><span></span>
+                  </div>
+                  <strong>Scan to Pay</strong>
+                  <small>Amount: ₹{totalPrice}</small>
+                </div>
+                <label className="receipt-upload-box">
+                  <Upload size={24} />
+                  <span>Upload UPI Payment Receipt / Screenshot</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleScreenshotChange}
+                    className="hidden-file-input"
+                  />
+                </label>
+                {screenshotName && <span className="file-name-inline">{screenshotName}</span>}
+                <button
+                  onClick={submitBookingRequest}
+                  className="btn btn-primary state-primary-btn"
+                  disabled={!screenshot || submittingBooking}
+                >
+                  {submittingBooking ? 'Verifying Receipt...' : 'Verify Receipt & Confirm Booking'}
+                </button>
+                <button onClick={() => setBookingStep('seats')} className="btn btn-secondary state-secondary-btn">
+                  Back to Seat Summary
+                </button>
+              </div>
+            )}
+
+            {bookingStep === 'success' && (
+              <div className="state-content success-message-state animate-scale-in">
+                <CheckCircle2 size={58} className="success-check-icon" />
+                <h2 className="heading-md">Congratulations!</h2>
+                <p>Your booking is successful. We look forward to seeing you at the event!</p>
+                <div className="success-seat-list">
+                  {selectedSeats.map((seat) => (
+                    <span key={seat}>{seat}</span>
+                  ))}
+                </div>
+                <button onClick={() => router.push('/profile')} className="btn btn-primary state-primary-btn">
+                  View My Seminar Bookings
+                </button>
+              </div>
+            )}
+          </aside>
+        </div>
+      )}
+
       {/* STEP 2: DYNAMIC SEAT MAP AND SCHEDULE TIMING */}
-      {bookingStep === 'seats' && selectedBus && (
+      {false && bookingStep === 'seats' && selectedBus && (
         <div className="seats-step-layout animate-slide-up">
           <div className="seats-control-sidebar">
             <div className="sidebar-card glass-card">
@@ -538,7 +689,7 @@ function BookingEngine() {
       )}
 
       {/* STEP 3: UPI QR SCREEN AND RECEIPT UPLOAD */}
-      {bookingStep === 'payment' && selectedBus && (
+      {false && bookingStep === 'payment' && selectedBus && (
         <div className="payment-step-layout animate-slide-up">
           <div className="payment-card glass-card">
             <h2 className="heading-md payment-title">Scan & Pay via UPI</h2>
@@ -649,7 +800,7 @@ function BookingEngine() {
       )}
 
       {/* STEP 4: SUCCESS SUBMISSION PAGE */}
-      {bookingStep === 'success' && selectedBus && (
+      {false && bookingStep === 'success' && selectedBus && (
         <div className="success-step-layout animate-scale-in">
           <div className="success-card glass-card">
             <CheckCircle2 size={64} className="success-check-icon animate-pulse-green" />
@@ -1003,6 +1154,350 @@ function BookingEngine() {
         .select-bus-btn {
           padding: 0.625rem 1.25rem;
           font-size: 0.9rem;
+        }
+
+        /* EVENT RESERVATION WORKSPACE */
+        .reservation-workspace {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1.75rem;
+          align-items: start;
+        }
+
+        @media (min-width: 1024px) {
+          .booking-page {
+            max-width: 1280px;
+          }
+
+          .reservation-workspace {
+            grid-template-columns: minmax(0, 1.3fr) minmax(340px, 0.7fr);
+          }
+        }
+
+        .event-seat-panel,
+        .reservation-state-card {
+          background: white;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-xl);
+          box-shadow: var(--shadow-md);
+        }
+
+        .event-seat-panel {
+          padding: 1.75rem;
+        }
+
+        .seat-panel-header {
+          display: flex;
+          justify-content: space-between;
+          gap: 1rem;
+          align-items: flex-start;
+          margin-bottom: 1.25rem;
+        }
+
+        .panel-kicker {
+          display: inline-block;
+          color: var(--primary);
+          font-size: 0.74rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          margin-bottom: 0.35rem;
+        }
+
+        .seat-legend {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: 0.75rem;
+          color: var(--muted);
+          font-size: 0.82rem;
+          font-weight: 700;
+        }
+
+        .seat-legend span {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+        }
+
+        .legend-dot {
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          display: inline-block;
+          border: 1px solid #9fb1c8;
+        }
+
+        .available-dot { background: rgba(255, 255, 255, 0.7); }
+        .selected-dot { background: var(--primary); border-color: var(--primary); }
+        .booked-dot { background: #cbd5e1; border-color: #cbd5e1; filter: blur(1px); }
+
+        .session-strip {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 0.85rem;
+          padding: 1rem;
+          margin-bottom: 1.5rem;
+          background: #f8fafc;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+        }
+
+        @media (min-width: 768px) {
+          .session-strip {
+            grid-template-columns: 1.3fr 0.55fr 1fr;
+            align-items: center;
+          }
+        }
+
+        .strip-label {
+          display: block;
+          color: var(--muted);
+          font-size: 0.72rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          margin-bottom: 0.25rem;
+        }
+
+        .compact-time-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.45rem;
+        }
+
+        .compact-time-chip {
+          border: 1px solid var(--border);
+          background: white;
+          color: var(--foreground);
+          border-radius: 999px;
+          padding: 0.35rem 0.7rem;
+          font-size: 0.78rem;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+
+        .compact-time-chip.active {
+          background: var(--primary);
+          border-color: var(--primary);
+          color: white;
+        }
+
+        .event-seat-grid {
+          display: grid;
+          grid-template-columns: repeat(6, minmax(42px, 1fr));
+          gap: 0.75rem;
+          justify-items: center;
+          padding: 1.25rem;
+          border-radius: var(--radius-xl);
+          background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+          border: 1px solid #e2e8f0;
+        }
+
+        @media (min-width: 700px) {
+          .event-seat-grid {
+            grid-template-columns: repeat(10, minmax(44px, 1fr));
+            gap: 0.85rem;
+          }
+        }
+
+        .event-seat {
+          width: 46px;
+          height: 46px;
+          border-radius: 50%;
+          border: 1.5px solid #9fb1c8;
+          background: rgba(255, 255, 255, 0.82);
+          color: var(--primary-dark);
+          font-size: 0.74rem;
+          font-weight: 800;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+        }
+
+        .event-seat:hover:not(:disabled) {
+          transform: translateY(-2px) scale(1.06);
+          border-color: var(--primary);
+          box-shadow: 0 8px 18px rgba(15, 95, 184, 0.18);
+        }
+
+        .event-seat.selected {
+          background: var(--primary);
+          border-color: var(--primary);
+          color: white;
+          box-shadow: 0 10px 20px rgba(15, 95, 184, 0.28);
+        }
+
+        .event-seat.booked {
+          background: rgba(203, 213, 225, 0.7);
+          border-color: rgba(148, 163, 184, 0.7);
+          color: rgba(71, 85, 105, 0.75);
+          cursor: not-allowed;
+          filter: blur(2px);
+          opacity: 0.72;
+          box-shadow: none;
+        }
+
+        .reservation-state-card {
+          padding: 1.75rem;
+          min-height: 440px;
+          position: sticky;
+          top: 92px;
+        }
+
+        .reservation-state-card.success-state {
+          border-color: rgba(15, 95, 184, 0.28);
+          background: linear-gradient(180deg, #ffffff 0%, #eaf3ff 100%);
+        }
+
+        .state-content {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          min-height: 390px;
+        }
+
+        .state-icon-wrap {
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--primary);
+          background: var(--primary-light);
+        }
+
+        .state-content p {
+          color: var(--muted);
+          line-height: 1.65;
+        }
+
+        .summary-box {
+          background: #f8fafc;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          padding: 1rem;
+        }
+
+        .summary-total-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1rem 0;
+          border-top: 1px solid var(--border);
+          border-bottom: 1px solid var(--border);
+          color: var(--muted);
+          font-weight: 800;
+        }
+
+        .summary-total-row strong {
+          color: var(--primary);
+          font-size: 2rem;
+          font-family: var(--font-heading);
+        }
+
+        .state-primary-btn,
+        .state-secondary-btn {
+          width: 100%;
+          padding: 0.85rem 1rem;
+        }
+
+        .dummy-qr-box {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.7rem;
+          padding: 1.25rem;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          background: #f8fafc;
+          text-align: center;
+        }
+
+        .qr-grid-mark {
+          width: 130px;
+          height: 130px;
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 6px;
+          padding: 12px;
+          background: white;
+          border: 1px solid #cbd5e1;
+          border-radius: var(--radius-md);
+        }
+
+        .qr-grid-mark span {
+          background: var(--primary-dark);
+          border-radius: 3px;
+        }
+
+        .qr-grid-mark span:nth-child(2n) {
+          background: var(--primary);
+        }
+
+        .receipt-upload-box {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0.65rem;
+          min-height: 118px;
+          border: 2px dashed #9fb1c8;
+          border-radius: var(--radius-lg);
+          background: white;
+          color: var(--primary-dark);
+          font-weight: 800;
+          text-align: center;
+          cursor: pointer;
+          padding: 1rem;
+          transition: all var(--transition-fast);
+        }
+
+        .receipt-upload-box:hover {
+          border-color: var(--primary);
+          background: var(--primary-light);
+        }
+
+        .file-name-inline {
+          color: var(--primary-dark);
+          background: var(--primary-light);
+          border: 1px solid rgba(15, 95, 184, 0.18);
+          border-radius: var(--radius-md);
+          padding: 0.55rem 0.75rem;
+          font-size: 0.85rem;
+          font-weight: 800;
+          word-break: break-word;
+        }
+
+        .success-message-state {
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+        }
+
+        .success-message-state .success-check-icon {
+          color: var(--primary);
+        }
+
+        .success-seat-list {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 0.35rem;
+        }
+
+        .success-seat-list span {
+          background: white;
+          color: var(--primary-dark);
+          border: 1px solid rgba(15, 95, 184, 0.2);
+          border-radius: 999px;
+          padding: 0.35rem 0.65rem;
+          font-size: 0.78rem;
+          font-weight: 800;
         }
 
         /* STEP 2 STYLES */
