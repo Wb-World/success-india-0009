@@ -131,8 +131,6 @@ export default function Footer() {
             <Link href="/contact">Privacy Policy</Link>
             <span className="bullet-dot"></span>
             <Link href="/contact">Terms & Conditions</Link>
-            <span className="bullet-dot"></span>
-            <Link href="/contact">Refund Guidelines</Link>
           </div>
         </div>
       </div>
@@ -206,9 +204,15 @@ export default function Footer() {
 
         .contact-item {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           gap: 0.625rem;
           color: #374151;
+          line-height: 1.45;
+        }
+        
+        .contact-item :global(svg) {
+          flex-shrink: 0;
+          margin-top: 3px;
         }
 
         .footer-title {
