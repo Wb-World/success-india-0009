@@ -209,7 +209,7 @@ export default function AdminDashboard() {
               <Clock size={22} />
             </div>
             <div className="metric-info">
-              <span className="metric-label">Unbooked Requests</span>
+              <span className="metric-label">Pending Registrations</span>
               <h3 className="metric-value text-amber">{stats.pendingCount}</h3>
             </div>
           </div>
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
               <Ticket size={22} />
             </div>
             <div className="metric-info">
-              <span className="metric-label">Approved Seats</span>
+              <span className="metric-label">Confirmed Seats</span>
               <h3 className="metric-value text-emerald">{stats.approvedCount}</h3>
             </div>
           </div>
@@ -229,7 +229,7 @@ export default function AdminDashboard() {
               <X size={22} />
             </div>
             <div className="metric-info">
-              <span className="metric-label">Denied Queries</span>
+              <span className="metric-label">Rejected Registrations</span>
               <h3 className="metric-value text-red">{stats.deniedCount}</h3>
             </div>
           </div>
@@ -243,7 +243,7 @@ export default function AdminDashboard() {
                 onClick={() => setActiveTab('pending')} 
                 className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
               >
-                Unbooked Requests ({stats.pendingCount})
+                Pending Registrations ({stats.pendingCount})
               </button>
               <button 
                 onClick={() => setActiveTab('approved')} 
@@ -255,7 +255,7 @@ export default function AdminDashboard() {
                 onClick={() => setActiveTab('denied')} 
                 className={`tab-btn ${activeTab === 'denied' ? 'active' : ''}`}
               >
-                Denied Log ({stats.deniedCount})
+                Rejected Log ({stats.deniedCount})
               </button>
             </div>
             <button onClick={() => fetchAdminBookings(adminUser.id)} className="btn btn-secondary btn-refresh hover-spin-icon">
@@ -295,21 +295,21 @@ export default function AdminDashboard() {
                     {/* Passenger & Booking Info */}
                     <div className="details-col">
                       <div className="details-group">
-                        <h4 className="group-title">Passenger Profile</h4>
+                        <h4 className="group-title">Member / Attendee Profile</h4>
                         <div className="info-grid">
-                          <div className="info-row"><span>Passenger Name:</span><strong>{b.user.name}</strong></div>
+                          <div className="info-row"><span>Attendee Name:</span><strong>{b.user.name}</strong></div>
                           <div className="info-row"><span>Email Contact:</span><strong>{b.user.email}</strong></div>
                           <div className="info-row"><span>Helpline Mobile:</span><strong>{b.user.phone}</strong></div>
                         </div>
                       </div>
 
                       <div className="details-group">
-                        <h4 className="group-title">Reservation Route & Seat Alignment</h4>
+                        <h4 className="group-title">Seminar Details & Seat Allocation</h4>
                         <div className="info-grid">
-                          <div className="info-row"><span>Coach Scheduled:</span><strong>{b.busName}</strong></div>
-                          <div className="info-row"><span>Highway Corridor:</span><strong>{b.source} <ArrowRight size={12} className="inline-arrow" /> {b.destination}</strong></div>
-                          <div className="info-row"><span>Departure Details:</span><strong>{b.date} &bull; {b.time}</strong></div>
-                          <div className="info-row"><span>Locked Cabin Seats:</span><span className="seats-span">{b.seats.join(', ')}</span></div>
+                          <div className="info-row"><span>Seminar Program:</span><strong>{b.busName}</strong></div>
+                          <div className="info-row"><span>Venue / Route:</span><strong>{b.source} <ArrowRight size={12} className="inline-arrow" /> {b.destination}</strong></div>
+                          <div className="info-row"><span>Seminar Date & Time:</span><strong>{b.date} &bull; {b.time}</strong></div>
+                          <div className="info-row"><span>Allocated Seats:</span><span className="seats-span">{b.seats.join(', ')}</span></div>
                         </div>
                       </div>
 
