@@ -191,6 +191,7 @@ export default function Navbar() {
           letter-spacing: -0.5px;
           color: var(--foreground);
           transition: transform var(--transition-fast), opacity var(--transition-fast);
+          white-space: nowrap;
         }
         .nav-logo:hover { transform: scale(1.03); opacity: 0.9; }
 
@@ -199,9 +200,10 @@ export default function Navbar() {
           height: 34px;
           border-radius: 50%;
           object-fit: cover;
-          border: 1px solid rgba(15, 95, 184, 0.22);
-          filter: drop-shadow(0 2px 6px rgba(15, 95, 184, 0.25));
+          border: 1px solid rgba(22, 163, 74, 0.22);
+          filter: drop-shadow(0 2px 6px rgba(22, 163, 74, 0.25));
           transition: transform var(--transition-fast);
+          flex-shrink: 0;
         }
         .nav-logo:hover .brand-logo-img { transform: rotate(-8deg); }
 
@@ -261,12 +263,12 @@ export default function Navbar() {
           font-size: 0.875rem;
           font-weight: 600;
           transition: all var(--transition-fast);
-          border: 1px solid rgba(15, 95, 184, 0.18);
+          border: 1px solid rgba(22, 163, 74, 0.18);
         }
         .profile-btn-nav:hover {
           background: #d1fae5;
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(15,95,184,0.2);
+          box-shadow: 0 4px 12px rgba(22,163,74,0.2);
         }
 
         .btn-logout {
@@ -294,10 +296,15 @@ export default function Navbar() {
           font-size: 0.9rem;
           border-radius: var(--radius-lg);
           transition: all var(--transition-fast) !important;
+          background: var(--primary-light);
+          color: var(--primary-dark);
+          border: 1px solid rgba(22, 163, 74, 0.22);
         }
         .nav-login-btn:hover {
+          background: #d1fae5;
+          color: var(--primary-dark);
           transform: translateY(-2px);
-          box-shadow: 0 4px 14px rgba(15,95,184,0.25);
+          box-shadow: 0 4px 14px rgba(22, 163, 74, 0.2);
         }
 
         .mobile-menu-toggle {
@@ -362,7 +369,17 @@ export default function Navbar() {
         .mobile-logout-btn { width: 100%; justify-content: center; padding: 0.625rem; }
 
         .mobile-auth-actions { display: flex; flex-direction: column; gap: 0.875rem; align-items: center; }
-        .mobile-login-btn { width: 100%; text-align: center; justify-content: center; }
+        .mobile-login-btn {
+          width: 100%;
+          text-align: center;
+          justify-content: center;
+          background: var(--primary-light) !important;
+          color: var(--primary-dark) !important;
+          border: 1px solid rgba(22, 163, 74, 0.22) !important;
+        }
+        .mobile-login-btn:hover {
+          background: #d1fae5 !important;
+        }
 
         @media (min-width: 768px) {
           .nav-links-desktop { display: flex; }

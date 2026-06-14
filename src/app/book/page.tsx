@@ -801,7 +801,7 @@ function BookingEngine() {
         }
 
         .spinner {
-          border: 3px solid rgba(15, 95, 184, 0.12);
+          border: 3px solid rgba(22, 163, 74, 0.12);
           border-left-color: var(--primary);
           width: 32px;
           height: 32px;
@@ -1155,14 +1155,14 @@ function BookingEngine() {
         .event-seat:hover:not(:disabled) {
           transform: translateY(-2px) scale(1.06);
           border-color: var(--primary);
-          box-shadow: 0 8px 18px rgba(15, 95, 184, 0.18);
+          box-shadow: 0 8px 18px rgba(22, 163, 74, 0.18);
         }
 
         .event-seat.selected {
           background: var(--primary);
           border-color: var(--primary);
           color: white;
-          box-shadow: 0 10px 20px rgba(15, 95, 184, 0.28);
+          box-shadow: 0 10px 20px rgba(22, 163, 74, 0.28);
         }
 
         .event-seat.booked {
@@ -1183,8 +1183,8 @@ function BookingEngine() {
         }
 
         .reservation-state-card.success-state {
-          border-color: rgba(15, 95, 184, 0.28);
-          background: linear-gradient(180deg, #ffffff 0%, #eaf3ff 100%);
+          border-color: rgba(22, 163, 74, 0.28);
+          background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
         }
 
         .state-content {
@@ -1313,7 +1313,7 @@ function BookingEngine() {
         .file-name-inline {
           color: var(--primary-dark);
           background: var(--primary-light);
-          border: 1px solid rgba(15, 95, 184, 0.18);
+          border: 1px solid rgba(22, 163, 74, 0.18);
           border-radius: var(--radius-md);
           padding: 0.55rem 0.75rem;
           font-size: 0.85rem;
@@ -1360,7 +1360,7 @@ function BookingEngine() {
         .success-seat-list span {
           background: white;
           color: var(--primary-dark);
-          border: 1px solid rgba(15, 95, 184, 0.2);
+          border: 1px solid rgba(22, 163, 74, 0.2);
           border-radius: 999px;
           padding: 0.35rem 0.65rem;
           font-size: 0.78rem;
@@ -1529,7 +1529,7 @@ function BookingEngine() {
           color: var(--primary-dark);
           padding: 0.25rem 0.5rem;
           border-radius: var(--radius-sm);
-          border: 1px solid rgba(15, 95, 184, 0.18);
+          border: 1px solid rgba(22, 163, 74, 0.18);
         }
 
         .total-price-row {

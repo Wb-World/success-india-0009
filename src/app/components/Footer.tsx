@@ -139,8 +139,8 @@ export default function Footer() {
 
       <style jsx>{`
         .site-footer {
-          background: #0b1329;
-          color: #94a3b8;
+          background: #f0fdf4;
+          color: #374151;
           padding: 4.5rem 0 1.5rem 0;
           border-top: 4px solid var(--primary);
           font-size: 0.9rem;
@@ -173,7 +173,8 @@ export default function Footer() {
           font-family: var(--font-heading);
           font-size: 1.5rem;
           font-weight: 800;
-          color: white;
+          color: var(--primary-dark);
+          white-space: nowrap;
         }
 
         .footer-logo-img {
@@ -181,11 +182,13 @@ export default function Footer() {
           height: 34px;
           border-radius: 50%;
           object-fit: cover;
-          border: 1px solid rgba(255, 255, 255, 0.24);
+          border: 1px solid rgba(22, 163, 74, 0.24);
+          flex-shrink: 0;
         }
 
         .footer-desc {
           line-height: 1.6;
+          color: #4b5563;
         }
 
         .footer-contact-info {
@@ -199,12 +202,12 @@ export default function Footer() {
           display: flex;
           align-items: center;
           gap: 0.625rem;
-          color: #cbd5e1;
+          color: #374151;
         }
 
         .footer-title {
           font-family: var(--font-heading);
-          color: white;
+          color: var(--primary-dark);
           font-size: 1rem;
           font-weight: 700;
           margin-bottom: 1.25rem;
@@ -233,6 +236,7 @@ export default function Footer() {
         }
 
         .footer-links a {
+          color: #4b5563;
           transition: all var(--transition-fast);
           display: inline-block;
         }
@@ -250,13 +254,14 @@ export default function Footer() {
 
         .newsletter-text {
           line-height: 1.5;
+          color: #4b5563;
         }
 
         .newsletter-form {
           display: flex;
           border-radius: var(--radius-lg);
           overflow: hidden;
-          border: 1px solid #334155;
+          border: 1px solid #cbd5e1;
           transition: border-color var(--transition-fast);
         }
 
@@ -266,11 +271,15 @@ export default function Footer() {
 
         .newsletter-input {
           flex: 1;
-          background: #1e293b;
+          background: #ffffff;
           border: none;
-          color: white;
+          color: #111827;
           padding: 0.75rem 1rem;
           font-size: 0.9rem;
+        }
+
+        .newsletter-input::placeholder {
+          color: #9ca3af;
         }
 
         .newsletter-btn {
@@ -287,9 +296,10 @@ export default function Footer() {
         }
 
         .footer-bottom {
-          border-top: 1px solid #1e293b;
+          border-top: 1px solid #d1fae5;
           padding-top: 1.5rem;
           font-size: 0.8rem;
+          color: #6b7280;
         }
 
         .footer-bottom-flex {
@@ -320,6 +330,10 @@ export default function Footer() {
           justify-content: center;
         }
 
+        .footer-legal-links a {
+          color: #6b7280;
+        }
+
         .footer-legal-links a:hover {
           color: var(--primary);
         }
@@ -327,7 +341,7 @@ export default function Footer() {
         .bullet-dot {
           width: 4px;
           height: 4px;
-          background-color: #475569;
+          background-color: #94a3b8;
           border-radius: 50%;
         }
       `}</style>
