@@ -4,9 +4,9 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 export const metadata: Metadata = {
-  title: 'GreenWheels | Premium Bus Ticket Booking',
-  description: 'Book premium and luxury bus tickets online with ease. Select your favorite seats, make instant payments, and enjoy a safe journey with GreenWheels.',
-  keywords: 'bus ticket, online booking, luxury travel, bus seating map, green wheels, fast transit',
+  title: 'ShowTime | Events & Movies Booking Platform',
+  description: 'Book tickets for the latest movies, live concerts, stand-up comedy, sports, and theatrical performances in your city instantly on ShowTime.',
+  keywords: 'event booking, movie tickets, showtime, live concerts, stand-up comedy, sports tickets, online reservation',
 };
 
 export default function RootLayout({

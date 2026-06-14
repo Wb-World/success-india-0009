@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Bus, User, LogOut, Menu, X } from 'lucide-react';
+import { Ticket, User, LogOut, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const router = useRouter();
@@ -50,8 +50,8 @@ export default function Navbar() {
       <header className="nav-header">
         <div className="nav-container">
           <div className="nav-logo">
-            <Bus size={26} className="logo-icon" />
-            <span>Green<span className="text-primary">Wheels</span></span>
+            <Ticket size={26} className="logo-icon" />
+            <span>Show<span className="text-primary">Time</span></span>
           </div>
         </div>
       </header>
@@ -65,8 +65,8 @@ export default function Navbar() {
     <header className="nav-header animate-slide-down">
       <div className="nav-container">
         <Link href="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
-          <Bus size={28} className="logo-icon" />
-          <span>Green<span className="text-primary">Wheels</span></span>
+          <Ticket size={28} className="logo-icon" />
+          <span>Show<span className="text-primary">Time</span></span>
         </Link>
 
         {/* Desktop Nav Links */}
@@ -81,7 +81,7 @@ export default function Navbar() {
           {isLoggedIn && !isAdmin && (
             <>
               <Link href="/profile" className={`nav-link ${pathname === '/profile' ? 'active' : ''}`}>Dashboard</Link>
-              <Link href="/book" className={`nav-link ${pathname === '/book' ? 'active' : ''}`}>Bus Booking</Link>
+              <Link href="/book" className={`nav-link ${pathname === '/book' ? 'active' : ''}`}>Book Tickets</Link>
             </>
           )}
         </nav>
@@ -127,7 +127,7 @@ export default function Navbar() {
             {isLoggedIn && !isAdmin && (
               <>
                 <Link href="/profile" className={`mobile-link ${pathname === '/profile' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Dashboard</Link>
-                <Link href="/book" className={`mobile-link ${pathname === '/book' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Bus Booking</Link>
+                <Link href="/book" className={`mobile-link ${pathname === '/book' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Book Tickets</Link>
               </>
             )}
             <hr className="mobile-divider" />

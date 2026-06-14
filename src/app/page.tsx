@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Calendar, MapPin, Search, ShieldCheck, Clock, Award, Compass, ArrowRight, Star } from 'lucide-react';
+import { Calendar, MapPin, Search, ShieldCheck, Ticket, Film, Mic, Music, Sparkles, Star, ArrowRight } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
   const [source, setSource] = useState('Bangalore');
-  const [destination, setDestination] = useState('Chennai');
+  const [destination, setDestination] = useState('Movies');
   const [date, setDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() + 7);
@@ -17,10 +17,6 @@ export default function Home() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (source === destination) {
-      alert('Departure and Destination locations cannot be the same!');
-      return;
-    }
     router.push(`/book?source=${encodeURIComponent(source)}&destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(date)}`);
   };
 
@@ -31,30 +27,30 @@ export default function Home() {
         <div className="hero-gradient"></div>
         <div className="container hero-container">
           <div className="hero-text-col animate-slide-up">
-            <span className="hero-tagline">Premium Intercity Travel</span>
+            <span className="hero-tagline">Live Experiences</span>
             <h1 className="hero-title">
-              India&apos;s Next-Generation <span className="text-highlight">Eco-Transit Network</span>
+              Discover The Best <span className="text-highlight">Events & Movies</span> Happening Near You
             </h1>
             <p className="hero-subtitle">
-              Enjoy premium reclining seats, high-speed onboard WiFi, and punctual departures. Book tickets securely with local QR transfers and verified manual approvals.
+              Book tickets for the latest movies, live concerts, stand-up comedy, sports, and theatrical performances in your city instantly.
             </p>
             <div className="hero-cta-buttons">
               <Link href="/book" className="btn btn-primary btn-lg-premium">
-                <Compass size={18} /> Reserve Seat Now
+                <Ticket size={18} /> Explore Events
               </Link>
-              <Link href="/about" className="btn btn-secondary btn-lg-premium">
-                Explore Fleet
+              <Link href="/book?destination=Movies" className="btn btn-secondary btn-lg-premium">
+                Trending Movies
               </Link>
             </div>
           </div>
 
           <div className="hero-search-col animate-scale-in">
             <div className="search-card glass-card">
-              <h3 className="search-card-title">Plan Your Next Journey</h3>
+              <h3 className="search-card-title">Find Your Next Plan</h3>
               <form onSubmit={handleSearch}>
                 <div className="form-group">
                   <label className="form-label">
-                    <MapPin size={14} className="input-label-icon" /> Departure Terminal
+                    <MapPin size={14} className="input-label-icon" /> Select City
                   </label>
                   <select 
                     value={source} 
@@ -62,37 +58,34 @@ export default function Home() {
                     className="form-control select-field"
                   >
                     <option value="Bangalore">Bengaluru (Bangalore)</option>
-                    <option value="Chennai">Chennai (Madras)</option>
-                    <option value="Mumbai">Mumbai (Bombay)</option>
+                    <option value="Chennai">Chennai</option>
+                    <option value="Mumbai">Mumbai</option>
                     <option value="Pune">Pune</option>
                     <option value="Delhi">Delhi (NCR)</option>
                     <option value="Hyderabad">Hyderabad</option>
-                    <option value="Jaipur">Jaipur (Pink City)</option>
+                    <option value="Jaipur">Jaipur</option>
                   </select>
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">
-                    <MapPin size={14} className="input-label-icon text-primary" /> Destination Terminal
+                    <Film size={14} className="input-label-icon text-primary" /> Event Category
                   </label>
                   <select 
                     value={destination} 
                     onChange={(e) => setDestination(e.target.value)}
                     className="form-control select-field"
                   >
-                    <option value="Chennai">Chennai (Madras)</option>
-                    <option value="Bangalore">Bengaluru (Bangalore)</option>
-                    <option value="Mumbai">Mumbai (Bombay)</option>
-                    <option value="Pune">Pune</option>
-                    <option value="Delhi">Delhi (NCR)</option>
-                    <option value="Hyderabad">Hyderabad</option>
-                    <option value="Jaipur">Jaipur (Pink City)</option>
+                    <option value="Movies">Movies</option>
+                    <option value="Concerts">Concerts</option>
+                    <option value="Comedy">Comedy</option>
+                    <option value="Sports">Sports</option>
                   </select>
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">
-                    <Calendar size={14} className="input-label-icon" /> Date of Travel
+                    <Calendar size={14} className="input-label-icon" /> Select Date
                   </label>
                   <input 
                     type="date" 
@@ -105,7 +98,7 @@ export default function Home() {
                 </div>
 
                 <button type="submit" className="btn btn-primary search-btn">
-                  <Search size={18} /> Search Buses
+                  <Search size={18} /> Search Events
                 </button>
               </form>
             </div>
@@ -116,38 +109,38 @@ export default function Home() {
       {/* Services Grid */}
       <section className="features-section container">
         <div className="section-header">
-          <h2 className="heading-lg">Why Intelligent Commuters Choose Us</h2>
-          <p className="section-subtitle">A seamless travel ecosystem engineered around speed, accountability, and luxurious comfort.</p>
+          <h2 className="heading-lg">The Ultimate Entertainment Booking Experience</h2>
+          <p className="section-subtitle">Enjoy instant confirmations, interactive seating layout selection, and verified premium tickets.</p>
         </div>
 
         <div className="features-grid">
           <div className="feature-card card-hover-rotate hover-lift hover-glow">
             <div className="feature-icon-wrapper">
-              <ShieldCheck size={28} className="feature-icon animate-pulse" />
+              <Ticket size={28} className="feature-icon animate-pulse" />
             </div>
-            <h4 className="heading-sm feature-title">Secured Vector Booking</h4>
+            <h4 className="heading-sm feature-title">Instant QR Tickets</h4>
             <p className="feature-desc">
-              Every passenger chooses their preferred seat on an interactive 60-seat vector cabin map. Each transaction is manually validated using screenshot verification, eliminating duplicate seat allocations completely.
+              Get your tickets delivered instantly as secure QR codes. Every ticket is manually and securely verified to eliminate duplicate entries and booking issues completely.
             </p>
           </div>
 
           <div className="feature-card card-hover-rotate">
             <div className="feature-icon-wrapper">
-              <Clock size={28} className="feature-icon animate-pulse" />
+              <Film size={28} className="feature-icon animate-pulse" />
             </div>
-            <h4 className="heading-sm feature-title">Unmatched Punctuality</h4>
+            <h4 className="heading-sm feature-title">Premium Seat Selection</h4>
             <p className="feature-desc">
-              We monitor highway traffic grids dynamically using intelligent GPS analytics. This translates to an exceptional 99.8% on-time departure and arrival index across all highway routes.
+              Interactive seating layout maps let you select your exact seats (recliners, premium, balcony) for all theaters, sports arenas, and live concert venues across cities.
             </p>
           </div>
 
           <div className="feature-card card-hover-rotate">
             <div className="feature-icon-wrapper">
-              <Award size={28} className="feature-icon animate-pulse" />
+              <Mic size={28} className="feature-icon animate-pulse" />
             </div>
-            <h4 className="heading-sm feature-title">Executive Fleet Cabin</h4>
+            <h4 className="heading-sm feature-title">Exclusive Shows & Events</h4>
             <p className="feature-desc">
-              Travel in state-of-the-art multi-axle coaches. Features include ergonomic calf-support recliners, personal reading brackets, Type-C charging slots, and temperature-controlled air purification.
+              Access early bird discounts, exclusive pre-sales, and front-row tickets for the most anticipated music concerts, stand-up comedy tours, local sports leagues, and movies.
             </p>
           </div>
         </div>
@@ -157,58 +150,58 @@ export default function Home() {
       <section className="stats-section">
         <div className="container stats-container">
           <div className="stat-item hover-bounce">
-            <div className="stat-num">99.8%</div>
-            <div className="stat-label">On-Time Departure Rate</div>
+            <div className="stat-num">1M+</div>
+            <div className="stat-label">Tickets Booked Monthly</div>
           </div>
           <div className="stat-item hover-bounce">
-            <div className="stat-num">25,000+</div>
-            <div className="stat-label">Satisfied Indian Commuters Monthly</div>
+            <div className="stat-num">5,000+</div>
+            <div className="stat-label">Events & Shows Listed</div>
           </div>
           <div className="stat-item hover-bounce">
-            <div className="stat-num">40+</div>
-            <div className="stat-label">Intercity Connect Lanes Daily</div>
+            <div className="stat-num">150+</div>
+            <div className="stat-label">Venues Across Cities</div>
           </div>
         </div>
       </section>
 
-      {/* Popular Routes */}
+      {/* Popular Routes -> Trending Events */}
       <section className="routes-section container">
         <div className="section-header">
-          <h2 className="heading-lg">Popular Direct Routes</h2>
-          <p className="section-subtitle">Quick reservation on our top-rated regional lines</p>
+          <h2 className="heading-lg">Trending Events & Shows</h2>
+          <p className="section-subtitle">Book tickets for the most popular shows near you</p>
         </div>
 
         <div className="routes-grid">
-          <div className="route-card route-card-interactive hover-lift" onClick={() => router.push(`/book?source=Bangalore&destination=Chennai`)}>
+          <div className="route-card route-card-interactive hover-lift" onClick={() => router.push(`/book?source=Chennai&destination=Concerts`)}>
             <div className="route-info">
-              <div className="route-cities">Bengaluru <ArrowRight size={14} className="cities-arrow" /> Chennai</div>
-              <div className="route-details">AC Sleeper (2+2) &bull; 6h 30m</div>
+              <div className="route-cities">A.R. Rahman Live <ArrowRight size={14} className="cities-arrow" /> Concert</div>
+              <div className="route-details">Musical Concert &bull; Chennai Venue</div>
             </div>
             <div className="route-price-tag">
               <span>From</span>
-              <span className="price-num">₹950</span>
+              <span className="price-num">₹1500</span>
             </div>
           </div>
 
-          <div className="route-card route-card-interactive hover-lift" onClick={() => router.push(`/book?source=Mumbai&destination=Pune`)}>
+          <div className="route-card route-card-interactive hover-lift" onClick={() => router.push(`/book?source=Bangalore&destination=Movies`)}>
             <div className="route-info">
-              <div className="route-cities">Mumbai <ArrowRight size={14} className="cities-arrow" /> Pune</div>
-              <div className="route-details">Executive Sleeper (2+1) &bull; 3h 45m</div>
+              <div className="route-cities">Kalki 2898 AD <ArrowRight size={14} className="cities-arrow" /> IMAX 3D</div>
+              <div className="route-details">Action / Sci-Fi Movie &bull; Bengaluru</div>
             </div>
             <div className="route-price-tag">
               <span>From</span>
-              <span className="price-num">₹650</span>
+              <span className="price-num">₹350</span>
             </div>
           </div>
 
-          <div className="route-card route-card-interactive hover-lift" onClick={() => router.push(`/book?source=Delhi&destination=Jaipur`)}>
+          <div className="route-card route-card-interactive hover-lift" onClick={() => router.push(`/book?source=Bangalore&destination=Comedy`)}>
             <div className="route-info">
-              <div className="route-cities">Delhi <ArrowRight size={14} className="cities-arrow" /> Jaipur</div>
-              <div className="route-details">AC Multi-Axle &bull; 5h 30m</div>
+              <div className="route-cities">Zakir Khan Live <ArrowRight size={14} className="cities-arrow" /> Tathastu</div>
+              <div className="route-details">Stand-Up Comedy &bull; Bengaluru Special</div>
             </div>
             <div className="route-price-tag">
               <span>From</span>
-              <span className="price-num">₹1250</span>
+              <span className="price-num">₹799</span>
             </div>
           </div>
         </div>
@@ -218,8 +211,8 @@ export default function Home() {
       <section className="testimonials-section">
         <div className="container">
           <div className="section-header">
-            <h2 className="heading-lg">What Our Travelers Say</h2>
-            <p className="section-subtitle">Real feedback from daily professionals and tourists</p>
+            <h2 className="heading-lg">What Our Fans & Moviegoers Say</h2>
+            <p className="section-subtitle">Real feedback from daily entertainment lovers and film critics</p>
           </div>
           <div className="testimonials-grid">
             <div className="testimonial-card">
@@ -231,9 +224,9 @@ export default function Home() {
                 <Star size={16} fill="#f59e0b" color="#f59e0b" />
               </div>
               <p className="testimonial-text">
-                &quot;The ticket booking flow is extremely transparent. I chose seat A3, uploaded my UPI payment screenshot, and within 10 minutes, the admin approved my seat. Excellent service between Bangalore and Chennai.&quot;
+                &quot;The booking flow for concerts is incredibly smooth. I chose my premium seats, uploaded my UPI payment receipt, and got my ticket confirmed in minutes! Excellent experience booking the AR Rahman concert.&quot;
               </p>
-              <h5 className="testimonial-author">- Raghav Sundaram, Senior Systems Engineer</h5>
+              <h5 className="testimonial-author">- Raghav Sundaram, Tech Lead & Concert Fan</h5>
             </div>
             
             <div className="testimonial-card">
@@ -245,9 +238,9 @@ export default function Home() {
                 <Star size={16} fill="#f59e0b" color="#f59e0b" />
               </div>
               <p className="testimonial-text">
-                &quot;I travel between Pune and Mumbai twice a week for client consults. GreenWheels&apos; coaches are consistently spotless, and the seats feel like business-class flight suites. Truly professional operations.&quot;
+                &quot;I book all my weekend movies and stand-up shows here. The ticket confirmation is blazing fast, and the seating selection is spot on. Truly a premium and reliable platform for live entertainment!&quot;
               </p>
-              <h5 className="testimonial-author">- Meera Deshmukh, Corporate Consultant</h5>
+              <h5 className="testimonial-author">- Meera Deshmukh, Film & Comedy Critic</h5>
             </div>
           </div>
         </div>
@@ -262,7 +255,7 @@ export default function Home() {
         .hero-section {
           position: relative;
           padding: 6rem 0 8rem 0;
-          background-color: #064e3b;
+          background-color: #121214;
           color: white;
           overflow: hidden;
           min-height: 600px;
@@ -276,7 +269,7 @@ export default function Home() {
           left: 0;
           right: 0;
           bottom: 0;
-          background: linear-gradient(135deg, #022c22 0%, #064e3b 60%, #10b981 100%);
+          background: linear-gradient(135deg, #09090b 0%, #121214 60%, #f84464 100%);
           z-index: 1;
         }
 
@@ -310,17 +303,17 @@ export default function Home() {
           text-transform: uppercase;
           letter-spacing: 2px;
           color: var(--primary);
-          background: rgba(16, 185, 129, 0.15);
+          background: rgba(248, 68, 100, 0.15);
           padding: 0.5rem 1rem;
           border-radius: 9999px;
           align-self: flex-start;
-          border: 1px solid rgba(16, 185, 129, 0.25);
+          border: 1px solid rgba(248, 68, 100, 0.25);
           transition: all 0.3s ease;
         }
         
         .hero-tagline:hover {
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+          box-shadow: 0 4px 12px rgba(248, 68, 100, 0.15);
         }
 
         .hero-title {
@@ -340,13 +333,13 @@ export default function Home() {
 
         .text-highlight {
           color: var(--primary);
-          text-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+          text-shadow: 0 4px 15px rgba(248, 68, 100, 0.3);
         }
 
         .hero-subtitle {
           font-size: 1.1rem;
           line-height: 1.7;
-          color: #d1fae5;
+          color: #ffe4e6;
           max-width: 560px;
           margin: 0;
         }
@@ -391,18 +384,18 @@ export default function Home() {
           font-family: var(--font-heading);
           font-size: 1.35rem;
           font-weight: 700;
-          color: #064e3b;
+          color: #f84464;
           margin-bottom: 1.5rem;
           text-align: center;
           padding-bottom: 1rem;
-          border-bottom: 1px solid #d1fae5;
+          border-bottom: 1px solid #ffe4e6;
         }
 
         .input-label-icon {
           vertical-align: middle;
           margin-top: -3px;
           margin-right: 4px;
-          color: var(--primary-dark);
+          color: var(--primary);
         }
 
         .select-field, .date-field {
@@ -485,7 +478,7 @@ export default function Home() {
           color: var(--primary);
           border-radius: 50%;
           margin-bottom: 1.5rem;
-          box-shadow: 0 6px 15px rgba(16, 185, 129, 0.12);
+          box-shadow: 0 6px 15px rgba(248, 68, 100, 0.12);
           flex-shrink: 0;
         }
 
@@ -504,9 +497,9 @@ export default function Home() {
 
         /* Stats Section */
         .stats-section {
-          background: #ecfdf5;
-          border-top: 1px solid #d1fae5;
-          border-bottom: 1px solid #d1fae5;
+          background: #fff1f2;
+          border-top: 1px solid #ffe4e6;
+          border-bottom: 1px solid #ffe4e6;
           padding: 5rem 2rem;
         }
 
@@ -535,7 +528,7 @@ export default function Home() {
 
         @media (min-width: 768px) {
           .stat-item:not(:last-child) {
-            border-right: 1px solid #a7f3d0;
+            border-right: 1px solid #fecdd3;
           }
         }
 
@@ -547,7 +540,7 @@ export default function Home() {
           font-family: var(--font-heading);
           font-size: 3.5rem;
           font-weight: 800;
-          color: var(--primary-dark);
+          color: var(--primary);
           letter-spacing: -1px;
           line-height: 1;
         }
@@ -555,7 +548,7 @@ export default function Home() {
         .stat-label {
           font-size: 0.975rem;
           font-weight: 600;
-          color: #047857;
+          color: #be123c;
           margin-top: 0.25rem;
         }
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bus, Mail, Phone, MapPin, Send } from 'lucide-react';
+import { Ticket, Mail, Phone, MapPin, Send } from 'lucide-react';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -46,11 +46,11 @@ export default function Footer() {
       <div className="container footer-grid">
         <div className="footer-brand-col">
           <Link href="/" className="footer-logo">
-            <Bus size={28} className="footer-logo-icon" />
-            <span>Green<span className="text-primary">Wheels</span></span>
+            <Ticket size={28} className="footer-logo-icon" />
+            <span>Show<span className="text-primary">Time</span></span>
           </Link>
           <p className="footer-desc">
-            Experience premium bus travel across major metropolitan routes. Combining top-tier safety, comfort, and seamless scheduling since 2020.
+            Book tickets for the latest movies, live concerts, stand-up comedy, sports, and theatrical performances happening in your city instantly.
           </p>
           <div className="footer-contact-info">
             <div className="contact-item">
@@ -59,11 +59,11 @@ export default function Footer() {
             </div>
             <div className="contact-item">
               <Mail size={16} />
-              <span>support@greenwheels.in</span>
+              <span>support@showtime.in</span>
             </div>
             <div className="contact-item">
               <MapPin size={16} />
-              <span>100, Green City Plaza, MG Road, Bangalore, KA, India</span>
+              <span>100, ShowTime Arcade, MG Road, Bangalore, KA, India</span>
             </div>
           </div>
         </div>
@@ -74,16 +74,16 @@ export default function Footer() {
             {!isLoggedIn ? (
               <>
                 <li><Link href="/">Home Page</Link></li>
-                <li><Link href="/about">About Our Fleet</Link></li>
+                <li><Link href="/about">About Shows</Link></li>
                 <li><Link href="/contact">Contact Support</Link></li>
-                <li><Link href="/book">Reserve Ticket</Link></li>
+                <li><Link href="/book">Book Tickets</Link></li>
               </>
             ) : (
               <>
                 {!isAdmin ? (
                   <>
                     <li><Link href="/profile">Dashboard</Link></li>
-                    <li><Link href="/book">Bus Booking</Link></li>
+                    <li><Link href="/book">Book Tickets</Link></li>
                   </>
                 ) : (
                   <li><Link href="/admin/dashboard">Operations Console</Link></li>
@@ -94,19 +94,19 @@ export default function Footer() {
         </div>
 
         <div className="footer-links-col">
-          <h4 className="footer-title">Top Routes</h4>
+          <h4 className="footer-title">Top Categories</h4>
           <ul className="footer-links">
-            <li><Link href="/book?source=Bangalore&destination=Chennai">Bangalore to Chennai</Link></li>
-            <li><Link href="/book?source=Chennai&destination=Bangalore">Chennai to Bangalore</Link></li>
-            <li><Link href="/book?source=Mumbai&destination=Pune">Mumbai to Pune</Link></li>
-            <li><Link href="/book?source=Delhi&destination=Jaipur">Delhi to Jaipur</Link></li>
+            <li><Link href="/book?destination=Movies">Movies</Link></li>
+            <li><Link href="/book?destination=Concerts">Live Concerts</Link></li>
+            <li><Link href="/book?destination=Comedy">Stand-Up Comedy</Link></li>
+            <li><Link href="/book?destination=Sports">Sports Matches</Link></li>
           </ul>
         </div>
 
         <div className="footer-newsletter-col">
           <h4 className="footer-title">Stay Updated</h4>
           <p className="newsletter-text">
-            Subscribe to receive travel advisories, seasonal discount promo codes, and fleet updates.
+            Subscribe to receive weekly recommendations, early access alerts, and exclusive promo codes.
           </p>
           <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>
             <input 
@@ -125,7 +125,7 @@ export default function Footer() {
       <div className="footer-bottom">
         <div className="container footer-bottom-flex">
           <p className="copyright-text">
-            &copy; {currentYear} GreenWheels Transport Systems Inc. All rights reserved.
+            &copy; {currentYear} ShowTime Entertainment Booking Inc. All rights reserved.
           </p>
           <div className="footer-legal-links">
             <Link href="/contact">Privacy Policy</Link>
