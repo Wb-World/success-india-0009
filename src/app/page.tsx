@@ -155,8 +155,15 @@ export default function Home() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
     const eventParam = selectedEventId ? `&eventId=${encodeURIComponent(selectedEventId)}` : '';
-    router.push(`/book?venue=${encodeURIComponent(venue)}&seminar=${encodeURIComponent(seminar)}&date=${encodeURIComponent(date)}${eventParam}`);
+    const bookingPath = `/book?venue=${encodeURIComponent(venue)}&seminar=${encodeURIComponent(seminar)}&date=${encodeURIComponent(date)}${eventParam}`;
+    
+    if (!storedUser) {
+      router.push(`/profile?callbackUrl=${encodeURIComponent(bookingPath)}`);
+    } else {
+      router.push(bookingPath);
+    }
   };
 
   return (
@@ -212,9 +219,20 @@ export default function Home() {
               </div>
             </div>
             <div className="hero-cta-buttons">
-              <Link href="/book" className="btn btn-primary btn-lg-premium">
+              <button 
+                onClick={() => {
+                  const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+                  if (!storedUser) {
+                    router.push('/profile?callbackUrl=%2Fbook');
+                  } else {
+                    router.push('/book');
+                  }
+                }}
+                className="btn btn-primary btn-lg-premium"
+                style={{ cursor: 'pointer' }}
+              >
                 <Calendar size={18} /> Reserve a Seat
-              </Link>
+              </button>
               <Link href="/about" className="btn btn-secondary btn-lg-premium">
                 View Portal Context
               </Link>
@@ -373,7 +391,15 @@ export default function Home() {
             <div
               key={category}
               className="seminar-track-card"
-              onClick={() => router.push(`/book?venue=${encodeURIComponent(location)}&seminar=${encodeURIComponent(category)}${eventParam}`)}
+              onClick={() => {
+                const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+                const bookingPath = `/book?venue=${encodeURIComponent(location)}&seminar=${encodeURIComponent(category)}${eventParam}`;
+                if (!storedUser) {
+                  router.push(`/profile?callbackUrl=${encodeURIComponent(bookingPath)}`);
+                } else {
+                  router.push(bookingPath);
+                }
+              }}
             >
               <div className="seminar-track-info">
                 <div className="seminar-track-title">{category}</div>
