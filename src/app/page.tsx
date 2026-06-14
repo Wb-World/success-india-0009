@@ -436,8 +436,7 @@ export default function Home() {
           position: relative;
           padding: 6rem 0 7rem;
           background:
-            linear-gradient(135deg, rgba(2, 44, 34, 0.98) 0%, rgba(6, 78, 59, 0.96) 62%, rgba(16, 185, 129, 0.88) 100%),
-            radial-gradient(circle at top right, rgba(167, 243, 208, 0.2), transparent 34%);
+            linear-gradient(135deg, #1e9e48 0%, #25b454 50%, #28a745 100%);
           color: white;
           overflow: hidden;
           min-height: 640px;
@@ -450,7 +449,7 @@ export default function Home() {
           position: absolute;
           inset: auto 0 0 0;
           height: 96px;
-          background: linear-gradient(180deg, transparent, rgba(248, 250, 252, 0.98));
+          background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.98));
           pointer-events: none;
         }
 
