@@ -17,8 +17,8 @@ function BookingEngine() {
   const searchParams = useSearchParams();
 
   // Search parameters states
-  const [source, setSource] = useState('Bangalore');
-  const [destination, setDestination] = useState('Chennai');
+  const [source, setSource] = useState('Chromepet, Chennai');
+  const [destination, setDestination] = useState('Leadership Development Seminars');
   const [date, setDate] = useState(() => {
     const today = new Date();
     today.setDate(today.getDate() + 7);
@@ -71,7 +71,7 @@ function BookingEngine() {
 
   const handleSearchBuses = async (srcVal = source, destVal = destination, dateVal = date) => {
     if (srcVal === destVal) {
-      setErrorMsg('Departure and Destination locations cannot be the same.');
+      setErrorMsg('Please choose a valid seminar location and category.');
       return;
     }
     setErrorMsg('');
@@ -86,10 +86,10 @@ function BookingEngine() {
       if (res.ok) {
         setBuses(data.buses || []);
       } else {
-        setErrorMsg(data.error || 'Failed to fetch buses');
+        setErrorMsg(data.error || 'Failed to fetch seminar listings');
       }
     } catch (err) {
-      setErrorMsg('A connection error occurred while searching routes.');
+      setErrorMsg('A connection error occurred while searching seminars.');
     } finally {
       setLoadingBuses(false);
     }
@@ -196,14 +196,14 @@ function BookingEngine() {
 
   const totalPrice = selectedSeats.length * (selectedBus?.price || 0);
 
-  // Enforce passenger login
+  // Enforce member login
   if (!user) {
     return (
       <div className="guest-booking-container container animate-slide-up">
         <div className="guest-card glass-card">
           <AlertCircle size={48} className="guest-icon animate-bounce" />
           <h2 className="heading-md">Sign In Required</h2>
-          <p>You must establish a passenger session to reserve seats and complete screenshot verification.</p>
+          <p>Please sign in to reserve seminar seats and complete screenshot verification.</p>
           <button onClick={() => router.push('/profile')} className="btn btn-primary">
             Sign In / Create Account
           </button>
@@ -244,7 +244,7 @@ function BookingEngine() {
       <div className="booking-steps-timeline animate-slide-down">
         <div className={`step-node ${bookingStep === 'search' ? 'active' : ''} ${selectedBus ? 'completed' : ''}`} onClick={() => setBookingStep('search')}>
           <span className="step-num">{selectedBus ? '✓' : '1'}</span>
-          <span className="step-txt">Search Routes</span>
+          <span className="step-txt">Search Seminars</span>
         </div>
         <ChevronRight size={16} className="timeline-arrow" />
         <div className={`step-node ${bookingStep === 'seats' ? 'active' : ''} ${bookingStep === 'payment' || bookingStep === 'success' ? 'completed' : ''}`} onClick={() => { if (selectedBus) setBookingStep('seats'); }}>
@@ -271,31 +271,27 @@ function BookingEngine() {
           <div className="search-bar-widget glass-card animate-slide-up">
             <form onSubmit={(e) => { e.preventDefault(); handleSearchBuses(); }} className="search-form-inline">
               <div className="inline-group">
-                <label className="inline-label">From Terminal</label>
+                <label className="inline-label">Location</label>
                 <select value={source} onChange={(e) => setSource(e.target.value)} className="form-control select-control">
-                  <option value="Bangalore">Bengaluru (Bangalore)</option>
-                  <option value="Chennai">Chennai</option>
-                  <option value="Mumbai">Mumbai</option>
-                  <option value="Pune">Pune</option>
-                  <option value="Delhi">Delhi (NCR)</option>
-                  <option value="Hyderabad">Hyderabad</option>
-                  <option value="Jaipur">Jaipur</option>
+                  <option value="Chromepet, Chennai">Chromepet, Chennai</option>
+                  <option value="Chennai Central Region">Chennai Central Region</option>
+                  <option value="South Chennai">South Chennai</option>
+                  <option value="Tambaram">Tambaram</option>
+                  <option value="Pallavaram">Pallavaram</option>
+                  <option value="Tamil Nadu Chapter Network">Tamil Nadu Chapter Network</option>
                 </select>
               </div>
               <div className="inline-group">
-                <label className="inline-label">To Terminal</label>
+                <label className="inline-label">Event Category</label>
                 <select value={destination} onChange={(e) => setDestination(e.target.value)} className="form-control select-control">
-                  <option value="Chennai">Chennai</option>
-                  <option value="Bangalore">Bengaluru (Bangalore)</option>
-                  <option value="Mumbai">Mumbai</option>
-                  <option value="Pune">Pune</option>
-                  <option value="Delhi">Delhi (NCR)</option>
-                  <option value="Hyderabad">Hyderabad</option>
-                  <option value="Jaipur">Jaipur</option>
+                  <option value="Leadership Development Seminars">Leadership Development Seminars</option>
+                  <option value="Weekly Income-Generation Systems">Weekly Income-Generation Systems</option>
+                  <option value="BOSS Agro Hub Chapter Meetups">BOSS Agro Hub Chapter Meetups</option>
+                  <option value="Digital Marketing & Direct-Selling Workshops">Digital Marketing & Direct-Selling Workshops</option>
                 </select>
               </div>
               <div className="inline-group">
-                <label className="inline-label">Date of Travel</label>
+                <label className="inline-label">Seminar Date</label>
                 <input 
                   type="date" 
                   value={date} 
@@ -306,7 +302,7 @@ function BookingEngine() {
                 />
               </div>
               <button type="submit" className="btn btn-primary search-submit-btn">
-                <Search size={16} /> Find Buses
+                <Search size={16} /> Find Seminars
               </button>
             </form>
           </div>
@@ -315,25 +311,25 @@ function BookingEngine() {
             {loadingBuses ? (
               <div className="spinner-center">
                 <div className="spinner"></div>
-                <p>Loading scheduled bus lines...</p>
+                <p>Loading scheduled seminar sessions...</p>
               </div>
             ) : buses.length === 0 ? (
               searchTriggered ? (
                 <div className="empty-results glass-card animate-scale-in">
                   <AlertCircle size={40} className="empty-icon" />
-                  <h3 className="heading-sm">No Coach Scheduled</h3>
-                  <p>There are no direct routes scheduled between {source} and {destination} on {date}. Modify your filter tags or try reversing the terminal cities.</p>
+                  <h3 className="heading-sm">No Seminar Scheduled</h3>
+                  <p>There are no listed {destination} sessions at {source} on {date}. Modify your location, category, or date filters.</p>
                 </div>
               ) : (
                 <div className="welcome-search-callout glass-card animate-scale-in">
                   <MapPin size={40} className="callout-icon" />
-                  <h3 className="heading-sm">Plan Your Commute</h3>
-                  <p>Input departure location, destination location, and date above to pull up schedule listings and lock seats.</p>
+                  <h3 className="heading-sm">Plan Your Seminar Visit</h3>
+                  <p>Select a location, seminar category, and date above to view available sessions and reserve seats.</p>
                 </div>
               )
             ) : (
               <div className="buses-list animate-slide-up">
-                <h3 className="heading-sm list-title">Active Routes & Coach Timings for {date}</h3>
+                <h3 className="heading-sm list-title">Available Seminar Sessions for {date}</h3>
                 {buses.map((bus) => (
                   <div key={bus.id} className="bus-card-item hover-glow-card">
                     <div className="bus-card-main">
@@ -356,12 +352,12 @@ function BookingEngine() {
                       </div>
 
                       <div className="bus-pricing">
-                        <span className="price-label">Ticket Fare</span>
+                        <span className="price-label">Seat Fee</span>
                         <span className="price-value">₹{bus.price} <span className="seat-label">/ seat</span></span>
                       </div>
 
                       <button onClick={() => handleBusSelect(bus)} className="btn btn-primary select-bus-btn">
-                        Select Seats
+                        Reserve Seats
                       </button>
                     </div>
                   </div>
@@ -377,17 +373,17 @@ function BookingEngine() {
         <div className="seats-step-layout animate-slide-up">
           <div className="seats-control-sidebar">
             <div className="sidebar-card glass-card">
-              <h3 className="heading-sm sidebar-title">Coach Selection</h3>
+              <h3 className="heading-sm sidebar-title">Seminar Selection</h3>
               <div className="summary-detail-row">
-                <span className="summary-label">Corridor</span>
+                <span className="summary-label">Session</span>
                 <span className="summary-val">{selectedBus.source} &rarr; {selectedBus.destination}</span>
               </div>
               <div className="summary-detail-row">
-                <span className="summary-label">Coach Name</span>
+                <span className="summary-label">Program Name</span>
                 <span className="summary-val">{selectedBus.name}</span>
               </div>
               <div className="summary-detail-row">
-                <span className="summary-label">Travel Date</span>
+                <span className="summary-label">Seminar Date</span>
                 <span className="summary-val">{date}</span>
               </div>
 
@@ -555,50 +551,50 @@ function BookingEngine() {
                   <svg width="220" height="220" viewBox="0 0 100 100" className="qr-svg">
                     <rect width="100" height="100" fill="white" />
                     {/* QR alignment markers */}
-                    <rect x="5" y="5" width="20" height="20" fill="#064e3b" />
+                    <rect x="5" y="5" width="20" height="20" fill="#082f61" />
                     <rect x="8" y="8" width="14" height="14" fill="white" />
-                    <rect x="11" y="11" width="8" height="8" fill="#10b981" />
+                    <rect x="11" y="11" width="8" height="8" fill="#0f5fb8" />
 
-                    <rect x="75" y="5" width="20" height="20" fill="#064e3b" />
+                    <rect x="75" y="5" width="20" height="20" fill="#082f61" />
                     <rect x="78" y="8" width="14" height="14" fill="white" />
-                    <rect x="81" y="11" width="8" height="8" fill="#10b981" />
+                    <rect x="81" y="11" width="8" height="8" fill="#0f5fb8" />
 
-                    <rect x="5" y="75" width="20" height="20" fill="#064e3b" />
+                    <rect x="5" y="75" width="20" height="20" fill="#082f61" />
                     <rect x="8" y="78" width="14" height="14" fill="white" />
-                    <rect x="11" y="81" width="8" height="8" fill="#10b981" />
+                    <rect x="11" y="81" width="8" height="8" fill="#0f5fb8" />
 
                     {/* QR noise simulation */}
-                    <rect x="35" y="5" width="5" height="15" fill="#10b981" />
-                    <rect x="45" y="15" width="15" height="5" fill="#064e3b" />
-                    <rect x="30" y="30" width="10" height="10" fill="#064e3b" />
-                    <rect x="50" y="30" width="5" height="5" fill="#10b981" />
-                    <rect x="65" y="35" width="10" height="15" fill="#064e3b" />
-                    <rect x="30" y="50" width="15" height="5" fill="#10b981" />
-                    <rect x="55" y="45" width="5" height="10" fill="#064e3b" />
-                    <rect x="40" y="60" width="10" height="5" fill="#064e3b" />
-                    <rect x="75" y="55" width="20" height="20" fill="#064e3b" />
+                    <rect x="35" y="5" width="5" height="15" fill="#0f5fb8" />
+                    <rect x="45" y="15" width="15" height="5" fill="#082f61" />
+                    <rect x="30" y="30" width="10" height="10" fill="#082f61" />
+                    <rect x="50" y="30" width="5" height="5" fill="#0f5fb8" />
+                    <rect x="65" y="35" width="10" height="15" fill="#082f61" />
+                    <rect x="30" y="50" width="15" height="5" fill="#0f5fb8" />
+                    <rect x="55" y="45" width="5" height="10" fill="#082f61" />
+                    <rect x="40" y="60" width="10" height="5" fill="#082f61" />
+                    <rect x="75" y="55" width="20" height="20" fill="#082f61" />
                     <rect x="78" y="58" width="14" height="14" fill="white" />
-                    <rect x="30" y="75" width="5" height="20" fill="#10b981" />
-                    <rect x="45" y="80" width="15" height="15" fill="#064e3b" />
+                    <rect x="30" y="75" width="5" height="20" fill="#0f5fb8" />
+                    <rect x="45" y="80" width="15" height="15" fill="#082f61" />
                   </svg>
                   <div className="qr-price-badge">₹{totalPrice.toFixed(2)}</div>
                 </div>
                 <div className="payment-summary-block">
                   <span className="pay-label">Transfer Amount:</span>
                   <span className="pay-amount">₹{totalPrice}</span>
-                  <span className="pay-account">UPI ID: greenwheels@ybl</span>
-                  <span className="pay-account-sub">Ref: GW-{selectedSeats.join('-')}-{Date.now().toString().slice(-4)}</span>
+                  <span className="pay-account">Payment account: confirm with the official event desk</span>
+                  <span className="pay-account-sub">Ref: SI-{selectedSeats.join('-')}-{Date.now().toString().slice(-4)}</span>
                 </div>
               </div>
 
               {/* Uploader section */}
               <div className="screenshot-uploader-section animate-scale-in">
                 <div className="booking-info-recap">
-                  <h4 className="heading-sm">Ticket Details</h4>
+                  <h4 className="heading-sm">Seminar Details</h4>
                   <div className="recap-table">
-                    <div className="recap-row"><span>Passenger Name:</span><strong>{user.name}</strong></div>
-                    <div className="recap-row"><span>Coach:</span><strong>{selectedBus.name} ({selectedTime})</strong></div>
-                    <div className="recap-row"><span>Departure Date:</span><strong>{date}</strong></div>
+                    <div className="recap-row"><span>Member Name:</span><strong>{user.name}</strong></div>
+                    <div className="recap-row"><span>Seminar:</span><strong>{selectedBus.name} ({selectedTime})</strong></div>
+                    <div className="recap-row"><span>Seminar Date:</span><strong>{date}</strong></div>
                     <div className="recap-row"><span>Allocated Seats:</span><strong>{selectedSeats.join(', ')}</strong></div>
                   </div>
                 </div>
@@ -817,7 +813,7 @@ function BookingEngine() {
         }
 
         .spinner {
-          border: 3px solid rgba(16, 185, 129, 0.1);
+          border: 3px solid rgba(15, 95, 184, 0.12);
           border-left-color: var(--primary);
           width: 32px;
           height: 32px;
@@ -1094,7 +1090,7 @@ function BookingEngine() {
           color: var(--primary-dark);
           padding: 0.25rem 0.5rem;
           border-radius: var(--radius-sm);
-          border: 1px solid rgba(16, 185, 129, 0.2);
+          border: 1px solid rgba(15, 95, 184, 0.18);
         }
 
         .total-price-row {
@@ -1293,7 +1289,7 @@ function BookingEngine() {
           left: 50%;
           transform: translateX(-50%);
           width: 2px;
-          background: repeating-linear-gradient(to bottom, #10b981 0, #10b981 6px, transparent 6px, transparent 12px);
+          background: repeating-linear-gradient(to bottom, #0f5fb8 0, #0f5fb8 6px, transparent 6px, transparent 12px);
           opacity: 0.3;
         }
 
@@ -1331,14 +1327,14 @@ function BookingEngine() {
         .seat-button:hover:not(:disabled) {
           border-color: var(--primary);
           transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(16, 185, 129, 0.15);
+          box-shadow: 0 4px 8px rgba(15, 95, 184, 0.16);
         }
 
         .seat-button.selected {
           background: var(--primary);
           border-color: var(--primary);
           color: white;
-          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+          box-shadow: 0 4px 10px rgba(15, 95, 184, 0.28);
         }
 
         .seat-button.selected::before {

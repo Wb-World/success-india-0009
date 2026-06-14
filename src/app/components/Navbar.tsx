@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Ticket, User, LogOut, Menu, X } from 'lucide-react';
+import { Award, User, LogOut, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const router = useRouter();
@@ -50,8 +50,8 @@ export default function Navbar() {
       <header className="nav-header">
         <div className="nav-container">
           <div className="nav-logo">
-            <Ticket size={26} className="logo-icon" />
-            <span>Show<span className="text-primary">Time</span></span>
+            <Award size={26} className="logo-icon" />
+            <span>Success<span className="text-primary"> India</span></span>
           </div>
         </div>
       </header>
@@ -65,8 +65,8 @@ export default function Navbar() {
     <header className="nav-header animate-slide-down">
       <div className="nav-container">
         <Link href="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
-          <Ticket size={28} className="logo-icon" />
-          <span>Show<span className="text-primary">Time</span></span>
+          <Award size={28} className="logo-icon" />
+          <span>Success<span className="text-primary"> India</span></span>
         </Link>
 
         {/* Desktop Nav Links */}
@@ -81,7 +81,7 @@ export default function Navbar() {
           {isLoggedIn && !isAdmin && (
             <>
               <Link href="/profile" className={`nav-link ${pathname === '/profile' ? 'active' : ''}`}>Dashboard</Link>
-              <Link href="/book" className={`nav-link ${pathname === '/book' ? 'active' : ''}`}>Book Tickets</Link>
+              <Link href="/book" className={`nav-link ${pathname === '/book' ? 'active' : ''}`}>Book Seminars</Link>
             </>
           )}
         </nav>
@@ -127,7 +127,7 @@ export default function Navbar() {
             {isLoggedIn && !isAdmin && (
               <>
                 <Link href="/profile" className={`mobile-link ${pathname === '/profile' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Dashboard</Link>
-                <Link href="/book" className={`mobile-link ${pathname === '/book' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Book Tickets</Link>
+                <Link href="/book" className={`mobile-link ${pathname === '/book' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Book Seminars</Link>
               </>
             )}
             <hr className="mobile-divider" />
@@ -196,7 +196,7 @@ export default function Navbar() {
 
         .logo-icon {
           color: var(--primary);
-          filter: drop-shadow(0 2px 6px rgba(16, 185, 129, 0.25));
+          filter: drop-shadow(0 2px 6px rgba(15, 95, 184, 0.25));
           transition: transform var(--transition-fast);
         }
         .nav-logo:hover .logo-icon { transform: rotate(-8deg); }
@@ -257,12 +257,12 @@ export default function Navbar() {
           font-size: 0.875rem;
           font-weight: 600;
           transition: all var(--transition-fast);
-          border: 1px solid rgba(16, 185, 129, 0.2);
+          border: 1px solid rgba(15, 95, 184, 0.18);
         }
         .profile-btn-nav:hover {
           background: #d1fae5;
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(16,185,129,0.2);
+          box-shadow: 0 4px 12px rgba(15,95,184,0.2);
         }
 
         .btn-logout {
@@ -293,7 +293,7 @@ export default function Navbar() {
         }
         .nav-login-btn:hover {
           transform: translateY(-2px);
-          box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+          box-shadow: 0 4px 14px rgba(15,95,184,0.25);
         }
 
         .mobile-menu-toggle {

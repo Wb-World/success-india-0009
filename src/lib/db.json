@@ -14,7 +14,7 @@
       "username": "admin",
       "password": "admin123",
       "name": "Super Admin",
-      "email": "admin@greenwheels.in",
+      "email": "admin@successindia.test",
       "phone": "+91 9999988888",
       "role": "admin"
     },
@@ -30,253 +30,104 @@
   ],
   "buses": [
     {
-      "id": "event_101",
-      "name": "Kalki 2898 AD (IMAX 3D)",
-      "type": "Sci-Fi / Action Movie",
-      "source": "Bangalore",
-      "destination": "Movies",
-      "price": 350,
-      "duration": "3h 05m",
-      "times": [
-        "10:30 AM",
-        "02:15 PM",
-        "06:00 PM",
-        "09:30 PM"
-      ]
-    },
-    {
-      "id": "event_102",
-      "name": "Leo (2D)",
-      "type": "Action / Thriller Movie",
-      "source": "Chennai",
-      "destination": "Movies",
-      "price": 190,
-      "duration": "2h 45m",
-      "times": [
-        "10:00 AM",
-        "01:30 PM",
-        "06:30 PM",
-        "10:00 PM"
-      ]
-    },
-    {
-      "id": "event_103",
-      "name": "Jawan (IMAX)",
-      "type": "Action / Drama Movie",
-      "source": "Mumbai",
-      "destination": "Movies",
+      "id": "seminar_101",
+      "name": "Success India Leadership Development Seminar",
+      "type": "Leadership Development Program",
+      "source": "Chromepet, Chennai",
+      "destination": "Leadership Development Seminars",
       "price": 250,
-      "duration": "2h 50m",
-      "times": [
-        "11:00 AM",
-        "03:00 PM",
-        "07:00 PM",
-        "10:30 PM"
-      ]
-    },
-    {
-      "id": "event_104",
-      "name": "Shaitaan (2D)",
-      "type": "Horror / Thriller Movie",
-      "source": "Pune",
-      "destination": "Movies",
-      "price": 180,
-      "duration": "2h 12m",
-      "times": [
-        "12:00 PM",
-        "04:30 PM",
-        "09:00 PM"
-      ]
-    },
-    {
-      "id": "event_105",
-      "name": "Animal (2D)",
-      "type": "Crime / Drama Movie",
-      "source": "Delhi",
-      "destination": "Movies",
-      "price": 300,
-      "duration": "3h 20m",
-      "times": [
-        "09:00 AM",
-        "01:00 PM",
-        "05:00 PM",
-        "09:00 PM"
-      ]
-    },
-    {
-      "id": "event_106",
-      "name": "Salaar: Part 1 - Ceasefire",
-      "type": "Action / Drama Movie",
-      "source": "Hyderabad",
-      "destination": "Movies",
-      "price": 250,
-      "duration": "2h 55m",
-      "times": [
-        "11:30 AM",
-        "03:15 PM",
-        "07:30 PM",
-        "11:00 PM"
-      ]
-    },
-    {
-      "id": "event_107",
-      "name": "Fighter (3D)",
-      "type": "Action / Adventure Movie",
-      "source": "Jaipur",
-      "destination": "Movies",
-      "price": 220,
-      "duration": "2h 40m",
-      "times": [
-        "10:15 AM",
-        "02:00 PM",
-        "06:45 PM",
-        "10:15 PM"
-      ]
-    },
-    {
-      "id": "event_201",
-      "name": "A.R. Rahman Live in Concert",
-      "type": "Musical Extravaganza",
-      "source": "Chennai",
-      "destination": "Concerts",
-      "price": 1500,
-      "duration": "3h 30m",
-      "times": [
-        "07:00 PM"
-      ]
-    },
-    {
-      "id": "event_202",
-      "name": "Alan Walker: Sunburn Arena",
-      "type": "EDM Live Concert",
-      "source": "Bangalore",
-      "destination": "Concerts",
-      "price": 1999,
-      "duration": "4h 00m",
-      "times": [
-        "06:00 PM"
-      ]
-    },
-    {
-      "id": "event_203",
-      "name": "Arijit Singh Live",
-      "type": "Romantic Melodies Live",
-      "source": "Mumbai",
-      "destination": "Concerts",
-      "price": 2499,
-      "duration": "3h 00m",
-      "times": [
-        "06:30 PM"
-      ]
-    },
-    {
-      "id": "event_204",
-      "name": "Diljit Dosanjh: Dil-Luminati Tour",
-      "type": "Punjabi Live Concert",
-      "source": "Hyderabad",
-      "destination": "Concerts",
-      "price": 2999,
-      "duration": "3h 30m",
-      "times": [
-        "07:00 PM"
-      ]
-    },
-    {
-      "id": "event_205",
-      "name": "Coldplay: Music of the Spheres",
-      "type": "Stadium Rock Concert",
-      "source": "Delhi",
-      "destination": "Concerts",
-      "price": 4999,
       "duration": "2h 30m",
       "times": [
+        "10:00 AM",
+        "02:30 PM"
+      ]
+    },
+    {
+      "id": "seminar_102",
+      "name": "Recruitment Training and Team Leadership Briefing",
+      "type": "Recruitment and Leadership Training",
+      "source": "Chennai Central Region",
+      "destination": "Leadership Development Seminars",
+      "price": 250,
+      "duration": "2h 00m",
+      "times": [
+        "11:00 AM",
+        "04:00 PM"
+      ]
+    },
+    {
+      "id": "seminar_201",
+      "name": "Weekly Income-Generation Strategy Session",
+      "type": "Business Volume and Referral Systems",
+      "source": "Chromepet, Chennai",
+      "destination": "Weekly Income-Generation Systems",
+      "price": 150,
+      "duration": "1h 45m",
+      "times": [
+        "06:30 PM",
         "08:00 PM"
       ]
     },
     {
-      "id": "event_301",
-      "name": "Zakir Khan - Tathastu Stand-Up",
-      "type": "Hindi Stand-Up Special",
-      "source": "Bangalore",
-      "destination": "Comedy",
-      "price": 799,
-      "duration": "1h 45m",
-      "times": [
-        "05:00 PM",
-        "08:30 PM"
-      ]
-    },
-    {
-      "id": "event_302",
-      "name": "Anubhav Singh Bassi - Kisi Ko Batana Mat",
-      "type": "Stand-Up Comedy",
-      "source": "Mumbai",
-      "destination": "Comedy",
-      "price": 999,
+      "id": "seminar_202",
+      "name": "Weekly Payouts and Market Connection Briefing",
+      "type": "Income-Generation Systems",
+      "source": "South Chennai",
+      "destination": "Weekly Income-Generation Systems",
+      "price": 150,
       "duration": "1h 30m",
-      "times": [
-        "06:00 PM",
-        "09:00 PM"
-      ]
-    },
-    {
-      "id": "event_303",
-      "name": "Kunal Kamra Live",
-      "type": "Satirical Stand-Up",
-      "source": "Delhi",
-      "destination": "Comedy",
-      "price": 600,
-      "duration": "1h 20m",
       "times": [
         "07:00 PM"
       ]
     },
     {
-      "id": "event_304",
-      "name": "Samay Raina - Unfiltered Chess & Comedy",
-      "type": "Interactive Stand-Up",
-      "source": "Pune",
-      "destination": "Comedy",
-      "price": 800,
-      "duration": "1h 50m",
+      "id": "seminar_301",
+      "name": "BOSS Agro Hub Chapter Meetup",
+      "type": "Local Chapter Networking",
+      "source": "Tambaram",
+      "destination": "BOSS Agro Hub Chapter Meetups",
+      "price": 200,
+      "duration": "2h 15m",
       "times": [
-        "07:30 PM"
+        "10:30 AM",
+        "03:00 PM"
       ]
     },
     {
-      "id": "event_401",
-      "name": "IPL: Mumbai Indians vs Chennai Super Kings",
-      "type": "T20 Cricket League Match",
-      "source": "Mumbai",
-      "destination": "Sports",
-      "price": 1200,
-      "duration": "4h 00m",
-      "times": [
-        "07:30 PM"
-      ]
-    },
-    {
-      "id": "event_402",
-      "name": "IPL: Royal Challengers Bengaluru vs KKR",
-      "type": "T20 Cricket League Match",
-      "source": "Bangalore",
-      "destination": "Sports",
-      "price": 1000,
-      "duration": "4h 00m",
-      "times": [
-        "07:30 PM"
-      ]
-    },
-    {
-      "id": "event_403",
-      "name": "Pro Kabaddi League Finals",
-      "type": "Kabaddi Championship",
-      "source": "Delhi",
-      "destination": "Sports",
-      "price": 500,
+      "id": "seminar_302",
+      "name": "Tamil Nadu Chapter Network Meetup",
+      "type": "Chapter Networking and Updates",
+      "source": "Tamil Nadu Chapter Network",
+      "destination": "BOSS Agro Hub Chapter Meetups",
+      "price": 200,
       "duration": "2h 00m",
       "times": [
-        "08:00 PM"
+        "05:00 PM"
+      ]
+    },
+    {
+      "id": "seminar_401",
+      "name": "Digital Marketing for Direct-Selling Teams",
+      "type": "Digital Marketing Workshop",
+      "source": "Pallavaram",
+      "destination": "Digital Marketing & Direct-Selling Workshops",
+      "price": 300,
+      "duration": "2h 45m",
+      "times": [
+        "09:30 AM",
+        "01:30 PM"
+      ]
+    },
+    {
+      "id": "seminar_402",
+      "name": "Online Portal and Mobile App Operations Workshop",
+      "type": "Digital Operations Workshop",
+      "source": "Chromepet, Chennai",
+      "destination": "Digital Marketing & Direct-Selling Workshops",
+      "price": 300,
+      "duration": "2h 00m",
+      "times": [
+        "04:30 PM"
       ]
     }
   ],

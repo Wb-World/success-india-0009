@@ -3,12 +3,41 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Calendar, MapPin, Search, ShieldCheck, Ticket, Film, Mic, Music, Sparkles, Star, ArrowRight } from 'lucide-react';
+import {
+  ArrowRight,
+  BarChart3,
+  BriefcaseBusiness,
+  Calendar,
+  CheckCircle2,
+  Globe2,
+  Handshake,
+  MapPin,
+  Search,
+  ShieldCheck,
+  Target,
+  Users,
+} from 'lucide-react';
+
+const locations = [
+  'Chromepet, Chennai',
+  'Chennai Central Region',
+  'South Chennai',
+  'Tambaram',
+  'Pallavaram',
+  'Tamil Nadu Chapter Network',
+];
+
+const eventCategories = [
+  'Leadership Development Seminars',
+  'Weekly Income-Generation Systems',
+  'BOSS Agro Hub Chapter Meetups',
+  'Digital Marketing & Direct-Selling Workshops',
+];
 
 export default function Home() {
   const router = useRouter();
-  const [source, setSource] = useState('Bangalore');
-  const [destination, setDestination] = useState('Movies');
+  const [source, setSource] = useState(locations[0]);
+  const [destination, setDestination] = useState(eventCategories[0]);
   const [date, setDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() + 7);
@@ -22,73 +51,80 @@ export default function Home() {
 
   return (
     <div className="landing-page">
-      {/* Hero Section */}
       <section className="hero-section">
-        <div className="hero-gradient"></div>
         <div className="container hero-container">
           <div className="hero-text-col animate-slide-up">
-            <span className="hero-tagline">Live Experiences</span>
+            <span className="hero-tagline">
+              <ShieldCheck size={16} />
+              Official Networking & Leadership Portal
+            </span>
             <h1 className="hero-title">
-              Discover The Best <span className="text-highlight">Events & Movies</span> Happening Near You
+              Empowering Your Growth: Book Your Next <span className="text-highlight">Success Seminar</span> & Chapter Meetup
             </h1>
             <p className="hero-subtitle">
-              Book tickets for the latest movies, live concerts, stand-up comedy, sports, and theatrical performances in your city instantly.
+              Reserve your seats for official leadership development programs, recruitment training, and weekly income-generation strategy sessions hosted across Tamil Nadu.
             </p>
+            <div className="hero-proof-row">
+              <div className="proof-item">
+                <MapPin size={18} />
+                <span>Chromepet, Chennai based operations</span>
+              </div>
+              <div className="proof-item">
+                <Globe2 size={18} />
+                <span>Online portal and mobile app ecosystem</span>
+              </div>
+            </div>
             <div className="hero-cta-buttons">
               <Link href="/book" className="btn btn-primary btn-lg-premium">
-                <Ticket size={18} /> Explore Events
+                <Calendar size={18} /> Reserve a Seat
               </Link>
-              <Link href="/book?destination=Movies" className="btn btn-secondary btn-lg-premium">
-                Trending Movies
+              <Link href="/about" className="btn btn-secondary btn-lg-premium">
+                View Portal Context
               </Link>
             </div>
           </div>
 
           <div className="hero-search-col animate-scale-in">
-            <div className="search-card glass-card">
-              <h3 className="search-card-title">Find Your Next Plan</h3>
+            <div className="registration-card">
+              <div className="card-kicker">Seminar Registration Hub</div>
+              <h3 className="search-card-title">Find a chapter session near you</h3>
               <form onSubmit={handleSearch}>
                 <div className="form-group">
                   <label className="form-label">
-                    <MapPin size={14} className="input-label-icon" /> Select City
+                    <MapPin size={14} className="input-label-icon" /> Location Selection
                   </label>
-                  <select 
-                    value={source} 
+                  <select
+                    value={source}
                     onChange={(e) => setSource(e.target.value)}
                     className="form-control select-field"
                   >
-                    <option value="Bangalore">Bengaluru (Bangalore)</option>
-                    <option value="Chennai">Chennai</option>
-                    <option value="Mumbai">Mumbai</option>
-                    <option value="Pune">Pune</option>
-                    <option value="Delhi">Delhi (NCR)</option>
-                    <option value="Hyderabad">Hyderabad</option>
-                    <option value="Jaipur">Jaipur</option>
+                    {locations.map((location) => (
+                      <option key={location} value={location}>{location}</option>
+                    ))}
                   </select>
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">
-                    <Film size={14} className="input-label-icon text-primary" /> Event Category
+                    <BriefcaseBusiness size={14} className="input-label-icon" /> Event Category
                   </label>
-                  <select 
-                    value={destination} 
+                  <select
+                    value={destination}
                     onChange={(e) => setDestination(e.target.value)}
                     className="form-control select-field"
                   >
-                    <option value="Movies">Movies</option>
-                    <option value="Concerts">Concerts</option>
-                    <option value="Comedy">Comedy</option>
-                    <option value="Sports">Sports</option>
+                    {eventCategories.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
                   </select>
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">
-                    <Calendar size={14} className="input-label-icon" /> Select Date
+                    <Calendar size={14} className="input-label-icon" /> Select Seminar Date
                   </label>
-                  <input 
-                    type="date" 
+                  <input
+                    type="date"
                     value={date}
                     min={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setDate(e.target.value)}
@@ -98,149 +134,119 @@ export default function Home() {
                 </div>
 
                 <button type="submit" className="btn btn-primary search-btn">
-                  <Search size={18} /> Search Events
+                  <Search size={18} /> Find Available Seminars
                 </button>
               </form>
+              <p className="registration-note">
+                Program details are based on the Success Team operations described in the provided source text.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Services Grid */}
       <section className="features-section container">
         <div className="section-header">
-          <h2 className="heading-lg">The Ultimate Entertainment Booking Experience</h2>
-          <p className="section-subtitle">Enjoy instant confirmations, interactive seating layout selection, and verified premium tickets.</p>
+          <span className="section-eyebrow">Operational Focus</span>
+          <h2 className="heading-lg">Built for leadership briefings and local chapter growth</h2>
+          <p className="section-subtitle">
+            Success India organizes the key training themes from the provided Accsys India Success Team context into a clean booking experience for prospective members and local teams.
+          </p>
         </div>
 
         <div className="features-grid">
-          <div className="feature-card card-hover-rotate hover-lift hover-glow">
+          <div className="feature-card">
             <div className="feature-icon-wrapper">
-              <Ticket size={28} className="feature-icon animate-pulse" />
+              <Users size={28} className="feature-icon" />
             </div>
-            <h4 className="heading-sm feature-title">Instant QR Tickets</h4>
+            <h4 className="heading-sm feature-title">Leadership Development</h4>
             <p className="feature-desc">
-              Get your tickets delivered instantly as secure QR codes. Every ticket is manually and securely verified to eliminate duplicate entries and booking issues completely.
+              Seat reservations for leadership programs, team updates, recruitment training, and business-volume focused briefings.
             </p>
           </div>
 
-          <div className="feature-card card-hover-rotate">
+          <div className="feature-card">
             <div className="feature-icon-wrapper">
-              <Film size={28} className="feature-icon animate-pulse" />
+              <BarChart3 size={28} className="feature-icon" />
             </div>
-            <h4 className="heading-sm feature-title">Premium Seat Selection</h4>
+            <h4 className="heading-sm feature-title">Weekly Strategy Systems</h4>
             <p className="feature-desc">
-              Interactive seating layout maps let you select your exact seats (recliners, premium, balcony) for all theaters, sports arenas, and live concert venues across cities.
+              Weekly income-generation sessions centered on referrals, payouts, market connections, and practical member routines.
             </p>
           </div>
 
-          <div className="feature-card card-hover-rotate">
+          <div className="feature-card">
             <div className="feature-icon-wrapper">
-              <Mic size={28} className="feature-icon animate-pulse" />
+              <Handshake size={28} className="feature-icon" />
             </div>
-            <h4 className="heading-sm feature-title">Exclusive Shows & Events</h4>
+            <h4 className="heading-sm feature-title">Chapter Networking</h4>
             <p className="feature-desc">
-              Access early bird discounts, exclusive pre-sales, and front-row tickets for the most anticipated music concerts, stand-up comedy tours, local sports leagues, and movies.
+              Local meetup access for chapter networks, including BOSS Agro Hub style chapter gatherings noted in the source material.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Dynamic Statistics Block */}
       <section className="stats-section">
-        <div className="container stats-container">
-          <div className="stat-item hover-bounce">
-            <div className="stat-num">1M+</div>
-            <div className="stat-label">Tickets Booked Monthly</div>
+        <div className="container trust-container">
+          <div className="trust-copy">
+            <span className="section-eyebrow">Trust & Due Diligence</span>
+            <h2 className="heading-lg">Clear information before every registration</h2>
+            <p>
+              The source text notes mixed consumer reviews and recommends careful due diligence. This portal presents seminar categories, locations, dates, and official resources plainly so attendees can review details before reserving seats.
+            </p>
           </div>
-          <div className="stat-item hover-bounce">
-            <div className="stat-num">5,000+</div>
-            <div className="stat-label">Events & Shows Listed</div>
-          </div>
-          <div className="stat-item hover-bounce">
-            <div className="stat-num">150+</div>
-            <div className="stat-label">Venues Across Cities</div>
+          <div className="trust-list">
+            <div className="trust-item">
+              <CheckCircle2 size={20} />
+              <span>Official resource links and company-detail context</span>
+            </div>
+            <div className="trust-item">
+              <CheckCircle2 size={20} />
+              <span>Local Tamil Nadu chapter and briefing filters</span>
+            </div>
+            <div className="trust-item">
+              <CheckCircle2 size={20} />
+              <span>Transparent session categories before seat selection</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Popular Routes -> Trending Events */}
       <section className="routes-section container">
         <div className="section-header">
-          <h2 className="heading-lg">Trending Events & Shows</h2>
-          <p className="section-subtitle">Book tickets for the most popular shows near you</p>
+          <span className="section-eyebrow">Popular Seminar Tracks</span>
+          <h2 className="heading-lg">Reserve seats for the next Success India session</h2>
+          <p className="section-subtitle">Quick access to the most relevant registration paths from the source business profile.</p>
         </div>
 
         <div className="routes-grid">
-          <div className="route-card route-card-interactive hover-lift" onClick={() => router.push(`/book?source=Chennai&destination=Concerts`)}>
-            <div className="route-info">
-              <div className="route-cities">A.R. Rahman Live <ArrowRight size={14} className="cities-arrow" /> Concert</div>
-              <div className="route-details">Musical Concert &bull; Chennai Venue</div>
+          {eventCategories.slice(0, 3).map((category, index) => (
+            <div
+              key={category}
+              className="route-card"
+              onClick={() => router.push(`/book?source=${encodeURIComponent(locations[index])}&destination=${encodeURIComponent(category)}`)}
+            >
+              <div className="route-info">
+                <div className="route-cities">{category}</div>
+                <div className="route-details">{locations[index]} <ArrowRight size={13} /> Seat registration</div>
+              </div>
+              <div className="route-price-tag">
+                <span>Track</span>
+                <span className="price-num">0{index + 1}</span>
+              </div>
             </div>
-            <div className="route-price-tag">
-              <span>From</span>
-              <span className="price-num">₹1500</span>
-            </div>
-          </div>
-
-          <div className="route-card route-card-interactive hover-lift" onClick={() => router.push(`/book?source=Bangalore&destination=Movies`)}>
-            <div className="route-info">
-              <div className="route-cities">Kalki 2898 AD <ArrowRight size={14} className="cities-arrow" /> IMAX 3D</div>
-              <div className="route-details">Action / Sci-Fi Movie &bull; Bengaluru</div>
-            </div>
-            <div className="route-price-tag">
-              <span>From</span>
-              <span className="price-num">₹350</span>
-            </div>
-          </div>
-
-          <div className="route-card route-card-interactive hover-lift" onClick={() => router.push(`/book?source=Bangalore&destination=Comedy`)}>
-            <div className="route-info">
-              <div className="route-cities">Zakir Khan Live <ArrowRight size={14} className="cities-arrow" /> Tathastu</div>
-              <div className="route-details">Stand-Up Comedy &bull; Bengaluru Special</div>
-            </div>
-            <div className="route-price-tag">
-              <span>From</span>
-              <span className="price-num">₹799</span>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* Customer Testimonials section (Humanoid value) */}
-      <section className="testimonials-section">
-        <div className="container">
-          <div className="section-header">
-            <h2 className="heading-lg">What Our Fans & Moviegoers Say</h2>
-            <p className="section-subtitle">Real feedback from daily entertainment lovers and film critics</p>
-          </div>
-          <div className="testimonials-grid">
-            <div className="testimonial-card">
-              <div className="star-rating">
-                <Star size={16} fill="#f59e0b" color="#f59e0b" />
-                <Star size={16} fill="#f59e0b" color="#f59e0b" />
-                <Star size={16} fill="#f59e0b" color="#f59e0b" />
-                <Star size={16} fill="#f59e0b" color="#f59e0b" />
-                <Star size={16} fill="#f59e0b" color="#f59e0b" />
-              </div>
-              <p className="testimonial-text">
-                &quot;The booking flow for concerts is incredibly smooth. I chose my premium seats, uploaded my UPI payment receipt, and got my ticket confirmed in minutes! Excellent experience booking the AR Rahman concert.&quot;
-              </p>
-              <h5 className="testimonial-author">- Raghav Sundaram, Tech Lead & Concert Fan</h5>
-            </div>
-            
-            <div className="testimonial-card">
-              <div className="star-rating">
-                <Star size={16} fill="#f59e0b" color="#f59e0b" />
-                <Star size={16} fill="#f59e0b" color="#f59e0b" />
-                <Star size={16} fill="#f59e0b" color="#f59e0b" />
-                <Star size={16} fill="#f59e0b" color="#f59e0b" />
-                <Star size={16} fill="#f59e0b" color="#f59e0b" />
-              </div>
-              <p className="testimonial-text">
-                &quot;I book all my weekend movies and stand-up shows here. The ticket confirmation is blazing fast, and the seating selection is spot on. Truly a premium and reliable platform for live entertainment!&quot;
-              </p>
-              <h5 className="testimonial-author">- Meera Deshmukh, Film & Comedy Critic</h5>
+      <section className="office-section">
+        <div className="container office-container">
+          <div className="office-card">
+            <Target size={26} />
+            <div>
+              <span className="office-label">Head Office Reference</span>
+              <p>No 303, 2nd floor, Grand Southern Trunk Rd, Chromepet, Chennai, Tamil Nadu 600044.</p>
             </div>
           </div>
         </div>
@@ -248,29 +254,29 @@ export default function Home() {
 
       <style jsx>{`
         .landing-page {
-          background-color: var(--background);
+          background: var(--background);
         }
 
-        /* Hero */
         .hero-section {
           position: relative;
-          padding: 6rem 0 8rem 0;
-          background-color: #121214;
+          padding: 6rem 0 7rem;
+          background:
+            linear-gradient(135deg, rgba(5, 25, 55, 0.98) 0%, rgba(7, 47, 104, 0.96) 58%, rgba(234, 88, 12, 0.92) 100%),
+            radial-gradient(circle at top right, rgba(245, 158, 11, 0.24), transparent 34%);
           color: white;
           overflow: hidden;
-          min-height: 600px;
+          min-height: 640px;
           display: flex;
           align-items: center;
         }
 
-        .hero-gradient {
+        .hero-section::after {
+          content: '';
           position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(135deg, #09090b 0%, #121214 60%, #f84464 100%);
-          z-index: 1;
+          inset: auto 0 0 0;
+          height: 96px;
+          background: linear-gradient(180deg, transparent, rgba(248, 250, 252, 0.98));
+          pointer-events: none;
         }
 
         .hero-container {
@@ -278,14 +284,14 @@ export default function Home() {
           z-index: 2;
           display: grid;
           grid-template-columns: 1fr;
-          gap: 3.5rem;
+          gap: 3rem;
           align-items: center;
           width: 100%;
         }
 
         @media (min-width: 992px) {
           .hero-container {
-            grid-template-columns: 1.15fr 0.85fr;
+            grid-template-columns: 1.1fr 0.9fr;
             gap: 4rem;
           }
         }
@@ -293,55 +299,71 @@ export default function Home() {
         .hero-text-col {
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 1.45rem;
         }
 
         .hero-tagline {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
           font-family: var(--font-heading);
-          font-size: 0.875rem;
-          font-weight: 700;
+          font-size: 0.78rem;
+          font-weight: 800;
           text-transform: uppercase;
-          letter-spacing: 2px;
-          color: var(--primary);
-          background: rgba(248, 68, 100, 0.15);
-          padding: 0.5rem 1rem;
-          border-radius: 9999px;
+          letter-spacing: 0.08em;
+          color: #fde68a;
+          background: rgba(255, 255, 255, 0.1);
+          padding: 0.55rem 0.85rem;
+          border-radius: 999px;
           align-self: flex-start;
-          border: 1px solid rgba(248, 68, 100, 0.25);
-          transition: all 0.3s ease;
-        }
-        
-        .hero-tagline:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(248, 68, 100, 0.15);
+          border: 1px solid rgba(253, 230, 138, 0.32);
         }
 
         .hero-title {
           font-family: var(--font-heading);
-          font-size: 3rem;
+          font-size: 2.75rem;
           font-weight: 800;
-          line-height: 1.1;
-          letter-spacing: -1px;
+          line-height: 1.08;
+          letter-spacing: 0;
           margin: 0;
+          max-width: 820px;
         }
 
         @media (min-width: 768px) {
           .hero-title {
-            font-size: 3.75rem;
+            font-size: 4rem;
           }
         }
 
         .text-highlight {
-          color: var(--primary);
-          text-shadow: 0 4px 15px rgba(248, 68, 100, 0.3);
+          color: #fbbf24;
         }
 
         .hero-subtitle {
-          font-size: 1.1rem;
-          line-height: 1.7;
-          color: #ffe4e6;
-          max-width: 560px;
+          font-size: 1.08rem;
+          line-height: 1.75;
+          color: #dbeafe;
+          max-width: 680px;
           margin: 0;
+        }
+
+        .hero-proof-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.85rem;
+        }
+
+        .proof-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.55rem;
+          padding: 0.65rem 0.85rem;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          border-radius: var(--radius-md);
+          background: rgba(255, 255, 255, 0.08);
+          color: #eff6ff;
+          font-size: 0.9rem;
+          font-weight: 600;
         }
 
         .hero-cta-buttons {
@@ -353,42 +375,45 @@ export default function Home() {
         }
 
         .btn-lg-premium {
-          padding: 0.9rem 1.875rem;
-          font-size: 1rem;
-          border-radius: var(--radius-lg);
-          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          padding: 0.9rem 1.5rem;
+          font-size: 0.96rem;
+          border-radius: var(--radius-md);
         }
 
-        /* Search Card */
         .hero-search-col {
           display: flex;
           align-items: stretch;
         }
 
-        .search-card {
+        .registration-card {
           width: 100%;
-          padding: 2rem 2.25rem 2.25rem;
+          padding: 2rem 2rem 1.5rem;
           background: rgba(255, 255, 255, 0.98);
           color: var(--foreground);
-          border-radius: var(--radius-2xl);
-          box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.4);
-          border: 1px solid rgba(255, 255, 255, 0.8);
-          transition: transform 0.3s ease;
+          border-radius: var(--radius-xl);
+          box-shadow: 0 28px 70px rgba(2, 8, 23, 0.32);
+          border: 1px solid rgba(255, 255, 255, 0.72);
         }
 
-        .search-card:hover {
-          transform: translateY(-3px);
+        .card-kicker {
+          color: var(--primary);
+          font-size: 0.78rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          text-align: center;
+          margin-bottom: 0.55rem;
         }
 
         .search-card-title {
           font-family: var(--font-heading);
-          font-size: 1.35rem;
-          font-weight: 700;
-          color: #f84464;
+          font-size: 1.45rem;
+          font-weight: 800;
+          color: var(--primary-dark);
           margin-bottom: 1.5rem;
           text-align: center;
           padding-bottom: 1rem;
-          border-bottom: 1px solid #ffe4e6;
+          border-bottom: 1px solid #dbeafe;
         }
 
         .input-label-icon {
@@ -398,163 +423,162 @@ export default function Home() {
           color: var(--primary);
         }
 
-        .select-field, .date-field {
-          background-color: var(--input);
-          border-color: var(--border);
-          font-weight: 600;
+        .select-field,
+        .date-field {
+          background-color: white;
+          border-color: #cbd5e1;
+          font-weight: 650;
           cursor: pointer;
-          height: 46px;
+          height: 48px;
         }
 
         .search-btn {
           width: 100%;
-          padding: 0.875rem;
-          font-size: 1.05rem;
-          margin-top: 0.5rem;
+          padding: 0.9rem;
+          font-size: 1rem;
+          margin-top: 0.35rem;
           box-shadow: var(--shadow-primary);
-          letter-spacing: 0.01em;
         }
 
-        /* Features Section */
-        .features-section {
-          padding: 7rem 2rem;
+        .registration-note {
+          color: var(--muted);
+          font-size: 0.78rem;
+          line-height: 1.5;
+          margin-top: 1rem;
+          text-align: center;
+        }
+
+        .features-section,
+        .routes-section {
+          padding: 6.5rem 2rem;
         }
 
         .section-header {
           text-align: center;
-          margin-bottom: 3.5rem;
-          max-width: 680px;
+          margin-bottom: 3.25rem;
+          max-width: 760px;
           margin-left: auto;
           margin-right: auto;
         }
 
+        .section-eyebrow {
+          display: inline-block;
+          color: var(--primary);
+          font-size: 0.78rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          margin-bottom: 0.75rem;
+        }
+
         .section-subtitle {
           color: var(--muted);
-          font-size: 1.05rem;
+          font-size: 1.02rem;
           margin-top: 0.75rem;
-          line-height: 1.65;
+          line-height: 1.7;
         }
 
         .features-grid {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 2rem;
-          align-items: stretch;
+          gap: 1.5rem;
         }
 
         @media (min-width: 768px) {
           .features-grid {
             grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
           }
         }
 
         .feature-card {
           background: white;
-          padding: 2.75rem 2rem;
-          border-radius: var(--radius-xl);
+          padding: 2.25rem 1.75rem;
+          border-radius: var(--radius-lg);
           border: 1px solid var(--border);
           box-shadow: var(--shadow-sm);
-          transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-          text-align: center;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
+          transition: all var(--transition-normal);
         }
 
         .feature-card:hover {
-          transform: translateY(-8px);
+          transform: translateY(-6px);
           box-shadow: var(--shadow-xl);
-          border-color: var(--primary);
+          border-color: rgba(8, 68, 153, 0.28);
         }
 
         .feature-icon-wrapper {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 68px;
-          height: 68px;
+          width: 58px;
+          height: 58px;
           background: var(--primary-light);
           color: var(--primary);
-          border-radius: 50%;
-          margin-bottom: 1.5rem;
-          box-shadow: 0 6px 15px rgba(248, 68, 100, 0.12);
-          flex-shrink: 0;
+          border-radius: var(--radius-md);
+          margin-bottom: 1.35rem;
         }
 
         .feature-title {
-          font-size: 1.2rem;
-          font-weight: 700;
-          margin-bottom: 0.75rem;
+          font-size: 1.13rem;
+          font-weight: 800;
+          margin-bottom: 0.65rem;
           color: var(--primary-dark);
         }
 
         .feature-desc {
           font-size: 0.92rem;
           color: var(--muted);
-          line-height: 1.7;
+          line-height: 1.72;
         }
 
-        /* Stats Section */
         .stats-section {
-          background: #fff1f2;
-          border-top: 1px solid #ffe4e6;
-          border-bottom: 1px solid #ffe4e6;
+          background: #082f61;
+          color: white;
           padding: 5rem 2rem;
         }
 
-        .stats-container {
+        .trust-container {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 3rem;
-          text-align: center;
-        }
-
-        @media (min-width: 768px) {
-          .stats-container {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0;
-          }
-        }
-
-        .stat-item {
-          display: flex;
-          flex-direction: column;
+          gap: 2rem;
           align-items: center;
-          gap: 0.375rem;
-          transition: transform 0.3s ease;
-          padding: 1rem 2rem;
         }
 
-        @media (min-width: 768px) {
-          .stat-item:not(:last-child) {
-            border-right: 1px solid #fecdd3;
+        @media (min-width: 900px) {
+          .trust-container {
+            grid-template-columns: 1fr 0.9fr;
           }
         }
 
-        .stat-item:hover {
-          transform: translateY(-3px);
+        .trust-copy .heading-lg {
+          color: white;
         }
 
-        .stat-num {
-          font-family: var(--font-heading);
-          font-size: 3.5rem;
-          font-weight: 800;
-          color: var(--primary);
-          letter-spacing: -1px;
-          line-height: 1;
+        .trust-copy p {
+          color: #dbeafe;
+          line-height: 1.75;
+          max-width: 690px;
         }
 
-        .stat-label {
-          font-size: 0.975rem;
-          font-weight: 600;
-          color: #be123c;
-          margin-top: 0.25rem;
+        .trust-list {
+          display: grid;
+          gap: 0.85rem;
         }
 
-        /* Routes Section */
-        .routes-section {
-          padding: 7rem 2rem;
+        .trust-item {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          padding: 1rem;
+          border-radius: var(--radius-md);
+          font-weight: 650;
+          color: #eff6ff;
+        }
+
+        .trust-item svg {
+          color: #fbbf24;
+          flex-shrink: 0;
         }
 
         .routes-grid {
@@ -566,28 +590,27 @@ export default function Home() {
         @media (min-width: 768px) {
           .routes-grid {
             grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
           }
         }
 
         .route-card {
           background: white;
           border: 1px solid var(--border);
-          border-radius: var(--radius-xl);
-          padding: 1.625rem 1.75rem;
+          border-radius: var(--radius-lg);
+          padding: 1.5rem;
           display: flex;
           justify-content: space-between;
           align-items: center;
           cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+          transition: all var(--transition-normal);
           box-shadow: var(--shadow-sm);
           gap: 1rem;
         }
 
         .route-card:hover {
           border-color: var(--primary);
-          transform: scale(1.02) translateY(-2px);
-          box-shadow: var(--shadow-md);
+          transform: translateY(-4px);
+          box-shadow: var(--shadow-lg);
         }
 
         .route-info {
@@ -597,27 +620,18 @@ export default function Home() {
 
         .route-cities {
           font-family: var(--font-heading);
-          font-size: 1.1rem;
-          font-weight: 700;
+          font-size: 1.03rem;
+          font-weight: 800;
           color: var(--foreground);
-          margin-bottom: 0.375rem;
-          display: flex;
-          align-items: center;
-          gap: 0.4rem;
-          white-space: nowrap;
-        }
-
-        .cities-arrow {
-          color: var(--primary);
-          flex-shrink: 0;
+          margin-bottom: 0.55rem;
         }
 
         .route-details {
           font-size: 0.85rem;
           color: var(--muted);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
         }
 
         .route-price-tag {
@@ -631,72 +645,77 @@ export default function Home() {
         .route-price-tag span:first-child {
           font-size: 0.7rem;
           color: var(--muted);
-          font-weight: 600;
+          font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
 
         .price-num {
           font-family: var(--font-heading);
-          font-size: 1.5rem;
+          font-size: 1.6rem;
           font-weight: 800;
           color: var(--primary);
-          letter-spacing: -0.5px;
         }
 
-        /* Testimonials Section */
-        .testimonials-section {
-          background: white;
-          padding: 7rem 2rem;
-          border-top: 1px solid var(--border);
+        .office-section {
+          padding: 0 2rem 6rem;
         }
 
-        .testimonials-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 2rem;
-          margin-top: 0;
-          align-items: stretch;
-        }
-
-        @media (min-width: 768px) {
-          .testimonials-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
-          }
-        }
-
-        .testimonial-card {
-          background: var(--background);
-          padding: 2.25rem 2.5rem;
-          border-radius: var(--radius-xl);
-          border: 1px solid var(--border);
+        .office-container {
           display: flex;
-          flex-direction: column;
+          justify-content: center;
+        }
+
+        .office-card {
+          width: 100%;
+          max-width: 860px;
+          display: flex;
           gap: 1rem;
-          height: 100%;
+          align-items: flex-start;
+          padding: 1.25rem 1.5rem;
+          background: #fff7ed;
+          border: 1px solid #fed7aa;
+          border-radius: var(--radius-lg);
+          color: #7c2d12;
         }
 
-        .star-rating {
-          display: flex;
-          gap: 0.2rem;
-          align-items: center;
+        .office-card svg {
+          color: var(--primary);
+          flex-shrink: 0;
         }
 
-        .testimonial-text {
-          font-size: 0.95rem;
-          line-height: 1.7;
-          color: var(--muted);
-          font-style: italic;
-          flex: 1;
+        .office-label {
+          display: block;
+          font-weight: 800;
+          margin-bottom: 0.25rem;
+          color: #9a3412;
         }
 
-        .testimonial-author {
-          font-weight: 700;
-          color: var(--foreground);
-          font-size: 0.875rem;
-          padding-top: 0.5rem;
-          border-top: 1px solid var(--border);
+        .office-card p {
+          line-height: 1.6;
+        }
+
+        @media (max-width: 640px) {
+          .hero-section {
+            padding: 4.25rem 0 5.5rem;
+          }
+
+          .hero-title {
+            font-size: 2.35rem;
+          }
+
+          .registration-card {
+            padding: 1.5rem 1.25rem;
+          }
+
+          .features-section,
+          .routes-section {
+            padding: 4.5rem 1.25rem;
+          }
+
+          .stats-section {
+            padding: 4rem 1.25rem;
+          }
         }
       `}</style>
     </div>
