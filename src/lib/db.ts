@@ -15,6 +15,7 @@ export interface Bus {
   id: string;
   name: string;
   type: string;
+  status?: string;
   source: string;
   destination: string;
   price: number;

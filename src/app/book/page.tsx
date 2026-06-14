@@ -335,7 +335,10 @@ function BookingEngine() {
                     <div className="bus-card-main">
                       <div className="bus-company">
                         <span className="bus-name-txt">{bus.name}</span>
-                        <span className="bus-type-badge">{bus.type}</span>
+                        <div className="bus-badge-row">
+                          <span className="bus-type-badge">{bus.type}</span>
+                          <span className="event-status-badge">{bus.status || 'Available to Register'}</span>
+                        </div>
                       </div>
                       
                       <div className="bus-timeline">
@@ -907,6 +910,25 @@ function BookingEngine() {
           padding: 0.125rem 0.5rem;
           border-radius: var(--radius-sm);
           align-self: flex-start;
+        }
+
+        .bus-badge-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+          align-items: center;
+        }
+
+        .event-status-badge {
+          font-size: 0.72rem;
+          font-weight: 800;
+          color: #9a3412;
+          background: #ffedd5;
+          border: 1px solid #fed7aa;
+          padding: 0.125rem 0.5rem;
+          border-radius: var(--radius-sm);
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
         }
 
         /* Bus Timeline */

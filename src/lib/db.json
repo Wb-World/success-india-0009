@@ -33,6 +33,7 @@
       "id": "seminar_101",
       "name": "Success India Leadership Development Seminar",
       "type": "Leadership Development Program",
+      "status": "Available to Register",
       "source": "Chromepet, Chennai",
       "destination": "Leadership Development Seminars",
       "price": 250,
@@ -46,6 +47,7 @@
       "id": "seminar_102",
       "name": "Recruitment Training and Team Leadership Briefing",
       "type": "Recruitment and Leadership Training",
+      "status": "Available to Register",
       "source": "Chennai Central Region",
       "destination": "Leadership Development Seminars",
       "price": 250,
@@ -59,6 +61,7 @@
       "id": "seminar_201",
       "name": "Weekly Income-Generation Strategy Session",
       "type": "Business Volume and Referral Systems",
+      "status": "Available to Register",
       "source": "Chromepet, Chennai",
       "destination": "Weekly Income-Generation Systems",
       "price": 150,
@@ -72,6 +75,7 @@
       "id": "seminar_202",
       "name": "Weekly Payouts and Market Connection Briefing",
       "type": "Income-Generation Systems",
+      "status": "Available to Register",
       "source": "South Chennai",
       "destination": "Weekly Income-Generation Systems",
       "price": 150,
@@ -84,6 +88,7 @@
       "id": "seminar_301",
       "name": "BOSS Agro Hub Chapter Meetup",
       "type": "Local Chapter Networking",
+      "status": "Available to Register",
       "source": "Tambaram",
       "destination": "BOSS Agro Hub Chapter Meetups",
       "price": 200,
@@ -97,6 +102,7 @@
       "id": "seminar_302",
       "name": "Tamil Nadu Chapter Network Meetup",
       "type": "Chapter Networking and Updates",
+      "status": "Available to Register",
       "source": "Tamil Nadu Chapter Network",
       "destination": "BOSS Agro Hub Chapter Meetups",
       "price": 200,
@@ -109,6 +115,7 @@
       "id": "seminar_401",
       "name": "Digital Marketing for Direct-Selling Teams",
       "type": "Digital Marketing Workshop",
+      "status": "Available to Register",
       "source": "Pallavaram",
       "destination": "Digital Marketing & Direct-Selling Workshops",
       "price": 300,
@@ -122,12 +129,27 @@
       "id": "seminar_402",
       "name": "Online Portal and Mobile App Operations Workshop",
       "type": "Digital Operations Workshop",
+      "status": "Available to Register",
       "source": "Chromepet, Chennai",
       "destination": "Digital Marketing & Direct-Selling Workshops",
       "price": 300,
       "duration": "2h 00m",
       "times": [
         "04:30 PM"
+      ]
+    },
+    {
+      "id": "seminar_501",
+      "name": "Success India Member Growth Orientation",
+      "type": "Leadership Chapter Orientation",
+      "status": "Available to Register",
+      "source": "Chromepet, Chennai",
+      "destination": "Leadership Development Seminars",
+      "price": 0,
+      "duration": "1h 30m",
+      "times": [
+        "09:30 AM",
+        "06:00 PM"
       ]
     }
   ],

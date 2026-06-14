@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { readDb } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +31,21 @@ export async function GET(request: Request) {
     }
 
     if (!buses || buses.length === 0) {
-      return NextResponse.json({ buses: [] });
+      const localBuses = readDb().buses.filter(
+        (bus) =>
+          bus.source.toLowerCase() === source.toLowerCase() &&
+          bus.destination.toLowerCase() === destination.toLowerCase()
+      );
+
+      const localBusesWithAvailability = localBuses.map((bus) => ({
+        ...bus,
+        bookedSeatsByTime: bus.times.reduce<Record<string, string[]>>((acc, time) => {
+          acc[time] = [];
+          return acc;
+        }, {}),
+      }));
+
+      return NextResponse.json({ buses: localBusesWithAvailability });
     }
 
     // Get approved bookings for these buses on the given date

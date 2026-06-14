@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS public.buses (
   id          TEXT        PRIMARY KEY,
   name        TEXT        NOT NULL,
   type        TEXT        NOT NULL,
+  status      TEXT        NOT NULL DEFAULT 'Available to Register',
   source      TEXT        NOT NULL,
   destination TEXT        NOT NULL,
   price       INTEGER     NOT NULL,
@@ -33,6 +34,9 @@ CREATE TABLE IF NOT EXISTS public.buses (
   times       TEXT[]      NOT NULL DEFAULT '{}',
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.buses
+  ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'Available to Register';
 
 -- Bookings table
 CREATE TABLE IF NOT EXISTS public.bookings (
@@ -85,6 +89,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- ── 6. SEED DATA — BUSES ─────────────────────────────────────
 INSERT INTO public.buses (id, name, type, source, destination, price, duration, times) VALUES
+  ('seminar_501', 'Success India Member Growth Orientation', 'Leadership Chapter Orientation', 'Chromepet, Chennai', 'Leadership Development Seminars', 0, '1h 30m', ARRAY['09:30 AM','06:00 PM']),
   ('bus_101', 'Karnataka Vaibhav',   'AC Luxury Sleeper (2+2)',        'Bangalore', 'Chennai',   950,  '6h 30m', ARRAY['08:00 AM','02:00 PM','09:30 PM','11:00 PM']),
   ('bus_102', 'Cauvery Travels',     'AC Premium Seater (2+2)',        'Chennai',   'Bangalore', 750,  '6h 15m', ARRAY['07:30 AM','01:00 PM','06:00 PM','10:30 PM']),
   ('bus_103', 'Deccan Express',      'AC Luxury Sleeper (2+1)',        'Mumbai',    'Pune',      650,  '3h 45m', ARRAY['06:00 AM','11:30 AM','04:30 PM','09:00 PM']),
