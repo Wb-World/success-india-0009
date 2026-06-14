@@ -1,16 +1,16 @@
 'use client';
 
-import { Shield, Sparkles, HeartHandshake, Compass, Terminal, Cpu, Key } from 'lucide-react';
+import { Shield, Sparkles, HeartHandshake, Compass } from 'lucide-react';
 
 export default function About() {
   return (
-    <div className="about-page animate-fade-in scanlines">
+    <div className="about-page animate-fade-in">
       {/* Mini Hero */}
       <section className="about-hero">
         <div className="container">
-          <h1 className="heading-xl hero-title glow-text">Conjoining Global Cyber Defense</h1>
+          <h1 className="heading-xl hero-title">Connecting India, Comfortably</h1>
           <p className="hero-subtitle">
-            Establishing secure network clusters, hardware exploitation arenas, and cryptanalysis symposia for white-hat operatives.
+            Pioneering safe, ecological, and premium intercity bus networks across India&apos;s business corridors.
           </p>
         </div>
       </section>
@@ -18,38 +18,38 @@ export default function About() {
       {/* Core Values / Pillars */}
       <section className="values-section container">
         <div className="section-header animate-slide-up">
-          <h2 className="heading-lg glow-text">OPERATIONAL CODES</h2>
-          <p className="section-subtitle">The principles that govern our coordination nodes from the sandbox rooms to the keynotes.</p>
+          <h2 className="heading-lg text-green">Our Core Commits</h2>
+          <p className="section-subtitle">The principles that drive every single route we manage from MG Road to Mumbai.</p>
         </div>
 
         <div className="values-grid">
-          <div className="value-card animate-slide-up hover-lift">
+          <div className="value-card animate-slide-up hover-lift hover-glow">
             <div className="value-icon-circle">
               <Shield size={24} />
             </div>
-            <h3 className="heading-sm value-title">Decryption Verification</h3>
+            <h3 className="heading-sm value-title">Rigorous Safety Protocols</h3>
             <p className="value-desc">
-              Every coordinate pass undergoes manual UPI receipt verification. Operations coordinators approve entries via database ledger within minutes, ensuring zero session overlaps.
+              Every multi-axle coach undergoes a strict 15-point check prior to dispatch. Our pilots are seasoned professionals certified in safety and night-highway operations.
             </p>
           </div>
 
-          <div className="value-card animate-slide-up hover-lift">
+          <div className="value-card animate-slide-up hover-lift hover-glow">
             <div className="value-icon-circle">
-              <Cpu size={24} style={{ color: '#06b6d4' }} />
+              <Sparkles size={24} />
             </div>
-            <h3 className="heading-sm value-title" style={{ color: '#06b6d4' }}>Elite Tech Clusters</h3>
+            <h3 className="heading-sm value-title">Eco-Smart Transit</h3>
             <p className="value-desc">
-              Each arena provides workstation setups, hardware fuzzer boards, and high-frequency traffic networks. Perfect for real-time exploit execution.
+              We leverage modern clean-diesel engines and advanced route optimization algorithms to maximize fuel efficiency and significantly lower per-passenger carbon impact.
             </p>
           </div>
 
-          <div className="value-card animate-slide-up hover-lift">
+          <div className="value-card animate-slide-up hover-lift hover-glow">
             <div className="value-icon-circle">
-              <HeartHandshake size={24} style={{ color: '#a855f7' }} />
+              <HeartHandshake size={24} />
             </div>
-            <h3 className="heading-sm value-title" style={{ color: '#a855f7' }}>Operative Conduct</h3>
+            <h3 className="heading-sm value-title">Hospitality On-Board</h3>
             <p className="value-desc">
-              We enforce a strict ethical disclosure matrix. White-hat collectives coordinate together under responsible disclosure parameters.
+              From our live-updated seat reservation system to climate controls, responsive helpdesks, and customer pilots, your comfort is our priority.
             </p>
           </div>
         </div>
@@ -59,22 +59,22 @@ export default function About() {
       <section className="story-section">
         <div className="container story-grid">
           <div className="story-text-col animate-slide-up">
-            <h2 className="heading-lg glow-text">The CyberStrike Mainframe</h2>
+            <h2 className="heading-lg text-green">The GreenWheels Vision</h2>
             <p className="story-para">
-              Established in 2020, CyberStrike was born to bridge the gap between theoretical cryptographic safety and hands-on offensive fuzzer execution. While other tech conferences are purely lecture-based, CyberStrike emphasizes terminal allocation and physical hardware exploits.
+              Established in 2020 in Bangalore, GreenWheels was born out of a desire to modernize intercity bus transit. We observed that while short flights are expensive and train bookings are consistently waitlisted, bus transit remained unorganized—plagued by delayed schedules, double-booked seats, and lack of customer support.
             </p>
             <p className="story-para">
-              We designed a platform prioritizing coordinate allocation. By utilizing precise 60-slot interactive room nodes and transparent manual transaction decryption, we protect operative seating allocations from double-booking.
+              We decided to build a platform that focuses on transparency and punctuality. By introducing precise 60-seat vector cabin grids and manual transaction receipt audits, we ensure that every ticket is locked and booked safely, with zero overlap.
             </p>
             <p className="story-para">
-              Today, CyberStrike manages five primary tracks including Offensive AI, Reverse Engineering, Web3 Security, IoT fuzzer nodes, and Threat Intelligence, coordinating credentials for thousands of white-hats globally.
+              Today, GreenWheels manages primary routes connecting Bangalore, Chennai, Mumbai, Pune, Hyderabad, Delhi, and Jaipur, serving thousands of daily commuters with reliability.
             </p>
           </div>
           <div className="story-graphics-col animate-scale-in">
             <div className="story-graphic-box">
               <div className="graphic-badge">Est. 2020</div>
-              <Compass size={80} className="graphic-icon animate-pulse" style={{ color: '#10b981' }} />
-              <div className="graphic-text">12,000+ Exploits Managed Annually</div>
+              <Compass size={80} className="graphic-icon animate-pulse" />
+              <div className="graphic-text">12,000+ Direct Trips Run Annually</div>
             </div>
           </div>
         </div>
@@ -83,32 +83,32 @@ export default function About() {
       {/* Fleet Overview */}
       <section className="fleet-section container">
         <div className="section-header animate-slide-up">
-          <h2 className="heading-lg glow-text">Arena Level Specifications</h2>
-          <p className="section-subtitle">Select the access tier that fits your workshop goals</p>
+          <h2 className="heading-lg text-green">Our Fleet Specifications</h2>
+          <p className="section-subtitle">Select the class of cabin that suits your itinerary</p>
         </div>
 
         <div className="fleet-grid">
           <div className="fleet-card animate-slide-up hover-lift">
-            <div className="fleet-badge">Elite Keynotes</div>
-            <h3 className="heading-sm fleet-title">Nexus Stages</h3>
+            <div className="fleet-badge">AC Luxury Sleeper</div>
+            <h3 className="heading-sm fleet-title">Premium Berths</h3>
             <p className="fleet-desc">
-              High-capacity auditorium rooms configured for global briefs, featuring 4K stream arrays, acoustic isolation, and live translation outputs.
+              Spacious 2+2 or 2+1 configurations featuring full-flat berths, privacy curtains, personal reading spotlights, USB fast chargers, and noise-cancelling insulation.
             </p>
           </div>
 
           <div className="fleet-card animate-slide-up hover-lift">
-            <div className="fleet-badge green-badge">Expert Labs</div>
-            <h3 className="heading-sm fleet-title">Sandbox Suites</h3>
+            <div className="fleet-badge green-badge">AC Premium Seater</div>
+            <h3 className="heading-sm fleet-title">Executive Recliners</h3>
             <p className="fleet-desc">
-              Ergonomic desk clusters, hardware debugging blocks, dedicated fuzzer network taps, and peer-to-peer operative coordination.
+              Ergonomic high-back pushback recliners, adjustable leg-rests, free onboard Wi-Fi, food tray consoles, and individual AC vents.
             </p>
           </div>
 
           <div className="fleet-card animate-slide-up hover-lift">
-            <div className="fleet-badge gray-badge">Standard Rooms</div>
-            <h3 className="heading-sm fleet-title">Breakout suites</h3>
+            <div className="fleet-badge gray-badge">Economy Class</div>
+            <h3 className="heading-sm fleet-title">Standard Seater</h3>
             <p className="fleet-desc">
-              Dynamic seating setups with personal charger slots, standard WiFi grids, and slide projection terminals.
+              Highly affordable 2+2 seating, high-capacity overhead luggage racks, optimized ventilation, and standard scheduling.
             </p>
           </div>
         </div>
@@ -122,26 +122,29 @@ export default function About() {
 
         /* Hero */
         .about-hero {
-          background: linear-gradient(135deg, #040914 0%, #0c1831 100%);
+          background: linear-gradient(135deg, #022c22 0%, #064e3b 100%);
           color: white;
           padding: 6rem 0;
           text-align: center;
           position: relative;
-          border-bottom: 1px solid var(--border);
         }
 
         .hero-title {
           color: white;
           margin-bottom: 1.25rem;
-          font-weight: 900;
+          font-weight: 800;
         }
 
         .hero-subtitle {
           font-size: 1.25rem;
-          color: #94a3b8;
+          color: #a7f3d0;
           max-width: 650px;
           margin: 0 auto;
           line-height: 1.65;
+        }
+
+        .text-green {
+          color: var(--primary-dark);
         }
 
         .section-header {
@@ -170,17 +173,19 @@ export default function About() {
         }
 
         .value-card {
-          background: rgba(12, 17, 29, 0.65);
+          background: white;
           border: 1px solid var(--border);
           border-radius: var(--radius-xl);
           padding: 3rem 2rem;
           text-align: center;
           box-shadow: var(--shadow-sm);
+          transition: all 0.3s ease;
         }
 
         .value-card:hover {
+          transform: translateY(-5px);
+          box-shadow: var(--shadow-xl);
           border-color: var(--primary);
-          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 10px rgba(16, 185, 129, 0.15);
         }
 
         .value-icon-circle {
@@ -189,18 +194,17 @@ export default function About() {
           justify-content: center;
           width: 58px;
           height: 58px;
-          background-color: rgba(16, 185, 129, 0.1);
+          background-color: var(--primary-light);
           color: var(--primary);
-          border: 1px solid rgba(16, 185, 129, 0.25);
           border-radius: 50%;
           margin-bottom: 1.5rem;
-          box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.1);
         }
 
         .value-title {
           font-weight: 700;
           margin-bottom: 0.875rem;
-          color: white;
+          color: var(--primary-dark);
           font-size: 1.2rem;
         }
 
@@ -212,7 +216,7 @@ export default function About() {
 
         /* Narrative */
         .story-section {
-          background: rgba(8, 12, 22, 0.4);
+          background: white;
           padding: 6rem 0;
           margin-top: 5rem;
           border-top: 1px solid var(--border);
@@ -241,7 +245,7 @@ export default function About() {
         .story-para {
           font-size: 1.025rem;
           line-height: 1.7;
-          color: var(--muted);
+          color: var(--foreground);
         }
 
         .story-graphics-col {
@@ -250,8 +254,8 @@ export default function About() {
         }
 
         .story-graphic-box {
-          background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
-          border: 1px solid rgba(16, 185, 129, 0.2);
+          background: linear-gradient(135deg, var(--primary-light) 0%, #d1fae5 100%);
+          border: 1px solid rgba(16, 185, 129, 0.25);
           border-radius: var(--radius-2xl);
           padding: 3.5rem 2.25rem;
           text-align: center;
@@ -262,29 +266,35 @@ export default function About() {
           max-width: 320px;
           box-shadow: var(--shadow-md);
           position: relative;
+          transition: transform 0.3s ease;
+        }
+        
+        .story-graphic-box:hover {
+          transform: scale(1.03);
         }
 
         .graphic-badge {
           position: absolute;
           top: -12px;
           background: var(--primary);
-          color: #022c22;
-          font-weight: 800;
+          color: white;
+          font-weight: 700;
           padding: 0.35rem 1rem;
-          border-radius: 4px;
+          border-radius: 9999px;
           font-size: 0.75rem;
           box-shadow: var(--shadow-sm);
         }
 
         .graphic-icon {
-          filter: drop-shadow(0 0 10px var(--primary-glow));
+          color: var(--primary);
+          filter: drop-shadow(0 4px 8px rgba(16, 185, 129, 0.2));
         }
 
         .graphic-text {
           font-family: var(--font-heading);
-          font-weight: 800;
+          font-weight: 700;
           font-size: 1.15rem;
-          color: white;
+          color: var(--primary-dark);
           line-height: 1.4;
         }
 
@@ -302,7 +312,7 @@ export default function About() {
         }
 
         .fleet-card {
-          background: rgba(8, 12, 22, 0.5);
+          background: white;
           border: 1px solid var(--border);
           border-radius: var(--radius-xl);
           padding: 2.25rem;
@@ -313,7 +323,7 @@ export default function About() {
 
         .fleet-card:hover {
           border-color: var(--primary);
-          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+          box-shadow: var(--shadow-xl);
           transform: translateY(-3px);
         }
 
@@ -321,8 +331,8 @@ export default function About() {
           position: absolute;
           top: 1.5rem;
           right: 1.5rem;
-          background: rgba(16, 185, 129, 0.1);
-          color: var(--primary);
+          background: #ecfdf5;
+          color: var(--primary-dark);
           font-size: 0.75rem;
           font-weight: 700;
           padding: 0.25rem 0.625rem;
@@ -331,21 +341,21 @@ export default function About() {
         }
 
         .green-badge {
-          background: rgba(6, 182, 212, 0.1);
-          color: #22d3ee;
-          border-color: rgba(6, 182, 212, 0.2);
+          background: #f0fdfa;
+          color: #0f766e;
+          border-color: rgba(13, 148, 136, 0.2);
         }
 
         .gray-badge {
-          background: rgba(255, 255, 255, 0.02);
-          color: var(--muted);
+          background: #f8fafc;
+          color: #475569;
           border-color: var(--border);
         }
 
         .fleet-title {
           font-weight: 700;
           margin-bottom: 0.875rem;
-          color: white;
+          color: var(--foreground);
           margin-top: 0.75rem;
           font-size: 1.15rem;
         }

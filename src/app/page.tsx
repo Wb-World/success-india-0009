@@ -1,262 +1,98 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Calendar, Shield, Search, ShieldCheck, Cpu, Terminal, Compass, ArrowRight, Star, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, Search, ShieldCheck, Clock, Award, Compass, ArrowRight, Star } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  const [source, setSource] = useState('Offensive AI');
-  const [destination, setDestination] = useState('Nexus Room (Hall A)');
+  const [source, setSource] = useState('Bangalore');
+  const [destination, setDestination] = useState('Chennai');
   const [date, setDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() + 7);
     return d.toISOString().split('T')[0];
   });
 
-  // Interactive Particle Canvas (Mass Effect Particle Field)
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let animationFrameId: number;
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
-
-    class Particle {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      radius: number;
-      alpha: number;
-      baseColor: string;
-
-      constructor() {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        // Direction vector from center to create a warp/mass effect outflow
-        const angle = Math.atan2(this.y - height / 2, this.x - width / 2);
-        const speed = 0.5 + Math.random() * 1.5;
-        this.vx = Math.cos(angle) * speed;
-        this.vy = Math.sin(angle) * speed;
-        this.radius = 1 + Math.random() * 2;
-        this.alpha = 0.1 + Math.random() * 0.8;
-        this.baseColor = Math.random() > 0.4 ? '16, 185, 129' : '6, 182, 212'; // Emerald or Cyan
-      }
-
-      draw() {
-        if (!ctx) return;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${this.baseColor}, ${this.alpha})`;
-        ctx.fill();
-      }
-
-      update() {
-        // Warp outwards
-        this.x += this.vx;
-        this.y += this.vy;
-
-        // Reset if out of bounds
-        if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
-          this.x = width / 2 + (Math.random() * 40 - 20);
-          this.y = height / 2 + (Math.random() * 40 - 20);
-          const angle = Math.random() * Math.PI * 2;
-          const speed = 0.5 + Math.random() * 1.5;
-          this.vx = Math.cos(angle) * speed;
-          this.vy = Math.sin(angle) * speed;
-          this.radius = 1 + Math.random() * 2;
-          this.alpha = 0.1 + Math.random() * 0.8;
-        }
-
-        // Interactive gravity warp towards/away from mouse cursor
-        if (mouse.active) {
-          const dx = mouse.x - this.x;
-          const dy = mouse.y - this.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 180) {
-            const force = (180 - dist) / 180;
-            // Warp push effect
-            this.x -= (dx / dist) * force * 4;
-            this.y -= (dy / dist) * force * 4;
-          }
-        }
-      }
-    }
-
-    const particles: Particle[] = [];
-    const maxParticles = 90;
-    const connectionDistance = 120;
-    const mouse = { x: -1000, y: -1000, active: false };
-
-    // Initialize particles
-    for (let i = 0; i < maxParticles; i++) {
-      particles.push(new Particle());
-    }
-
-    const handleResize = () => {
-      if (!canvas) return;
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-      mouse.active = true;
-    };
-
-    const handleMouseLeave = () => {
-      mouse.active = false;
-      mouse.x = -1000;
-      mouse.y = -1000;
-    };
-
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseleave', handleMouseLeave);
-
-    const animate = () => {
-      ctx.fillStyle = 'rgba(3, 7, 18, 0.25)'; // trail opacity
-      ctx.fillRect(0, 0, width, height);
-
-      // Draw grid overlay lines
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.005)';
-      ctx.lineWidth = 1;
-      const gridSize = 80;
-      for (let x = 0; x < width; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
-        ctx.stroke();
-      }
-      for (let y = 0; y < height; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
-        ctx.stroke();
-      }
-
-      // Draw and connect particles
-      for (let i = 0; i < particles.length; i++) {
-        const p1 = particles[i];
-        p1.update();
-        p1.draw();
-
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const dx = p1.x - p2.x;
-          const dy = p1.y - p2.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < connectionDistance) {
-            const alpha = (1 - dist / connectionDistance) * 0.15;
-            ctx.strokeStyle = `rgba(16, 185, 129, ${alpha})`;
-            ctx.lineWidth = 0.5;
-            ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.stroke();
-          }
-        }
-      }
-
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (canvas) {
-        canvas.removeEventListener('mouseleave', handleMouseLeave);
-      }
-    };
-  }, []);
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    if (source === destination) {
+      alert('Departure and Destination locations cannot be the same!');
+      return;
+    }
     router.push(`/book?source=${encodeURIComponent(source)}&destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(date)}`);
   };
 
   return (
-    <div className="landing-page scanlines">
-      {/* Background Interactive Canvas */}
-      <canvas ref={canvasRef} className="mass-effect-canvas" />
-
+    <div className="landing-page">
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-gradient"></div>
         <div className="container hero-container">
           <div className="hero-text-col animate-slide-up">
-            <span className="hero-tagline">GLOBAL CYBER EXPLOITATION & DEFENSE SUMMIT</span>
+            <span className="hero-tagline">Premium Intercity Travel</span>
             <h1 className="hero-title">
-              CYBERSTRIKE 2026 <br/>
-              <span className="text-highlight">GRID CONTEXT INITIATED</span>
+              India&apos;s Next-Generation <span className="text-highlight">Eco-Transit Network</span>
             </h1>
             <p className="hero-subtitle">
-              Secure your access coordinates. Select specialized session tracks, lock down hardware hacking terminals, and join the elite CTF cyber defense networks. UPI-screenshot decryption active.
+              Enjoy premium reclining seats, high-speed onboard WiFi, and punctual departures. Book tickets securely with local QR transfers and verified manual approvals.
             </p>
             <div className="hero-cta-buttons">
               <Link href="/book" className="btn btn-primary btn-lg-premium">
-                <Terminal size={16} /> Reserve Access Pass
+                <Compass size={18} /> Reserve Seat Now
               </Link>
               <Link href="/about" className="btn btn-secondary btn-lg-premium">
-                Explore Arenas
+                Explore Fleet
               </Link>
             </div>
           </div>
 
           <div className="hero-search-col animate-scale-in">
             <div className="search-card glass-card">
-              <h3 className="search-card-title">DECRYPT TICKETS & ACCESS CODES</h3>
+              <h3 className="search-card-title">Plan Your Next Journey</h3>
               <form onSubmit={handleSearch}>
                 <div className="form-group">
                   <label className="form-label">
-                    <Terminal size={12} className="input-label-icon" /> Access Sector (Track)
+                    <MapPin size={14} className="input-label-icon" /> Departure Terminal
                   </label>
                   <select 
                     value={source} 
                     onChange={(e) => setSource(e.target.value)}
                     className="form-control select-field"
                   >
-                    <option value="Offensive AI">Offensive AI & ML Fuzzing</option>
-                    <option value="Reverse Engineering">Reverse Engineering & Kernel Exploits</option>
-                    <option value="Web3 & Cryptography">Web3, Cryptography & Blockchain</option>
-                    <option value="Hardware & IoT">Hardware, IoT & Firmware Fuzzing</option>
-                    <option value="Defensive AI">Defensive AI & Threat Intel</option>
+                    <option value="Bangalore">Bengaluru (Bangalore)</option>
+                    <option value="Chennai">Chennai (Madras)</option>
+                    <option value="Mumbai">Mumbai (Bombay)</option>
+                    <option value="Pune">Pune</option>
+                    <option value="Delhi">Delhi (NCR)</option>
+                    <option value="Hyderabad">Hyderabad</option>
+                    <option value="Jaipur">Jaipur (Pink City)</option>
                   </select>
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">
-                    <Compass size={12} className="input-label-icon" /> Arena Room (Venue)
+                    <MapPin size={14} className="input-label-icon text-primary" /> Destination Terminal
                   </label>
                   <select 
                     value={destination} 
                     onChange={(e) => setDestination(e.target.value)}
                     className="form-control select-field"
                   >
-                    <option value="Nexus Room (Hall A)">Nexus Stage (Hall A)</option>
-                    <option value="Sandbox Lab (Suite 404)">Sandbox Lab (Suite 404)</option>
-                    <option value="Black Box Room (Hall B)">Black Box (Hall B)</option>
-                    <option value="Silicon Sandbox (Lab C)">Silicon Sandbox (Lab C)</option>
-                    <option value="War Room (Room 101)">Operations War Room (101)</option>
+                    <option value="Chennai">Chennai (Madras)</option>
+                    <option value="Bangalore">Bengaluru (Bangalore)</option>
+                    <option value="Mumbai">Mumbai (Bombay)</option>
+                    <option value="Pune">Pune</option>
+                    <option value="Delhi">Delhi (NCR)</option>
+                    <option value="Hyderabad">Hyderabad</option>
+                    <option value="Jaipur">Jaipur (Pink City)</option>
                   </select>
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">
-                    <Calendar size={12} className="input-label-icon" /> Access Date
+                    <Calendar size={14} className="input-label-icon" /> Date of Travel
                   </label>
                   <input 
                     type="date" 
@@ -269,7 +105,7 @@ export default function Home() {
                 </div>
 
                 <button type="submit" className="btn btn-primary search-btn">
-                  <Search size={16} /> Search Active Sessions
+                  <Search size={18} /> Search Buses
                 </button>
               </form>
             </div>
@@ -280,38 +116,38 @@ export default function Home() {
       {/* Services Grid */}
       <section className="features-section container">
         <div className="section-header">
-          <h2 className="heading-lg glow-text">SUMMIT PROTOCOLS & REINFORCEMENTS</h2>
-          <p className="section-subtitle">Engineered for real-time security coordination and elite knowledge transfer.</p>
+          <h2 className="heading-lg">Why Intelligent Commuters Choose Us</h2>
+          <p className="section-subtitle">A seamless travel ecosystem engineered around speed, accountability, and luxurious comfort.</p>
         </div>
 
         <div className="features-grid">
-          <div className="feature-card hover-lift">
+          <div className="feature-card card-hover-rotate hover-lift hover-glow">
             <div className="feature-icon-wrapper">
-              <Terminal size={28} className="feature-icon" />
+              <ShieldCheck size={28} className="feature-icon animate-pulse" />
             </div>
-            <h4 className="heading-sm feature-title">Interactive Terminal Mapping</h4>
+            <h4 className="heading-sm feature-title">Secured Vector Booking</h4>
             <p className="feature-desc">
-              Every operative reserves their physical desk interface on our interactive 60-slot cyber node map. Instantly lock down your coordinates to claim exclusive session terminals.
+              Every passenger chooses their preferred seat on an interactive 60-seat vector cabin map. Each transaction is manually validated using screenshot verification, eliminating duplicate seat allocations completely.
             </p>
           </div>
 
-          <div className="feature-card hover-lift">
+          <div className="feature-card card-hover-rotate">
             <div className="feature-icon-wrapper">
-              <Cpu size={28} className="feature-icon" />
+              <Clock size={28} className="feature-icon animate-pulse" />
             </div>
-            <h4 className="heading-sm feature-title">Live Exploitation Demos</h4>
+            <h4 className="heading-sm feature-title">Unmatched Punctuality</h4>
             <p className="feature-desc">
-              Our hardware labs provide physical chipsets, oscilloscopes, and software suites. Experience live zero-day disclosure briefs and automated shell injection streams.
+              We monitor highway traffic grids dynamically using intelligent GPS analytics. This translates to an exceptional 99.8% on-time departure and arrival index across all highway routes.
             </p>
           </div>
 
-          <div className="feature-card hover-lift">
+          <div className="feature-card card-hover-rotate">
             <div className="feature-icon-wrapper">
-              <ShieldCheck size={28} className="feature-icon" />
+              <Award size={28} className="feature-icon animate-pulse" />
             </div>
-            <h4 className="heading-sm feature-title">Elite Holographic Passes</h4>
+            <h4 className="heading-sm feature-title">Executive Fleet Cabin</h4>
             <p className="feature-desc">
-              Complete your reservation using screenshot-backed UPI credentials. Once validated by the operations desk, download a premium &quot;Elite Pass&quot; holographic ticket with full security clearance metadata.
+              Travel in state-of-the-art multi-axle coaches. Features include ergonomic calf-support recliners, personal reading brackets, Type-C charging slots, and temperature-controlled air purification.
             </p>
           </div>
         </div>
@@ -320,17 +156,17 @@ export default function Home() {
       {/* Dynamic Statistics Block */}
       <section className="stats-section">
         <div className="container stats-container">
-          <div className="stat-item">
-            <div className="stat-num glow-text">99.9%</div>
-            <div className="stat-label">Exploit Success Rate</div>
+          <div className="stat-item hover-bounce">
+            <div className="stat-num">99.8%</div>
+            <div className="stat-label">On-Time Departure Rate</div>
           </div>
-          <div className="stat-item">
-            <div className="stat-num glow-text-cyan">5,000+</div>
-            <div className="stat-label">Registered Elite Operatives</div>
+          <div className="stat-item hover-bounce">
+            <div className="stat-num">25,000+</div>
+            <div className="stat-label">Satisfied Indian Commuters Monthly</div>
           </div>
-          <div className="stat-item">
-            <div className="stat-num glow-text">25+</div>
-            <div className="stat-label">Specialized Workshop Labs</div>
+          <div className="stat-item hover-bounce">
+            <div className="stat-num">40+</div>
+            <div className="stat-label">Intercity Connect Lanes Daily</div>
           </div>
         </div>
       </section>
@@ -338,80 +174,80 @@ export default function Home() {
       {/* Popular Routes */}
       <section className="routes-section container">
         <div className="section-header">
-          <h2 className="heading-lg glow-text">POPULAR SESSION CHANNELS</h2>
+          <h2 className="heading-lg">Popular Direct Routes</h2>
           <p className="section-subtitle">Quick reservation on our top-rated regional lines</p>
         </div>
 
         <div className="routes-grid">
-          <div className="route-card hover-lift" onClick={() => router.push(`/book?source=Offensive+AI&destination=Nexus+Room+(Hall+A)`)}>
+          <div className="route-card route-card-interactive hover-lift" onClick={() => router.push(`/book?source=Bangalore&destination=Chennai`)}>
             <div className="route-info">
-              <div className="route-cities">Offensive AI <ArrowRight size={14} className="cities-arrow" /> Nexus Stage</div>
-              <div className="route-details">Advanced Keynote &bull; 2h 30m</div>
+              <div className="route-cities">Bengaluru <ArrowRight size={14} className="cities-arrow" /> Chennai</div>
+              <div className="route-details">AC Sleeper (2+2) &bull; 6h 30m</div>
             </div>
             <div className="route-price-tag">
-              <span>Pass Fare</span>
-              <span className="price-num">₹1500</span>
+              <span>From</span>
+              <span className="price-num">₹950</span>
             </div>
           </div>
 
-          <div className="route-card hover-lift" onClick={() => router.push(`/book?source=Reverse+Engineering&destination=Sandbox+Lab+(Suite+404)`)}>
+          <div className="route-card route-card-interactive hover-lift" onClick={() => router.push(`/book?source=Mumbai&destination=Pune`)}>
             <div className="route-info">
-              <div className="route-cities">Rev Engineering <ArrowRight size={14} className="cities-arrow" /> Sandbox Lab</div>
-              <div className="route-details">Expert Workshop (Red Team) &bull; 4h 00m</div>
+              <div className="route-cities">Mumbai <ArrowRight size={14} className="cities-arrow" /> Pune</div>
+              <div className="route-details">Executive Sleeper (2+1) &bull; 3h 45m</div>
             </div>
             <div className="route-price-tag">
-              <span>Pass Fare</span>
-              <span className="price-num">₹2500</span>
+              <span>From</span>
+              <span className="price-num">₹650</span>
             </div>
           </div>
 
-          <div className="route-card hover-lift" onClick={() => router.push(`/book?source=Web3+%26+Cryptography&destination=Black+Box+Room+(Hall+B)`)}>
+          <div className="route-card route-card-interactive hover-lift" onClick={() => router.push(`/book?source=Delhi&destination=Jaipur`)}>
             <div className="route-info">
-              <div className="route-cities">Web3 Cryptography <ArrowRight size={14} className="cities-arrow" /> Black Box</div>
-              <div className="route-details">Smart Contract Breakout &bull; 3h 15m</div>
+              <div className="route-cities">Delhi <ArrowRight size={14} className="cities-arrow" /> Jaipur</div>
+              <div className="route-details">AC Multi-Axle &bull; 5h 30m</div>
             </div>
             <div className="route-price-tag">
-              <span>Pass Fare</span>
-              <span className="price-num">₹1800</span>
+              <span>From</span>
+              <span className="price-num">₹1250</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Customer Testimonials section */}
+      {/* Customer Testimonials section (Humanoid value) */}
       <section className="testimonials-section">
         <div className="container">
           <div className="section-header">
-            <h2 className="heading-lg glow-text">OPERATIVE TRANSMISSIONS</h2>
-            <p className="section-subtitle">Real feedback from daily professionals and security researchers</p>
+            <h2 className="heading-lg">What Our Travelers Say</h2>
+            <p className="section-subtitle">Real feedback from daily professionals and tourists</p>
           </div>
           <div className="testimonials-grid">
             <div className="testimonial-card">
               <div className="star-rating">
-                <Star size={14} fill="#10b981" color="#10b981" />
-                <Star size={14} fill="#10b981" color="#10b981" />
-                <Star size={14} fill="#10b981" color="#10b981" />
-                <Star size={14} fill="#10b981" color="#10b981" />
-                <Star size={14} fill="#10b981" color="#10b981" />
+                <Star size={16} fill="#f59e0b" color="#f59e0b" />
+                <Star size={16} fill="#f59e0b" color="#f59e0b" />
+                <Star size={16} fill="#f59e0b" color="#f59e0b" />
+                <Star size={16} fill="#f59e0b" color="#f59e0b" />
+                <Star size={16} fill="#f59e0b" color="#f59e0b" />
               </div>
               <p className="testimonial-text">
-                &quot;The terminal mapping flow is incredibly detailed. I allocated desk coordinate K3, uploaded my transfer receipt, and the operator desk verified my ticket in 8 minutes. The holographic Elite Pass is absolute art.&quot;
+                &quot;The ticket booking flow is extremely transparent. I chose seat A3, uploaded my UPI payment screenshot, and within 10 minutes, the admin approved my seat. Excellent service between Bangalore and Chennai.&quot;
               </p>
-              <h5 className="testimonial-author">- Cipher_Vortex, Senior Security Researcher</h5>
+              <h5 className="testimonial-author">- Raghav Sundaram, Senior Systems Engineer</h5>
             </div>
             
             <div className="testimonial-card">
               <div className="star-rating">
-                <Star size={14} fill="#10b981" color="#10b981" />
-                <Star size={14} fill="#10b981" color="#10b981" />
-                <Star size={14} fill="#10b981" color="#10b981" />
-                <Star size={14} fill="#10b981" color="#10b981" />
-                <Star size={14} fill="#10b981" color="#10b981" />
+                <Star size={16} fill="#f59e0b" color="#f59e0b" />
+                <Star size={16} fill="#f59e0b" color="#f59e0b" />
+                <Star size={16} fill="#f59e0b" color="#f59e0b" />
+                <Star size={16} fill="#f59e0b" color="#f59e0b" />
+                <Star size={16} fill="#f59e0b" color="#f59e0b" />
               </div>
               <p className="testimonial-text">
-                &quot;Attending the Hardware Fuzzing lab was the highlight of my year. Reserving terminal access side-by-side with fellow black-hats was extremely seamless. Can&apos;t wait for the CyberStrike 2026 main event.&quot;
+                &quot;I travel between Pune and Mumbai twice a week for client consults. GreenWheels&apos; coaches are consistently spotless, and the seats feel like business-class flight suites. Truly professional operations.&quot;
               </p>
-              <h5 className="testimonial-author">- Kernel_Panic, Red Team Lead</h5>
+              <h5 className="testimonial-author">- Meera Deshmukh, Corporate Consultant</h5>
             </div>
           </div>
         </div>
@@ -420,31 +256,18 @@ export default function Home() {
       <style jsx>{`
         .landing-page {
           background-color: var(--background);
-          position: relative;
-          width: 100vw;
-          min-height: 100vh;
-        }
-
-        .mass-effect-canvas {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          z-index: 0;
-          pointer-events: none;
         }
 
         /* Hero */
         .hero-section {
           position: relative;
           padding: 6rem 0 8rem 0;
+          background-color: #064e3b;
           color: white;
           overflow: hidden;
           min-height: 600px;
           display: flex;
           align-items: center;
-          z-index: 1;
         }
 
         .hero-gradient {
@@ -453,9 +276,8 @@ export default function Home() {
           left: 0;
           right: 0;
           bottom: 0;
-          background: radial-gradient(circle at 70% 30%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
-                      radial-gradient(circle at 10% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
-          z-index: -1;
+          background: linear-gradient(135deg, #022c22 0%, #064e3b 60%, #10b981 100%);
+          z-index: 1;
         }
 
         .hero-container {
@@ -483,23 +305,28 @@ export default function Home() {
 
         .hero-tagline {
           font-family: var(--font-heading);
-          font-size: 0.8rem;
-          font-weight: 800;
+          font-size: 0.875rem;
+          font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 2.5px;
+          letter-spacing: 2px;
           color: var(--primary);
-          background: rgba(16, 185, 129, 0.1);
-          padding: 0.5rem 1.25rem;
-          border-radius: 4px;
+          background: rgba(16, 185, 129, 0.15);
+          padding: 0.5rem 1rem;
+          border-radius: 9999px;
           align-self: flex-start;
           border: 1px solid rgba(16, 185, 129, 0.25);
-          box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+          transition: all 0.3s ease;
+        }
+        
+        .hero-tagline:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
         }
 
         .hero-title {
           font-family: var(--font-heading);
           font-size: 3rem;
-          font-weight: 900;
+          font-weight: 800;
           line-height: 1.1;
           letter-spacing: -1px;
           margin: 0;
@@ -507,19 +334,19 @@ export default function Home() {
 
         @media (min-width: 768px) {
           .hero-title {
-            font-size: 4rem;
+            font-size: 3.75rem;
           }
         }
 
         .text-highlight {
           color: var(--primary);
-          text-shadow: 0 0 15px var(--primary-glow);
+          text-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
         }
 
         .hero-subtitle {
-          font-size: 1.05rem;
+          font-size: 1.1rem;
           line-height: 1.7;
-          color: #94a3b8;
+          color: #d1fae5;
           max-width: 560px;
           margin: 0;
         }
@@ -528,90 +355,81 @@ export default function Home() {
           display: flex;
           flex-wrap: wrap;
           gap: 1rem;
-          margin-top: 0.5rem;
+          margin-top: 0.25rem;
           align-items: center;
         }
 
         .btn-lg-premium {
-          padding: 0.95rem 2.1rem;
-          font-size: 0.95rem;
-          border-radius: var(--radius-md);
+          padding: 0.9rem 1.875rem;
+          font-size: 1rem;
+          border-radius: var(--radius-lg);
+          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         /* Search Card */
         .hero-search-col {
           display: flex;
           align-items: stretch;
-          z-index: 5;
         }
 
         .search-card {
           width: 100%;
-          padding: 2.25rem;
-          background: rgba(8, 12, 22, 0.85);
+          padding: 2rem 2.25rem 2.25rem;
+          background: rgba(255, 255, 255, 0.98);
           color: var(--foreground);
-          border-radius: var(--radius-xl);
-          box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.8);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          transition: border-color 0.3s;
+          border-radius: var(--radius-2xl);
+          box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.8);
+          transition: transform 0.3s ease;
         }
 
         .search-card:hover {
-          border-color: rgba(16, 185, 129, 0.2);
+          transform: translateY(-3px);
         }
 
         .search-card-title {
           font-family: var(--font-heading);
-          font-size: 1.1rem;
-          font-weight: 900;
-          color: white;
+          font-size: 1.35rem;
+          font-weight: 700;
+          color: #064e3b;
           margin-bottom: 1.5rem;
           text-align: center;
           padding-bottom: 1rem;
-          border-bottom: 1px solid var(--border);
-          letter-spacing: 1.5px;
+          border-bottom: 1px solid #d1fae5;
         }
 
         .input-label-icon {
           vertical-align: middle;
           margin-top: -3px;
-          margin-right: 6px;
-          color: var(--primary);
+          margin-right: 4px;
+          color: var(--primary-dark);
         }
 
         .select-field, .date-field {
           background-color: var(--input);
           border-color: var(--border);
-          color: white;
           font-weight: 600;
           cursor: pointer;
-          height: 48px;
-        }
-
-        .select-field option {
-          background-color: #0c111d;
-          color: white;
+          height: 46px;
         }
 
         .search-btn {
           width: 100%;
-          padding: 0.9rem;
-          font-size: 1rem;
-          margin-top: 0.75rem;
+          padding: 0.875rem;
+          font-size: 1.05rem;
+          margin-top: 0.5rem;
           box-shadow: var(--shadow-primary);
-          letter-spacing: 0.5px;
+          letter-spacing: 0.01em;
         }
 
         /* Features Section */
         .features-section {
           padding: 7rem 2rem;
-          position: relative;
-          z-index: 2;
         }
 
         .section-header {
           text-align: center;
-          margin-bottom: 4rem;
+          margin-bottom: 3.5rem;
           max-width: 680px;
           margin-left: auto;
           margin-right: auto;
@@ -619,7 +437,7 @@ export default function Home() {
 
         .section-subtitle {
           color: var(--muted);
-          font-size: 1rem;
+          font-size: 1.05rem;
           margin-top: 0.75rem;
           line-height: 1.65;
         }
@@ -639,9 +457,8 @@ export default function Home() {
         }
 
         .feature-card {
-          background: rgba(12, 17, 29, 0.6);
-          backdrop-filter: blur(8px);
-          padding: 3rem 2.25rem;
+          background: white;
+          padding: 2.75rem 2rem;
           border-radius: var(--radius-xl);
           border: 1px solid var(--border);
           box-shadow: var(--shadow-sm);
@@ -654,7 +471,7 @@ export default function Home() {
 
         .feature-card:hover {
           transform: translateY(-8px);
-          box-shadow: 0 15px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(16, 185, 129, 0.15);
+          box-shadow: var(--shadow-xl);
           border-color: var(--primary);
         }
 
@@ -662,40 +479,35 @@ export default function Home() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 64px;
-          height: 64px;
-          background: rgba(16, 185, 129, 0.1);
+          width: 68px;
+          height: 68px;
+          background: var(--primary-light);
           color: var(--primary);
-          border-radius: 12px;
-          margin-bottom: 1.75rem;
-          box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
-          border: 1px solid rgba(16, 185, 129, 0.25);
+          border-radius: 50%;
+          margin-bottom: 1.5rem;
+          box-shadow: 0 6px 15px rgba(16, 185, 129, 0.12);
           flex-shrink: 0;
         }
 
         .feature-title {
-          font-size: 1.15rem;
+          font-size: 1.2rem;
           font-weight: 700;
           margin-bottom: 0.75rem;
-          color: white;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
+          color: var(--primary-dark);
         }
 
         .feature-desc {
           font-size: 0.92rem;
           color: var(--muted);
-          line-height: 1.65;
+          line-height: 1.7;
         }
 
         /* Stats Section */
         .stats-section {
-          background: rgba(12, 17, 29, 0.8);
-          border-top: 1px solid var(--border);
-          border-bottom: 1px solid var(--border);
+          background: #ecfdf5;
+          border-top: 1px solid #d1fae5;
+          border-bottom: 1px solid #d1fae5;
           padding: 5rem 2rem;
-          position: relative;
-          z-index: 2;
         }
 
         .stats-container {
@@ -723,7 +535,7 @@ export default function Home() {
 
         @media (min-width: 768px) {
           .stat-item:not(:last-child) {
-            border-right: 1px solid var(--border);
+            border-right: 1px solid #a7f3d0;
           }
         }
 
@@ -734,26 +546,22 @@ export default function Home() {
         .stat-num {
           font-family: var(--font-heading);
           font-size: 3.5rem;
-          font-weight: 900;
-          color: var(--primary);
+          font-weight: 800;
+          color: var(--primary-dark);
           letter-spacing: -1px;
           line-height: 1;
         }
 
         .stat-label {
-          font-size: 0.9rem;
-          font-weight: 700;
-          color: var(--muted);
+          font-size: 0.975rem;
+          font-weight: 600;
+          color: #047857;
           margin-top: 0.25rem;
-          text-transform: uppercase;
-          letter-spacing: 1px;
         }
 
         /* Routes Section */
         .routes-section {
           padding: 7rem 2rem;
-          position: relative;
-          z-index: 2;
         }
 
         .routes-grid {
@@ -770,11 +578,10 @@ export default function Home() {
         }
 
         .route-card {
-          background: rgba(12, 17, 29, 0.6);
-          backdrop-filter: blur(8px);
+          background: white;
           border: 1px solid var(--border);
           border-radius: var(--radius-xl);
-          padding: 1.75rem;
+          padding: 1.625rem 1.75rem;
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -786,8 +593,8 @@ export default function Home() {
 
         .route-card:hover {
           border-color: var(--primary);
-          transform: translateY(-4px);
-          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(16, 185, 129, 0.15);
+          transform: scale(1.02) translateY(-2px);
+          box-shadow: var(--shadow-md);
         }
 
         .route-info {
@@ -797,13 +604,13 @@ export default function Home() {
 
         .route-cities {
           font-family: var(--font-heading);
-          font-size: 1.05rem;
+          font-size: 1.1rem;
           font-weight: 700;
-          color: white;
+          color: var(--foreground);
           margin-bottom: 0.375rem;
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.4rem;
           white-space: nowrap;
         }
 
@@ -829,29 +636,26 @@ export default function Home() {
         }
 
         .route-price-tag span:first-child {
-          font-size: 0.65rem;
+          font-size: 0.7rem;
           color: var(--muted);
-          font-weight: 700;
+          font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
 
         .price-num {
           font-family: var(--font-heading);
-          font-size: 1.45rem;
+          font-size: 1.5rem;
           font-weight: 800;
           color: var(--primary);
           letter-spacing: -0.5px;
-          text-shadow: 0 0 5px var(--primary-glow);
         }
 
         /* Testimonials Section */
         .testimonials-section {
-          background: rgba(12, 17, 29, 0.4);
-          border-top: 1px solid var(--border);
+          background: white;
           padding: 7rem 2rem;
-          position: relative;
-          z-index: 2;
+          border-top: 1px solid var(--border);
         }
 
         .testimonials-grid {
@@ -870,24 +674,19 @@ export default function Home() {
         }
 
         .testimonial-card {
-          background: rgba(8, 12, 22, 0.7);
-          backdrop-filter: blur(8px);
-          padding: 2.5rem;
+          background: var(--background);
+          padding: 2.25rem 2.5rem;
           border-radius: var(--radius-xl);
           border: 1px solid var(--border);
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
+          gap: 1rem;
           height: 100%;
-        }
-
-        .testimonial-card:hover {
-          border-color: var(--primary);
         }
 
         .star-rating {
           display: flex;
-          gap: 0.25rem;
+          gap: 0.2rem;
           align-items: center;
         }
 
@@ -901,12 +700,10 @@ export default function Home() {
 
         .testimonial-author {
           font-weight: 700;
-          color: white;
-          font-size: 0.85rem;
-          padding-top: 0.75rem;
+          color: var(--foreground);
+          font-size: 0.875rem;
+          padding-top: 0.5rem;
           border-top: 1px solid var(--border);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
         }
       `}</style>
     </div>
