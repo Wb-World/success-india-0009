@@ -8,9 +8,12 @@ export const metadata: Metadata = {
   description: 'Reserve seats for Success India leadership development seminars, recruitment training, weekly strategy sessions, and local Tamil Nadu chapter meetups.',
   keywords: 'Success India, seminar booking, leadership development, chapter meetups, Tamil Nadu, Chromepet Chennai, direct selling workshops',
   icons: {
-    icon: '/favicon.png',
+    icon: [
+      { url: '/favicon.png', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon.png', type: 'image/png', sizes: '16x16' },
+    ],
     shortcut: '/favicon.png',
-    apple: '/favicon.png',
+    apple: { url: '/favicon.png', sizes: '180x180' },
   },
   openGraph: {
     title: 'Success India - Official Seminar & Leadership Portal',
@@ -28,8 +31,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/png" href="/favicon.png" />
-        <link rel="apple-touch-icon" href="/favicon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
         <link rel="shortcut icon" href="/favicon.png" />
       </head>
       <body>
