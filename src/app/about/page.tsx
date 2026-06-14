@@ -8,9 +8,9 @@ export default function About() {
       {/* Mini Hero */}
       <section className="about-hero">
         <div className="container">
-          <h1 className="heading-xl hero-title">Connecting India, Comfortably</h1>
+          <h1 className="heading-xl hero-title">Success India Seminar Booking Portal</h1>
           <p className="hero-subtitle">
-            Pioneering safe, ecological, and premium intercity bus networks across India&apos;s business corridors.
+            Reserve seats for leadership programs, chapter meetups, business briefings, and professional development events across Tamil Nadu.
           </p>
         </div>
       </section>
@@ -18,8 +18,8 @@ export default function About() {
       {/* Core Values / Pillars */}
       <section className="values-section container">
         <div className="section-header animate-slide-up">
-          <h2 className="heading-lg text-green">Our Core Commits</h2>
-          <p className="section-subtitle">The principles that drive every single route we manage from MG Road to Mumbai.</p>
+          <h2 className="heading-lg text-green">Our Event Commitments</h2>
+          <p className="section-subtitle">The principles that guide every seminar registration, member update, and chapter gathering.</p>
         </div>
 
         <div className="values-grid">
@@ -27,9 +27,9 @@ export default function About() {
             <div className="value-icon-circle">
               <Shield size={24} />
             </div>
-            <h3 className="heading-sm value-title">Rigorous Safety Protocols</h3>
+            <h3 className="heading-sm value-title">Verified Seminar Access</h3>
             <p className="value-desc">
-              Every multi-axle coach undergoes a strict 15-point check prior to dispatch. Our pilots are seasoned professionals certified in safety and night-highway operations.
+              Every registration request is reviewed with attendee details, selected seats, event timing, and uploaded payment receipt before approval.
             </p>
           </div>
 
@@ -37,9 +37,9 @@ export default function About() {
             <div className="value-icon-circle">
               <Sparkles size={24} />
             </div>
-            <h3 className="heading-sm value-title">Eco-Smart Transit</h3>
+            <h3 className="heading-sm value-title">Professional Growth Programs</h3>
             <p className="value-desc">
-              We leverage modern clean-diesel engines and advanced route optimization algorithms to maximize fuel efficiency and significantly lower per-passenger carbon impact.
+              Success India focuses on leadership development, recruitment training, weekly strategy sessions, and digital business learning.
             </p>
           </div>
 
@@ -47,9 +47,9 @@ export default function About() {
             <div className="value-icon-circle">
               <HeartHandshake size={24} />
             </div>
-            <h3 className="heading-sm value-title">Hospitality On-Board</h3>
+            <h3 className="heading-sm value-title">Member Support</h3>
             <p className="value-desc">
-              From our live-updated seat reservation system to climate controls, responsive helpdesks, and customer pilots, your comfort is our priority.
+              From seat selection to registration status updates, the portal helps members manage event participation with clarity and confidence.
             </p>
           </div>
         </div>
@@ -59,56 +59,56 @@ export default function About() {
       <section className="story-section">
         <div className="container story-grid">
           <div className="story-text-col animate-slide-up">
-            <h2 className="heading-lg text-green">The GreenWheels Vision</h2>
+            <h2 className="heading-lg text-green">The Success India Vision</h2>
             <p className="story-para">
-              Established in 2020 in Bangalore, GreenWheels was born out of a desire to modernize intercity bus transit. We observed that while short flights are expensive and train bookings are consistently waitlisted, bus transit remained unorganized—plagued by delayed schedules, double-booked seats, and lack of customer support.
+              Success India brings seminar discovery, member registration, payment receipt review, and seat allocation into one focused portal for official events and local chapter sessions.
             </p>
             <p className="story-para">
-              We decided to build a platform that focuses on transparency and punctuality. By introducing precise 60-seat vector cabin grids and manual transaction receipt audits, we ensure that every ticket is locked and booked safely, with zero overlap.
+              The experience is designed for attendees who need simple event selection, clear approval tracking, and a trustworthy path from registration to confirmed seat allocation.
             </p>
             <p className="story-para">
-              Today, GreenWheels manages primary routes connecting Bangalore, Chennai, Mumbai, Pune, Hyderabad, Delhi, and Jaipur, serving thousands of daily commuters with reliability.
+              Today, the portal supports leadership seminars, income strategy sessions, BOSS Agro Hub chapter meetups, and digital marketing workshops for Tamil Nadu member networks.
             </p>
           </div>
           <div className="story-graphics-col animate-scale-in">
             <div className="story-graphic-box">
-              <div className="graphic-badge">Est. 2020</div>
+              <div className="graphic-badge">Success India</div>
               <Compass size={80} className="graphic-icon animate-pulse" />
-              <div className="graphic-text">12,000+ Direct Trips Run Annually</div>
+              <div className="graphic-text">60 Seat Seminar Registration Grid</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Fleet Overview */}
+      {/* Event Overview */}
       <section className="fleet-section container">
         <div className="section-header animate-slide-up">
-          <h2 className="heading-lg text-green">Our Fleet Specifications</h2>
-          <p className="section-subtitle">Select the class of cabin that suits your itinerary</p>
+          <h2 className="heading-lg text-green">Event Categories</h2>
+          <p className="section-subtitle">Select the seminar format that matches your growth plan</p>
         </div>
 
         <div className="fleet-grid">
           <div className="fleet-card animate-slide-up hover-lift">
-            <div className="fleet-badge">AC Luxury Sleeper</div>
-            <h3 className="heading-sm fleet-title">Premium Berths</h3>
+            <div className="fleet-badge">Leadership</div>
+            <h3 className="heading-sm fleet-title">Leadership Development Seminars</h3>
             <p className="fleet-desc">
-              Spacious 2+2 or 2+1 configurations featuring full-flat berths, privacy curtains, personal reading spotlights, USB fast chargers, and noise-cancelling insulation.
+              Structured programs for team growth, communication, recruitment training, and practical leadership habits.
             </p>
           </div>
 
           <div className="fleet-card animate-slide-up hover-lift">
-            <div className="fleet-badge green-badge">AC Premium Seater</div>
-            <h3 className="heading-sm fleet-title">Executive Recliners</h3>
+            <div className="fleet-badge green-badge">Weekly Systems</div>
+            <h3 className="heading-sm fleet-title">Income Strategy Sessions</h3>
             <p className="fleet-desc">
-              Ergonomic high-back pushback recliners, adjustable leg-rests, free onboard Wi-Fi, food tray consoles, and individual AC vents.
+              Weekly briefings focused on business volume, referrals, market connections, and member routines.
             </p>
           </div>
 
           <div className="fleet-card animate-slide-up hover-lift">
-            <div className="fleet-badge gray-badge">Economy Class</div>
-            <h3 className="heading-sm fleet-title">Standard Seater</h3>
+            <div className="fleet-badge gray-badge">Chapter Network</div>
+            <h3 className="heading-sm fleet-title">BOSS Agro Hub Meetups</h3>
             <p className="fleet-desc">
-              Highly affordable 2+2 seating, high-capacity overhead luggage racks, optimized ventilation, and standard scheduling.
+              Local member gatherings for chapter updates, community learning, and business collaboration.
             </p>
           </div>
         </div>
@@ -298,7 +298,7 @@ export default function About() {
           line-height: 1.4;
         }
 
-        /* Fleet */
+        /* Event Cards */
         .fleet-grid {
           display: grid;
           grid-template-columns: 1fr;

@@ -5,20 +5,20 @@ import { Mail, Phone, MapPin, Send, HelpCircle, CheckCircle2, ChevronDown } from
 
 const FAQS = [
   {
-    q: 'How does the booking manual approval work?',
-    a: 'Once you select your bus route and seat numbers, the system displays our reservation QR code. You can make the transfer for the exact amount using any UPI app (like GPay, PhonePe, Paytm, or BHIM) or net banking. Capture a screenshot of the transaction receipt showing the UTR/Reference number, and upload it. Our audit team reviews approvals continuously, usually confirming your seats within 10-30 minutes.'
+    q: 'How does seminar registration approval work?',
+    a: 'After you select an event and seat numbers, the portal shows the payment step. Complete the transfer using your preferred UPI app or net banking, then upload the receipt screenshot. Our team reviews submissions and usually confirms seats within 10 to 30 minutes.'
   },
   {
-    q: 'How long does payment approval take?',
-    a: 'Helpline administrators process receipts 24/7. Approvals are typically completed within 15 minutes. During late-night hours or heavy travel seasons, it might take up to 1 hour. You can check the real-time status of your ticket under the "Travel Bookings" table on your Profile page.'
+    q: 'How long does receipt approval take?',
+    a: 'Administrators review receipts throughout the day. Most approvals are completed within 15 minutes. During busy seminar periods, it may take up to 1 hour. You can check the live status under My Seminar Bookings in your profile.'
   },
   {
-    q: 'Can I cancel or reschedule my ticket?',
-    a: 'Yes. Tickets can be cancelled or rescheduled up to 12 hours before departure. To request a reschedule or refund, please dial our toll-free customer helpline (+91 80 4567 8900) or email support@greenwheels.in with your Booking reference number.'
+    q: 'Can I update or cancel my seminar registration?',
+    a: 'Yes. Please contact the event support desk before the seminar begins. Share your booking reference, selected seats, and preferred update request so the team can guide you.'
   },
   {
-    q: 'What happens if my receipt upload is denied?',
-    a: 'If your payment booking is marked as "Denied" by administration, check your transaction receipt. Common reasons include incorrect transfer amounts or uploaded corrupted image file structures. Contact support to clarify and re-submit your receipt if necessary.'
+    q: 'What happens if my receipt upload is rejected?',
+    a: 'If your registration is marked as rejected, review the receipt image and payment amount. You can contact support for clarification and upload a new receipt if needed.'
   }
 ];
 
@@ -44,9 +44,9 @@ export default function Contact() {
       {/* Mini Hero */}
       <section className="contact-hero">
         <div className="container">
-          <h1 className="heading-xl hero-title">Customer Care & Support</h1>
+          <h1 className="heading-xl hero-title">Event Registration Support</h1>
           <p className="hero-subtitle">
-            Have questions about your bus ticket, route departure times, or manual receipt validation? We are here to help.
+            Have questions about seminar bookings, chapter meetup seats, payment receipt validation, or member profile updates? We are here to help.
           </p>
         </div>
       </section>
@@ -58,9 +58,9 @@ export default function Contact() {
           {submitted ? (
             <div className="success-card glass-card animate-scale-in">
               <CheckCircle2 size={56} className="success-icon" />
-              <h3 className="heading-md">Inquiry Received!</h3>
+              <h3 className="heading-md">Inquiry Received</h3>
               <p>
-                Thank you for contacting GreenWheels support. A passenger relations representative has been assigned to your ticket and will reply via email within the next 2 hours.
+                Thank you for contacting Success India support. A member support representative will review your event query and reply by email within the next 2 hours.
               </p>
               <button onClick={() => setSubmitted(false)} className="btn btn-primary">
                 Send Another Message
@@ -101,7 +101,7 @@ export default function Contact() {
                     type="text" 
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    placeholder="E.g., Booking assistance, Refund status, Route enquiry..." 
+                    placeholder="Example, seminar booking help, payment status, event update" 
                     className="form-control" 
                     required 
                   />
@@ -132,27 +132,27 @@ export default function Contact() {
           <div className="info-card info-card-hover">
             <Phone size={22} className="info-card-icon" />
             <div>
-              <h4 className="info-card-title">Call Helpline</h4>
-              <p className="info-card-detail">+91 80 4567 8900</p>
-              <p className="info-card-sub">Mon-Sun, 24 Hours Active</p>
+              <h4 className="info-card-title">Event Support Desk</h4>
+              <p className="info-card-detail">Support through official Success India channels</p>
+              <p className="info-card-sub">Monday to Sunday support window</p>
             </div>
           </div>
 
           <div className="info-card info-card-hover">
             <Mail size={22} className="info-card-icon" />
             <div>
-              <h4 className="info-card-title">Email Desk</h4>
-              <p className="info-card-detail">support@greenwheels.in</p>
-              <p className="info-card-sub">Response within 2 hours</p>
+              <h4 className="info-card-title">Online Resource</h4>
+              <p className="info-card-detail">accsysindia.com</p>
+              <p className="info-card-sub">Use official resources for company details</p>
             </div>
           </div>
 
           <div className="info-card info-card-hover">
             <MapPin size={22} className="info-card-icon" />
             <div>
-              <h4 className="info-card-title">Main Terminal Head Office</h4>
-              <p className="info-card-detail">100, Green City Plaza</p>
-              <p className="info-card-sub">MG Road, Bangalore, KA - 560001</p>
+              <h4 className="info-card-title">Head Office Reference</h4>
+              <p className="info-card-detail">No 303, 2nd floor, Grand Southern Trunk Rd</p>
+              <p className="info-card-sub">Chromepet, Chennai, Tamil Nadu 600044</p>
             </div>
           </div>
         </div>
@@ -164,7 +164,7 @@ export default function Contact() {
           <div className="faq-header animate-slide-up">
             <HelpCircle size={32} className="faq-header-icon animate-bounce" />
             <h2 className="heading-lg">Frequently Asked Questions</h2>
-            <p className="section-subtitle">Quick answers regarding bookings, refunds, and UPI screenshot validation</p>
+            <p className="section-subtitle">Quick answers regarding seminar registrations, approvals, and UPI receipt validation</p>
           </div>
 
           <div className="faq-accordion-list">
