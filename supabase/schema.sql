@@ -38,6 +38,18 @@ CREATE TABLE IF NOT EXISTS public.buses (
 ALTER TABLE public.buses
   ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'Available to Register';
 
+-- Success India seminar events table
+CREATE TABLE IF NOT EXISTS public.events (
+  id             TEXT        PRIMARY KEY,
+  title          TEXT        NOT NULL,
+  venue          TEXT        NOT NULL,
+  event_datetime TIMESTAMPTZ NOT NULL,
+  price          INTEGER     NOT NULL DEFAULT 0,
+  total_seats    INTEGER     NOT NULL DEFAULT 60,
+  status         TEXT        NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Bookings table
 CREATE TABLE IF NOT EXISTS public.bookings (
   id          TEXT        PRIMARY KEY DEFAULT 'bk_' || extract(epoch from now())::bigint::text,
@@ -75,12 +87,16 @@ CREATE INDEX IF NOT EXISTS idx_bookings_seminar_id ON public.bookings(seminar_id
 CREATE INDEX IF NOT EXISTS idx_bookings_status    ON public.bookings(status);
 CREATE INDEX IF NOT EXISTS idx_bookings_date      ON public.bookings(date);
 CREATE INDEX IF NOT EXISTS idx_buses_source_dest  ON public.buses(source, destination);
+CREATE INDEX IF NOT EXISTS idx_events_datetime    ON public.events(event_datetime);
+CREATE INDEX IF NOT EXISTS idx_events_status      ON public.events(status);
+CREATE INDEX IF NOT EXISTS idx_events_venue_title ON public.events(venue, title);
 
 -- ── 4. ROW LEVEL SECURITY ─────────────────────────────────────
 -- Enable RLS on all tables
 ALTER TABLE public.users    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.buses    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.events   ENABLE ROW LEVEL SECURITY;
 
 -- Because we use the service_role key in our Next.js API routes,
 -- the server bypasses RLS entirely. We set permissive policies
@@ -90,6 +106,10 @@ ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "buses_public_read"
   ON public.buses FOR SELECT
   USING (true);
+
+CREATE POLICY "events_public_read"
+  ON public.events FOR SELECT
+  USING (status = 'active');
 
 -- Users: only service_role (server) can touch — no anon policies needed
 -- Bookings: only service_role (server) can touch — no anon policies needed
@@ -120,6 +140,27 @@ INSERT INTO public.buses (id, name, type, source, destination, price, duration, 
   ('bus_114', 'Vindhya Volvo',       'AC Multi-Axle Seater (2+2)',     'Delhi',     'Mumbai',    1800, '16h 00m',ARRAY['03:00 PM','06:00 PM']),
   ('bus_115', 'Mysore Palace Liner', 'AC Luxury Sleeper (2+2)',        'Bangalore', 'Mysore',    250,  '3h 00m', ARRAY['06:00 AM','09:00 AM','12:00 PM','03:00 PM','06:00 PM','09:00 PM'])
 ON CONFLICT (id) DO NOTHING;
+
+-- Seed data for active Success India seminar events
+INSERT INTO public.events (id, title, venue, event_datetime, price, total_seats, status) VALUES
+  ('seminar_101', 'Success India Leadership Development Seminar', 'Chromepet, Chennai', '2026-06-21T10:00:00+05:30', 250, 60, 'active'),
+  ('seminar_102', 'Weekly Income Strategy Session', 'Tambaram', '2026-06-22T18:00:00+05:30', 250, 60, 'active'),
+  ('seminar_103', 'BOSS Agro Hub Chapter Meetup', 'Pallavaram', '2026-06-23T17:30:00+05:30', 250, 60, 'active')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.buses (id, name, type, status, source, destination, price, duration, times) VALUES
+  ('seminar_101', 'Success India Leadership Development Seminar', 'Success India Seminar Event', 'Available to Register', 'Chromepet, Chennai', 'Success India Leadership Development Seminar', 250, 'Scheduled Program', ARRAY['10:00 AM']),
+  ('seminar_102', 'Weekly Income Strategy Session', 'Success India Seminar Event', 'Available to Register', 'Tambaram', 'Weekly Income Strategy Session', 250, 'Scheduled Program', ARRAY['06:00 PM']),
+  ('seminar_103', 'BOSS Agro Hub Chapter Meetup', 'Success India Seminar Event', 'Available to Register', 'Pallavaram', 'BOSS Agro Hub Chapter Meetup', 250, 'Scheduled Program', ARRAY['05:30 PM'])
+ON CONFLICT (id) DO UPDATE SET
+  name = EXCLUDED.name,
+  type = EXCLUDED.type,
+  status = EXCLUDED.status,
+  source = EXCLUDED.source,
+  destination = EXCLUDED.destination,
+  price = EXCLUDED.price,
+  duration = EXCLUDED.duration,
+  times = EXCLUDED.times;
 
 -- ── 7. SEED DATA — SAMPLE BOOKINGS ───────────────────────────
 INSERT INTO public.bookings (id, user_id, bus_id, bus_name, source, destination, date, time, seats, total_price, screenshot, status, created_at) VALUES

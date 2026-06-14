@@ -12,6 +12,17 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'denied'>('pending');
   const [mounted, setMounted] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [adminSection, setAdminSection] = useState<'registrations' | 'events'>('registrations');
+  const [events, setEvents] = useState<any[]>([]);
+  const [eventSaving, setEventSaving] = useState(false);
+  const [eventMessage, setEventMessage] = useState('');
+  const [eventForm, setEventForm] = useState({
+    title: 'Success India Leadership Development Seminar',
+    venue: 'Chromepet, Chennai',
+    eventDateTime: '',
+    price: '250',
+    totalSeats: '60',
+  });
 
   // Statistic counters
   const [stats, setStats] = useState({
@@ -41,6 +52,7 @@ export default function AdminDashboard() {
       }
       setAdminUser(u);
       fetchAdminBookings(u.id);
+      fetchAdminEvents();
     } catch (e) {
       router.push('/admin/login');
     }
@@ -96,6 +108,63 @@ export default function AdminDashboard() {
       pendingCount: pend,
       deniedCount: den,
     });
+  };
+
+  const fetchAdminEvents = async () => {
+    try {
+      const res = await fetch('/api/events');
+      const data = await res.json();
+      if (res.ok) {
+        setEvents(data.events || []);
+      }
+    } catch (err) {
+      console.error('Error fetching seminar events:', err);
+    }
+  };
+
+  const handlePublishEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminUser?.id) return;
+
+    setEventSaving(true);
+    setEventMessage('');
+
+    try {
+      const res = await fetch('/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-id': adminUser.id,
+        },
+        body: JSON.stringify({
+          title: eventForm.title,
+          venue: eventForm.venue,
+          eventDateTime: eventForm.eventDateTime,
+          price: Number(eventForm.price),
+          totalSeats: Number(eventForm.totalSeats || 60),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setEventMessage(data.error || 'Failed to publish seminar event');
+        return;
+      }
+
+      setEventMessage('Seminar event published successfully');
+      setEventForm({
+        title: 'Success India Leadership Development Seminar',
+        venue: 'Chromepet, Chennai',
+        eventDateTime: '',
+        price: '250',
+        totalSeats: '60',
+      });
+      fetchAdminEvents();
+    } catch (err) {
+      setEventMessage('Network error while publishing seminar event');
+    } finally {
+      setEventSaving(false);
+    }
   };
 
   const handleStatusUpdate = async (bookingId: string, actionStatus: 'approved' | 'denied') => {
@@ -180,7 +249,7 @@ export default function AdminDashboard() {
           <div className="admin-title-logo">
             <Shield className="logo-shield animate-pulse" />
             <div>
-              <h1 className="admin-workspace-title">GreenWheels Operations Console</h1>
+              <h1 className="admin-workspace-title">Success India Operations Console</h1>
               <span className="admin-user-tag">Administrator Node: {adminUser?.name}</span>
             </div>
           </div>
@@ -235,7 +304,23 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        <div className="admin-section-tabs animate-slide-up">
+          <button
+            onClick={() => setAdminSection('registrations')}
+            className={`section-tab ${adminSection === 'registrations' ? 'active' : ''}`}
+          >
+            Registration Approvals
+          </button>
+          <button
+            onClick={() => setAdminSection('events')}
+            className={`section-tab ${adminSection === 'events' ? 'active' : ''}`}
+          >
+            Manage Seminars / Add New Event
+          </button>
+        </div>
+
         {/* List Controls */}
+        {adminSection === 'registrations' ? (
         <div className="dashboard-main-area animate-slide-up">
           <div className="list-controls-bar">
             <div className="tab-buttons">
@@ -357,6 +442,115 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
+        ) : (
+          <div className="event-manager-area animate-slide-up">
+            <div className="event-form-card glass-card">
+              <div className="event-manager-header">
+                <div>
+                  <span className="manager-kicker">Event Management</span>
+                  <h2 className="heading-md">Manage Seminars / Add New Event</h2>
+                </div>
+                <button onClick={fetchAdminEvents} className="btn btn-secondary btn-refresh">
+                  <RefreshCw size={14} /> Refresh Events
+                </button>
+              </div>
+
+              <form onSubmit={handlePublishEvent} className="event-form-grid">
+                <div className="event-form-group span-2">
+                  <label className="form-label">Seminar Title</label>
+                  <input
+                    type="text"
+                    value={eventForm.title}
+                    onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
+                    className="form-control"
+                    placeholder="Success India Leadership Development Seminar"
+                    required
+                  />
+                </div>
+
+                <div className="event-form-group">
+                  <label className="form-label">Venue / Route Location</label>
+                  <input
+                    type="text"
+                    value={eventForm.venue}
+                    onChange={(e) => setEventForm({ ...eventForm, venue: e.target.value })}
+                    className="form-control"
+                    placeholder="Chromepet, Chennai"
+                    required
+                  />
+                </div>
+
+                <div className="event-form-group">
+                  <label className="form-label">Event Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    value={eventForm.eventDateTime}
+                    onChange={(e) => setEventForm({ ...eventForm, eventDateTime: e.target.value })}
+                    className="form-control"
+                    required
+                  />
+                </div>
+
+                <div className="event-form-group">
+                  <label className="form-label">Ticket Price / Fee</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={eventForm.price}
+                    onChange={(e) => setEventForm({ ...eventForm, price: e.target.value })}
+                    className="form-control"
+                    placeholder="250"
+                    required
+                  />
+                </div>
+
+                <div className="event-form-group">
+                  <label className="form-label">Total Available Seats</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={eventForm.totalSeats}
+                    onChange={(e) => setEventForm({ ...eventForm, totalSeats: e.target.value })}
+                    className="form-control"
+                    placeholder="60"
+                    required
+                  />
+                </div>
+
+                <div className="event-form-actions span-2">
+                  {eventMessage && <span className="event-message">{eventMessage}</span>}
+                  <button type="submit" disabled={eventSaving} className="btn btn-primary publish-event-btn">
+                    {eventSaving ? 'Publishing Seminar...' : 'Publish Seminar Event'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div className="events-list-card glass-card">
+              <h3 className="heading-sm">Published Active Events</h3>
+              {events.length === 0 ? (
+                <p className="events-empty">No active seminar events are currently published.</p>
+              ) : (
+                <div className="events-table-list">
+                  {events.map((event) => (
+                    <div key={event.id} className="event-row">
+                      <div>
+                        <strong>{event.title || event.name}</strong>
+                        <span>{event.venue || event.source}</span>
+                      </div>
+                      <div className="event-row-meta">
+                        <span>{event.eventDate || 'Scheduled'}</span>
+                        <span>{event.eventTime || ''}</span>
+                        <strong>₹{event.price}</strong>
+                        <span>{event.totalSeats || 60} seats</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Screenshot Lightbox Modal */}
@@ -438,6 +632,41 @@ export default function AdminDashboard() {
 
         .dashboard-content {
           margin-top: 2.5rem;
+        }
+
+        .admin-section-tabs {
+          display: flex;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+          margin-bottom: 2rem;
+          background: white;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-xl);
+          padding: 0.75rem;
+          box-shadow: var(--shadow-sm);
+        }
+
+        .section-tab {
+          border: none;
+          background: transparent;
+          color: var(--muted);
+          font-family: var(--font-heading);
+          font-weight: 700;
+          padding: 0.85rem 1.1rem;
+          border-radius: var(--radius-lg);
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+
+        .section-tab:hover {
+          color: var(--primary-dark);
+          background: var(--primary-light);
+        }
+
+        .section-tab.active {
+          background: var(--primary);
+          color: white;
+          box-shadow: var(--shadow-primary);
         }
 
         /* Metrics Grid */
@@ -610,6 +839,123 @@ export default function AdminDashboard() {
           color: var(--muted);
           max-width: 350px;
           line-height: 1.5;
+        }
+
+        .event-manager-area {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+        }
+
+        .event-form-card,
+        .events-list-card {
+          background: white;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-2xl);
+          box-shadow: var(--shadow-md);
+          padding: 2rem;
+        }
+
+        .event-manager-header {
+          display: flex;
+          justify-content: space-between;
+          gap: 1rem;
+          align-items: flex-start;
+          padding-bottom: 1.25rem;
+          border-bottom: 1px solid var(--border);
+          margin-bottom: 1.5rem;
+        }
+
+        .manager-kicker {
+          display: block;
+          color: var(--primary);
+          font-size: 0.75rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          margin-bottom: 0.35rem;
+        }
+
+        .event-form-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1.25rem;
+        }
+
+        @media (min-width: 768px) {
+          .event-form-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+
+          .span-2 {
+            grid-column: span 2;
+          }
+        }
+
+        .event-form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.45rem;
+        }
+
+        .event-form-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+          align-items: center;
+          justify-content: space-between;
+          padding-top: 0.5rem;
+        }
+
+        .event-message {
+          color: var(--primary-dark);
+          font-weight: 700;
+        }
+
+        .publish-event-btn {
+          min-width: 220px;
+          justify-content: center;
+        }
+
+        .events-list-card h3 {
+          margin-bottom: 1rem;
+        }
+
+        .events-empty {
+          color: var(--muted);
+          padding: 1rem 0;
+        }
+
+        .events-table-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.85rem;
+        }
+
+        .event-row {
+          display: flex;
+          justify-content: space-between;
+          gap: 1rem;
+          padding: 1rem;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          background: var(--background);
+        }
+
+        .event-row strong,
+        .event-row span {
+          display: block;
+        }
+
+        .event-row span {
+          color: var(--muted);
+          font-size: 0.9rem;
+          margin-top: 0.2rem;
+        }
+
+        .event-row-meta {
+          text-align: right;
+          min-width: 170px;
         }
 
         /* Stream cards layout */
