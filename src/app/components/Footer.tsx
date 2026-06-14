@@ -96,10 +96,10 @@ export default function Footer() {
         <div className="footer-links-col">
           <h4 className="footer-title">Seminar Categories</h4>
           <ul className="footer-links">
-            <li><Link href="/book?destination=Leadership%20Development%20Seminars">Leadership Development</Link></li>
-            <li><Link href="/book?destination=Weekly%20Income-Generation%20Systems">Weekly Income-Generation</Link></li>
-            <li><Link href="/book?destination=BOSS%20Agro%20Hub%20Chapter%20Meetups">BOSS Agro Hub Meetups</Link></li>
-            <li><Link href="/book?destination=Digital%20Marketing%20%26%20Direct-Selling%20Workshops">Digital Marketing Workshops</Link></li>
+            <li><Link href="/book?seminar=Leadership%20Development%20Seminars">Leadership Development</Link></li>
+            <li><Link href="/book?seminar=Weekly%20Income-Generation%20Systems">Weekly Income-Generation</Link></li>
+            <li><Link href="/book?seminar=BOSS%20Agro%20Hub%20Chapter%20Meetups">BOSS Agro Hub Meetups</Link></li>
+            <li><Link href="/book?seminar=Digital%20Marketing%20%26%20Direct-Selling%20Workshops">Digital Marketing Workshops</Link></li>
           </ul>
         </div>
 
@@ -125,7 +125,7 @@ export default function Footer() {
       <div className="footer-bottom">
         <div className="container footer-bottom-flex">
           <p className="copyright-text">
-            &copy; {currentYear} Success India Seminar Booking Portal. All rights reserved.
+            &copy; {currentYear} Success India - Official Seminar & Leadership Portal. All rights reserved.
           </p>
           <div className="footer-legal-links">
             <Link href="/contact">Privacy Policy</Link>

@@ -11,10 +11,14 @@ export async function POST(request: Request) {
     }
 
     const {
-      busId,
-      busName,
       seminarId,
       seminarName,
+      eventId,
+      eventName,
+      busId,
+      busName,
+      venue,
+      seminar,
       source,
       destination,
       date,
@@ -24,12 +28,14 @@ export async function POST(request: Request) {
       screenshot,
     } = await request.json();
 
-    const resolvedSeminarId = seminarId || busId;
-    const resolvedSeminarName = seminarName || busName;
+    const resolvedSeminarId = seminarId || eventId || busId;
+    const resolvedSeminarName = seminarName || eventName || busName;
+    const resolvedVenue = venue || source;
+    const resolvedSeminarTopic = seminar || destination;
 
     // Validation
     if (
-      !resolvedSeminarId || !resolvedSeminarName || !source || !destination || !date || !time ||
+      !resolvedSeminarId || !resolvedSeminarName || !resolvedVenue || !resolvedSeminarTopic || !date || !time ||
       !seats || !Array.isArray(seats) || seats.length === 0 ||
       totalPrice === undefined || totalPrice === null || !screenshot
     ) {
@@ -85,8 +91,8 @@ export async function POST(request: Request) {
         seminar_name: resolvedSeminarName,
         bus_id: null,
         bus_name: null,
-        source,
-        destination,
+        source: resolvedVenue,
+        destination: resolvedSeminarTopic,
         date,
         time,
         seats,
@@ -107,9 +113,9 @@ export async function POST(request: Request) {
           {
             id: resolvedSeminarId,
             name: resolvedSeminarName,
-            type: destination,
-            source,
-            destination,
+            type: resolvedSeminarTopic,
+            source: resolvedVenue,
+            destination: resolvedSeminarTopic,
             price: Number(totalPrice) || 0,
             duration: 'Seminar session',
             times: [time],
@@ -128,8 +134,8 @@ export async function POST(request: Request) {
           user_id: userId,
           bus_id: resolvedSeminarId,
           bus_name: resolvedSeminarName,
-          source,
-          destination,
+          source: resolvedVenue,
+          destination: resolvedSeminarTopic,
           date,
           time,
           seats,
@@ -161,8 +167,8 @@ export async function POST(request: Request) {
       seminarName: newBooking.seminar_name,
       busId: newBooking.seminar_id || newBooking.bus_id,
       busName: newBooking.seminar_name || newBooking.bus_name,
-      source: newBooking.source,
-      destination: newBooking.destination,
+      venue: newBooking.source,
+      seminar: newBooking.destination,
       date: newBooking.date,
       time: newBooking.time,
       seats: newBooking.seats,

@@ -87,8 +87,8 @@ async function getApprovedSeatMap(eventIds: string[], date?: string) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const source = searchParams.get('source') || '';
-    const destination = searchParams.get('destination') || '';
+    const venue = searchParams.get('venue') || searchParams.get('source') || '';
+    const seminar = searchParams.get('seminar') || searchParams.get('destination') || '';
     const date = searchParams.get('date') || '';
     const eventId = searchParams.get('eventId') || '';
 
@@ -100,8 +100,8 @@ export async function GET(request: Request) {
       .order('event_datetime', { ascending: true });
 
     if (eventId) query = query.eq('id', eventId);
-    if (source) query = query.ilike('venue', source);
-    if (destination) query = query.ilike('title', destination);
+    if (venue) query = query.ilike('venue', venue);
+    if (seminar) query = query.ilike('title', seminar);
     if (date) {
       query = query
         .gte('event_datetime', `${date}T00:00:00`)
@@ -112,16 +112,16 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('Events table fetch error, falling back to local seminars:', error);
-      const localEvents = readDb().buses
+      const localEvents = readDb().seminars
         .filter((item) => item.id.startsWith('seminar_'))
-        .filter((item) => !source || item.source.toLowerCase() === source.toLowerCase())
-        .filter((item) => !destination || item.destination.toLowerCase() === destination.toLowerCase())
+        .filter((item) => !venue || item.venue.toLowerCase() === venue.toLowerCase())
+        .filter((item) => !seminar || item.seminar.toLowerCase() === seminar.toLowerCase())
         .map((item) => ({
           id: item.id,
           title: item.name,
-          venue: item.source,
+          venue: item.venue,
           event_datetime: `${date || new Date().toISOString().split('T')[0]}T10:00:00`,
-          price: item.price,
+          price: item.registrationPrice,
           total_seats: DEFAULT_TOTAL_SEATS,
           status: 'active',
         }));

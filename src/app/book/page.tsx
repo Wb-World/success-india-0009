@@ -33,8 +33,8 @@ function BookingEngine() {
   const searchParams = useSearchParams();
 
   // Search parameters states
-  const [source, setSource] = useState('Chromepet, Chennai');
-  const [destination, setDestination] = useState('Leadership Development Seminars');
+  const [venue, setVenue] = useState('Chromepet, Chennai');
+  const [seminar, setSeminar] = useState('Leadership Development Seminars');
   const [selectedEventId, setSelectedEventId] = useState('');
   const [date, setDate] = useState(() => {
     const today = new Date();
@@ -45,13 +45,13 @@ function BookingEngine() {
   // Flow control states
   const [user, setUser] = useState<any>(null);
   const [events, setEvents] = useState<any[]>([]);
-  const [buses, setBuses] = useState<any[]>([]);
-  const [loadingBuses, setLoadingBuses] = useState(false);
+  const [seminars, setSeminars] = useState<any[]>([]);
+  const [loadingSeminars, setLoadingSeminars] = useState(false);
   const [searchTriggered, setSearchTriggered] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Selected bus and schedule states
-  const [selectedBus, setSelectedBus] = useState<any>(null);
+  // Selected seminar and schedule states
+  const [selectedSeminar, setSelectedSeminar] = useState<any>(null);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
@@ -79,44 +79,48 @@ function BookingEngine() {
   }, [searchParams]);
 
   const initializeBookingSearch = async () => {
-    const sParam = searchParams.get('source');
-    const dParam = searchParams.get('destination');
+    const sParam = searchParams.get('venue') || searchParams.get('source');
+    const dParam = searchParams.get('seminar') || searchParams.get('destination');
     const tParam = searchParams.get('date');
     const eParam = searchParams.get('eventId');
 
     try {
       const res = await fetch('/api/events');
       const data = await res.json();
-      const fetchedEvents = res.ok ? data.events || [] : [];
+      const fetchedEvents = res.ok ? (data.events || []).map((event: any) => ({
+        ...event,
+        legacySource: event.venue || event.source,
+        legacyDestination: event.title || event.destination,
+      })) : [];
       setEvents(fetchedEvents);
 
       const matchedEvent = eParam
         ? fetchedEvents.find((event: any) => event.id === eParam)
         : fetchedEvents.find((event: any) =>
-            (!sParam || event.venue === sParam || event.source === sParam) &&
-            (!dParam || event.title === dParam || event.destination === dParam)
+            (!sParam || event.venue === sParam || event.legacySource === sParam) &&
+            (!dParam || event.title === dParam || event.legacyDestination === dParam)
           );
 
-      const resolvedSource = sParam || matchedEvent?.venue || matchedEvent?.source || source;
-      const resolvedDestination = dParam || matchedEvent?.title || matchedEvent?.destination || destination;
+      const resolvedVenue = sParam || matchedEvent?.venue || matchedEvent?.legacySource || venue;
+      const resolvedSeminar = dParam || matchedEvent?.title || matchedEvent?.legacyDestination || seminar;
       const resolvedDate = tParam || matchedEvent?.eventDate || date;
       const resolvedEventId = eParam || matchedEvent?.id || '';
 
-      setSource(resolvedSource);
-      setDestination(resolvedDestination);
+      setVenue(resolvedVenue);
+      setSeminar(resolvedSeminar);
       setDate(resolvedDate);
       setSelectedEventId(resolvedEventId);
 
       if (resolvedEventId || (sParam && dParam && resolvedDate)) {
-        handleSearchBuses(resolvedSource, resolvedDestination, resolvedDate, resolvedEventId);
+        handleSearchSeminars(resolvedVenue, resolvedSeminar, resolvedDate, resolvedEventId);
       }
     } catch (error) {
       console.error('Unable to initialize seminar events:', error);
-      if (sParam) setSource(sParam);
-      if (dParam) setDestination(dParam);
+      if (sParam) setVenue(sParam);
+      if (dParam) setSeminar(dParam);
       if (tParam) setDate(tParam);
       if (sParam && dParam && tParam) {
-        handleSearchBuses(sParam, dParam, tParam, eParam || '');
+        handleSearchSeminars(sParam, dParam, tParam, eParam || '');
       }
     }
   };
@@ -125,22 +129,22 @@ function BookingEngine() {
     const event = events.find((item) => item.id === eventIdOrTitle);
     if (!event) {
       setSelectedEventId('');
-      setDestination(eventIdOrTitle);
+      setSeminar(eventIdOrTitle);
       return;
     }
 
     setSelectedEventId(event.id);
-    setSource(event.venue || event.source || source);
-    setDestination(event.title || event.destination || destination);
+    setVenue(event.venue || event.legacySource || venue);
+    setSeminar(event.title || event.legacyDestination || seminar);
     if (event.eventDate) setDate(event.eventDate);
   };
 
   const handleLocationSelect = (location: string) => {
-    setSource(location);
-    const firstMatchingEvent = events.find((event) => (event.venue || event.source) === location);
+    setVenue(location);
+    const firstMatchingEvent = events.find((event) => (event.venue || event.legacySource) === location);
     if (firstMatchingEvent) {
       setSelectedEventId(firstMatchingEvent.id);
-      setDestination(firstMatchingEvent.title || firstMatchingEvent.destination || destination);
+      setSeminar(firstMatchingEvent.title || firstMatchingEvent.legacyDestination || seminar);
       if (firstMatchingEvent.eventDate) setDate(firstMatchingEvent.eventDate);
     } else {
       setSelectedEventId('');
@@ -148,52 +152,57 @@ function BookingEngine() {
   };
 
   const eventLocations = events.length
-    ? Array.from(new Set(events.map((event) => event.venue || event.source).filter(Boolean))) as string[]
+    ? Array.from(new Set(events.map((event) => event.venue || event.legacySource).filter(Boolean))) as string[]
     : fallbackLocations;
 
   const eventOptions = events.length
-    ? events.filter((event) => (event.venue || event.source) === source)
+    ? events.filter((event) => (event.venue || event.legacySource) === venue)
     : [];
 
-  const handleSearchBuses = async (srcVal = source, destVal = destination, dateVal = date, eventIdVal = selectedEventId) => {
-    if (srcVal === destVal) {
+  const handleSearchSeminars = async (venueVal = venue, seminarVal = seminar, dateVal = date, eventIdVal = selectedEventId) => {
+    if (venueVal === seminarVal) {
       setErrorMsg('Please choose a valid seminar location and category.');
       return;
     }
     setErrorMsg('');
-    setLoadingBuses(true);
+    setLoadingSeminars(true);
     setSearchTriggered(true);
-    setSelectedBus(null);
+    setSelectedSeminar(null);
     setSelectedSeats([]);
 
     try {
       const eventParam = eventIdVal ? `&eventId=${encodeURIComponent(eventIdVal)}` : '';
-      const res = await fetch(`/api/events?source=${encodeURIComponent(srcVal)}&destination=${encodeURIComponent(destVal)}&date=${encodeURIComponent(dateVal)}${eventParam}`);
+      const res = await fetch(`/api/events?venue=${encodeURIComponent(venueVal)}&seminar=${encodeURIComponent(seminarVal)}&date=${encodeURIComponent(dateVal)}${eventParam}`);
       const data = await res.json();
       if (res.ok) {
-        setBuses(data.events || data.buses || []);
+        const fetchedSeminars = (data.events || data.seminars || data.buses || []).map((event: any) => ({
+          ...event,
+          legacySource: event.venue || event.source,
+          legacyDestination: event.title || event.destination,
+        }));
+        setSeminars(fetchedSeminars);
       } else {
         setErrorMsg(data.error || 'Failed to fetch seminar listings');
       }
     } catch (err) {
       setErrorMsg('A connection error occurred while searching seminars.');
     } finally {
-      setLoadingBuses(false);
+      setLoadingSeminars(false);
     }
   };
 
-  const handleBusSelect = (bus: any) => {
-    setSelectedBus(bus);
-    const firstTime = bus.times?.[0] || bus.eventTime || '10:00 AM';
+  const handleSeminarSelect = (seminarEvent: any) => {
+    setSelectedSeminar(seminarEvent);
+    const firstTime = seminarEvent.times?.[0] || seminarEvent.eventTime || '10:00 AM';
     setSelectedTime(firstTime);
-    setBookedSeats(bus.bookedSeatsByTime?.[firstTime] || []);
+    setBookedSeats(seminarEvent.bookedSeatsByTime?.[firstTime] || []);
     setSelectedSeats([]);
     setBookingStep('seats');
   };
 
   const handleTimeChange = (time: string) => {
     setSelectedTime(time);
-    setBookedSeats(selectedBus.bookedSeatsByTime[time] || []);
+    setBookedSeats(selectedSeminar.bookedSeatsByTime[time] || []);
     setSelectedSeats([]);
   };
 
@@ -277,16 +286,16 @@ function BookingEngine() {
 
     try {
       const payload = {
-        seminarId: selectedBus.id,
-        seminarName: selectedBus.name,
-        busId: selectedBus.id,
-        busName: selectedBus.name,
-        source: selectedBus.source,
-        destination: selectedBus.destination,
+        eventId: selectedSeminar.id,
+        eventName: selectedSeminar.name,
+        seminarId: selectedSeminar.id,
+        seminarName: selectedSeminar.name,
+        venue: selectedSeminar.venue || selectedSeminar.legacySource,
+        seminar: selectedSeminar.title || selectedSeminar.legacyDestination,
         date,
         time: selectedTime,
         seats: selectedSeats,
-        totalPrice: selectedSeats.length * selectedBus.price,
+        totalPrice: selectedSeats.length * selectedSeminar.price,
         screenshot,
       };
 
@@ -313,30 +322,21 @@ function BookingEngine() {
     }
   };
 
-  // 15 rows of 4 legacy seats kept for inactive fallback markup.
-  const generateSeats = () => {
-    const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'];
-    return rows.map((rowLetter) => ({
-      rowLetter,
-      seats: [1, 2, 3, 4].map((seatNumber) => `${rowLetter}${seatNumber}`),
-    }));
-  };
-
   const eventSeats = Array.from({ length: 60 }, (_, index) => `S${index + 1}`);
 
-  const totalPrice = selectedSeats.length * (selectedBus?.price || 0);
+  const totalPrice = selectedSeats.length * (selectedSeminar?.price || 0);
 
   return (
     <div className="booking-page container animate-fade-in">
       
       {/* Timeline Steps */}
       <div className="booking-steps-timeline animate-slide-down">
-        <div className={`step-node ${bookingStep === 'search' ? 'active' : ''} ${selectedBus ? 'completed' : ''}`} onClick={() => setBookingStep('search')}>
-          <span className="step-num">{selectedBus ? '✓' : '1'}</span>
+        <div className={`step-node ${bookingStep === 'search' ? 'active' : ''} ${selectedSeminar ? 'completed' : ''}`} onClick={() => setBookingStep('search')}>
+          <span className="step-num">{selectedSeminar ? '✓' : '1'}</span>
           <span className="step-txt">Search Seminars</span>
         </div>
         <ChevronRight size={16} className="timeline-arrow" />
-        <div className={`step-node ${bookingStep === 'seats' ? 'active' : ''} ${bookingStep === 'payment' || bookingStep === 'success' ? 'completed' : ''}`} onClick={() => { if (selectedBus) setBookingStep('seats'); }}>
+        <div className={`step-node ${bookingStep === 'seats' ? 'active' : ''} ${bookingStep === 'payment' || bookingStep === 'success' ? 'completed' : ''}`} onClick={() => { if (selectedSeminar) setBookingStep('seats'); }}>
           <span className="step-num">{bookingStep === 'payment' || bookingStep === 'success' ? '✓' : '2'}</span>
           <span className="step-txt">Select Seats</span>
         </div>
@@ -354,14 +354,14 @@ function BookingEngine() {
         </div>
       )}
 
-      {/* STEP 1: ROUTE SEARCH AND BUS SELECTION */}
+      {/* STEP 1: SEMINAR SEARCH AND EVENT SELECTION */}
       {bookingStep === 'search' && (
         <div className="search-step-layout">
           <div className="search-bar-widget glass-card animate-slide-up">
-            <form onSubmit={(e) => { e.preventDefault(); handleSearchBuses(); }} className="search-form-inline">
+            <form onSubmit={(e) => { e.preventDefault(); handleSearchSeminars(); }} className="search-form-inline">
               <div className="inline-group">
                 <label className="inline-label">Location</label>
-                <select value={source} onChange={(e) => handleLocationSelect(e.target.value)} className="form-control select-control">
+                <select value={venue} onChange={(e) => handleLocationSelect(e.target.value)} className="form-control select-control">
                   {eventLocations.map((location) => (
                     <option key={location} value={location}>{location}</option>
                   ))}
@@ -369,7 +369,7 @@ function BookingEngine() {
               </div>
               <div className="inline-group">
                 <label className="inline-label">Seminar Event</label>
-                <select value={selectedEventId || destination} onChange={(e) => handleEventSelect(e.target.value)} className="form-control select-control">
+                <select value={selectedEventId || seminar} onChange={(e) => handleEventSelect(e.target.value)} className="form-control select-control">
                   {eventOptions.length > 0 ? (
                     eventOptions.map((event) => (
                       <option key={event.id} value={event.id}>
@@ -401,17 +401,17 @@ function BookingEngine() {
           </div>
 
           <div className="search-results-section">
-            {loadingBuses ? (
+            {loadingSeminars ? (
               <div className="spinner-center">
                 <div className="spinner"></div>
                 <p>Loading scheduled seminar sessions...</p>
               </div>
-            ) : buses.length === 0 ? (
+            ) : seminars.length === 0 ? (
               searchTriggered ? (
                 <div className="empty-results glass-card animate-scale-in">
                   <AlertCircle size={40} className="empty-icon" />
                   <h3 className="heading-sm">No Seminar Scheduled</h3>
-                  <p>There are no listed {destination} sessions at {source} on {date}. Modify your location, category, or date filters.</p>
+                  <p>There are no listed {seminar} sessions at {venue} on {date}. Modify your location, seminar, or date filters.</p>
                 </div>
               ) : (
                 <div className="welcome-search-callout glass-card animate-scale-in">
@@ -421,38 +421,38 @@ function BookingEngine() {
                 </div>
               )
             ) : (
-              <div className="buses-list animate-slide-up">
+              <div className="seminars-list animate-slide-up">
                 <h3 className="heading-sm list-title">Available Seminar Sessions for {date}</h3>
-                {buses.map((bus) => (
-                  <div key={bus.id} className="bus-card-item hover-glow-card">
-                    <div className="bus-card-main">
-                      <div className="bus-company">
-                        <span className="bus-name-txt">{bus.name}</span>
-                        <div className="bus-badge-row">
-                          <span className="bus-type-badge">{bus.type}</span>
-                          <span className="event-status-badge">{bus.status || 'Available to Register'}</span>
+                {seminars.map((seminarEvent) => (
+                  <div key={seminarEvent.id} className="seminar-card-item hover-glow-card">
+                    <div className="seminar-card-main">
+                      <div className="seminar-company">
+                        <span className="seminar-name-txt">{seminarEvent.name}</span>
+                        <div className="seminar-badge-row">
+                          <span className="seminar-type-badge">{seminarEvent.type}</span>
+                          <span className="event-status-badge">{seminarEvent.status || 'Available to Register'}</span>
                         </div>
                       </div>
                       
-                      <div className="bus-timeline">
+                      <div className="seminar-timeline">
                         <div className="timeline-node">
-                          <span className="timeline-city">{bus.source}</span>
+                          <span className="timeline-city">{seminarEvent.venue || seminarEvent.legacySource}</span>
                         </div>
                         <div className="timeline-connector">
-                          <span className="timeline-duration">{bus.duration}</span>
+                          <span className="timeline-duration">{seminarEvent.duration}</span>
                           <hr className="connector-line" />
                         </div>
                         <div className="timeline-node">
-                          <span className="timeline-city">{bus.destination}</span>
+                          <span className="timeline-city">{seminarEvent.title || seminarEvent.legacyDestination}</span>
                         </div>
                       </div>
 
-                      <div className="bus-pricing">
+                      <div className="seminar-pricing">
                         <span className="price-label">Seat Fee</span>
-                        <span className="price-value">₹{bus.price} <span className="seat-label">/ seat</span></span>
+                        <span className="price-value">₹{seminarEvent.price} <span className="seat-label">/ seat</span></span>
                       </div>
 
-                      <button onClick={() => handleBusSelect(bus)} className="btn btn-primary select-bus-btn">
+                      <button onClick={() => handleSeminarSelect(seminarEvent)} className="btn btn-primary select-seminar-btn">
                         Reserve Seats
                       </button>
                     </div>
@@ -465,7 +465,7 @@ function BookingEngine() {
       )}
 
       {/* STEP 2-4: EVENT SEAT GRID WITH DYNAMIC PAYMENT BOX */}
-      {(bookingStep === 'seats' || bookingStep === 'payment' || bookingStep === 'success') && selectedBus && (
+      {(bookingStep === 'seats' || bookingStep === 'payment' || bookingStep === 'success') && selectedSeminar && (
         <div className="reservation-workspace animate-slide-up">
           <section className="event-seat-panel glass-card">
             <div className="seat-panel-header">
@@ -483,16 +483,16 @@ function BookingEngine() {
             <div className="session-strip">
               <div>
                 <span className="strip-label">Program</span>
-                <strong>{selectedBus.name}</strong>
+                <strong>{selectedSeminar.name}</strong>
               </div>
               <div>
                 <span className="strip-label">Date</span>
                 <strong>{date}</strong>
               </div>
               <div>
-                <span className="strip-label">Timing</span>
+                <span className="strip-label">Session Time</span>
                 <div className="compact-time-chips">
-                  {selectedBus.times.map((time: string) => (
+                  {selectedSeminar.times.map((time: string) => (
                     <button
                       key={time}
                       onClick={() => handleTimeChange(time)}
@@ -560,7 +560,7 @@ function BookingEngine() {
                   </div>
                 </div>
                 <div className="summary-total-row">
-                  <span>Total Fare</span>
+                  <span>Total Registration Fee</span>
                   <strong>₹{totalPrice}</strong>
                 </div>
                 <button
@@ -633,306 +633,6 @@ function BookingEngine() {
               </div>
             )}
           </aside>
-        </div>
-      )}
-
-      {/* STEP 2: DYNAMIC SEAT MAP AND SCHEDULE TIMING */}
-      {false && bookingStep === 'seats' && selectedBus && (
-        <div className="seats-step-layout animate-slide-up">
-          <div className="seats-control-sidebar">
-            <div className="sidebar-card glass-card">
-              <h3 className="heading-sm sidebar-title">Seminar Selection</h3>
-              <div className="summary-detail-row">
-                <span className="summary-label">Session</span>
-                <span className="summary-val">{selectedBus.source} &rarr; {selectedBus.destination}</span>
-              </div>
-              <div className="summary-detail-row">
-                <span className="summary-label">Program Name</span>
-                <span className="summary-val">{selectedBus.name}</span>
-              </div>
-              <div className="summary-detail-row">
-                <span className="summary-label">Seminar Date</span>
-                <span className="summary-val">{date}</span>
-              </div>
-
-              <hr className="card-divider" />
-
-              {/* Time Selection */}
-              <div className="time-selection-section">
-                <label className="form-label font-bold"><Clock size={12} className="inline-icon" /> Departure Timing</label>
-                <div className="time-chips-grid">
-                  {selectedBus.times.map((time: string) => (
-                    <button 
-                      key={time} 
-                      onClick={() => handleTimeChange(time)} 
-                      className={`time-chip ${selectedTime === time ? 'active' : ''}`}
-                    >
-                      {time}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <hr className="card-divider" />
-
-              {/* Seat Details */}
-              <div className="seat-stats-detail">
-                <div className="selected-seats-row">
-                  <span className="summary-label">Selected Seats</span>
-                  <div className="selected-seats-list">
-                    {selectedSeats.length === 0 ? (
-                      <span className="no-seats-placeholder">None Selected</span>
-                    ) : (
-                      selectedSeats.map((s) => <span key={s} className="seat-summary-tag animate-scale-in">{s}</span>)
-                    )}
-                  </div>
-                </div>
-                <div className="total-price-row">
-                  <span className="summary-label">Total Fare</span>
-                  <span className="total-price-val">₹{totalPrice}</span>
-                </div>
-              </div>
-
-              <button 
-                onClick={() => setBookingStep('payment')} 
-                className="btn btn-primary checkout-btn" 
-                disabled={selectedSeats.length === 0}
-              >
-                Proceed to UPI Payment (₹{totalPrice})
-              </button>
-              <button onClick={() => setBookingStep('search')} className="btn btn-secondary back-btn">
-                Change Route / Date
-              </button>
-            </div>
-          </div>
-
-          {/* Seat Layout Graphics */}
-          <div className="seats-map-display glass-card">
-            <div className="map-legend">
-              <div className="legend-item">
-                <div className="legend-box available-box"></div>
-                <span>Available</span>
-              </div>
-              <div className="legend-item">
-                <div className="legend-box selected-box animate-pulse-green"></div>
-                <span>Selected</span>
-              </div>
-              <div className="legend-item">
-                <div className="legend-box booked-box"></div>
-                <span>Booked</span>
-              </div>
-            </div>
-
-            {/* Premium Bus cabin outline */}
-            <div className="bus-cabin-frame animate-scale-in">
-              <div className="bus-front-cabin">
-                {/* Steering Wheel graphic */}
-                <div className="driver-dashboard-panel">
-                  <div className="steering-wheel-vector">
-                    <div className="wheel-rim">
-                      <div className="wheel-spoke spoke-h"></div>
-                      <div className="wheel-spoke spoke-v"></div>
-                      <div className="wheel-center"></div>
-                    </div>
-                  </div>
-                  <div className="driver-suite-seat">Pilot Seat</div>
-                </div>
-                <span className="cabin-label">Cockpit / Front windshield</span>
-              </div>
-
-              <div className="bus-seats-container">
-                {generateSeats().map(({ rowLetter, seats }) => (
-                  <div key={rowLetter} className="seat-row">
-                    {/* Left seats (1 and 2) */}
-                    <div className="seat-pair">
-                      {seats.slice(0, 2).map((seatId) => {
-                        const isBooked = bookedSeats.includes(seatId);
-                        const isSelected = selectedSeats.includes(seatId);
-                        return (
-                          <button 
-                            key={seatId} 
-                            onClick={() => handleSeatClick(seatId)}
-                            className={`seat-button ${isBooked ? 'booked' : ''} ${isSelected ? 'selected' : ''}`}
-                            title={`Seat ${seatId} (${isBooked ? 'Booked' : 'Available'})`}
-                            disabled={isBooked}
-                          >
-                            <span className="seat-number">{seatId}</span>
-                            <div className="seat-cushion-leather"></div>
-                            <div className="seat-armrest arm-l"></div>
-                            <div className="seat-armrest arm-r"></div>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Floor lights in center corridor aisle */}
-                    <div className="bus-aisle">
-                      <div className="aisle-floor-light"></div>
-                    </div>
-
-                    {/* Right seats (3 and 4) */}
-                    <div className="seat-pair">
-                      {seats.slice(2, 4).map((seatId) => {
-                        const isBooked = bookedSeats.includes(seatId);
-                        const isSelected = selectedSeats.includes(seatId);
-                        return (
-                          <button 
-                            key={seatId} 
-                            onClick={() => handleSeatClick(seatId)}
-                            className={`seat-button ${isBooked ? 'booked' : ''} ${isSelected ? 'selected' : ''}`}
-                            title={`Seat ${seatId} (${isBooked ? 'Booked' : 'Available'})`}
-                            disabled={isBooked}
-                          >
-                            <span className="seat-number">{seatId}</span>
-                            <div className="seat-cushion-leather"></div>
-                            <div className="seat-armrest arm-l"></div>
-                            <div className="seat-armrest arm-r"></div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="bus-back-cabin">
-                <span className="cabin-label-back">Rear Row Limit</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 3: UPI QR SCREEN AND RECEIPT UPLOAD */}
-      {false && bookingStep === 'payment' && selectedBus && (
-        <div className="payment-step-layout animate-slide-up">
-          <div className="payment-card glass-card">
-            <h2 className="heading-md payment-title">Scan & Pay via UPI</h2>
-            <p className="payment-desc">
-              Scan the transaction QR below with GPay, PhonePe, Paytm, or BHIM. complete the exact transfer, and upload your receipt screenshot for admin manual verification.
-            </p>
-
-            <div className="payment-split">
-              {/* QR display */}
-              <div className="qr-code-section animate-scale-in">
-                <div className="qr-container">
-                  {/* Custom SVG QR simulation */}
-                  <svg width="220" height="220" viewBox="0 0 100 100" className="qr-svg">
-                    <rect width="100" height="100" fill="white" />
-                    {/* QR alignment markers */}
-                    <rect x="5" y="5" width="20" height="20" fill="#082f61" />
-                    <rect x="8" y="8" width="14" height="14" fill="white" />
-                    <rect x="11" y="11" width="8" height="8" fill="#0f5fb8" />
-
-                    <rect x="75" y="5" width="20" height="20" fill="#082f61" />
-                    <rect x="78" y="8" width="14" height="14" fill="white" />
-                    <rect x="81" y="11" width="8" height="8" fill="#0f5fb8" />
-
-                    <rect x="5" y="75" width="20" height="20" fill="#082f61" />
-                    <rect x="8" y="78" width="14" height="14" fill="white" />
-                    <rect x="11" y="81" width="8" height="8" fill="#0f5fb8" />
-
-                    {/* QR noise simulation */}
-                    <rect x="35" y="5" width="5" height="15" fill="#0f5fb8" />
-                    <rect x="45" y="15" width="15" height="5" fill="#082f61" />
-                    <rect x="30" y="30" width="10" height="10" fill="#082f61" />
-                    <rect x="50" y="30" width="5" height="5" fill="#0f5fb8" />
-                    <rect x="65" y="35" width="10" height="15" fill="#082f61" />
-                    <rect x="30" y="50" width="15" height="5" fill="#0f5fb8" />
-                    <rect x="55" y="45" width="5" height="10" fill="#082f61" />
-                    <rect x="40" y="60" width="10" height="5" fill="#082f61" />
-                    <rect x="75" y="55" width="20" height="20" fill="#082f61" />
-                    <rect x="78" y="58" width="14" height="14" fill="white" />
-                    <rect x="30" y="75" width="5" height="20" fill="#0f5fb8" />
-                    <rect x="45" y="80" width="15" height="15" fill="#082f61" />
-                  </svg>
-                  <div className="qr-price-badge">₹{totalPrice.toFixed(2)}</div>
-                </div>
-                <div className="payment-summary-block">
-                  <span className="pay-label">Transfer Amount:</span>
-                  <span className="pay-amount">₹{totalPrice}</span>
-                  <span className="pay-account">Payment account: confirm with the official event desk</span>
-                  <span className="pay-account-sub">Ref: SI-{selectedSeats.join('-')}-{Date.now().toString().slice(-4)}</span>
-                </div>
-              </div>
-
-              {/* Uploader section */}
-              <div className="screenshot-uploader-section animate-scale-in">
-                <div className="booking-info-recap">
-                  <h4 className="heading-sm">Seminar Details</h4>
-                  <div className="recap-table">
-                    <div className="recap-row"><span>Member Name:</span><strong>{user.name}</strong></div>
-                    <div className="recap-row"><span>Seminar:</span><strong>{selectedBus.name} ({selectedTime})</strong></div>
-                    <div className="recap-row"><span>Seminar Date:</span><strong>{date}</strong></div>
-                    <div className="recap-row"><span>Allocated Seats:</span><strong>{selectedSeats.join(', ')}</strong></div>
-                  </div>
-                </div>
-
-                <div className="uploader-container">
-                  <label className="uploader-box">
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={handleScreenshotChange} 
-                      className="hidden-file-input" 
-                    />
-                    <Upload size={32} className="uploader-icon" />
-                    {screenshot ? (
-                      <div className="upload-preview-details">
-                        <span className="file-success">UPI Screenshot Added!</span>
-                        <span className="file-name">{screenshotName}</span>
-                      </div>
-                    ) : (
-                      <div className="upload-prompt">
-                        <span className="upload-title">Click to Upload Transaction Screenshot</span>
-                        <span className="upload-sub">Supports PNG, JPG, or JPEG file structures</span>
-                      </div>
-                    )}
-                  </label>
-                  {screenshot && (
-                    <div className="screenshot-preview-thumb">
-                      <img src={screenshot} alt="Receipt Screenshot Preview" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="form-actions">
-                  <button onClick={() => setBookingStep('seats')} className="btn btn-secondary flex-1">
-                    Back to Seat Map
-                  </button>
-                  <button 
-                    onClick={submitBookingRequest} 
-                    className="btn btn-primary flex-1 checkout-btn-submit" 
-                    disabled={!screenshot || submittingBooking}
-                  >
-                    {submittingBooking ? 'Submitting request...' : 'Confirm Transfer Receipt'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 4: SUCCESS SUBMISSION PAGE */}
-      {false && bookingStep === 'success' && selectedBus && (
-        <div className="success-step-layout animate-scale-in">
-          <div className="success-card glass-card">
-            <CheckCircle2 size={64} className="success-check-icon animate-pulse-green" />
-            <h2 className="heading-lg success-title">Booking Ticket Submitted!</h2>
-            <p className="success-text">
-              Your request for seats <strong>{selectedSeats.join(', ')}</strong> on the <strong>{selectedBus.name}</strong> has been forwarded to our audit desk.
-            </p>
-            <div className="alert-notice-box">
-              <Clock size={18} className="notice-icon" />
-              <div>
-                <strong>Verification Status: Pending Approval</strong>
-                <p>Helpline administrators evaluate UPI transaction logs continuously. Your seats will turn active and locked once verified (usually takes 10-20 minutes).</p>
-              </div>
-            </div>
-            <button onClick={() => router.push('/profile')} className="btn btn-primary go-profile-btn">
-              Go to Profile / Booking Logs
-            </button>
-          </div>
         </div>
       )}
 
@@ -1133,7 +833,7 @@ function BookingEngine() {
           line-height: 1.6;
         }
 
-        .buses-list {
+        .seminars-list {
           display: flex;
           flex-direction: column;
           gap: 1.25rem;
@@ -1145,7 +845,7 @@ function BookingEngine() {
           margin-bottom: 0.5rem;
         }
 
-        .bus-card-item {
+        .seminar-card-item {
           background: white;
           border: 1px solid var(--border);
           border-radius: var(--radius-xl);
@@ -1154,40 +854,40 @@ function BookingEngine() {
           transition: all var(--transition-normal);
         }
 
-        .bus-card-item:hover {
+        .seminar-card-item:hover {
           border-color: var(--primary);
           box-shadow: var(--shadow-md);
         }
 
-        .bus-card-main {
+        .seminar-card-main {
           display: flex;
           flex-direction: column;
           gap: 1.5rem;
         }
 
         @media (min-width: 768px) {
-          .bus-card-main {
+          .seminar-card-main {
             flex-direction: row;
             align-items: center;
             justify-content: space-between;
           }
         }
 
-        .bus-company {
+        .seminar-company {
           display: flex;
           flex-direction: column;
           gap: 0.25rem;
           min-width: 200px;
         }
 
-        .bus-name-txt {
+        .seminar-name-txt {
           font-family: var(--font-heading);
           font-size: 1.15rem;
           font-weight: 700;
           color: var(--foreground);
         }
 
-        .bus-type-badge {
+        .seminar-type-badge {
           font-size: 0.75rem;
           font-weight: 600;
           background: var(--input);
@@ -1197,7 +897,7 @@ function BookingEngine() {
           align-self: flex-start;
         }
 
-        .bus-badge-row {
+        .seminar-badge-row {
           display: flex;
           flex-wrap: wrap;
           gap: 0.4rem;
@@ -1216,8 +916,8 @@ function BookingEngine() {
           letter-spacing: 0.04em;
         }
 
-        /* Bus Timeline */
-        .bus-timeline {
+        /* Seminar Timeline */
+        .seminar-timeline {
           display: flex;
           align-items: center;
           gap: 1rem;
@@ -1259,7 +959,7 @@ function BookingEngine() {
           z-index: 1;
         }
 
-        .bus-pricing {
+        .seminar-pricing {
           display: flex;
           flex-direction: column;
           align-items: flex-start;
@@ -1285,7 +985,7 @@ function BookingEngine() {
           color: var(--muted);
         }
 
-        .select-bus-btn {
+        .select-seminar-btn {
           padding: 0.625rem 1.25rem;
           font-size: 0.9rem;
         }
@@ -1858,293 +1558,6 @@ function BookingEngine() {
           width: 100%;
           padding: 0.625rem;
           font-size: 0.9rem;
-        }
-
-        /* Seating Display Grid */
-        .seats-map-display {
-          background: white;
-          padding: 2.5rem 2rem;
-          border-radius: var(--radius-2xl);
-          border: 1px solid var(--border);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .map-legend {
-          display: flex;
-          gap: 2rem;
-          margin-bottom: 2.5rem;
-          font-size: 0.85rem;
-          font-weight: 600;
-        }
-
-        .legend-item {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .legend-box {
-          width: 18px;
-          height: 18px;
-          border-radius: 4px;
-          border: 1px solid var(--border);
-        }
-
-        .available-box { background: white; border-color: var(--muted-light); }
-        .selected-box { background: var(--primary); border-color: var(--primary); }
-        .booked-box { background: #cbd5e1; border-color: #cbd5e1; }
-
-        /* Cabin frame */
-        .bus-cabin-frame {
-          border: 4px solid #475569;
-          border-radius: 24px 24px 12px 12px;
-          background: #f8fafc;
-          padding: 2rem 1.25rem;
-          width: 100%;
-          max-width: 320px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), inset 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        .bus-front-cabin {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          border-bottom: 3px double #cbd5e1;
-          padding-bottom: 1.5rem;
-          margin-bottom: 2rem;
-          position: relative;
-        }
-
-        .driver-dashboard-panel {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          width: 100%;
-          justify-content: space-between;
-        }
-
-        .steering-wheel-vector {
-          width: 34px;
-          height: 34px;
-          border-radius: 50%;
-          border: 3px solid #334155;
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #f1f5f9;
-        }
-
-        .wheel-rim {
-          width: 100%;
-          height: 100%;
-          position: relative;
-        }
-
-        .wheel-spoke {
-          position: absolute;
-          background: #334155;
-        }
-
-        .spoke-h {
-          width: 100%;
-          height: 3px;
-          top: 50%;
-          transform: translateY(-50%);
-        }
-
-        .spoke-v {
-          width: 3px;
-          height: 50%;
-          left: 50%;
-          bottom: 0;
-          transform: translateX(-50%);
-        }
-
-        .wheel-center {
-          position: absolute;
-          width: 8px;
-          height: 8px;
-          background: #334155;
-          border-radius: 50%;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-        }
-
-        .driver-suite-seat {
-          font-size: 0.7rem;
-          font-weight: 700;
-          color: #64748b;
-          padding: 0.35rem 0.6rem;
-          border: 2px solid #e2e8f0;
-          background: #ffffff;
-          border-radius: 6px;
-          box-shadow: var(--shadow-sm);
-        }
-
-        .cabin-label {
-          position: absolute;
-          top: -24px;
-          left: 50%;
-          transform: translateX(-50%);
-          font-size: 0.65rem;
-          color: var(--muted);
-          text-transform: uppercase;
-          font-weight: 700;
-          letter-spacing: 1.5px;
-        }
-
-        .bus-seats-container {
-          display: flex;
-          flex-direction: column;
-          gap: 0.875rem;
-        }
-
-        .seat-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .seat-pair {
-          display: flex;
-          gap: 0.75rem;
-        }
-
-        .bus-aisle {
-          width: 30px;
-          height: 38px;
-          position: relative;
-        }
-
-        .bus-aisle::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          bottom: 0;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 2px;
-          background: repeating-linear-gradient(to bottom, #0f5fb8 0, #0f5fb8 6px, transparent 6px, transparent 12px);
-          opacity: 0.3;
-        }
-
-        /* Bus Seat Button styling (leather look) */
-        .seat-button {
-          width: 44px;
-          height: 44px;
-          background: white;
-          border: 1px solid #cbd5e1;
-          border-radius: 8px;
-          position: relative;
-          cursor: pointer;
-          transition: all var(--transition-fast);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-        }
-
-        /* Headrest mockups */
-        .seat-button::before {
-          content: '';
-          position: absolute;
-          top: -5px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 22px;
-          height: 6px;
-          background: #e2e8f0;
-          border: 1px solid #cbd5e1;
-          border-radius: 3px;
-          transition: all var(--transition-fast);
-        }
-
-        .seat-button:hover:not(:disabled) {
-          border-color: var(--primary);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(15, 95, 184, 0.16);
-        }
-
-        .seat-button.selected {
-          background: var(--primary);
-          border-color: var(--primary);
-          color: white;
-          box-shadow: 0 4px 10px rgba(15, 95, 184, 0.28);
-        }
-
-        .seat-button.selected::before {
-          background: var(--primary-dark);
-          border-color: var(--primary-dark);
-        }
-
-        .seat-button.booked {
-          background: #cbd5e1;
-          border-color: #cbd5e1;
-          color: #94a3b8;
-          cursor: not-allowed;
-          box-shadow: none;
-        }
-
-        .seat-button.booked::before {
-          background: #94a3b8;
-          border-color: #94a3b8;
-        }
-
-        .seat-number {
-          font-size: 0.8rem;
-          font-weight: 700;
-          z-index: 2;
-        }
-
-        .seat-cushion-leather {
-          position: absolute;
-          bottom: 3px;
-          left: 4px;
-          right: 4px;
-          height: 18px;
-          border-radius: 4px;
-          background: rgba(0, 0, 0, 0.03);
-          z-index: 1;
-        }
-
-        .seat-button.selected .seat-cushion-leather {
-          background: rgba(255, 255, 255, 0.15);
-        }
-
-        .seat-armrest {
-          position: absolute;
-          width: 3px;
-          height: 28px;
-          background: rgba(0, 0, 0, 0.05);
-          top: 8px;
-          border-radius: 1px;
-        }
-
-        .seat-button.selected .seat-armrest {
-          background: rgba(255, 255, 255, 0.2);
-        }
-
-        .arm-l { left: 2px; }
-        .arm-r { right: 2px; }
-
-        .bus-back-cabin {
-          border-top: 3px double #cbd5e1;
-          padding-top: 1.5rem;
-          margin-top: 2rem;
-          text-align: center;
-          position: relative;
-        }
-
-        .cabin-label-back {
-          font-size: 0.65rem;
-          color: var(--muted);
-          text-transform: uppercase;
-          font-weight: 700;
-          letter-spacing: 1.5px;
         }
 
         /* STEP 3 UPI PAYMENT STYLES */

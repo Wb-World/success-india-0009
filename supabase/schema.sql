@@ -1,5 +1,5 @@
 -- ============================================================
--- GreenWheels Bus Ticket Booking — Supabase Database Schema
+-- Success India Official Seminar and Leadership Portal Supabase Database Schema
 -- Run this entire file in your Supabase SQL Editor once.
 -- Project: raypwndyjclstbqxrahm
 -- ============================================================
@@ -21,7 +21,9 @@ CREATE TABLE IF NOT EXISTS public.users (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Buses table
+-- Legacy compatibility seminar lookup table.
+-- New event creation uses public.events. This table is retained only so older
+-- bookings columns and deployed data can continue to resolve seminar records.
 CREATE TABLE IF NOT EXISTS public.buses (
   id          TEXT        PRIMARY KEY,
   name        TEXT        NOT NULL,
@@ -100,9 +102,9 @@ ALTER TABLE public.events   ENABLE ROW LEVEL SECURITY;
 
 -- Because we use the service_role key in our Next.js API routes,
 -- the server bypasses RLS entirely. We set permissive policies
--- for the anon key (used on the client side — read-only buses).
+-- for the anon key. Public seminar records are read through public.events.
 
--- Buses: anyone can read (for the landing page search widget)
+-- Legacy compatibility rows can be read by older clients.
 CREATE POLICY "buses_public_read"
   ON public.buses FOR SELECT
   USING (true);
@@ -117,30 +119,11 @@ CREATE POLICY "events_public_read"
 -- ── 5. SEED DATA — USERS ─────────────────────────────────────
 INSERT INTO public.users (id, username, password, name, email, phone, role) VALUES
   ('usr_1',       'user',    'password',   'Alex Mercer', 'alex.mercer@gmail.com', '+91 9876543210', 'user'),
-  ('adm_1',       'admin',   'admin123',   'Super Admin',  'admin@greenwheels.in', '+91 9999988888', 'admin'),
+  ('adm_1',       'admin',   'admin123',   'Super Admin',  'admin@successindia.test', '+91 9999988888', 'admin'),
   ('usr_mohamed', 'mohamed', 'mohamed123', 'Mohamed',     'mohamed@gmail.com',     '9944994778',     'user')
 ON CONFLICT (id) DO NOTHING;
 
--- ── 6. SEED DATA — BUSES ─────────────────────────────────────
-INSERT INTO public.buses (id, name, type, source, destination, price, duration, times) VALUES
-  ('seminar_501', 'Success India Member Growth Orientation', 'Leadership Chapter Orientation', 'Chromepet, Chennai', 'Leadership Development Seminars', 0, '1h 30m', ARRAY['09:30 AM','06:00 PM']),
-  ('bus_101', 'Karnataka Vaibhav',   'AC Luxury Sleeper (2+2)',        'Bangalore', 'Chennai',   950,  '6h 30m', ARRAY['08:00 AM','02:00 PM','09:30 PM','11:00 PM']),
-  ('bus_102', 'Cauvery Travels',     'AC Premium Seater (2+2)',        'Chennai',   'Bangalore', 750,  '6h 15m', ARRAY['07:30 AM','01:00 PM','06:00 PM','10:30 PM']),
-  ('bus_103', 'Deccan Express',      'AC Luxury Sleeper (2+1)',        'Mumbai',    'Pune',      650,  '3h 45m', ARRAY['06:00 AM','11:30 AM','04:30 PM','09:00 PM']),
-  ('bus_104', 'Western Ghats Glider','Non-AC Economy Seater (2+2)',    'Pune',      'Mumbai',    350,  '3h 30m', ARRAY['08:00 AM','02:00 PM','07:00 PM']),
-  ('bus_105', 'Rajdhani Connect',    'AC Multi-Axle Sleeper (2+1)',    'Delhi',     'Jaipur',    1250, '5h 30m', ARRAY['07:00 AM','01:30 PM','09:00 PM','11:30 PM']),
-  ('bus_106', 'Pink City Express',   'AC Seater (2+2)',                'Jaipur',    'Delhi',     850,  '5h 15m', ARRAY['06:30 AM','12:00 PM','05:30 PM','10:00 PM']),
-  ('bus_107', 'Nizams Cruiser',      'AC Premium Sleeper (2+1)',       'Hyderabad', 'Bangalore', 1450, '8h 45m', ARRAY['08:30 PM','10:00 PM','11:15 PM']),
-  ('bus_108', 'Garden City Link',    'AC Luxury Seater (2+2)',         'Bangalore', 'Hyderabad', 1100, '8h 30m', ARRAY['09:00 AM','03:00 PM','09:30 PM']),
-  ('bus_109', 'Coromandel Express',  'AC Sleeper (2+2)',               'Chennai',   'Hyderabad', 1350, '10h 00m',ARRAY['07:00 PM','08:30 PM','10:00 PM']),
-  ('bus_110', 'Charminar Shuttle',   'AC Seater (2+2)',                'Hyderabad', 'Chennai',   900,  '9h 30m', ARRAY['08:00 AM','02:30 PM','09:00 PM']),
-  ('bus_111', 'Golden Temple Liner', 'AC Multi-Axle Sleeper (2+2)',    'Delhi',     'Amritsar',  1100, '7h 00m', ARRAY['07:00 AM','09:00 PM','11:00 PM']),
-  ('bus_112', 'Konkan Cruiser',      'AC Luxury Sleeper (2+1)',        'Mumbai',    'Goa',       1300, '9h 00m', ARRAY['06:00 PM','08:00 PM','10:00 PM']),
-  ('bus_113', 'East Coast Express',  'AC Premium Seater (2+2)',        'Hyderabad', 'Chennai',   800,  '9h 00m', ARRAY['06:00 AM','06:00 PM']),
-  ('bus_114', 'Vindhya Volvo',       'AC Multi-Axle Seater (2+2)',     'Delhi',     'Mumbai',    1800, '16h 00m',ARRAY['03:00 PM','06:00 PM']),
-  ('bus_115', 'Mysore Palace Liner', 'AC Luxury Sleeper (2+2)',        'Bangalore', 'Mysore',    250,  '3h 00m', ARRAY['06:00 AM','09:00 AM','12:00 PM','03:00 PM','06:00 PM','09:00 PM'])
-ON CONFLICT (id) DO NOTHING;
-
+-- ── 6. SEED DATA — SEMINAR EVENTS ────────────────────────────
 -- Seed data for active Success India seminar events
 INSERT INTO public.events (id, title, venue, event_datetime, price, total_seats, status) VALUES
   ('seminar_101', 'Success India Leadership Development Seminar', 'Chromepet, Chennai', '2026-06-21T10:00:00+05:30', 250, 60, 'active'),
@@ -162,18 +145,7 @@ ON CONFLICT (id) DO UPDATE SET
   duration = EXCLUDED.duration,
   times = EXCLUDED.times;
 
--- ── 7. SEED DATA — SAMPLE BOOKINGS ───────────────────────────
-INSERT INTO public.bookings (id, user_id, bus_id, bus_name, source, destination, date, time, seats, total_price, screenshot, status, created_at) VALUES
-  ('bk_1', 'usr_1', 'bus_101', 'Karnataka Vaibhav', 'Bangalore', 'Chennai', '2026-06-20', '08:00 AM',
-   ARRAY['A1','A2'], 1900,
-   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-   'approved', '2026-06-12T14:32:00.000Z'),
-  ('bk_2', 'usr_mohamed', 'bus_102', 'Cauvery Travels', 'Chennai', 'Bangalore', '2026-06-15', '07:30 AM',
-   ARRAY['C3'], 750,
-   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-   'pending', '2026-06-13T08:00:00.000Z')
-ON CONFLICT (id) DO NOTHING;
-
+-- ── 7. SAMPLE BOOKINGS ────────────────────────────────────────
 -- ── 8. DONE ───────────────────────────────────────────────────
--- Schema setup complete! Your tables: users, buses, bookings
+-- Schema setup complete! Your primary tables: users, events, bookings
 -- All API routes will now use the Supabase client in src/lib/supabase.ts

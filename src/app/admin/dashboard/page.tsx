@@ -377,7 +377,7 @@ export default function AdminDashboard() {
                   {/* Main Grid: Details vs Screenshot */}
                   <div className="item-card-body">
                     
-                    {/* Passenger & Booking Info */}
+                    {/* Member and seminar booking info */}
                     <div className="details-col">
                       <div className="details-group">
                         <h4 className="group-title">Member / Attendee Profile</h4>
@@ -391,8 +391,8 @@ export default function AdminDashboard() {
                       <div className="details-group">
                         <h4 className="group-title">Seminar Details & Seat Allocation</h4>
                         <div className="info-grid">
-                          <div className="info-row"><span>Seminar Program:</span><strong>{b.busName}</strong></div>
-                          <div className="info-row"><span>Venue / Route:</span><strong>{b.source} <ArrowRight size={12} className="inline-arrow" /> {b.destination}</strong></div>
+                          <div className="info-row"><span>Seminar Program:</span><strong>{b.seminarName || b.eventName}</strong></div>
+                          <div className="info-row"><span>Venue / Seminar:</span><strong>{b.venue || b.source} <ArrowRight size={12} className="inline-arrow" /> {b.seminar || b.destination}</strong></div>
                           <div className="info-row"><span>Seminar Date & Time:</span><strong>{b.date} &bull; {b.time}</strong></div>
                           <div className="info-row"><span>Allocated Seats:</span><span className="seats-span">{b.seats.join(', ')}</span></div>
                         </div>
@@ -469,7 +469,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="event-form-group">
-                  <label className="form-label">Venue / Route Location</label>
+                  <label className="form-label">Venue / City Location</label>
                   <input
                     type="text"
                     value={eventForm.venue}
@@ -492,7 +492,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="event-form-group">
-                  <label className="form-label">Ticket Price / Fee</label>
+                  <label className="form-label">Registration Price / Fee</label>
                   <input
                     type="number"
                     min="0"

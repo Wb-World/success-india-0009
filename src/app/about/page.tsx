@@ -81,33 +81,33 @@ export default function About() {
       </section>
 
       {/* Event Overview */}
-      <section className="fleet-section container">
+      <section className="event-categories-section container">
         <div className="section-header animate-slide-up">
           <h2 className="heading-lg text-green">Event Categories</h2>
           <p className="section-subtitle">Select the seminar format that matches your growth plan</p>
         </div>
 
-        <div className="fleet-grid">
-          <div className="fleet-card animate-slide-up hover-lift">
-            <div className="fleet-badge">Leadership</div>
-            <h3 className="heading-sm fleet-title">Leadership Development Seminars</h3>
-            <p className="fleet-desc">
+        <div className="event-category-grid">
+          <div className="event-category-card animate-slide-up hover-lift">
+            <div className="event-category-badge">Leadership</div>
+            <h3 className="heading-sm event-category-title">Leadership Development Seminars</h3>
+            <p className="event-category-desc">
               Structured programs for team growth, communication, recruitment training, and practical leadership habits.
             </p>
           </div>
 
-          <div className="fleet-card animate-slide-up hover-lift">
-            <div className="fleet-badge green-badge">Weekly Systems</div>
-            <h3 className="heading-sm fleet-title">Income Strategy Sessions</h3>
-            <p className="fleet-desc">
+          <div className="event-category-card animate-slide-up hover-lift">
+            <div className="event-category-badge green-badge">Weekly Systems</div>
+            <h3 className="heading-sm event-category-title">Income Strategy Sessions</h3>
+            <p className="event-category-desc">
               Weekly briefings focused on business volume, referrals, market connections, and member routines.
             </p>
           </div>
 
-          <div className="fleet-card animate-slide-up hover-lift">
-            <div className="fleet-badge gray-badge">Chapter Network</div>
-            <h3 className="heading-sm fleet-title">BOSS Agro Hub Meetups</h3>
-            <p className="fleet-desc">
+          <div className="event-category-card animate-slide-up hover-lift">
+            <div className="event-category-badge gray-badge">Chapter Network</div>
+            <h3 className="heading-sm event-category-title">BOSS Agro Hub Meetups</h3>
+            <p className="event-category-desc">
               Local member gatherings for chapter updates, community learning, and business collaboration.
             </p>
           </div>
@@ -299,19 +299,19 @@ export default function About() {
         }
 
         /* Event Cards */
-        .fleet-grid {
+        .event-category-grid {
           display: grid;
           grid-template-columns: 1fr;
           gap: 2rem;
         }
 
         @media (min-width: 768px) {
-          .fleet-grid {
+          .event-category-grid {
             grid-template-columns: repeat(3, 1fr);
           }
         }
 
-        .fleet-card {
+        .event-category-card {
           background: white;
           border: 1px solid var(--border);
           border-radius: var(--radius-xl);
@@ -321,13 +321,13 @@ export default function About() {
           transition: all 0.3s ease;
         }
 
-        .fleet-card:hover {
+        .event-category-card:hover {
           border-color: var(--primary);
           box-shadow: var(--shadow-xl);
           transform: translateY(-3px);
         }
 
-        .fleet-badge {
+        .event-category-badge {
           position: absolute;
           top: 1.5rem;
           right: 1.5rem;
@@ -352,7 +352,7 @@ export default function About() {
           border-color: var(--border);
         }
 
-        .fleet-title {
+        .event-category-title {
           font-weight: 700;
           margin-bottom: 0.875rem;
           color: var(--foreground);
@@ -360,7 +360,7 @@ export default function About() {
           font-size: 1.15rem;
         }
 
-        .fleet-desc {
+        .event-category-desc {
           font-size: 0.9rem;
           color: var(--muted);
           line-height: 1.65;
