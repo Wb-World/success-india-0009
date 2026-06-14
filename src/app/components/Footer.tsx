@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Award, Mail, Phone, MapPin, Send } from 'lucide-react';
+import { Mail, Phone, MapPin, Send } from 'lucide-react';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -46,7 +46,7 @@ export default function Footer() {
       <div className="container footer-grid">
         <div className="footer-brand-col">
           <Link href="/" className="footer-logo">
-            <Award size={28} className="footer-logo-icon" />
+            <img src="/success-india-logo.jpeg" alt="Success India logo" className="footer-logo-img" />
             <span>Success<span className="text-primary"> India</span></span>
           </Link>
           <p className="footer-desc">
@@ -176,8 +176,12 @@ export default function Footer() {
           color: white;
         }
 
-        .footer-logo-icon {
-          color: var(--primary);
+        .footer-logo-img {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1px solid rgba(255, 255, 255, 0.24);
         }
 
         .footer-desc {

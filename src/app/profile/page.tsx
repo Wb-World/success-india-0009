@@ -392,7 +392,7 @@ export default function Profile() {
     <div className="profile-dashboard container animate-fade-in">
       <div className="dashboard-welcome-banner animate-slide-down">
         <h1 className="welcome-title">Welcome back, {currentUser.name}! 👋</h1>
-        <p className="welcome-subtitle">Here is your passenger dashboard where you can check booking approvals and update account details.</p>
+        <p className="welcome-subtitle">Welcome to your Success India Member Portal. Here you can track your seminar registrations, event approvals, and update your professional profile details.</p>
       </div>
 
       <div className="dashboard-grid">
@@ -402,10 +402,10 @@ export default function Profile() {
           <div className="info-card glass-card hover-lift">
             <div className="avatar-section">
               <div className="avatar-circle">
-                <User size={36} />
+                <img src="/success-india-logo.jpeg" alt="Success India logo" className="member-logo" />
               </div>
               <h2 className="heading-md user-fullname">{currentUser.name}</h2>
-              <span className="user-role-badge">Member Passenger</span>
+              <span className="user-role-badge">Official Delegate</span>
             </div>
 
             <hr className="card-divider" />
@@ -488,18 +488,18 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Right Side: Travel Bookings History */}
+        {/* Right Side: Seminar Bookings History */}
         <div className="bookings-history-column">
           <div className="history-card glass-card hover-lift">
-            <h2 className="heading-md history-card-title">My Travel Bookings</h2>
+            <h2 className="heading-md history-card-title">My Seminar Bookings</h2>
             
             {bookings.length === 0 ? (
               <div className="empty-bookings">
                 <Calendar size={48} className="empty-icon" />
-                <h4 className="heading-sm">No Tickets Booked Yet</h4>
-                <p>Ready to travel? Select a destination route and lock in your seats now.</p>
+                <h4 className="heading-sm">No Seminars Reserved Yet</h4>
+                <p>Ready to scale your business? Select an upcoming leadership chapter meetup or seminar and reserve your seats now.</p>
                 <button onClick={() => router.push('/book')} className="btn btn-primary">
-                  Book A Ticket Now
+                  Explore Upcoming Events
                 </button>
               </div>
             ) : (
@@ -508,10 +508,10 @@ export default function Profile() {
                   <thead>
                     <tr>
                       <th>Booking Ref</th>
-                      <th>Route Info</th>
+                      <th>Event Info</th>
                       <th>Seats</th>
-                      <th>Departure</th>
-                      <th>Total Cost</th>
+                      <th>Session Date</th>
+                      <th>Total Fee</th>
                       <th>Status</th>
                     </tr>
                   </thead>
@@ -632,6 +632,13 @@ export default function Profile() {
           justify-content: center;
           border: 2px solid rgba(16, 185, 129, 0.2);
           box-shadow: var(--shadow-sm);
+          overflow: hidden;
+        }
+
+        .member-logo {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
 
         .user-fullname {

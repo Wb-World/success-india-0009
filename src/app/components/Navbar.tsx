@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Award, User, LogOut, Menu, X } from 'lucide-react';
+import { User, LogOut, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const router = useRouter();
@@ -50,7 +50,7 @@ export default function Navbar() {
       <header className="nav-header">
         <div className="nav-container">
           <div className="nav-logo">
-            <Award size={26} className="logo-icon" />
+            <img src="/success-india-logo.jpeg" alt="Success India logo" className="brand-logo-img" />
             <span>Success<span className="text-primary"> India</span></span>
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function Navbar() {
     <header className="nav-header animate-slide-down">
       <div className="nav-container">
         <Link href="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
-          <Award size={28} className="logo-icon" />
+          <img src="/success-india-logo.jpeg" alt="Success India logo" className="brand-logo-img" />
           <span>Success<span className="text-primary"> India</span></span>
         </Link>
 
@@ -194,12 +194,16 @@ export default function Navbar() {
         }
         .nav-logo:hover { transform: scale(1.03); opacity: 0.9; }
 
-        .logo-icon {
-          color: var(--primary);
+        .brand-logo-img {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1px solid rgba(15, 95, 184, 0.22);
           filter: drop-shadow(0 2px 6px rgba(15, 95, 184, 0.25));
           transition: transform var(--transition-fast);
         }
-        .nav-logo:hover .logo-icon { transform: rotate(-8deg); }
+        .nav-logo:hover .brand-logo-img { transform: rotate(-8deg); }
 
         .text-primary { color: var(--primary); }
 
