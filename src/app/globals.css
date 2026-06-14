@@ -426,3 +426,30 @@ button, input, select, textarea {
   width: 100%;
 }
 
+/* Pixel-Perfect Brand Logo & Text Centering */
+.nav-logo, .footer-logo {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  font-family: var(--font-heading) !important;
+  font-size: 1.5rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.5px !important;
+  white-space: nowrap !important;
+}
+
+.nav-logo > span, .footer-logo > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1 !important;
+  margin-top: -3.5px !important; /* Perfect visual correction nudge */
+}
+
+.brand-logo-img, .footer-logo-img {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  flex-shrink: 0 !important;
+}
+
