@@ -114,7 +114,7 @@ export default function AdminLogin() {
 
             <div className="form-group">
               <label className="form-label font-label-custom">Security Key / Password</label>
-              <div className="input-with-icon relative w-full">
+              <div className="input-with-icon">
                 <Lock size={18} className="input-field-icon" />
                 <input 
                   type={showPassword ? "text" : "password"} 
@@ -127,7 +127,7 @@ export default function AdminLogin() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="pwd-toggle-btn absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 z-10"
+                  className="pwd-toggle-btn"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -145,8 +145,8 @@ export default function AdminLogin() {
 
       <style jsx>{`
         .admin-login-page {
-          background-color: #021e17;
-          background: radial-gradient(circle at center, #063c2c 0%, #01140f 100%);
+          background-color: #f0fdf4;
+          background: radial-gradient(circle at center, #ffffff 0%, #dcfce7 100%);
           min-height: 100vh;
           display: flex;
           align-items: center;
@@ -162,14 +162,14 @@ export default function AdminLogin() {
           border-radius: 50%;
           filter: blur(120px);
           z-index: 1;
-          opacity: 0.15;
+          opacity: 0.4;
           animation: float 12s infinite alternate ease-in-out;
         }
         
         .circle-1 {
           width: 350px;
           height: 350px;
-          background: #10b981;
+          background: #bbf7d0;
           top: -100px;
           left: -100px;
         }
@@ -177,7 +177,7 @@ export default function AdminLogin() {
         .circle-2 {
           width: 400px;
           height: 400px;
-          background: #0d9488;
+          background: #86efac;
           bottom: -150px;
           right: -100px;
           animation-delay: -4s;
@@ -186,7 +186,7 @@ export default function AdminLogin() {
         .circle-3 {
           width: 300px;
           height: 300px;
-          background: #047857;
+          background: #bbf7d0;
           top: 40%;
           left: 60%;
           animation-delay: -7s;
@@ -211,37 +211,38 @@ export default function AdminLogin() {
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
-          color: #a7f3d0;
+          color: #15803d;
           font-weight: 600;
           font-size: 0.9rem;
           align-self: flex-start;
           transition: all 0.3s ease;
           padding: 0.5rem 1rem;
           border-radius: var(--radius-lg);
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.05);
+          background: rgba(255, 255, 255, 0.7);
+          border: 1px solid rgba(22, 163, 74, 0.2);
           backdrop-filter: blur(10px);
         }
 
         .back-home-link:hover {
-          color: white;
-          background: rgba(255, 255, 255, 0.1);
+          color: #166534;
+          background: rgba(255, 255, 255, 0.95);
           transform: translateX(-4px);
         }
 
         .login-card {
-          background: rgba(5, 25, 20, 0.7);
+          background: rgba(255, 255, 255, 0.85);
           border-radius: var(--radius-2xl);
-          border: 1px solid rgba(16, 185, 129, 0.15);
-          box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7);
+          border: 1px solid rgba(22, 163, 74, 0.25);
+          box-shadow: 0 20px 40px -10px rgba(22, 163, 74, 0.1);
           backdrop-filter: blur(25px);
           -webkit-backdrop-filter: blur(25px);
           padding: 3.5rem 2.5rem;
-          transition: border-color 0.3s;
+          transition: border-color 0.3s, box-shadow 0.3s;
         }
         
         .login-card:hover {
-          border-color: rgba(16, 185, 129, 0.3);
+          border-color: rgba(22, 163, 74, 0.4);
+          box-shadow: 0 25px 50px -12px rgba(22, 163, 74, 0.2);
         }
 
         .card-header {
@@ -259,10 +260,10 @@ export default function AdminLogin() {
           justify-content: center;
           width: 80px;
           height: 80px;
-          background: rgba(255, 255, 255, 0.05);
+          background: #ffffff;
           border-radius: 50%;
-          border: 2px solid rgba(16, 185, 129, 0.4);
-          box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+          border: 2px solid rgba(22, 163, 74, 0.3);
+          box-shadow: 0 8px 24px rgba(22, 163, 74, 0.15);
           overflow: hidden;
           padding: 3px;
         }
@@ -280,7 +281,7 @@ export default function AdminLogin() {
 
         .admin-title {
           font-family: var(--font-heading);
-          color: white;
+          color: #1f2937;
           font-weight: 800;
           font-size: 1.5rem;
           letter-spacing: -0.5px;
@@ -288,14 +289,14 @@ export default function AdminLogin() {
 
         .card-subtitle {
           font-size: 0.85rem;
-          color: #a7f3d0;
+          color: #4b5563;
           line-height: 1.6;
-          opacity: 0.8;
+          opacity: 0.9;
           max-width: 290px;
         }
 
         .font-label-custom {
-          color: #a7f3d0;
+          color: #374151;
           font-weight: 600;
           font-size: 0.8rem;
           text-transform: uppercase;
@@ -306,43 +307,13 @@ export default function AdminLogin() {
           position: relative;
         }
 
-        .relative {
-          position: relative;
-        }
-
-        .w-full {
-          width: 100%;
-        }
-
-        .absolute {
-          position: absolute;
-        }
-
-        .right-3 {
-          right: 0.75rem;
-        }
-
-        .top-1\/2 {
-          top: 50%;
-        }
-
-        .-translate-y-1\/2 {
-          transform: translateY(-50%);
-        }
-
-        .text-gray-400 {
-          color: #9ca3af;
-        }
-
-        .hover\:text-gray-200:hover {
-          color: #e5e7eb;
-        }
-
-        .z-10 {
-          z-index: 10;
-        }
-
         .pwd-toggle-btn {
+          position: absolute;
+          right: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--primary);
+          opacity: 0.7;
           background: none;
           border: none;
           padding: 0;
@@ -350,7 +321,15 @@ export default function AdminLogin() {
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: color 0.2s ease;
+          transition: all 0.2s ease;
+          z-index: 10;
+          width: 18px;
+          height: 18px;
+        }
+
+        .pwd-toggle-btn:hover {
+          opacity: 1;
+          color: var(--primary-hover);
         }
 
         .padded-input-right {
@@ -363,14 +342,14 @@ export default function AdminLogin() {
           top: 50%;
           transform: translateY(-50%);
           color: var(--primary);
-          opacity: 0.6;
+          opacity: 0.8;
           transition: opacity 0.3s;
         }
 
         .custom-input-style {
-          background: rgba(0, 0, 0, 0.3);
-          border: 1px solid rgba(16, 185, 129, 0.2);
-          color: white;
+          background: #ffffff;
+          border: 1.5px solid rgba(22, 163, 74, 0.3);
+          color: #1f2937;
           height: 46px;
           font-weight: 500;
           border-radius: var(--radius-lg);
@@ -379,8 +358,8 @@ export default function AdminLogin() {
 
         .custom-input-style:focus {
           border-color: var(--primary);
-          background: rgba(0, 0, 0, 0.5);
-          box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+          background: #ffffff;
+          box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
         }
         
         .custom-input-style:focus + .input-field-icon {
@@ -429,10 +408,10 @@ export default function AdminLogin() {
         .login-footer-info {
           text-align: center;
           font-size: 0.8rem;
-          color: #a7f3d0;
-          opacity: 0.7;
+          color: #4b5563;
+          opacity: 0.8;
           margin-top: 2rem;
-          border-top: 1px solid rgba(16, 185, 129, 0.1);
+          border-top: 1px solid rgba(22, 163, 74, 0.15);
           padding-top: 1.25rem;
         }
 
