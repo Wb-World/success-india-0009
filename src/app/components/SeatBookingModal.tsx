@@ -1,0 +1,1926 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import {
+  X, Calendar, MapPin, CheckCircle2,
+  Download, Printer, Ticket, Clock, AlertCircle, Upload
+} from 'lucide-react';
+
+// ─── Seat Configuration ───────────────────────────────────────────────────────
+const ROWS = ['A', 'B', 'C', 'D', 'E', 'F'];
+const SEATS_PER_ROW = 10;
+const ALL_SEATS: string[] = ROWS.flatMap((row) =>
+  Array.from({ length: SEATS_PER_ROW }, (_, i) => `${row}${i + 1}`)
+);
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+function generateBookingId(): string {
+  const year = new Date().getFullYear();
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let random = '';
+  for (let i = 0; i < 8; i++) {
+    random += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return `EVT-${year}-${random}`;
+}
+
+function formatTimestamp(): string {
+  return new Date().toLocaleString('en-IN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+}
+
+function getVehicleLabel(quantity: number): string {
+  switch (quantity) {
+    case 1: return 'Scooter (Solo)';
+    case 2: return 'Auto Rickshaw (Couple)';
+    case 3: return 'E-Rickshaw (Friends)';
+    case 4: return 'Hatchback (Small Group)';
+    case 5: return 'Sedan (Family)';
+    case 6: return 'SUV (Large Family)';
+    case 7: return 'MPV (Group)';
+    case 8: return 'Minivan (Party)';
+    case 9: return 'Shuttle (Teams)';
+    case 10: return 'Minibus (Corporate)';
+    default: return 'Vehicle';
+  }
+}
+
+function renderVehicleIllustration(quantity: number) {
+  if (quantity === 1) {
+    return (
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" className="vehicle-svg">
+        <circle cx="18" cy="46" r="7" stroke="currentColor" strokeWidth="2.5" fill="#f3f4f6" />
+        <circle cx="46" cy="46" r="7" stroke="currentColor" strokeWidth="2.5" fill="#f3f4f6" />
+        <path d="M18 39h20l6-15h-8l-3 10H18v5z" stroke="currentColor" strokeWidth="2.5" fill="currentColor" fillOpacity="0.1" />
+        <path d="M46 20v26M40 20h10M10 28h8v11h-8z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      </svg>
+    );
+  } else if (quantity === 2) {
+    return (
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" className="vehicle-svg">
+        <circle cx="16" cy="48" r="6" stroke="currentColor" strokeWidth="2.5" fill="#f3f4f6" />
+        <circle cx="48" cy="48" r="6" stroke="currentColor" strokeWidth="2.5" fill="#f3f4f6" />
+        <path d="M8 42h48V30H38l-6-16H14v28z" stroke="currentColor" strokeWidth="2.5" fill="currentColor" fillOpacity="0.1" />
+        <path d="M14 16L8 42M12 16h22l6 14v12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      </svg>
+    );
+  } else if (quantity === 3 || quantity === 4) {
+    return (
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" className="vehicle-svg">
+        <circle cx="18" cy="46" r="7" stroke="currentColor" fill="#f3f4f6" />
+        <circle cx="46" cy="46" r="7" stroke="currentColor" fill="#f3f4f6" />
+        <path d="M4 38h4v8h6v-8h32v8h6v-8h8v-8l-8-12H16L6 30v8z" stroke="currentColor" fill="currentColor" fillOpacity="0.1" />
+        <path d="M18 30h12V20H20l-2 10zM34 30h10l-4-10H34v10z" stroke="currentColor" />
+      </svg>
+    );
+  } else if (quantity >= 5 && quantity <= 7) {
+    return (
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" className="vehicle-svg">
+        <circle cx="18" cy="46" r="8" stroke="currentColor" fill="#f3f4f6" />
+        <circle cx="46" cy="46" r="8" stroke="currentColor" fill="#f3f4f6" />
+        <path d="M4 40h4v6h6v-6h32v6h6v-6h8v-14l-4-8H16L6 26v14z" stroke="currentColor" fill="currentColor" fillOpacity="0.1" />
+        <path d="M16 28h12V18H18l-2 10zM32 28h12V18H32v10zM48 28h8l-2-10H48v10z" stroke="currentColor" />
+      </svg>
+    );
+  } else {
+    return (
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" className="vehicle-svg">
+        <circle cx="20" cy="48" r="7" stroke="currentColor" fill="#f3f4f6" />
+        <circle cx="48" cy="48" r="7" stroke="currentColor" fill="#f3f4f6" />
+        <rect x="6" y="16" width="52" height="28" rx="4" stroke="currentColor" fill="currentColor" fillOpacity="0.1" />
+        <rect x="12" y="22" width="8" height="8" rx="1" stroke="currentColor" />
+        <rect x="24" y="22" width="8" height="8" rx="1" stroke="currentColor" />
+        <rect x="36" y="22" width="8" height="8" rx="1" stroke="currentColor" />
+        <rect x="48" y="22" width="6" height="14" rx="1" stroke="currentColor" />
+        <path d="M6 34h42M6 40h42" stroke="currentColor" strokeWidth="1.5" />
+      </svg>
+    );
+  }
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+type EventData = {
+  id: string;
+  title?: string;
+  name?: string;
+  venue: string;
+  eventDate?: string;
+  eventTime?: string;
+  price: number;
+  bookedSeatsByTime?: Record<string, string[]>;
+};
+
+type Props = {
+  event: EventData;
+  onClose: () => void;
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
+export default function SeatBookingModal({ event, onClose }: Props) {
+  const [quantity, setQuantity] = useState(2); // Default to 2
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [bookedSeats, setBookedSeats] = useState<string[]>([]);
+  const [step, setStep] = useState<'quantity_select' | 'select' | 'payment' | 'success'>('quantity_select');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingId, setBookingId] = useState('');
+  const [bookingTimestamp, setBookingTimestamp] = useState('');
+  const [confirmedData, setConfirmedData] = useState<any>(null);
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
+
+  // Payment configuration and upload states
+  const [upiConfig, setUpiConfig] = useState({ upiId: 'shesh.dav07-1@okaxis', upiName: 'david', upiQrUrl: '/upi-qr-code.jpg?v=2' });
+  const [screenshotUrl, setScreenshotUrl] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const eventName = event.title || event.name || 'Success India Seminar';
+  const pricePerSeat = event.price;
+  const totalPrice = selectedSeats.length * pricePerSeat;
+
+  // Build booked seats from event data
+  useEffect(() => {
+    if (event.bookedSeatsByTime) {
+      const allBooked = Object.values(event.bookedSeatsByTime).flat();
+      setBookedSeats(allBooked);
+    }
+  }, [event]);
+
+  // Fetch UPI configs
+  useEffect(() => {
+    fetch('/api/admin/configs')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.configs) {
+          const upiId = data.configs.find((c: any) => c.key === 'upi_id')?.value || 'shesh.dav07-1@okaxis';
+          const upiName = data.configs.find((c: any) => c.key === 'upi_name')?.value || 'david';
+          const upiQrUrl = data.configs.find((c: any) => c.key === 'upi_qr_url')?.value || '/upi-qr-code.jpg?v=2';
+          setUpiConfig({ upiId, upiName, upiQrUrl });
+        }
+      })
+      .catch((err) => console.error('Failed to load configs:', err));
+  }, []);
+
+  // UPI Link payload & Dynamic QR Image (emerald green color combo #10b981)
+  const upiPayload = `upi://pay?pa=${upiConfig.upiId}&pn=${encodeURIComponent(upiConfig.upiName)}&am=${totalPrice}&cu=INR`;
+  const qrCodeUrl = upiConfig.upiQrUrl 
+    ? upiConfig.upiQrUrl 
+    : `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayload)}&qzone=1&format=png&color=10b981`;
+
+  // QR code data for ticket validation
+  const qrPayload = confirmedData
+    ? `BOOKING:${confirmedData.id}|EVENT:${eventName}|SEATS:${confirmedData.seats.join(',')}|VENUE:${event.venue}|DATE:${event.eventDate || 'TBD'}|AMOUNT:INR${confirmedData.totalPrice}|STATUS:PENDING_VERIFICATION`
+    : '';
+  const qrImageUrl = qrPayload
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrPayload)}&qzone=1&format=png&color=10b981`
+    : '';
+
+  // ── Handlers ────────────────────────────────────────────────────────────────
+  const handleQuantityChange = (val: number) => {
+    if (val < 1 || val > 10) return;
+    setQuantity(val);
+    setSelectedSeats([]); // Reset seats to manual selection mode
+    setWarningMessage(null);
+  };
+
+  const handleSeatClick = (seatId: string) => {
+    if (bookedSeats.includes(seatId)) return;
+    
+    if (selectedSeats.includes(seatId)) {
+      // Deselect
+      setSelectedSeats((prev) => prev.filter((s) => s !== seatId));
+      setWarningMessage(null);
+    } else {
+      // Trying to select a new seat
+      if (selectedSeats.length >= quantity) {
+        setWarningMessage(`You can only select ${quantity} seat${quantity === 1 ? '' : 's'}.`);
+        // Auto clear warning after 4 seconds
+        const timer = setTimeout(() => {
+          setWarningMessage((prev) => {
+            if (prev === `You can only select ${quantity} seat${quantity === 1 ? '' : 's'}.`) {
+              return null;
+            }
+            return prev;
+          });
+        }, 4000);
+        return;
+      }
+      setSelectedSeats((prev) => [...prev, seatId]);
+      setWarningMessage(null);
+    }
+  };
+
+  const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/bookings/upload-proof', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setScreenshotUrl(data.url);
+      } else {
+        setUploadError(data.error || 'Failed to upload screenshot');
+      }
+    } catch (err) {
+      setUploadError('Network error uploading screenshot');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!screenshotUrl) return;
+    setIsSubmitting(true);
+    const newBookingId = generateBookingId();
+    const ts = formatTimestamp();
+
+    const payload = {
+      bookingId: newBookingId,
+      eventId: event.id,
+      eventName,
+      seminarId: event.id,
+      seminarName: eventName,
+      venue: event.venue,
+      seminar: eventName,
+      date: event.eventDate || new Date().toISOString().split('T')[0],
+      time: event.eventTime || '10:00 AM',
+      seats: selectedSeats,
+      totalPrice,
+      screenshot: screenshotUrl,
+    };
+
+    try {
+      await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch (_) {
+      // Continue regardless — ticket is generated client-side
+    }
+
+    setBookingId(newBookingId);
+    setBookingTimestamp(ts);
+    setConfirmedData({ id: newBookingId, seats: selectedSeats, totalPrice, timestamp: ts });
+    setIsSubmitting(false);
+    setStep('success');
+  };
+
+  const handleDownloadQR = () => {
+    if (!qrImageUrl) return;
+    const a = document.createElement('a');
+    a.href = qrImageUrl;
+    a.download = `QR-${bookingId}.png`;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const handleDownloadTicket = () => {
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Success India Ticket – ${bookingId}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0fdf4; padding: 32px; color: #111827; }
+  .ticket { max-width: 640px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+  .ticket-header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 32px; text-align: center; }
+  .ticket-header h1 { font-size: 28px; font-weight: 800; letter-spacing: 2px; margin-bottom: 4px; }
+  .ticket-header p { font-size: 13px; opacity: 0.85; }
+  .booking-id { font-size: 26px; font-weight: 900; letter-spacing: 4px; background: rgba(255,255,255,0.15); padding: 12px 24px; border-radius: 8px; margin: 16px auto; display: inline-block; }
+  .ticket-body { padding: 32px; }
+  .status-badge { display: inline-flex; align-items: center; gap: 6px; background: #dcfce7; color: #047857; padding: 6px 16px; border-radius: 999px; font-weight: 700; font-size: 14px; margin-bottom: 24px; }
+  .detail-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #f3f4f6; gap: 16px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { color: #6b7280; font-size: 13px; font-weight: 500; flex-shrink: 0; }
+  .detail-value { font-weight: 600; color: #111827; text-align: right; }
+  .total-row { background: #ecfdf5; border-radius: 8px; padding: 16px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center; }
+  .total-label { font-size: 15px; font-weight: 600; color: #374151; }
+  .total-value { font-size: 24px; font-weight: 800; color: #10b981; }
+  .seats-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+  .seat-chip { background: #dcfce7; color: #047857; padding: 3px 10px; border-radius: 6px; font-size: 13px; font-weight: 700; }
+  .qr-section { text-align: center; padding: 24px; border-top: 2px dashed #a7f3d0; }
+  .qr-section img { width: 160px; height: 160px; }
+  .qr-caption { font-size: 12px; color: #9ca3af; margin-top: 8px; }
+  .footer-note { text-align: center; font-size: 12px; color: #9ca3af; padding: 16px 32px; background: #f9fafb; }
+</style>
+</head>
+<body>
+<div class="ticket">
+  <div class="ticket-header">
+    <h1>SUCCESS INDIA</h1>
+    <p>Official Event Booking Confirmation</p>
+    <div class="booking-id">${bookingId}</div>
+  </div>
+  <div class="ticket-body">
+    <div style="text-align:center;margin-bottom:20px"><span class="status-badge">✓ PENDING VERIFICATION</span></div>
+    <div class="detail-row"><span class="detail-label">Event</span><span class="detail-value">${eventName}</span></div>
+    <div class="detail-row"><span class="detail-label">Venue</span><span class="detail-value">${event.venue}</span></div>
+    <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${event.eventDate || 'To Be Confirmed'}</span></div>
+    <div class="detail-row"><span class="detail-label">Time</span><span class="detail-value">${event.eventTime || '10:00 AM'}</span></div>
+    <div class="detail-row">
+      <span class="detail-label">Seats (${selectedSeats.length})</span>
+      <span class="detail-value">
+        <div class="seats-list">${selectedSeats.map((s) => `<span class="seat-chip">${s}</span>`).join('')}</div>
+      </span>
+    </div>
+    <div class="detail-row"><span class="detail-label">Price per Seat</span><span class="detail-value">₹${pricePerSeat}</span></div>
+    <div class="detail-row"><span class="detail-label">Booked At</span><span class="detail-value">${bookingTimestamp}</span></div>
+    <div class="total-row"><span class="total-label">Total Amount</span><span class="total-value">₹${totalPrice}</span></div>
+  </div>
+  <div class="qr-section">
+    <img src="${qrImageUrl}" alt="Booking QR Code" />
+    <p class="qr-caption">Scan QR code for verification audit</p>
+  </div>
+  <div class="footer-note">This is a ticket receipt showing status as Pending Verification. Once approved by administration, it compiles as Confirmed.</div>
+</div>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SuccessIndia-Ticket-${bookingId}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePrint = () => window.print();
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+  return (
+    <div
+      className="sbm-overlay"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Seat Booking Modal"
+    >
+      <div className={`sbm-card sbm-card-${step}`}>
+        {/* Close button */}
+        <button className="sbm-close-btn" onClick={onClose} aria-label="Close">
+          <X size={20} />
+        </button>
+
+        {/* ── STEP 1: Centered Quantity Selector ───────── */}
+        {step === 'quantity_select' && (
+          <div className="qty-select-container">
+            <h2 className="qty-select-title">How many seats would you like to book?</h2>
+            
+            <div className="illustration-wrapper">
+              <div className="illustration-graphic animate-bounce-subtle">
+                {renderVehicleIllustration(quantity)}
+              </div>
+              <div className="illustration-label">
+                {getVehicleLabel(quantity)}
+              </div>
+            </div>
+
+            <div className="qty-grid">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                <button
+                  key={num}
+                  className={`qty-number-btn ${quantity === num ? 'qty-number-btn-active' : ''}`}
+                  onClick={() => handleQuantityChange(num)}
+                  aria-label={`${num} seat${num === 1 ? '' : 's'}`}
+                >
+                  {num}
+                </button>
+              ))}
+            </div>
+
+            <button
+              className="qty-submit-btn"
+              onClick={() => setStep('select')}
+            >
+              Select Seats
+            </button>
+          </div>
+        )}
+
+        {/* ── STEP 2: Seat Selection (Seat Map) ──────────────────── */}
+        {step === 'select' && (
+          <>
+            <div className="sbm-header">
+              <div className="sbm-kicker">Seat Reservation</div>
+              <h2 className="sbm-title">{eventName}</h2>
+              <div className="sbm-meta">
+                <span className="sbm-meta-item"><MapPin size={13} /> {event.venue}</span>
+                {event.eventDate && <span className="sbm-meta-item"><Calendar size={13} /> {event.eventDate}</span>}
+                {event.eventTime && <span className="sbm-meta-item"><Clock size={13} /> {event.eventTime}</span>}
+              </div>
+            </div>
+
+            {/* Warning Message Toast */}
+            {warningMessage && (
+              <div className="sbm-warning-toast">
+                <AlertCircle size={16} />
+                <span>{warningMessage}</span>
+              </div>
+            )}
+
+            <div className="sbm-body">
+              {/* ── Left: Seat Map ── */}
+              <div className="sbm-left">
+                <div className="stage-bar">
+                  <span>▶ STAGE / PODIUM ◀</span>
+                </div>
+
+                <div className="seat-map-wrapper">
+                  {ROWS.map((row) => (
+                    <div key={row} className="seat-row-group">
+                      <span className="row-label">{row}</span>
+                      <div className="seat-row">
+                        {Array.from({ length: SEATS_PER_ROW }, (_, i) => {
+                          const seatId = `${row}${i + 1}`;
+                          const isBooked = bookedSeats.includes(seatId);
+                          const isSelected = selectedSeats.includes(seatId);
+                          return (
+                            <button
+                              key={seatId}
+                              className={`sbm-seat ${isBooked ? 'seat-booked' : isSelected ? 'seat-selected' : 'seat-available'}`}
+                              onClick={() => handleSeatClick(seatId)}
+                              disabled={isBooked}
+                              title={`${seatId} – ${isBooked ? 'Booked' : isSelected ? 'Selected' : 'Available'}`}
+                            >
+                              {i + 1}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="seat-legend">
+                  <span><i className="legend-dot ld-available" /> Available</span>
+                  <span><i className="legend-dot ld-selected" /> Selected</span>
+                  <span><i className="legend-dot ld-booked" /> Booked</span>
+                </div>
+              </div>
+
+              {/* ── Right: Controls & Summary ── */}
+              <div className="sbm-right">
+                {/* Quantity Readout & Edit Option */}
+                <div className="qty-indicator-box">
+                  <div className="qty-indicator-info">
+                    <span className="qty-indicator-label">Ticket Quantity</span>
+                    <span className="qty-indicator-value">{quantity} Seat{quantity === 1 ? '' : 's'}</span>
+                  </div>
+                  <button 
+                    className="qty-edit-btn" 
+                    onClick={() => {
+                      setStep('quantity_select');
+                      setSelectedSeats([]);
+                    }}
+                    title="Change seat count"
+                  >
+                    Edit
+                  </button>
+                </div>
+
+                {/* Booking Summary */}
+                <div className="summary-card">
+                  <div className="summary-head">Booking Summary</div>
+                  
+                  {/* Live Counter Progress bar */}
+                  <div className="live-counter-section">
+                    <div className="live-counter-text">
+                      <span>Selected Seats</span>
+                      <span className="counter-accent">{selectedSeats.length} / {quantity}</span>
+                    </div>
+                    <div className="progress-track">
+                      <div 
+                        className="progress-bar" 
+                        style={{ width: `${(selectedSeats.length / quantity) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="summary-row">
+                    <span>Event</span>
+                    <span className="summary-val summary-val-sm">{eventName}</span>
+                  </div>
+                  {event.eventDate && (
+                    <div className="summary-row">
+                      <span>Date</span>
+                      <span className="summary-val">{event.eventDate}</span>
+                    </div>
+                  )}
+                  <div className="summary-row">
+                    <span>Venue</span>
+                    <span className="summary-val summary-val-sm">{event.venue}</span>
+                  </div>
+                  <div className="summary-row summary-row-seats">
+                    <span>Seats Selected</span>
+                    <div className="selected-seat-tags">
+                      {selectedSeats.length > 0
+                        ? selectedSeats.map((s) => (
+                            <span key={s} className="seat-tag">{s}</span>
+                          ))
+                        : <span className="no-seats-hint">Click seats in map</span>}
+                    </div>
+                  </div>
+                  <div className="summary-row">
+                    <span>Price / Seat</span>
+                    <span className="summary-val">₹{pricePerSeat}</span>
+                  </div>
+                  <div className="summary-divider" />
+                  <div className="summary-total-row">
+                    <span>Total Amount</span>
+                    <span className="summary-total-val">₹{totalPrice}</span>
+                  </div>
+                </div>
+
+                <button
+                  className="sbm-proceed-btn"
+                  onClick={() => setStep('payment')}
+                  disabled={selectedSeats.length !== quantity}
+                >
+                  {selectedSeats.length === quantity 
+                    ? 'Proceed to Confirm →' 
+                    : `Select ${quantity - selectedSeats.length} more seat${quantity - selectedSeats.length === 1 ? '' : 's'}`
+                  }
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── STEP 3: Payment Page (Light Green & White Theme) ────── */}
+        {step === 'payment' && (
+          <div className="payment-container">
+            <h2 className="payment-title">Complete Your Payment</h2>
+            <p className="payment-subtitle">Verify reservation summary, scan the UPI QR code below and complete payment.</p>
+
+            <div className="payment-split">
+              {/* Left: Summary and Uploader */}
+              <div className="payment-left-panel">
+                <div className="summary-card" style={{ background: '#ffffff', borderColor: '#a7f3d0' }}>
+                  <div className="summary-head" style={{ color: '#047857', borderBottomColor: '#ecfdf5' }}>Reservation Receipt Details</div>
+                  <div className="summary-row">
+                    <span>Event Program:</span>
+                    <span className="summary-val">{eventName}</span>
+                  </div>
+                  <div className="summary-row">
+                    <span>Venue Venue:</span>
+                    <span className="summary-val">{event.venue}</span>
+                  </div>
+                  {event.eventDate && (
+                    <div className="summary-row">
+                      <span>Seminar Date:</span>
+                      <span className="summary-val">{event.eventDate}</span>
+                    </div>
+                  )}
+                  <div className="summary-row">
+                    <span>Selected Seats ({quantity}):</span>
+                    <div className="selected-seat-tags">
+                      {selectedSeats.map((s) => <span key={s} className="seat-tag">{s}</span>)}
+                    </div>
+                  </div>
+                  <div className="summary-row">
+                    <span>Price Per Seat:</span>
+                    <span className="summary-val">₹{pricePerSeat}</span>
+                  </div>
+                  <div className="summary-divider" />
+                  <div className="summary-total-row">
+                    <span>Grand Total Price:</span>
+                    <span className="summary-total-val" style={{ color: '#10b981' }}>₹{totalPrice}</span>
+                  </div>
+                </div>
+
+                {/* File Uploader */}
+                <div className="upload-section">
+                  <label className="upload-header">
+                    <Upload size={16} />
+                    <span>Upload Payment Screenshot</span>
+                  </label>
+                  
+                  <div className="upload-dropzone">
+                    <input 
+                      type="file" 
+                      accept=".jpg,.jpeg,.png,.webp" 
+                      onChange={handleScreenshotUpload}
+                      id="screenshot-file-input"
+                      className="hidden-file-input"
+                    />
+                    
+                    {!screenshotUrl ? (
+                      <label htmlFor="screenshot-file-input" className="file-input-label">
+                        <Upload size={24} className="upload-zone-icon" />
+                        <strong>{isUploading ? 'Uploading proof image...' : 'Choose Receipt Screenshot file'}</strong>
+                        <span>Supports JPG, JPEG, PNG, WEBP (max 5MB)</span>
+                      </label>
+                    ) : (
+                      <div className="upload-preview-container animate-fade-in">
+                        <img src={screenshotUrl} alt="Screenshot Preview" className="uploaded-preview-img" />
+                        <div className="upload-preview-meta">
+                          <span className="upload-success-badge">✓ Payment proof uploaded successfully.</span>
+                          <button 
+                            type="button" 
+                            onClick={() => setScreenshotUrl('')}
+                            className="btn-clear-upload"
+                          >
+                            Upload Another File
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {uploadError && <span className="upload-error-text">⚠️ {uploadError}</span>}
+                </div>
+              </div>
+
+              {/* Right: QR Code and Account Info */}
+              <div className="payment-right-panel">
+                <div className="qr-container-box">
+                  <div className="qr-image-wrap">
+                    <img src={qrCodeUrl} alt="UPI Payment QR Code" className="payment-qr-img" />
+                  </div>
+                  <div className="qr-pay-caption">Scan the QR code and complete the payment.</div>
+                </div>
+
+                <div className="upi-details-card">
+                  <h4 className="upi-details-title">Beneficiary Details</h4>
+                  <div className="upi-detail-row">
+                    <span>Merchant Name:</span>
+                    <strong>{upiConfig.upiName}</strong>
+                  </div>
+                  <div className="upi-detail-row">
+                    <span>Payee UPI ID:</span>
+                    <strong>{upiConfig.upiId}</strong>
+                  </div>
+                  <div className="upi-detail-row">
+                    <span>Payable Amount:</span>
+                    <strong style={{ color: '#10b981' }}>₹{totalPrice}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="confirm-actions" style={{ marginTop: '2.5rem', width: '100%', maxWidth: 'none', justifyContent: 'center' }}>
+              <button className="sbm-back-btn" onClick={() => setStep('select')} style={{ maxWidth: '180px' }}>
+                ← Back
+              </button>
+              <button 
+                className="sbm-confirm-btn" 
+                onClick={handleConfirmBooking} 
+                disabled={isSubmitting || !screenshotUrl}
+                style={{ maxWidth: '300px' }}
+              >
+                {isSubmitting ? 'Verifying Booking...' : 'Confirm Booking'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 4: Success + Ticket + QR ─────────────────────── */}
+        {step === 'success' && confirmedData && (
+          <div className="success-step">
+            {/* Success Header */}
+            <div className="success-header">
+              <div className="success-check-wrap">
+                <CheckCircle2 size={48} />
+              </div>
+              <h2 className="success-title">Booking Registered!</h2>
+              <div className="booking-id-display">{bookingId}</div>
+              <span className="status-confirmed-pill">✓ PENDING VERIFICATION</span>
+            </div>
+
+            {/* Ticket */}
+            <div className="ticket-display" id="printable-ticket">
+              <div className="ticket-left">
+                <div className="qr-wrapper">
+                  {qrImageUrl ? (
+                    <img
+                      src={qrImageUrl}
+                      alt="Booking QR Code"
+                      className="qr-img"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="qr-placeholder">Generating QR…</div>
+                  )}
+                  <span className="qr-caption">Scan to audit booking</span>
+                </div>
+              </div>
+
+              <div className="ticket-right">
+                <div className="ticket-detail-row">
+                  <span className="td-label">Event</span>
+                  <strong className="td-value">{eventName}</strong>
+                </div>
+                <div className="ticket-detail-row">
+                  <span className="td-label">Venue</span>
+                  <strong className="td-value">{event.venue}</strong>
+                </div>
+                {event.eventDate && (
+                  <div className="ticket-detail-row">
+                    <span className="td-label">Date</span>
+                    <strong className="td-value">{event.eventDate}</strong>
+                  </div>
+                )}
+                {event.eventTime && (
+                  <div className="ticket-detail-row">
+                    <span className="td-label">Time</span>
+                    <strong className="td-value">{event.eventTime}</strong>
+                  </div>
+                )}
+                <div className="ticket-detail-row">
+                  <span className="td-label">Seats</span>
+                  <div className="td-seat-tags">
+                    {selectedSeats.map((s) => <span key={s} className="seat-tag">{s}</span>)}
+                  </div>
+                </div>
+                <div className="ticket-detail-row">
+                  <span className="td-label">No. of Seats</span>
+                  <strong className="td-value">{quantity}</strong>
+                </div>
+                <div className="ticket-detail-row">
+                  <span className="td-label">Price / Seat</span>
+                  <strong className="td-value">₹{pricePerSeat}</strong>
+                </div>
+                <div className="ticket-detail-row ticket-total-row">
+                  <span className="td-label">Total Amount</span>
+                  <strong className="td-value td-total">₹{totalPrice}</strong>
+                </div>
+                <div className="ticket-detail-row">
+                  <span className="td-label">Booked At</span>
+                  <strong className="td-value td-small">{bookingTimestamp}</strong>
+                </div>
+                <div className="ticket-detail-row">
+                  <span className="td-label">Status</span>
+                  <strong className="td-value"><span className="td-status">✓ Pending Verification</span></strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="ticket-action-row">
+              <button className="tkt-action-btn tkt-dl-qr" onClick={handleDownloadQR}>
+                <Download size={15} /> Download QR
+              </button>
+              <button className="tkt-action-btn tkt-dl-ticket" onClick={handleDownloadTicket}>
+                <Ticket size={15} /> Download Ticket
+              </button>
+              <button className="tkt-action-btn tkt-print" onClick={handlePrint}>
+                <Printer size={15} /> Print Ticket
+              </button>
+            </div>
+
+            <button className="sbm-done-btn" onClick={onClose}>
+              Done
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ─── Styles ─────────────────────────────────────────────────────────── */}
+      <style jsx>{`
+        /* Overlay */
+        .sbm-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 9999;
+          background: rgba(0, 0, 0, 0.65);
+          backdrop-filter: blur(6px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem;
+          animation: overlayIn 0.25s ease;
+        }
+
+        @keyframes overlayIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        /* Modal Card */
+        .sbm-card {
+          position: relative;
+          background: #ffffff;
+          border-radius: 20px;
+          width: 100%;
+          max-height: 92vh;
+          overflow-y: auto;
+          box-shadow: 0 32px 80px rgba(0, 0, 0, 0.35);
+          animation: cardIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          scrollbar-width: thin;
+          scrollbar-color: #a7f3d0 #ecfdf5;
+          transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .sbm-card-quantity_select { max-width: 480px; }
+        .sbm-card-select { max-width: 960px; }
+        .sbm-card-payment { max-width: 840px; }
+        .sbm-card-success { max-width: 760px; }
+
+        @keyframes cardIn {
+          from { opacity: 0; transform: scale(0.94) translateY(20px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Close Button */
+        .sbm-close-btn {
+          position: absolute;
+          top: 1.25rem;
+          right: 1.25rem;
+          z-index: 10;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          border: none;
+          background: #f3f4f6;
+          color: #6b7280;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.15s;
+        }
+        .sbm-close-btn:hover { background: #fee2e2; color: #dc2626; transform: scale(1.1); }
+
+        /* Step 1: Centered Quantity Selection styles */
+        .qty-select-container {
+          padding: 3.5rem 2.25rem 2.5rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+
+        .qty-select-title {
+          font-size: 1.35rem;
+          font-weight: 800;
+          color: #1f2937;
+          margin-bottom: 1.75rem;
+          line-height: 1.3;
+        }
+
+        .illustration-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 140px;
+          margin-bottom: 1.75rem;
+        }
+
+        .illustration-graphic {
+          color: #10b981;
+          width: 100px;
+          height: 80px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.25s ease-out;
+        }
+
+        .illustration-graphic :global(.vehicle-svg) {
+          width: 100%;
+          height: 100%;
+        }
+
+        .illustration-label {
+          font-size: 0.9rem;
+          font-weight: 700;
+          color: #047857;
+          margin-top: 0.5rem;
+          background: #ecfdf5;
+          padding: 4px 14px;
+          border-radius: 99px;
+          letter-spacing: 0.02em;
+        }
+
+        .qty-grid {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 8px;
+          max-width: 320px;
+          margin-bottom: 2rem;
+        }
+
+        .qty-number-btn {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          border: 1.5px solid #e5e7eb;
+          background: #ffffff;
+          font-size: 1rem;
+          font-weight: 700;
+          color: #374151;
+          cursor: pointer;
+          transition: all 0.15s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .qty-number-btn:hover {
+          border-color: #10b981;
+          color: #10b981;
+          background: #ecfdf5;
+          transform: scale(1.08);
+        }
+
+        .qty-number-btn-active {
+          background: #10b981;
+          border-color: #10b981;
+          color: #ffffff;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+          transform: scale(1.08);
+        }
+        .qty-number-btn-active:hover {
+          background: #10b981;
+          color: #ffffff;
+        }
+
+        .qty-submit-btn {
+          width: 100%;
+          max-width: 300px;
+          padding: 0.875rem;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 1rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s;
+          box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+        .qty-submit-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        @keyframes bounceSubtle {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+        .animate-bounce-subtle {
+          animation: bounceSubtle 2s infinite ease-in-out;
+        }
+
+        /* Header */
+        .sbm-header {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          padding: 2rem 2rem 1.75rem;
+          border-radius: 20px 20px 0 0;
+        }
+
+        .sbm-kicker {
+          font-size: 0.72rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          color: #a7f3d0;
+          margin-bottom: 0.5rem;
+        }
+
+        .sbm-title {
+          font-size: clamp(1.25rem, 4vw, 1.75rem);
+          font-weight: 800;
+          color: #ffffff;
+          margin: 0 0 0.75rem;
+          padding-right: 2.5rem;
+          line-height: 1.2;
+        }
+
+        .sbm-meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+        }
+
+        .sbm-meta-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          font-size: 0.85rem;
+          color: #ecfdf5;
+          font-weight: 500;
+        }
+
+        /* Warning Toast overlay in seat layout */
+        .sbm-warning-toast {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: #fee2e2;
+          color: #b91c1c;
+          border-bottom: 1.5px solid #fca5a5;
+          padding: 0.75rem 2rem;
+          font-size: 0.88rem;
+          font-weight: 600;
+          animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+          from { transform: translateY(-100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Body layout */
+        .sbm-body {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 0;
+        }
+
+        @media (min-width: 720px) {
+          .sbm-body {
+            grid-template-columns: 1.4fr 1fr;
+          }
+        }
+
+        /* Seat Map Left */
+        .sbm-left {
+          padding: 1.75rem;
+          border-right: 1px solid #ecfdf5;
+          background: #ffffff;
+        }
+
+        .stage-bar {
+          text-align: center;
+          padding: 0.6rem 1rem;
+          background: linear-gradient(90deg, #6b7280, #4b5563);
+          color: white;
+          font-size: 0.72rem;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          border-radius: 8px;
+          margin-bottom: 1.25rem;
+        }
+
+        .seat-map-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .seat-row-group {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .row-label {
+          width: 18px;
+          font-size: 0.75rem;
+          font-weight: 800;
+          color: #4b5563;
+          text-align: center;
+          flex-shrink: 0;
+        }
+
+        .seat-row {
+          display: flex;
+          gap: 6px;
+          flex-wrap: nowrap;
+        }
+
+        /* ─── Circular Theater Seat Styling ────────────────────────── */
+        .sbm-seat {
+          position: relative;
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          border: 1.5px solid;
+          font-size: 0.65rem;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        /* Top-down seat back cushion arc */
+        .sbm-seat::before {
+          content: '';
+          position: absolute;
+          top: 3px;
+          left: 5px;
+          right: 5px;
+          height: 5px;
+          border-radius: 2px;
+          background: rgba(0, 0, 0, 0.12);
+          transition: background 0.2s;
+        }
+
+        @media (max-width: 480px) {
+          .sbm-seat { width: 22px; height: 22px; font-size: 0.55rem; }
+          .sbm-seat::before { top: 2px; left: 4px; right: 4px; height: 4px; }
+          .seat-row { gap: 4px; }
+        }
+
+        .seat-available {
+          background: #ffffff;
+          border-color: #10b981;
+          color: #047857;
+        }
+        .seat-available:hover:not(:disabled) {
+          background: #ecfdf5;
+          border-color: #059669;
+          transform: scale(1.18);
+          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+        }
+
+        .seat-selected {
+          background: #10b981;
+          border-color: #059669;
+          color: white;
+          transform: scale(1.12);
+          box-shadow: 0 3px 10px rgba(16, 185, 129, 0.45);
+        }
+        .seat-selected::before {
+          background: rgba(255, 255, 255, 0.35);
+        }
+
+        .seat-booked {
+          background: #e5e7eb;
+          border-color: #d1d5db;
+          color: #9ca3af;
+          cursor: not-allowed;
+        }
+        .seat-booked::before {
+          background: rgba(0, 0, 0, 0.05);
+        }
+
+        .seat-legend {
+          display: flex;
+          gap: 1rem;
+          margin-top: 1.25rem;
+          flex-wrap: wrap;
+        }
+
+        .seat-legend span {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 0.75rem;
+          color: #4b5563;
+          font-weight: 600;
+        }
+
+        .legend-dot {
+          display: inline-block;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          border: 1.5px solid;
+        }
+
+        .ld-available { background: #ffffff; border-color: #10b981; }
+        .ld-selected { background: #10b981; border-color: #059669; }
+        .ld-booked { background: #e5e7eb; border-color: #d1d5db; }
+
+        /* Right Panel */
+        .sbm-right {
+          padding: 1.75rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+          background: #ffffff;
+        }
+
+        /* Quantity Display & Edit Box */
+        .qty-indicator-box {
+          background: #ecfdf5;
+          border: 1px solid #a7f3d0;
+          border-radius: 12px;
+          padding: 0.85rem 1.15rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .qty-indicator-info {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .qty-indicator-label {
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .qty-indicator-value {
+          font-size: 0.95rem;
+          font-weight: 800;
+          color: #111827;
+        }
+
+        .qty-edit-btn {
+          background: #ffffff;
+          border: 1.5px solid #10b981;
+          color: #047857;
+          padding: 4px 14px;
+          border-radius: 7px;
+          font-size: 0.8rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+        
+        .qty-edit-btn:hover {
+          background: #10b981;
+          color: #ffffff;
+          box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Live Progress Counter */
+        .live-counter-section {
+          margin-bottom: 1.15rem;
+        }
+
+        .live-counter-text {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.82rem;
+          font-weight: 700;
+          color: #4b5563;
+          margin-bottom: 6px;
+        }
+
+        .counter-accent {
+          color: #10b981;
+          font-weight: 800;
+          font-size: 0.9rem;
+        }
+
+        .progress-track {
+          height: 6px;
+          background: #f3f4f6;
+          border-radius: 99px;
+          overflow: hidden;
+        }
+
+        .progress-bar {
+          height: 100%;
+          background: #10b981;
+          border-radius: 99px;
+          transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Summary Card */
+        .summary-card {
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 1rem 1.125rem;
+          font-size: 0.85rem;
+        }
+
+        .summary-head {
+          font-weight: 800;
+          font-size: 0.78rem;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: #374151;
+          padding-bottom: 0.625rem;
+          border-bottom: 1px solid #f3f4f6;
+          margin-bottom: 0.625rem;
+        }
+
+        .summary-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          padding: 0.35rem 0;
+          color: #6b7280;
+          gap: 0.5rem;
+        }
+
+        .summary-row-seats {
+          flex-direction: column;
+          gap: 0.35rem;
+        }
+
+        .summary-val {
+          font-weight: 600;
+          color: #111827;
+          text-align: right;
+        }
+
+        .summary-val-sm {
+          font-size: 0.8rem;
+        }
+
+        .selected-seat-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+          justify-content: flex-end;
+        }
+
+        .seat-tag {
+          background: #ecfdf5;
+          color: #047857;
+          font-size: 0.72rem;
+          font-weight: 700;
+          padding: 2px 7px;
+          border-radius: 5px;
+        }
+
+        .no-seats-hint {
+          font-size: 0.75rem;
+          color: #9ca3af;
+          font-style: italic;
+        }
+
+        .summary-divider {
+          border: 0;
+          border-top: 1.5px solid #f3f4f6;
+          margin: 0.5rem 0;
+        }
+
+        .summary-total-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-weight: 700;
+          color: #111827;
+        }
+
+        .summary-total-val {
+          font-size: 1.25rem;
+          font-weight: 800;
+          color: #10b981;
+        }
+
+        /* Proceed Button */
+        .sbm-proceed-btn {
+          width: 100%;
+          padding: 0.875rem;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 0.95rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s;
+          box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+        .sbm-proceed-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        .sbm-proceed-btn:disabled {
+          background: #d1d5db;
+          box-shadow: none;
+          cursor: not-allowed;
+        }
+
+        /* ── STEP 3: Payment Page styles ──────────────────────────── */
+        .payment-container {
+          padding: 2.25rem 2rem;
+        }
+
+        .payment-title {
+          font-size: 1.45rem;
+          font-weight: 800;
+          color: #111827;
+          text-align: center;
+          margin-bottom: 0.35rem;
+        }
+
+        .payment-subtitle {
+          font-size: 0.88rem;
+          color: #6b7280;
+          text-align: center;
+          margin-bottom: 2rem;
+          max-width: 500px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .payment-split {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1.75rem;
+        }
+
+        @media (min-width: 768px) {
+          .payment-split {
+            grid-template-columns: 1.1fr 0.9fr;
+          }
+        }
+
+        .payment-left-panel {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        .upload-section {
+          background: #ffffff;
+          border: 1.5px dashed #a7f3d0;
+          border-radius: 14px;
+          padding: 1.25rem;
+        }
+
+        .upload-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: #047857;
+          margin-bottom: 0.85rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .upload-dropzone {
+          position: relative;
+          background: #fafafc;
+          border: 1px solid #e5e7eb;
+          border-radius: 10px;
+          padding: 1.5rem;
+          text-align: center;
+          cursor: pointer;
+          transition: border-color 0.15s;
+        }
+        .upload-dropzone:hover {
+          border-color: #10b981;
+        }
+
+        .hidden-file-input {
+          display: none;
+        }
+
+        .file-input-label {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          color: #4b5563;
+          font-size: 0.8rem;
+          cursor: pointer;
+        }
+
+        .file-input-label strong {
+          color: #111827;
+          font-size: 0.88rem;
+        }
+
+        .upload-zone-icon {
+          color: #10b981;
+          margin-bottom: 4px;
+        }
+
+        .upload-preview-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .uploaded-preview-img {
+          max-width: 140px;
+          max-height: 140px;
+          border-radius: 8px;
+          border: 1px solid #d1d5db;
+          object-fit: contain;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .upload-preview-meta {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .upload-success-badge {
+          font-size: 0.8rem;
+          font-weight: 700;
+          color: #047857;
+          background: #ecfdf5;
+          padding: 4px 12px;
+          border-radius: 99px;
+        }
+
+        .btn-clear-upload {
+          background: none;
+          border: none;
+          color: #dc2626;
+          font-size: 0.75rem;
+          font-weight: 700;
+          text-decoration: underline;
+          cursor: pointer;
+        }
+
+        .upload-error-text {
+          display: block;
+          margin-top: 0.5rem;
+          font-size: 0.78rem;
+          color: #b91c1c;
+          font-weight: 600;
+          text-align: center;
+        }
+
+        .payment-right-panel {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        .qr-container-box {
+          background: #ecfdf5;
+          border: 1.5px solid #a7f3d0;
+          border-radius: 16px;
+          padding: 1.75rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .qr-image-wrap {
+          background: white;
+          padding: 10px;
+          border-radius: 12px;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+
+        .payment-qr-img {
+          width: 180px;
+          height: 180px;
+          display: block;
+        }
+
+        .qr-pay-caption {
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: #047857;
+          text-align: center;
+        }
+
+        .upi-details-card {
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 1.15rem;
+          font-size: 0.85rem;
+        }
+
+        .upi-details-title {
+          font-size: 0.78rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          color: #374151;
+          letter-spacing: 0.05em;
+          border-bottom: 1px solid #f3f4f6;
+          padding-bottom: 0.5rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .upi-detail-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 5px 0;
+          color: #4b5563;
+        }
+
+        .upi-detail-row strong {
+          color: #111827;
+        }
+
+        /* ── Confirm actions ───────────────────────────────────────── */
+        .confirm-actions {
+          display: flex;
+          gap: 0.75rem;
+          width: 100%;
+        }
+
+        .sbm-back-btn {
+          flex: 1;
+          padding: 0.875rem;
+          background: #f3f4f6;
+          color: #374151;
+          border: none;
+          border-radius: 10px;
+          font-size: 0.92rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .sbm-back-btn:hover { background: #e5e7eb; }
+
+        .sbm-confirm-btn {
+          flex: 2;
+          padding: 0.875rem;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 0.95rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s;
+          box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+        }
+        .sbm-confirm-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+        }
+        .sbm-confirm-btn:disabled { background: #d1d5db; box-shadow: none; cursor: not-allowed; }
+
+        /* ── Success Step ─────────────────────────────────────────── */
+        .success-step {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 2rem;
+        }
+
+        .success-header {
+          text-align: center;
+          margin-bottom: 1.5rem;
+        }
+
+        .success-check-wrap {
+          width: 84px;
+          height: 84px;
+          background: #ecfdf5;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #10b981;
+          margin: 0 auto 0.875rem;
+          animation: checkIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes checkIn {
+          from { transform: scale(0.4); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+
+        .success-title {
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: #111827;
+          margin-bottom: 0.75rem;
+        }
+
+        .booking-id-display {
+          font-size: 1.35rem;
+          font-weight: 900;
+          letter-spacing: 3px;
+          color: #10b981;
+          background: #ecfdf5;
+          border: 2px solid #a7f3d0;
+          padding: 0.5rem 1.25rem;
+          border-radius: 10px;
+          display: inline-block;
+          margin-bottom: 0.5rem;
+          font-family: monospace;
+        }
+
+        .status-confirmed-pill {
+          display: inline-block;
+          background: #dcfce7;
+          color: #047857;
+          font-weight: 700;
+          font-size: 0.8rem;
+          padding: 4px 14px;
+          border-radius: 999px;
+          letter-spacing: 0.05em;
+        }
+
+        /* Ticket Layout */
+        .ticket-display {
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+          width: 100%;
+          max-width: 760px;
+          background: #ffffff;
+          border: 2px solid #e5e7eb;
+          border-radius: 16px;
+          overflow: hidden;
+          margin: 1rem 0;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        @media (min-width: 600px) {
+          .ticket-display {
+            flex-direction: row;
+          }
+        }
+
+        .ticket-left {
+          background: linear-gradient(160deg, #ecfdf5 0%, #dcfce7 100%);
+          padding: 1.75rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          border-right: 2px dashed #a7f3d0;
+          min-width: 180px;
+        }
+
+        .qr-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .qr-img {
+          width: 150px;
+          height: 150px;
+          border-radius: 8px;
+          border: 3px solid #10b981;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        .qr-placeholder {
+          width: 150px;
+          height: 150px;
+          background: #f3f4f6;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.8rem;
+          color: #9ca3af;
+        }
+
+        .qr-caption {
+          font-size: 0.72rem;
+          color: #6b7280;
+          text-align: center;
+          font-weight: 500;
+        }
+
+        .ticket-right {
+          flex: 1;
+          padding: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+        }
+
+        .ticket-detail-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          padding: 0.5rem 0;
+          border-bottom: 1px solid #f3f4f6;
+          gap: 0.5rem;
+        }
+        .ticket-detail-row:last-child { border-bottom: none; }
+
+        .td-label {
+          font-size: 0.75rem;
+          color: #9ca3af;
+          font-weight: 500;
+          flex-shrink: 0;
+        }
+
+        .td-value {
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #111827;
+          text-align: right;
+        }
+
+        .td-small { font-size: 0.75rem; }
+
+        .td-seat-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+          justify-content: flex-end;
+        }
+
+        .ticket-total-row { background: #ecfdf5; border-radius: 6px; padding: 0.5rem 0.375rem; margin: 0.25rem 0; }
+
+        .td-total {
+          font-size: 1.1rem;
+          font-weight: 800;
+          color: #10b981;
+        }
+
+        .td-status {
+          background: #dcfce7;
+          color: #047857;
+          padding: 2px 10px;
+          border-radius: 999px;
+          font-size: 0.8rem;
+        }
+
+        /* Ticket Action Buttons */
+        .ticket-action-row {
+          display: flex;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+          justify-content: center;
+          margin-top: 0.5rem;
+          margin-bottom: 1rem;
+        }
+
+        .tkt-action-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          padding: 0.6rem 1rem;
+          border-radius: 9px;
+          border: 1.5px solid;
+          font-size: 0.85rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+
+        .tkt-dl-qr {
+          background: #ecfdf5;
+          color: #10b981;
+          border-color: #a7f3d0;
+        }
+        .tkt-dl-qr:hover { background: #dcfce7; border-color: #10b981; transform: translateY(-2px); }
+
+        .tkt-dl-ticket {
+          background: #10b981;
+          color: white;
+          border-color: #10b981;
+          box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25);
+        }
+        .tkt-dl-ticket:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 5px 14px rgba(16, 185, 129, 0.35); }
+
+        .tkt-print {
+          background: #f8fafc;
+          color: #374151;
+          border-color: #d1d5db;
+        }
+        .tkt-print:hover { background: #f3f4f6; transform: translateY(-2px); }
+
+        .sbm-done-btn {
+          padding: 0.75rem 2.5rem;
+          background: #111827;
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 0.92rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+        .sbm-done-btn:hover { background: #374151; transform: translateY(-2px); }
+
+        /* Print styles */
+        @media print {
+          .sbm-overlay { position: static; background: none; backdrop-filter: none; }
+          .sbm-card { box-shadow: none; max-height: none; overflow: visible; border-radius: 0; }
+          .sbm-close-btn, .ticket-action-row, .sbm-done-btn, .sbm-header, .success-header { display: none !important; }
+          .success-step { padding: 0; }
+          .ticket-display { border: 1px solid #e5e7eb; box-shadow: none; }
+        }
+      `}</style>
+    </div>
+  );
+}

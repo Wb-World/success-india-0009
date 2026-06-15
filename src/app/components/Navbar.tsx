@@ -1,114 +1,47 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
-import { User, LogOut, Menu, X } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Menu, X, Calendar } from 'lucide-react';
 
 export default function Navbar() {
-  const router = useRouter();
   const pathname = usePathname();
-
-  // ALL hooks must be at the top — never after a conditional return
-  const [sessionUser, setSessionUser] = useState<{ name: string; role: string } | null>(null);
-  const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-    const checkAuth = () => {
-      const stored = localStorage.getItem('user');
-      if (stored) {
-        try {
-          setSessionUser(JSON.parse(stored));
-        } catch (e) {
-          console.error(e);
-        }
-      } else {
-        setSessionUser(null);
-      }
-    };
-    checkAuth();
-    window.addEventListener('auth-change', checkAuth);
-    return () => window.removeEventListener('auth-change', checkAuth);
-  }, [pathname]);
-
-  // Conditionals AFTER all hooks
+  // Suppress navbar completely on admin pages
   const isAdminRoute = pathname.startsWith('/admin');
   if (isAdminRoute) return null;
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setSessionUser(null);
-    setMenuOpen(false);
-    window.dispatchEvent(new Event('auth-change'));
-    router.push('/');
-  };
-
-  if (!mounted) {
-    return (
-      <header className="nav-header">
-        <div className="nav-container">
-          <div className="nav-logo">
-            <img src="/success-india-logo.jpeg" alt="Success India logo" className="brand-logo-img" />
-            <span>Success<span className="text-primary"> India</span></span>
-          </div>
-        </div>
-      </header>
-    );
-  }
-
-  const isAdmin = sessionUser?.role === 'admin';
-  const isLoggedIn = !!sessionUser;
 
   return (
     <header className="nav-header animate-slide-down">
       <div className="nav-container">
         <Link href="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
-          <img src="/success-india-logo.jpeg" alt="Success India logo" className="brand-logo-img" />
+          <img src="/success-india-logo.jpeg?v=2" alt="Success India logo" className="brand-logo-img" />
           <span>Success<span className="text-primary"> India</span></span>
         </Link>
 
         {/* Desktop Nav Links */}
         <nav className="nav-links-desktop">
-          {!isLoggedIn && (
-            <>
-              <Link href="/" className={`nav-link ${pathname === '/' ? 'active' : ''}`}>Home</Link>
-              <Link href="/about" className={`nav-link ${pathname === '/about' ? 'active' : ''}`}>About</Link>
-              <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`}>Contact</Link>
-            </>
-          )}
-          {isLoggedIn && !isAdmin && (
-            <>
-              <Link href="/profile" className={`nav-link ${pathname === '/profile' ? 'active' : ''}`}>Dashboard</Link>
-              <Link href="/book" className={`nav-link ${pathname === '/book' ? 'active' : ''}`}>Book Seminars</Link>
-            </>
-          )}
+          <Link href="/" className={`nav-link ${pathname === '/' ? 'active' : ''}`}>Home</Link>
+          <Link href="/about" className={`nav-link ${pathname === '/about' ? 'active' : ''}`}>About</Link>
+          <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`}>Contact</Link>
+          <Link href="/book" className={`nav-link ${pathname === '/book' ? 'active' : ''}`}>Book Seminars</Link>
         </nav>
 
-        {/* Desktop Actions */}
+        {/* Desktop CTA Button */}
         <div className="nav-actions-desktop">
-          {isLoggedIn ? (
-            <div className="user-profile-controls">
-              {!isAdmin && (
-                <Link href="/profile" className="profile-btn-nav">
-                  <User size={16} />
-                  <span>{sessionUser!.name.split(' ')[0]}</span>
-                </Link>
-              )}
-              <button onClick={handleLogout} className="btn-logout" title="Log Out">
-                <LogOut size={18} />
-              </button>
-            </div>
-          ) : (
-            <div className="nav-auth-buttons">
-              <Link href="/profile" className="btn btn-primary nav-login-btn">Login / Sign Up</Link>
-            </div>
-          )}
+          <Link href="/book" className="btn btn-primary nav-book-btn">
+            <Calendar size={16} /> Book a Seat
+          </Link>
         </div>
 
-        {/* Mobile Toggle */}
-        <button className="mobile-menu-toggle" onClick={() => setMenuOpen(!menuOpen)}>
+        {/* Mobile Hamburger Toggle */}
+        <button
+          className="mobile-menu-toggle"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+        >
           {menuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
@@ -117,38 +50,16 @@ export default function Navbar() {
       {menuOpen && (
         <div className="mobile-drawer animate-fade-in">
           <nav className="mobile-drawer-links">
-            {!isLoggedIn && (
-              <>
-                <Link href="/" className={`mobile-link ${pathname === '/' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Home</Link>
-                <Link href="/about" className={`mobile-link ${pathname === '/about' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>About Us</Link>
-                <Link href="/contact" className={`mobile-link ${pathname === '/contact' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Contact Us</Link>
-              </>
-            )}
-            {isLoggedIn && !isAdmin && (
-              <>
-                <Link href="/profile" className={`mobile-link ${pathname === '/profile' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Dashboard</Link>
-                <Link href="/book" className={`mobile-link ${pathname === '/book' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Book Seminars</Link>
-              </>
-            )}
+            <Link href="/" className={`mobile-link ${pathname === '/' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Home</Link>
+            <Link href="/about" className={`mobile-link ${pathname === '/about' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>About Us</Link>
+            <Link href="/contact" className={`mobile-link ${pathname === '/contact' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Contact Us</Link>
+            <Link href="/book" className={`mobile-link ${pathname === '/book' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Book Seminars</Link>
             <hr className="mobile-divider" />
-            {isLoggedIn ? (
-              <div className="mobile-user-info">
-                {!isAdmin && (
-                  <Link href="/profile" className="mobile-profile-link" onClick={() => setMenuOpen(false)}>
-                    <User size={18} /> View Dashboard ({sessionUser!.name})
-                  </Link>
-                )}
-                <button onClick={handleLogout} className="btn btn-secondary mobile-logout-btn">
-                  <LogOut size={16} /> Log Out
-                </button>
-              </div>
-            ) : (
-              <div className="mobile-auth-actions">
-                <Link href="/profile" className="btn btn-primary mobile-login-btn" onClick={() => setMenuOpen(false)}>
-                  Login / Sign Up
-                </Link>
-              </div>
-            )}
+            <div className="mobile-auth-actions">
+              <Link href="/book" className="btn btn-primary mobile-book-btn" onClick={() => setMenuOpen(false)}>
+                <Calendar size={16} /> Book a Seat
+              </Link>
+            </div>
           </nav>
         </div>
       )}
@@ -182,15 +93,11 @@ export default function Navbar() {
         }
 
         @media (min-width: 640px) {
-          .nav-container {
-            padding: 0 1.5rem;
-          }
+          .nav-container { padding: 0 1.5rem; }
         }
 
         @media (min-width: 1024px) {
-          .nav-container {
-            padding: 0 2rem;
-          }
+          .nav-container { padding: 0 2rem; }
         }
 
         .nav-logo {
@@ -225,14 +132,8 @@ export default function Navbar() {
         }
 
         @media (max-width: 400px) {
-          .nav-logo {
-            font-size: 1.2rem !important;
-            gap: 0.35rem !important;
-          }
-          .brand-logo-img {
-            width: 28px !important;
-            height: 28px !important;
-          }
+          .nav-logo { font-size: 1.2rem !important; gap: 0.35rem !important; }
+          .brand-logo-img { width: 28px !important; height: 28px !important; }
         }
         .nav-logo:hover .brand-logo-img { transform: rotate(-8deg); }
 
@@ -275,63 +176,16 @@ export default function Navbar() {
           gap: 1rem;
         }
 
-        .user-profile-controls {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
-        }
-
-        .profile-btn-nav {
+        .nav-book-btn {
           display: flex;
           align-items: center;
           gap: 0.45rem;
-          padding: 0.45rem 1rem;
-          background: var(--primary);
-          color: #ffffff;
-          border-radius: var(--radius-lg);
-          font-size: 0.875rem;
-          font-weight: 600;
-          transition: all var(--transition-fast);
-          border: 1px solid var(--primary);
-        }
-        .profile-btn-nav:hover {
-          background: var(--primary-hover);
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-primary);
-        }
-
-        .btn-logout {
-          background: none;
-          border: none;
-          color: var(--muted);
-          cursor: pointer;
-          padding: 0.45rem;
-          border-radius: var(--radius-md);
-          transition: all var(--transition-fast);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .btn-logout:hover {
-          color: var(--danger);
-          background: #fee2e2;
-          transform: scale(1.1);
-        }
-
-        .nav-auth-buttons { display: flex; align-items: center; gap: 1rem; }
-
-        .nav-login-btn {
           padding: 0.5rem 1.25rem;
           font-size: 0.9rem;
           border-radius: var(--radius-lg);
           transition: all var(--transition-fast) !important;
-          background: var(--primary) !important;
-          color: #ffffff !important;
-          border: 1px solid var(--primary) !important;
         }
-        .nav-login-btn:hover {
-          background: var(--primary-hover) !important;
-          color: #ffffff !important;
+        .nav-book-btn:hover {
           transform: translateY(-2px);
           box-shadow: var(--shadow-primary);
         }
@@ -382,32 +236,14 @@ export default function Navbar() {
 
         .mobile-divider { border: 0; border-top: 1px solid var(--border); margin: 0.25rem 0; }
 
-        .mobile-user-info { display: flex; flex-direction: column; gap: 0.875rem; }
-
-        .mobile-profile-link {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 1rem;
-          color: var(--foreground);
-          font-weight: 500;
-          transition: color var(--transition-fast);
-        }
-        .mobile-profile-link:hover { color: var(--primary); }
-
-        .mobile-logout-btn { width: 100%; justify-content: center; padding: 0.625rem; }
-
         .mobile-auth-actions { display: flex; flex-direction: column; gap: 0.875rem; align-items: center; }
-        .mobile-login-btn {
+        .mobile-book-btn {
           width: 100%;
           text-align: center;
           justify-content: center;
-          background: var(--primary) !important;
-          color: #ffffff !important;
-          border: 1px solid var(--primary) !important;
-        }
-        .mobile-login-btn:hover {
-          background: var(--primary-hover) !important;
+          display: flex;
+          align-items: center;
+          gap: 0.45rem;
         }
 
         @media (min-width: 768px) {
