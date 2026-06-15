@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import GlobalTransitionLoader from './components/GlobalTransitionLoader';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'Success India - Official Seminar & Leadership Portal',
@@ -37,6 +39,9 @@ export default function RootLayout({
         <link rel="shortcut icon" href="/favicon.png" />
       </head>
       <body>
+        <Suspense fallback={null}>
+          <GlobalTransitionLoader />
+        </Suspense>
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
           <Navbar />
           <main style={{ flex: 1 }}>{children}</main>
