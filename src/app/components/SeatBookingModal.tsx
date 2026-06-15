@@ -36,74 +36,6 @@ function formatTimestamp(): string {
   });
 }
 
-function getVehicleLabel(quantity: number): string {
-  switch (quantity) {
-    case 1: return 'Scooter (Solo)';
-    case 2: return 'Auto Rickshaw (Couple)';
-    case 3: return 'E-Rickshaw (Friends)';
-    case 4: return 'Hatchback (Small Group)';
-    case 5: return 'Sedan (Family)';
-    case 6: return 'SUV (Large Family)';
-    case 7: return 'MPV (Group)';
-    case 8: return 'Minivan (Party)';
-    case 9: return 'Shuttle (Teams)';
-    case 10: return 'Minibus (Corporate)';
-    default: return 'Vehicle';
-  }
-}
-
-function renderVehicleIllustration(quantity: number) {
-  if (quantity === 1) {
-    return (
-      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" className="vehicle-svg">
-        <circle cx="18" cy="46" r="7" stroke="currentColor" strokeWidth="2.5" fill="#f3f4f6" />
-        <circle cx="46" cy="46" r="7" stroke="currentColor" strokeWidth="2.5" fill="#f3f4f6" />
-        <path d="M18 39h20l6-15h-8l-3 10H18v5z" stroke="currentColor" strokeWidth="2.5" fill="currentColor" fillOpacity="0.1" />
-        <path d="M46 20v26M40 20h10M10 28h8v11h-8z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-      </svg>
-    );
-  } else if (quantity === 2) {
-    return (
-      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" className="vehicle-svg">
-        <circle cx="16" cy="48" r="6" stroke="currentColor" strokeWidth="2.5" fill="#f3f4f6" />
-        <circle cx="48" cy="48" r="6" stroke="currentColor" strokeWidth="2.5" fill="#f3f4f6" />
-        <path d="M8 42h48V30H38l-6-16H14v28z" stroke="currentColor" strokeWidth="2.5" fill="currentColor" fillOpacity="0.1" />
-        <path d="M14 16L8 42M12 16h22l6 14v12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-      </svg>
-    );
-  } else if (quantity === 3 || quantity === 4) {
-    return (
-      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" className="vehicle-svg">
-        <circle cx="18" cy="46" r="7" stroke="currentColor" fill="#f3f4f6" />
-        <circle cx="46" cy="46" r="7" stroke="currentColor" fill="#f3f4f6" />
-        <path d="M4 38h4v8h6v-8h32v8h6v-8h8v-8l-8-12H16L6 30v8z" stroke="currentColor" fill="currentColor" fillOpacity="0.1" />
-        <path d="M18 30h12V20H20l-2 10zM34 30h10l-4-10H34v10z" stroke="currentColor" />
-      </svg>
-    );
-  } else if (quantity >= 5 && quantity <= 7) {
-    return (
-      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" className="vehicle-svg">
-        <circle cx="18" cy="46" r="8" stroke="currentColor" fill="#f3f4f6" />
-        <circle cx="46" cy="46" r="8" stroke="currentColor" fill="#f3f4f6" />
-        <path d="M4 40h4v6h6v-6h32v6h6v-6h8v-14l-4-8H16L6 26v14z" stroke="currentColor" fill="currentColor" fillOpacity="0.1" />
-        <path d="M16 28h12V18H18l-2 10zM32 28h12V18H32v10zM48 28h8l-2-10H48v10z" stroke="currentColor" />
-      </svg>
-    );
-  } else {
-    return (
-      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" className="vehicle-svg">
-        <circle cx="20" cy="48" r="7" stroke="currentColor" fill="#f3f4f6" />
-        <circle cx="48" cy="48" r="7" stroke="currentColor" fill="#f3f4f6" />
-        <rect x="6" y="16" width="52" height="28" rx="4" stroke="currentColor" fill="currentColor" fillOpacity="0.1" />
-        <rect x="12" y="22" width="8" height="8" rx="1" stroke="currentColor" />
-        <rect x="24" y="22" width="8" height="8" rx="1" stroke="currentColor" />
-        <rect x="36" y="22" width="8" height="8" rx="1" stroke="currentColor" />
-        <rect x="48" y="22" width="6" height="14" rx="1" stroke="currentColor" />
-        <path d="M6 34h42M6 40h42" stroke="currentColor" strokeWidth="1.5" />
-      </svg>
-    );
-  }
-}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type EventData = {
@@ -479,14 +411,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           <div className="qty-select-container">
             <h2 className="qty-select-title">How many seats would you like to book?</h2>
             
-            <div className="illustration-wrapper">
-              <div className="illustration-graphic animate-bounce-subtle">
-                {renderVehicleIllustration(quantity)}
-              </div>
-              <div className="illustration-label">
-                {getVehicleLabel(quantity)}
-              </div>
-            </div>
+
 
             <div className="qty-grid">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
