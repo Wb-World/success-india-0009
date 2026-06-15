@@ -30,8 +30,10 @@ export async function POST(request: Request) {
     const dataUrl = `data:${file.type};base64,${base64}`;
 
     return NextResponse.json({ url: dataUrl }, { status: 201 });
-  } catch (err) {
-    console.error('File upload error:', err);
-    return NextResponse.json({ error: 'Failed to process and upload image proof' }, { status: 500 });
+  } catch (err: any) {
+    console.error('Backend File upload error details:', err);
+    return NextResponse.json({ 
+      error: `Failed to process and upload image proof. Error: ${err.message || String(err)}` 
+    }, { status: 500 });
   }
 }
