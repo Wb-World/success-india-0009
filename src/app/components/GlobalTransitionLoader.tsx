@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 export default function GlobalTransitionLoader() {
@@ -10,35 +10,67 @@ export default function GlobalTransitionLoader() {
   const [isActive, setIsActive] = useState(true); // Active on initial load
   const [isFading, setIsFading] = useState(false);
 
-  // 1. Initial Page Load fade-out
-  useEffect(() => {
-    const fadeTimer = setTimeout(() => {
+  const startTimeRef = useRef<number>(Date.now());
+  const safetyTimeoutRef = useRef<any>(null);
+  const fadeTimeoutRef = useRef<any>(null);
+  const removeTimeoutRef = useRef<any>(null);
+
+  const clearTimers = () => {
+    if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
+    if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
+    if (removeTimeoutRef.current) clearTimeout(removeTimeoutRef.current);
+  };
+
+  const startFadeOut = (delay: number) => {
+    clearTimers();
+    
+    fadeTimeoutRef.current = setTimeout(() => {
       setIsFading(true);
-    }, 1000);
+      
+      removeTimeoutRef.current = setTimeout(() => {
+        setIsActive(false);
+      }, 700); // Wait 700ms for the exit fade transition to complete
+    }, delay);
+  };
 
-    const removeTimer = setTimeout(() => {
-      setIsActive(false);
-    }, 1500);
+  const triggerLoading = () => {
+    clearTimers();
+    setIsFading(false);
+    setIsActive(true);
+    startTimeRef.current = Date.now();
 
-    return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(removeTimer);
-    };
-  }, []);
+    // Safety timeout: force close if no path change resolves within 10 seconds
+    safetyTimeoutRef.current = setTimeout(() => {
+      startFadeOut(0);
+    }, 10000);
+  };
 
-  // 2. Detect path change to trigger fade-out when navigation completes
+  // 1. Initial Page Load and Path changes
   useEffect(() => {
-    setIsFading(true);
-    const removeTimer = setTimeout(() => {
-      setIsActive(false);
-    }, 500);
+    const wasInactive = !isActive;
+    
+    if (wasInactive) {
+      // Direct transition triggered by path change without prior click interaction
+      setIsFading(false);
+      setIsActive(true);
+      startTimeRef.current = Date.now();
+      
+      startFadeOut(2500);
+    } else {
+      const elapsed = Date.now() - startTimeRef.current;
+      if (elapsed < 2500) {
+        // Enforce the remaining hold time so we hit exactly 2500ms
+        startFadeOut(2500 - elapsed);
+      } else {
+        // Transition took longer than 2.5s, fade out immediately
+        startFadeOut(0);
+      }
+    }
 
-    return () => {
-      clearTimeout(removeTimer);
-    };
+    return () => clearTimers();
   }, [pathname, searchParams]);
 
-  // 3. Intercept Link clicks to show the loader instantly when navigation starts
+  // 2. Intercept Link & Button clicks to show the loader instantly when navigation starts
   useEffect(() => {
     const handleAnchorClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -56,22 +88,94 @@ export default function GlobalTransitionLoader() {
           !href.includes('#') &&
           href !== pathname // Avoid loader when clicking links pointing to the current page
         ) {
-          setIsFading(false);
-          setIsActive(true);
+          triggerLoading();
+        }
+      }
+    };
+
+    const handleButtonClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const button = target.closest('button, [role="button"], .btn');
+      if (button) {
+        const text = (button.textContent || '').trim().toLowerCase();
+        
+        // Match specific texts or classes that we know do navigation
+        const isNavBtn = 
+          button.classList.contains('btn-logout') ||
+          button.classList.contains('mobile-logout-btn') ||
+          button.classList.contains('state-primary-btn') ||
+          text.includes('reserve a seat') ||
+          text.includes('explore upcoming') ||
+          text.includes('view my seminar') ||
+          text.includes('log out') ||
+          text.includes('login') ||
+          text.includes('sign up');
+
+        const isNonNav =
+          button.classList.contains('mobile-menu-toggle') ||
+          button.classList.contains('accordion-trigger') ||
+          button.classList.contains('lightbox-close') ||
+          button.classList.contains('edit-profile-btn') ||
+          button.classList.contains('btn-refresh') ||
+          text.includes('search') ||
+          text.includes('close') ||
+          text.includes('cancel');
+
+        if (isNavBtn && !isNonNav) {
+          triggerLoading();
         }
       }
     };
 
     document.addEventListener('click', handleAnchorClick, { capture: true });
+    document.addEventListener('click', handleButtonClick, { capture: true });
+    
     return () => {
       document.removeEventListener('click', handleAnchorClick, { capture: true });
+      document.removeEventListener('click', handleButtonClick, { capture: true });
+      clearTimers();
     };
   }, [pathname]);
+
+  // 3. Fallback for programmatic URL changes (history API monkey-patching)
+  useEffect(() => {
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+
+    window.history.pushState = function (...args) {
+      const url = args[2];
+      if (url && typeof url === 'string') {
+        const targetPath = url.split('#')[0].split('?')[0];
+        const currentPath = window.location.pathname;
+        if (targetPath !== currentPath) {
+          triggerLoading();
+        }
+      }
+      return originalPushState.apply(this, args);
+    };
+
+    window.history.replaceState = function (...args) {
+      const url = args[2];
+      if (url && typeof url === 'string') {
+        const targetPath = url.split('#')[0].split('?')[0];
+        const currentPath = window.location.pathname;
+        if (targetPath !== currentPath) {
+          triggerLoading();
+        }
+      }
+      return originalReplaceState.apply(this, args);
+    };
+
+    return () => {
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+    };
+  }, []);
 
   if (!isActive) return null;
 
   return (
-    <div className={`global-splash-overlay ${isFading ? 'fade-out' : ''}`}>
+    <div className={`global-splash-overlay ${isFading ? 'opacity-0 duration-700' : ''}`}>
       <div className="splash-loader-box">
         <div className="splash-content-wrapper">
           <div className="logo-wrapper animate-pulse-green">
@@ -107,13 +211,18 @@ export default function GlobalTransitionLoader() {
           justify-content: center;
           align-items: center;
           z-index: 99999;
-          transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+          transition: opacity 0.7s cubic-bezier(0.25, 1, 0.5, 1);
           overflow: hidden;
+          opacity: 1;
         }
 
-        .global-splash-overlay.fade-out {
-          opacity: 0;
+        .opacity-0 {
+          opacity: 0 !important;
           pointer-events: none;
+        }
+
+        .duration-700 {
+          transition: opacity 0.7s cubic-bezier(0.25, 1, 0.5, 1) !important;
         }
 
         .splash-loader-box {
