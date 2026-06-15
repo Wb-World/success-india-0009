@@ -457,7 +457,7 @@ export default function AdminDashboard() {
             onClick={() => setAdminSection('events')}
             className={`section-tab ${adminSection === 'events' ? 'active' : ''}`}
           >
-            Manage Seminars / Add New Event
+            Add New Event
           </button>
           <button
             onClick={() => setAdminSection('configs')}
@@ -593,7 +593,7 @@ export default function AdminDashboard() {
                 <div>
                   <span className="manager-kicker">Event Management</span>
                   <h2 className="heading-md">
-                    {editingEventId ? 'Edit / Modify Seminar Event' : 'Manage Seminars / Add New Event'}
+                    {editingEventId ? 'Edit / Modify Seminar Event' : 'Add New Event'}
                   </h2>
                 </div>
                 <button onClick={fetchAdminEvents} className="btn btn-secondary btn-refresh">
