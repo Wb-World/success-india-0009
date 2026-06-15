@@ -638,7 +638,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                       <label htmlFor="screenshot-file-input" className="file-input-label">
                         <Upload size={24} className="upload-zone-icon" />
                         <strong>{isUploading ? 'Uploading proof image...' : 'Choose Receipt Screenshot file'}</strong>
-                        <span>Supports JPG, JPEG, PNG, WEBP (max 5MB)</span>
+                        <span>Supports JPG, JPEG, PNG, WEBP (max 3MB)</span>
                       </label>
                     ) : (
                       <div className="upload-preview-container animate-fade-in">
