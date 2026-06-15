@@ -191,28 +191,101 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
   const handleSeatClick = (seatId: string) => {
     if (bookedSeats.includes(seatId)) return;
-    
+
+    const row = seatId[0];
+    const col = parseInt(seatId.slice(1), 10);
+
+    // If the clicked seat is already selected, deselect everything (toggle off)
     if (selectedSeats.includes(seatId)) {
-      // Deselect
-      setSelectedSeats((prev) => prev.filter((s) => s !== seatId));
+      setSelectedSeats([]);
+      setWarningMessage(null);
+      return;
+    }
+
+    // Get all seats in the same row and determine availability
+    const rowSeats: { col: number; seatId: string; isAvailable: boolean }[] = [];
+    for (let c = 1; c <= SEATS_PER_ROW; c++) {
+      const sId = `${row}${c}`;
+      rowSeats.push({
+        col: c,
+        seatId: sId,
+        isAvailable: !bookedSeats.includes(sId)
+      });
+    }
+
+    let foundBlock: string[] | null = null;
+
+    // 1. Try to find a contiguous available block containing the clicked column 'col'
+    // We shift the starting column left if clicking near the end of the row
+    for (let s = col; s >= col - quantity + 1; s--) {
+      if (s >= 1 && s + quantity - 1 <= SEATS_PER_ROW) {
+        let allAvailable = true;
+        const candidateSeats: string[] = [];
+        for (let offset = 0; offset < quantity; offset++) {
+          const seat = rowSeats[s - 1 + offset];
+          if (!seat || !seat.isAvailable) {
+            allAvailable = false;
+            break;
+          }
+          candidateSeats.push(seat.seatId);
+        }
+        if (allAvailable) {
+          foundBlock = candidateSeats;
+          break;
+        }
+      }
+    }
+
+    // 2. Try to find ANY contiguous available block of size 'quantity' in the same row (prioritizing proximity to 'col')
+    if (!foundBlock) {
+      let bestDist = Infinity;
+      for (let s = 1; s <= SEATS_PER_ROW - quantity + 1; s++) {
+        let allAvailable = true;
+        const candidateSeats: string[] = [];
+        for (let offset = 0; offset < quantity; offset++) {
+          const seat = rowSeats[s - 1 + offset];
+          if (!seat || !seat.isAvailable) {
+            allAvailable = false;
+            break;
+          }
+          candidateSeats.push(seat.seatId);
+        }
+        if (allAvailable) {
+          const center = s + (quantity - 1) / 2;
+          const dist = Math.abs(center - col);
+          if (dist < bestDist) {
+            bestDist = dist;
+            foundBlock = candidateSeats;
+          }
+        }
+      }
+    }
+
+    // 3. Fallback: Select the closest available seats in the row (even if non-contiguous, skipping booked ones)
+    if (!foundBlock) {
+      const availableInRow = rowSeats.filter(s => s.isAvailable);
+      if (availableInRow.length >= quantity) {
+        availableInRow.sort((a, b) => Math.abs(a.col - col) - Math.abs(b.col - col));
+        const closestSeats = availableInRow.slice(0, quantity);
+        closestSeats.sort((a, b) => a.col - b.col);
+        foundBlock = closestSeats.map(s => s.seatId);
+      }
+    }
+
+    if (foundBlock && foundBlock.length === quantity) {
+      setSelectedSeats(foundBlock);
       setWarningMessage(null);
     } else {
-      // Trying to select a new seat
-      if (selectedSeats.length >= quantity) {
-        setWarningMessage(`You can only select ${quantity} seat${quantity === 1 ? '' : 's'}.`);
-        // Auto clear warning after 4 seconds
-        const timer = setTimeout(() => {
-          setWarningMessage((prev) => {
-            if (prev === `You can only select ${quantity} seat${quantity === 1 ? '' : 's'}.`) {
-              return null;
-            }
-            return prev;
-          });
-        }, 4000);
-        return;
-      }
-      setSelectedSeats((prev) => [...prev, seatId]);
-      setWarningMessage(null);
+      // Display warning if there are not enough available seats in the entire row
+      setWarningMessage(`Not enough available seats in row ${row} to book ${quantity} seats.`);
+      const timer = setTimeout(() => {
+        setWarningMessage((prev) => {
+          if (prev === `Not enough available seats in row ${row} to book ${quantity} seats.`) {
+            return null;
+          }
+          return prev;
+        });
+      }, 4000);
     }
   };
 
