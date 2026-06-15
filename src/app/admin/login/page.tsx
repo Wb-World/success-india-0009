@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Lock, User, AlertCircle, ArrowLeft, Key } from 'lucide-react';
+import { Lock, User, AlertCircle, ArrowLeft, Key } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminLogin() {
@@ -80,11 +80,13 @@ export default function AdminLogin() {
 
         <div className="login-card glass-card animate-scale-in">
           <div className="card-header">
-            <div className="shield-icon-wrapper animate-pulse-green">
-              <Shield size={34} className="shield-icon" />
+            <div className="login-logo-wrapper animate-pulse-green">
+              <img src="/success-india-logo.jpeg" alt="Success India Logo" className="login-logo-img" />
             </div>
-            <h2 className="heading-md admin-title">Operations Console</h2>
-            <p className="card-subtitle">Authorize administrative credentials to access command hub.</p>
+            <h2 className="heading-md admin-title">
+              Success<span className="text-primary-green"> India</span>
+            </h2>
+            <p className="card-subtitle">Authorize credentials to access the administrative portal.</p>
           </div>
 
           {errorMsg && (
@@ -242,21 +244,29 @@ export default function AdminLogin() {
           gap: 1rem;
         }
 
-        .shield-icon-wrapper {
+        .login-logo-wrapper {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 72px;
-          height: 72px;
-          background: rgba(16, 185, 129, 0.1);
-          color: var(--primary);
-          border-radius: 20px;
-          border: 1px solid rgba(16, 185, 129, 0.3);
-          box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15);
+          width: 80px;
+          height: 80px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 50%;
+          border: 2px solid rgba(16, 185, 129, 0.4);
+          box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+          overflow: hidden;
+          padding: 3px;
         }
 
-        .shield-icon {
-          filter: drop-shadow(0 4px 10px rgba(16, 185, 129, 0.4));
+        .login-logo-img {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+
+        .text-primary-green {
+          color: var(--primary) !important;
         }
 
         .admin-title {
