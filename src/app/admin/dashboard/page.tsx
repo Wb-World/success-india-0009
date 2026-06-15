@@ -253,7 +253,6 @@ export default function AdminDashboard() {
                 Success<span className="text-primary-green"> India</span>
                 <span className="workspace-suffix">Operations Console</span>
               </h1>
-              <span className="admin-user-tag">Administrator Node: {adminUser?.name}</span>
             </div>
           </div>
           <button onClick={handleLogout} className="btn-admin-logout">
