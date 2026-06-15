@@ -122,7 +122,7 @@ export default function About() {
 
         /* Hero */
         .about-hero {
-          background: linear-gradient(135deg, #022c22 0%, #064e3b 100%);
+          background: linear-gradient(135deg, #1e9e48 0%, #25b454 50%, #28a745 100%);
           color: white;
           padding: 6rem 0;
           text-align: center;
