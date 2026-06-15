@@ -672,9 +672,15 @@ export default function AdminDashboard() {
         /* Metrics Grid */
         .metrics-cards-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: 1fr;
           gap: 1.25rem;
           margin-bottom: 2.5rem;
+        }
+
+        @media (min-width: 480px) {
+          .metrics-cards-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
         }
 
         @media (min-width: 992px) {
@@ -742,15 +748,33 @@ export default function AdminDashboard() {
         /* Dashboard controls */
         .list-controls-bar {
           display: flex;
-          justify-content: space-between;
-          align-items: center;
+          flex-direction: column;
+          gap: 1rem;
+          align-items: stretch;
           border-bottom: 2px solid var(--border);
           margin-bottom: 2rem;
+          padding-bottom: 0.5rem;
+        }
+
+        @media (min-width: 640px) {
+          .list-controls-bar {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 0;
+          }
         }
 
         .tab-buttons {
           display: flex;
-          gap: 1.5rem;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        @media (min-width: 640px) {
+          .tab-buttons {
+            gap: 1.5rem;
+          }
         }
 
         .tab-btn {
@@ -934,12 +958,21 @@ export default function AdminDashboard() {
 
         .event-row {
           display: flex;
-          justify-content: space-between;
-          gap: 1rem;
+          flex-direction: column;
+          gap: 0.75rem;
           padding: 1rem;
           border: 1px solid var(--border);
           border-radius: var(--radius-lg);
           background: var(--background);
+        }
+
+        @media (min-width: 640px) {
+          .event-row {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+          }
         }
 
         .event-row strong,
@@ -954,8 +987,21 @@ export default function AdminDashboard() {
         }
 
         .event-row-meta {
-          text-align: right;
-          min-width: 170px;
+          text-align: left;
+          min-width: auto;
+          border-top: 1px dashed var(--border);
+          padding-top: 0.75rem;
+          margin-top: 0.25rem;
+        }
+
+        @media (min-width: 640px) {
+          .event-row-meta {
+            text-align: right;
+            min-width: 170px;
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+          }
         }
 
         /* Stream cards layout */

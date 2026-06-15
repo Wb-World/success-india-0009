@@ -156,12 +156,18 @@ button, input, select, textarea {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1rem;
 }
 
-@media (max-width: 768px) {
+@media (min-width: 640px) {
   .container {
-    padding: 0 1.25rem;
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 2rem;
   }
 }
 
@@ -173,7 +179,7 @@ button, input, select, textarea {
 
 .heading-xl {
   font-family: var(--font-heading);
-  font-size: 2.5rem;
+  font-size: clamp(1.85rem, 5vw, 2.5rem);
   font-weight: 800;
   line-height: 1.2;
   color: var(--foreground);
@@ -181,21 +187,21 @@ button, input, select, textarea {
 
 .heading-lg {
   font-family: var(--font-heading);
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 4vw, 2rem);
   font-weight: 700;
   color: var(--foreground);
 }
 
 .heading-md {
   font-family: var(--font-heading);
-  font-size: 1.5rem;
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
   font-weight: 600;
   color: var(--foreground);
 }
 
 .heading-sm {
   font-family: var(--font-heading);
-  font-size: 1.25rem;
+  font-size: clamp(1.05rem, 2.5vw, 1.25rem);
   font-weight: 600;
   color: var(--foreground);
 }

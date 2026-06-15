@@ -151,6 +151,13 @@ export default function Footer() {
           margin-bottom: 3rem;
         }
 
+        @media (min-width: 480px) and (max-width: 767px) {
+          .footer-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2.5rem;
+          }
+        }
+
         @media (min-width: 768px) {
           .footer-grid {
             grid-template-columns: 1.8fr 1fr 1fr 1.8fr;

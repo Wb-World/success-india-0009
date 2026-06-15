@@ -728,6 +728,27 @@ function BookingEngine() {
           color: var(--muted-light);
         }
 
+        @media (max-width: 500px) {
+          .booking-steps-timeline {
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+          }
+          .step-node {
+            gap: 0.25rem;
+          }
+          .step-node :global(.step-txt) {
+            font-size: 0.75rem;
+          }
+          .step-num {
+            width: 22px;
+            height: 22px;
+            font-size: 0.7rem;
+          }
+          .timeline-arrow {
+            display: none;
+          }
+        }
+
         .error-alert {
           background: #fee2e2;
           color: #b91c1c;
@@ -1136,6 +1157,14 @@ function BookingEngine() {
           }
         }
 
+        @media (max-width: 375px) {
+          .event-seat-grid {
+            grid-template-columns: repeat(6, minmax(32px, 1fr)) !important;
+            gap: 0.4rem !important;
+            padding: 0.75rem 0.5rem !important;
+          }
+        }
+
         .event-seat {
           width: 46px;
           height: 46px;
@@ -1150,6 +1179,14 @@ function BookingEngine() {
           align-items: center;
           justify-content: center;
           transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+        }
+
+        @media (max-width: 375px) {
+          .event-seat {
+            width: 34px !important;
+            height: 34px !important;
+            font-size: 0.65rem !important;
+          }
         }
 
         .event-seat:hover:not(:disabled) {
@@ -1565,10 +1602,16 @@ function BookingEngine() {
           max-width: 800px;
           margin: 0 auto;
           background: white;
-          padding: 2.5rem;
+          padding: 1.5rem;
           border-radius: var(--radius-2xl);
           border: 1px solid var(--border);
           box-shadow: var(--shadow-lg);
+        }
+
+        @media (min-width: 640px) {
+          .payment-card {
+            padding: 2.5rem;
+          }
         }
 
         .payment-title {

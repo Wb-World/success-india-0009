@@ -334,7 +334,13 @@ export default function Profile() {
         <style jsx>{`
           .auth-page {
             max-width: 480px;
-            padding: 5rem 1.5rem;
+            padding: 3rem 1rem;
+            width: 100%;
+          }
+          @media (min-width: 640px) {
+            .auth-page {
+              padding: 5rem 1.5rem;
+            }
           }
           .auth-card {
             background: white;
@@ -350,15 +356,21 @@ export default function Profile() {
           }
           .auth-tab-btn {
             flex: 1;
-            padding: 1.25rem;
+            padding: 1rem;
             background: none;
             border: none;
             cursor: pointer;
             font-family: var(--font-heading);
             font-weight: 600;
-            font-size: 1.05rem;
+            font-size: 0.95rem;
             color: var(--muted);
             transition: all var(--transition-fast);
+          }
+          @media (min-width: 640px) {
+            .auth-tab-btn {
+              padding: 1.25rem;
+              font-size: 1.05rem;
+            }
           }
           .auth-tab-btn.active {
             background: white;
@@ -366,7 +378,12 @@ export default function Profile() {
             box-shadow: 0 -2px 0 0 var(--primary) inset;
           }
           .auth-form-content {
-            padding: 2.5rem 2rem;
+            padding: 1.5rem 1.25rem;
+          }
+          @media (min-width: 640px) {
+            .auth-form-content {
+              padding: 2.5rem 2rem;
+            }
           }
           .auth-error {
             background: #fee2e2;
@@ -586,13 +603,18 @@ export default function Profile() {
           margin-bottom: 2.5rem;
           background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
           border: 1px solid rgba(16, 185, 129, 0.25);
-          padding: 2rem 2.5rem;
+          padding: 1.25rem 1.5rem;
           border-radius: var(--radius-2xl);
           box-shadow: var(--shadow-sm);
         }
+        @media (min-width: 640px) {
+          .dashboard-welcome-banner {
+            padding: 2rem 2.5rem;
+          }
+        }
         .welcome-title {
           font-family: var(--font-heading);
-          font-size: 2.2rem;
+          font-size: clamp(1.4rem, 5vw, 2.2rem);
           font-weight: 800;
           color: var(--primary-dark);
           margin-bottom: 0.5rem;
@@ -600,8 +622,9 @@ export default function Profile() {
         }
         .welcome-subtitle {
           color: #065f46;
-          font-size: 1.05rem;
+          font-size: clamp(0.9rem, 2.5vw, 1.05rem);
           font-weight: 500;
+          line-height: 1.5;
         }
 
         .dashboard-grid {
@@ -809,10 +832,12 @@ export default function Profile() {
         .bookings-table-wrapper {
           width: 100%;
           overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
         }
 
         .bookings-table {
           width: 100%;
+          min-width: 700px;
           border-collapse: collapse;
           text-align: left;
           font-size: 0.95rem;

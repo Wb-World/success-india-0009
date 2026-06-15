@@ -178,7 +178,19 @@ export default function Navbar() {
           width: 100%;
           max-width: 1280px;
           margin: 0 auto;
-          padding: 0 2rem;
+          padding: 0 1rem;
+        }
+
+        @media (min-width: 640px) {
+          .nav-container {
+            padding: 0 1.5rem;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .nav-container {
+            padding: 0 2rem;
+          }
         }
 
         .nav-logo {
@@ -210,6 +222,17 @@ export default function Navbar() {
           filter: drop-shadow(0 2px 6px rgba(22, 163, 74, 0.25));
           transition: transform var(--transition-fast);
           flex-shrink: 0;
+        }
+
+        @media (max-width: 400px) {
+          .nav-logo {
+            font-size: 1.2rem !important;
+            gap: 0.35rem !important;
+          }
+          .brand-logo-img {
+            width: 28px !important;
+            height: 28px !important;
+          }
         }
         .nav-logo:hover .brand-logo-img { transform: rotate(-8deg); }
 

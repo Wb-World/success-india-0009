@@ -439,9 +439,15 @@ export default function Home() {
             linear-gradient(135deg, #1e9e48 0%, #25b454 50%, #28a745 100%);
           color: white;
           overflow: hidden;
-          min-height: 640px;
+          min-height: auto;
           display: flex;
           align-items: center;
+        }
+
+        @media (min-width: 768px) {
+          .hero-section {
+            min-height: 640px;
+          }
         }
 
         .hero-section::after {
@@ -495,18 +501,12 @@ export default function Home() {
 
         .hero-title {
           font-family: var(--font-heading);
-          font-size: 2.75rem;
+          font-size: clamp(2rem, 8vw, 4rem);
           font-weight: 800;
           line-height: 1.08;
           letter-spacing: 0;
           margin: 0;
           max-width: 820px;
-        }
-
-        @media (min-width: 768px) {
-          .hero-title {
-            font-size: 4rem;
-          }
         }
 
         .text-highlight {
@@ -557,10 +557,14 @@ export default function Home() {
         .hero-search-col {
           display: flex;
           align-items: stretch;
+          width: 100%;
+          justify-content: center;
         }
 
         .registration-card {
           width: 100%;
+          max-width: 500px;
+          margin: 0 auto;
           padding: 2rem 2rem 1.5rem;
           background: rgba(255, 255, 255, 0.98);
           color: var(--foreground);
@@ -656,6 +660,12 @@ export default function Home() {
           display: grid;
           grid-template-columns: 1fr;
           gap: 1.5rem;
+        }
+
+        @media (min-width: 600px) and (max-width: 767px) {
+          .features-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
         }
 
         @media (min-width: 768px) {
@@ -759,6 +769,12 @@ export default function Home() {
           display: grid;
           grid-template-columns: 1fr;
           gap: 1.25rem;
+        }
+
+        @media (min-width: 550px) and (max-width: 767px) {
+          .routes-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
         }
 
         @media (min-width: 768px) {
