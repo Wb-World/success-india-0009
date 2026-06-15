@@ -11,6 +11,11 @@ export default function Footer() {
   const [sessionUser, setSessionUser] = useState<{ name: string; role: string } | null>(null);
   const [mounted, setMounted] = useState(false);
 
+  // Newsletter state hooks
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [message, setMessage] = useState('');
+
   useEffect(() => {
     setMounted(true);
     const checkAuth = () => {
@@ -40,6 +45,39 @@ export default function Footer() {
 
   const isLoggedIn = !!sessionUser;
   const isAdmin = sessionUser?.role === 'admin';
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setStatus('loading');
+    setMessage('');
+
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setStatus('success');
+        setMessage('Successfully Subscribed! Check your inbox ✨');
+        setEmail('');
+      } else {
+        setStatus('error');
+        setMessage(data.error || 'Failed to subscribe. Please try again.');
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus('error');
+      setMessage('An error occurred. Please check your connection and try again.');
+    }
+  };
 
   return (
     <footer className="site-footer">
@@ -108,17 +146,34 @@ export default function Footer() {
           <p className="newsletter-text">
             Subscribe for local chapter updates, seminar reminders, and official resource notices.
           </p>
-          <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>
+          <form className="newsletter-form" onSubmit={handleSubscribe}>
             <input 
               type="email" 
               placeholder="Enter your email" 
               className="newsletter-input" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={status === 'loading'}
               required 
             />
-            <button type="submit" className="newsletter-btn">
-              <Send size={16} />
+            <button 
+              type="submit" 
+              className="newsletter-btn"
+              disabled={status === 'loading'}
+              aria-label="Subscribe"
+            >
+              {status === 'loading' ? (
+                <span className="spinner"></span>
+              ) : (
+                <Send size={16} />
+              )}
             </button>
           </form>
+          {message && (
+            <p className={`newsletter-status-message ${status}`} role="alert">
+              {message}
+            </p>
+          )}
         </div>
       </div>
 
@@ -305,10 +360,54 @@ export default function Footer() {
           padding: 0 1.25rem;
           cursor: pointer;
           transition: background var(--transition-fast);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 50px;
         }
 
-        .newsletter-btn:hover {
+        .newsletter-btn:hover:not(:disabled) {
           background: #dcfce7;
+        }
+
+        .newsletter-btn:disabled {
+          cursor: not-allowed;
+          background: rgba(255, 255, 255, 0.7);
+        }
+
+        .spinner {
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(22, 163, 74, 0.3);
+          border-radius: 50%;
+          border-top-color: #16a34a;
+          animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        .newsletter-status-message {
+          font-size: 0.85rem;
+          margin-top: 0.5rem;
+          line-height: 1.4;
+          font-weight: 500;
+        }
+
+        .newsletter-status-message.success {
+          color: #dcfce7;
+        }
+
+        .newsletter-status-message.error {
+          color: #fecaca;
+        }
+
+        .newsletter-status-message.loading {
+          color: rgba(255, 255, 255, 0.7);
         }
 
         .footer-bottom {
