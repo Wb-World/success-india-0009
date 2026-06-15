@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Validate size (under 3MB for Vercel payload constraints)
+    // Validate size (under 3MB for Vercel/Supabase payload limits)
     const MAX_SIZE = 3 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       return NextResponse.json({ error: 'File size must be under 3MB.' }, { status: 400 });
@@ -23,13 +24,41 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Only JPG, JPEG, PNG, and WEBP image uploads are allowed.' }, { status: 400 });
     }
 
-    // Convert file to Base64 in-memory data URL (Serverless/Vercel safe)
+    // Generate safe unique filename
+    const fileExt = file.type.split('/')[1] || 'png';
+    const randId = Math.floor(Math.random() * 100000);
+    const fileName = `proof_${Date.now()}_${randId}.${fileExt}`;
+
+    // Read file as ArrayBuffer and convert to Buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const base64 = buffer.toString('base64');
-    const dataUrl = `data:${file.type};base64,${base64}`;
 
-    return NextResponse.json({ url: dataUrl }, { status: 201 });
+    // Upload to Supabase Storage bucket 'payment-proofs'
+    const { data: uploadData, error: uploadError } = await supabaseAdmin
+      .storage
+      .from('payment-proofs')
+      .upload(fileName, buffer, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error('Supabase storage upload error details:', uploadError);
+      throw new Error(`Supabase Storage upload failed: ${uploadError.message}`);
+    }
+
+    // Generate Public URL for the uploaded file
+    const { data: urlData } = supabaseAdmin
+      .storage
+      .from('payment-proofs')
+      .getPublicUrl(fileName);
+
+    if (!urlData || !urlData.publicUrl) {
+      throw new Error('Failed to generate public URL for the uploaded file.');
+    }
+
+    console.log('Successfully uploaded image. Public URL:', urlData.publicUrl);
+    return NextResponse.json({ url: urlData.publicUrl }, { status: 201 });
   } catch (err: any) {
     console.error('Backend File upload error details:', err);
     return NextResponse.json({ 
