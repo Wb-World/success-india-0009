@@ -16,6 +16,7 @@ export default function AdminDashboard() {
   const [events, setEvents] = useState<any[]>([]);
   const [eventSaving, setEventSaving] = useState(false);
   const [eventMessage, setEventMessage] = useState('');
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [eventForm, setEventForm] = useState({
     title: 'Success India Leadership Development Seminar',
     venue: 'Chromepet, Chennai',
@@ -129,29 +130,35 @@ export default function AdminDashboard() {
     setEventSaving(true);
     setEventMessage('');
 
+    const isEdit = !!editingEventId;
+    const url = '/api/events';
+    const method = isEdit ? 'PATCH' : 'POST';
+    const bodyPayload = {
+      title: eventForm.title,
+      venue: eventForm.venue,
+      eventDateTime: eventForm.eventDateTime,
+      price: Number(eventForm.price),
+      totalSeats: Number(eventForm.totalSeats || 60),
+      ...(isEdit && { eventId: editingEventId }),
+    };
+
     try {
-      const res = await fetch('/api/events', {
-        method: 'POST',
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           'x-admin-id': adminUser.id,
         },
-        body: JSON.stringify({
-          title: eventForm.title,
-          venue: eventForm.venue,
-          eventDateTime: eventForm.eventDateTime,
-          price: Number(eventForm.price),
-          totalSeats: Number(eventForm.totalSeats || 60),
-        }),
+        body: JSON.stringify(bodyPayload),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        setEventMessage(data.error || 'Failed to publish seminar event');
+        setEventMessage(data.error || `Failed to ${isEdit ? 'update' : 'publish'} seminar event`);
         return;
       }
 
-      setEventMessage('Seminar event published successfully');
+      setEventMessage(`Seminar event ${isEdit ? 'updated' : 'published'} successfully`);
       setEventForm({
         title: 'Success India Leadership Development Seminar',
         venue: 'Chromepet, Chennai',
@@ -159,11 +166,74 @@ export default function AdminDashboard() {
         price: '250',
         totalSeats: '60',
       });
+      setEditingEventId(null);
       fetchAdminEvents();
     } catch (err) {
-      setEventMessage('Network error while publishing seminar event');
+      setEventMessage(`Network error while ${isEdit ? 'updating' : 'publishing'} seminar event`);
     } finally {
       setEventSaving(false);
+    }
+  };
+
+  const handleEditClick = (event: any) => {
+    setEditingEventId(event.id);
+    setEventMessage('');
+    
+    // Format the eventDateTime for datetime-local input (YYYY-MM-DDThh:mm)
+    let formattedDateTime = '';
+    if (event.eventDateTime) {
+      const d = new Date(event.eventDateTime);
+      const offset = d.getTimezoneOffset();
+      const localTime = new Date(d.getTime() - offset * 60 * 1000);
+      formattedDateTime = localTime.toISOString().slice(0, 16);
+    }
+
+    setEventForm({
+      title: event.title || event.name,
+      venue: event.venue,
+      eventDateTime: formattedDateTime,
+      price: String(event.price),
+      totalSeats: String(event.totalSeats || 60),
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingEventId(null);
+    setEventMessage('');
+    setEventForm({
+      title: 'Success India Leadership Development Seminar',
+      venue: 'Chromepet, Chennai',
+      eventDateTime: '',
+      price: '250',
+      totalSeats: '60',
+    });
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!confirm('Are you sure you want to permanently delete this seminar event? This cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/events?eventId=${eventId}`, {
+        method: 'DELETE',
+        headers: {
+          'x-admin-id': adminUser.id,
+        },
+      });
+
+      if (res.ok) {
+        alert('Event deleted successfully');
+        fetchAdminEvents();
+        if (editingEventId === eventId) {
+          handleCancelEdit();
+        }
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete event');
+      }
+    } catch (err) {
+      alert('Network error deleting event');
     }
   };
 
@@ -450,7 +520,9 @@ export default function AdminDashboard() {
               <div className="event-manager-header">
                 <div>
                   <span className="manager-kicker">Event Management</span>
-                  <h2 className="heading-md">Manage Seminars / Add New Event</h2>
+                  <h2 className="heading-md">
+                    {editingEventId ? 'Edit / Modify Seminar Event' : 'Manage Seminars / Add New Event'}
+                  </h2>
                 </div>
                 <button onClick={fetchAdminEvents} className="btn btn-secondary btn-refresh">
                   <RefreshCw size={14} /> Refresh Events
@@ -521,9 +593,16 @@ export default function AdminDashboard() {
 
                 <div className="event-form-actions span-2">
                   {eventMessage && <span className="event-message">{eventMessage}</span>}
-                  <button type="submit" disabled={eventSaving} className="btn btn-primary publish-event-btn">
-                    {eventSaving ? 'Publishing Seminar...' : 'Publish Seminar Event'}
-                  </button>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    {editingEventId && (
+                      <button type="button" onClick={handleCancelEdit} className="btn btn-secondary" style={{ height: '44px' }}>
+                        Cancel Edit
+                      </button>
+                    )}
+                    <button type="submit" disabled={eventSaving} className="btn btn-primary publish-event-btn">
+                      {eventSaving ? 'Saving Seminar...' : editingEventId ? 'Update Seminar Event' : 'Publish Seminar Event'}
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>
@@ -536,10 +615,18 @@ export default function AdminDashboard() {
                 <div className="events-table-list">
                   {events.map((event) => (
                     <div key={event.id} className="event-row">
-                      <div>
-                        <strong>{event.title || event.name}</strong>
-                        <span>{event.venue}</span>
-                      </div>
+                       <div>
+                         <strong>{event.title || event.name}</strong>
+                         <span>{event.venue}</span>
+                         <div className="event-row-actions">
+                           <button onClick={() => handleEditClick(event)} className="btn-edit-event">
+                             Edit
+                           </button>
+                           <button onClick={() => handleDeleteEvent(event.id)} className="btn-delete-event">
+                             Delete
+                           </button>
+                         </div>
+                       </div>
                       <div className="event-row-meta">
                         <span>{event.eventDate || 'Scheduled'}</span>
                         <span>{event.eventTime || ''}</span>
@@ -660,6 +747,47 @@ export default function AdminDashboard() {
 
         .dashboard-content {
           margin-top: 2.5rem;
+        }
+
+        .event-row-actions {
+          display: flex;
+          gap: 0.5rem;
+          margin-top: 0.625rem;
+        }
+
+        .btn-edit-event {
+          background: var(--primary-light);
+          color: var(--primary-dark);
+          border: 1px solid var(--border);
+          padding: 0.35rem 0.75rem;
+          border-radius: var(--radius-md);
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+        .btn-edit-event:hover {
+          background: var(--primary);
+          color: white;
+          transform: translateY(-1px);
+        }
+
+        .btn-delete-event {
+          background: #fee2e2;
+          color: #ef4444;
+          border: 1px solid #fca5a5;
+          padding: 0.35rem 0.75rem;
+          border-radius: var(--radius-md);
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+        .btn-delete-event:hover {
+          background: #ef4444;
+          color: white;
+          border-color: #ef4444;
+          transform: translateY(-1px);
         }
 
         .admin-section-tabs {

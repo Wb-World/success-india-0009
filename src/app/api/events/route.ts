@@ -234,3 +234,153 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const adminId = request.headers.get('x-admin-id');
+    if (!adminId) {
+      return NextResponse.json({ error: 'Admin authentication is required' }, { status: 401 });
+    }
+
+    const { data: adminUser, error: adminError } = await supabaseAdmin
+      .from('users')
+      .select('id, role')
+      .eq('id', adminId)
+      .eq('role', 'admin')
+      .single();
+
+    if (adminError || !adminUser) {
+      return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const eventId = String(body.eventId || '').trim();
+    const title = String(body.title || '').trim();
+    const venue = String(body.venue || '').trim();
+    const eventDateTime = String(body.eventDateTime || '').trim();
+    const price = Number(body.price);
+    const totalSeats = Number(body.totalSeats || DEFAULT_TOTAL_SEATS);
+
+    if (!eventId) {
+      return NextResponse.json({ error: 'Event ID is required' }, { status: 400 });
+    }
+
+    if (!title || !venue || !eventDateTime || Number.isNaN(price) || price < 0) {
+      return NextResponse.json(
+        { error: 'Seminar title, venue, event date time, and valid fee are required' },
+        { status: 400 }
+      );
+    }
+
+    if (!Number.isInteger(totalSeats) || totalSeats <= 0) {
+      return NextResponse.json({ error: 'Total available seats must be a positive number' }, { status: 400 });
+    }
+
+    const eventDate = new Date(eventDateTime);
+    if (Number.isNaN(eventDate.getTime())) {
+      return NextResponse.json({ error: 'Please provide a valid event date and time' }, { status: 400 });
+    }
+
+    // 1. Update events table
+    const { error: eventError } = await supabaseAdmin
+      .from('events')
+      .update({
+        title,
+        venue,
+        event_datetime: eventDate.toISOString(),
+        price,
+        total_seats: totalSeats,
+      })
+      .eq('id', eventId);
+
+    if (eventError) {
+      console.error('Update event error:', eventError);
+      return NextResponse.json({ error: eventError.message || 'Failed to update event' }, { status: 500 });
+    }
+
+    // 2. Update legacy buses table
+    const eventTime = getTimePart(eventDate.toISOString());
+    const { error: legacyError } = await supabaseAdmin
+      .from('buses')
+      .upsert({
+        id: eventId,
+        name: title,
+        type: 'Success India Seminar Event',
+        status: DEFAULT_STATUS,
+        source: venue,
+        destination: title,
+        price: price,
+        duration: 'Scheduled Program',
+        times: [eventTime],
+      });
+
+    if (legacyError) {
+      console.error('Legacy seminar mirror update error:', legacyError);
+    }
+
+    return NextResponse.json({ success: true, message: 'Event updated successfully' });
+  } catch (error: any) {
+    console.error('Events PATCH error:', error);
+    return NextResponse.json(
+      { error: error?.message || 'An error occurred updating the event' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const adminId = request.headers.get('x-admin-id');
+    if (!adminId) {
+      return NextResponse.json({ error: 'Admin authentication is required' }, { status: 401 });
+    }
+
+    const { data: adminUser, error: adminError } = await supabaseAdmin
+      .from('users')
+      .select('id, role')
+      .eq('id', adminId)
+      .eq('role', 'admin')
+      .single();
+
+    if (adminError || !adminUser) {
+      return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const eventId = searchParams.get('eventId');
+
+    if (!eventId) {
+      return NextResponse.json({ error: 'Event ID is required' }, { status: 400 });
+    }
+
+    // 1. Delete from events table
+    const { error: eventError } = await supabaseAdmin
+      .from('events')
+      .delete()
+      .eq('id', eventId);
+
+    if (eventError) {
+      console.error('Delete event error:', eventError);
+      return NextResponse.json({ error: eventError.message || 'Failed to delete event' }, { status: 500 });
+    }
+
+    // 2. Delete from legacy buses table
+    const { error: legacyError } = await supabaseAdmin
+      .from('buses')
+      .delete()
+      .eq('id', eventId);
+
+    if (legacyError) {
+      console.error('Delete legacy bus error:', legacyError);
+    }
+
+    return NextResponse.json({ success: true, message: 'Event deleted successfully' });
+  } catch (error: any) {
+    console.error('Events DELETE error:', error);
+    return NextResponse.json(
+      { error: error?.message || 'An error occurred deleting the event' },
+      { status: 500 }
+    );
+  }
+}
+
