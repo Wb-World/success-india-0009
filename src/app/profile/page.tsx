@@ -431,7 +431,7 @@ export default function Profile() {
           <div className="info-card glass-card hover-lift">
             <div className="avatar-section">
               <div className="avatar-circle">
-                <img src="/success-india-logo.jpeg" alt="Success India logo" className="member-logo" />
+                <img src="/success-india-logo.jpeg?v=2" alt="Success India logo" className="member-logo" />
               </div>
               <h2 className="heading-md user-fullname">{currentUser.name}</h2>
               <span className="user-role-badge">Official Delegate</span>

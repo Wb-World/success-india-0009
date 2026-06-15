@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -17,6 +16,7 @@ import {
   Target,
   Users,
 } from 'lucide-react';
+import SeatBookingModal from './components/SeatBookingModal';
 
 const fallbackLocations = [
   'Chromepet, Chennai',
@@ -45,10 +45,10 @@ type SeminarEvent = {
   name?: string;
   legacySource?: string;
   legacyDestination?: string;
+  bookedSeatsByTime?: Record<string, string[]>;
 };
 
 export default function Home() {
-  const router = useRouter();
   const [events, setEvents] = useState<SeminarEvent[]>([]);
   const [venue, setVenue] = useState(fallbackLocations[0]);
   const [seminar, setSeminar] = useState(fallbackEventCategories[0]);
@@ -59,7 +59,8 @@ export default function Home() {
     return d.toISOString().split('T')[0];
   });
 
-
+  // Modal state
+  const [modalEvent, setModalEvent] = useState<SeminarEvent | null>(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -91,7 +92,7 @@ export default function Home() {
   }, []);
 
   const eventLocations = events.length
-    ? Array.from(new Set(events.map((event) => event.venue || event.legacySource).filter(Boolean))) as string[]
+    ? (Array.from(new Set(events.map((event) => event.venue || event.legacySource).filter(Boolean))) as string[])
     : fallbackLocations;
 
   const visibleEvents = events.length
@@ -107,7 +108,6 @@ export default function Home() {
       setSeminar(eventIdOrTitle);
       return;
     }
-
     setSelectedEventId(event.id);
     setVenue(event.venue || event.legacySource || venue);
     setSeminar(event.title || event.name || seminar);
@@ -126,31 +126,47 @@ export default function Home() {
     }
   };
 
+  // Search navigates to /book page (no auth required)
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
     const eventParam = selectedEventId ? `&eventId=${encodeURIComponent(selectedEventId)}` : '';
-    const bookingPath = `/book?venue=${encodeURIComponent(venue)}&seminar=${encodeURIComponent(seminar)}&date=${encodeURIComponent(date)}${eventParam}`;
-    
-    if (!storedUser) {
-      router.push(`/profile?callbackUrl=${encodeURIComponent(bookingPath)}`);
+    window.location.href = `/book?venue=${encodeURIComponent(venue)}&seminar=${encodeURIComponent(seminar)}&date=${encodeURIComponent(date)}${eventParam}`;
+  };
+
+  // Open modal for an event card click
+  const handleEventCardClick = (event: SeminarEvent) => {
+    setModalEvent(event);
+  };
+
+  // Open modal for hero CTA — use first available event or navigate to /book
+  const handleReserveClick = () => {
+    if (events.length > 0) {
+      setModalEvent(events[0]);
     } else {
-      router.push(bookingPath);
+      window.location.href = '/book';
     }
   };
 
   return (
     <div className="landing-page">
+      {/* Seat Booking Modal */}
+      {modalEvent && (
+        <SeatBookingModal
+          event={modalEvent}
+          onClose={() => setModalEvent(null)}
+        />
+      )}
+
       <div className="landing-page-content">
         <section className="hero-section">
         <div className="container hero-container">
           <div className="hero-text-col animate-slide-up">
             <span className="hero-tagline">
               <ShieldCheck size={16} />
-              Official Networking & Leadership Portal
+              Official Networking &amp; Leadership Portal
             </span>
             <h1 className="hero-title">
-              Empowering Your Growth: Book Your Next <span className="text-highlight">Success Seminar</span> & Chapter Meetup
+              Empowering Your Growth: Book Your Next <span className="text-highlight">Success Seminar</span> &amp; Chapter Meetup
             </h1>
             <p className="hero-subtitle">
               Reserve your seats for official leadership development programs, recruitment training, and weekly income-generation strategy sessions hosted across Tamil Nadu.
@@ -166,15 +182,8 @@ export default function Home() {
               </div>
             </div>
             <div className="hero-cta-buttons">
-              <button 
-                onClick={() => {
-                  const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-                  if (!storedUser) {
-                    router.push('/profile?callbackUrl=%2Fbook');
-                  } else {
-                    router.push('/book');
-                  }
-                }}
+              <button
+                onClick={handleReserveClick}
                 className="btn btn-primary btn-lg-premium"
                 style={{ cursor: 'pointer' }}
               >
@@ -298,7 +307,7 @@ export default function Home() {
       <section className="stats-section">
         <div className="container trust-container">
           <div className="trust-copy">
-            <span className="section-eyebrow">Trust & Due Diligence</span>
+            <span className="section-eyebrow">Trust &amp; Due Diligence</span>
             <h2 className="heading-lg">Clear information before every registration</h2>
             <p>
               The provided context notes mixed consumer reviews and recommends careful due diligence. This portal presents seminar categories, locations, dates, and official resources plainly so attendees can review details before reserving seats.
@@ -325,7 +334,7 @@ export default function Home() {
         <div className="section-header">
           <span className="section-eyebrow">Popular Seminar Tracks</span>
           <h2 className="heading-lg">Reserve seats for the next Success India session</h2>
-          <p className="section-subtitle">Quick access to the most relevant registration paths from the business profile.</p>
+          <p className="section-subtitle">Click any event card to instantly open seat booking.</p>
         </div>
 
         <div className="routes-grid">
@@ -333,31 +342,29 @@ export default function Home() {
             const event = typeof item === 'string' ? null : item;
             const category = event ? event.title || event.name || fallbackEventCategories[index] : String(item);
             const location = event ? event.venue || event.legacySource || fallbackLocations[index] : fallbackLocations[index];
-            const eventParam = event ? `&eventId=${encodeURIComponent(event.id)}` : '';
             return (
-            <div
-              key={category}
-              className="seminar-track-card"
-              onClick={() => {
-                const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-                const bookingPath = `/book?venue=${encodeURIComponent(location)}&seminar=${encodeURIComponent(category)}${eventParam}`;
-                if (!storedUser) {
-                  router.push(`/profile?callbackUrl=${encodeURIComponent(bookingPath)}`);
-                } else {
-                  router.push(bookingPath);
-                }
-              }}
-            >
-              <div className="seminar-track-info">
-                <div className="seminar-track-title">{category}</div>
-                <div className="seminar-track-details">{location} <ArrowRight size={13} /> Seat registration</div>
+              <div
+                key={category}
+                className="seminar-track-card"
+                onClick={() => {
+                  if (event) {
+                    handleEventCardClick(event);
+                  } else {
+                    window.location.href = `/book?seminar=${encodeURIComponent(category)}`;
+                  }
+                }}
+              >
+                <div className="seminar-track-info">
+                  <div className="seminar-track-title">{category}</div>
+                  <div className="seminar-track-details">{location} <ArrowRight size={13} /> Seat registration</div>
+                </div>
+                <div className="seminar-fee-tag">
+                  <span>{event ? 'Fee' : 'Track'}</span>
+                  <span className="price-num">{event ? `₹${event.price}` : `0${index + 1}`}</span>
+                </div>
               </div>
-              <div className="seminar-fee-tag">
-                <span>{event ? 'Fee' : 'Track'}</span>
-                <span className="price-num">{event ? `₹${event.price}` : `0${index + 1}`}</span>
-              </div>
-            </div>
-          )})}
+            );
+          })}
         </div>
       </section>
 

@@ -2,8 +2,6 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import GlobalTransitionLoader from './components/GlobalTransitionLoader';
-import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'Success India - Official Seminar & Leadership Portal',
@@ -11,17 +9,17 @@ export const metadata: Metadata = {
   keywords: 'Success India, seminar booking, leadership development, chapter meetups, Tamil Nadu, Chromepet Chennai, direct selling workshops',
   icons: {
     icon: [
-      { url: '/favicon.png', type: 'image/png', sizes: '32x32' },
-      { url: '/favicon.png', type: 'image/png', sizes: '16x16' },
+      { url: '/favicon.png?v=2', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon.png?v=2', type: 'image/png', sizes: '16x16' },
     ],
-    shortcut: '/favicon.png',
-    apple: { url: '/favicon.png', sizes: '180x180' },
+    shortcut: '/favicon.png?v=2',
+    apple: { url: '/favicon.png?v=2', sizes: '180x180' },
   },
   openGraph: {
     title: 'Success India - Official Seminar & Leadership Portal',
     description: 'Official seminar registration, leadership development, and chapter meetup portal for Success India.',
     type: 'website',
-    images: ['/favicon.png'],
+    images: ['/favicon.png?v=2'],
   },
 };
 
@@ -33,15 +31,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
-        <link rel="shortcut icon" href="/favicon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=2" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=2" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png?v=2" />
+        <link rel="shortcut icon" href="/favicon.png?v=2" />
       </head>
       <body>
-        <Suspense fallback={null}>
-          <GlobalTransitionLoader />
-        </Suspense>
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
           <Navbar />
           <main style={{ flex: 1 }}>{children}</main>

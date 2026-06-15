@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
@@ -8,57 +8,24 @@ import { Mail, Phone, MapPin, Send } from 'lucide-react';
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const pathname = usePathname();
-  const [sessionUser, setSessionUser] = useState<{ name: string; role: string } | null>(null);
-  const [mounted, setMounted] = useState(false);
 
-  // Newsletter state hooks
+  // Newsletter state
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    setMounted(true);
-    const checkAuth = () => {
-      const stored = localStorage.getItem('user');
-      if (stored) {
-        try {
-          setSessionUser(JSON.parse(stored));
-        } catch (e) {
-          console.error(e);
-        }
-      } else {
-        setSessionUser(null);
-      }
-    };
-
-    checkAuth();
-    window.addEventListener('auth-change', checkAuth);
-    return () => window.removeEventListener('auth-change', checkAuth);
-  }, [pathname]);
-
-  if (!mounted) return null;
-
-  // Suppress footer completely on admin pages
-  if (pathname.startsWith('/admin')) {
-    return null;
-  }
-
-  const isLoggedIn = !!sessionUser;
-  const isAdmin = sessionUser?.role === 'admin';
+  // Suppress footer on admin pages
+  if (pathname.startsWith('/admin')) return null;
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-
-    setStatus('loading');
     setMessage('');
 
     try {
       const res = await fetch('/api/subscribe', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
 
@@ -84,7 +51,7 @@ export default function Footer() {
       <div className="container footer-grid">
         <div className="footer-brand-col">
           <Link href="/" className="footer-logo">
-            <img src="/success-india-logo.jpeg" alt="Success India logo" className="footer-logo-img" />
+            <img src="/success-india-logo.jpeg?v=2" alt="Success India logo" className="footer-logo-img" />
             <span>Success<span className="text-primary"> India</span></span>
           </Link>
           <p className="footer-desc">
@@ -109,25 +76,10 @@ export default function Footer() {
         <div className="footer-links-col">
           <h4 className="footer-title">Quick Links</h4>
           <ul className="footer-links">
-            {!isLoggedIn ? (
-              <>
-                <li><Link href="/">Home Page</Link></li>
-                <li><Link href="/about">About Portal</Link></li>
-                <li><Link href="/contact">Contact Support</Link></li>
-                <li><Link href="/book">Book Seminars</Link></li>
-              </>
-            ) : (
-              <>
-                {!isAdmin ? (
-                  <>
-                    <li><Link href="/profile">Dashboard</Link></li>
-                    <li><Link href="/book">Book Seminars</Link></li>
-                  </>
-                ) : (
-                  <li><Link href="/admin/dashboard">Operations Console</Link></li>
-                )}
-              </>
-            )}
+            <li><Link href="/">Home Page</Link></li>
+            <li><Link href="/about">About Portal</Link></li>
+            <li><Link href="/contact">Contact Support</Link></li>
+            <li><Link href="/book">Book Seminars</Link></li>
           </ul>
         </div>
 
@@ -147,26 +99,16 @@ export default function Footer() {
             Subscribe for local chapter updates, seminar reminders, and official resource notices.
           </p>
           <form className="newsletter-form" onSubmit={handleSubscribe}>
-            <input 
-              type="email" 
-              placeholder="Enter your email" 
-              className="newsletter-input" 
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="newsletter-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={status === 'loading'}
-              required 
+              required
             />
-            <button 
-              type="submit" 
-              className="newsletter-btn"
-              disabled={status === 'loading'}
-              aria-label="Subscribe"
-            >
-              {status === 'loading' ? (
-                <span className="spinner"></span>
-              ) : (
-                <Send size={16} />
-              )}
+            <button type="submit" className="newsletter-btn" aria-label="Subscribe">
+              <Send size={16} />
             </button>
           </form>
           {message && (
@@ -180,12 +122,12 @@ export default function Footer() {
       <div className="footer-bottom">
         <div className="container footer-bottom-flex">
           <p className="copyright-text">
-            &copy; {currentYear} Success India - Official Seminar & Leadership Portal. All rights reserved.
+            &copy; {currentYear} Success India - Official Seminar &amp; Leadership Portal. All rights reserved.
           </p>
           <div className="footer-legal-links">
             <Link href="/contact">Privacy Policy</Link>
             <span className="bullet-dot"></span>
-            <Link href="/contact">Terms & Conditions</Link>
+            <Link href="/contact">Terms &amp; Conditions</Link>
           </div>
         </div>
       </div>
@@ -250,6 +192,8 @@ export default function Footer() {
           border: 2px solid rgba(255,255,255,0.5);
           flex-shrink: 0;
         }
+
+        .text-primary { color: #ffffff; opacity: 0.85; }
 
         .footer-desc {
           line-height: 1.6;
@@ -366,29 +310,8 @@ export default function Footer() {
           min-width: 50px;
         }
 
-        .newsletter-btn:hover:not(:disabled) {
+        .newsletter-btn:hover {
           background: #dcfce7;
-        }
-
-        .newsletter-btn:disabled {
-          cursor: not-allowed;
-          background: rgba(255, 255, 255, 0.7);
-        }
-
-        .spinner {
-          display: inline-block;
-          width: 16px;
-          height: 16px;
-          border: 2px solid rgba(22, 163, 74, 0.3);
-          border-radius: 50%;
-          border-top-color: #16a34a;
-          animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
         }
 
         .newsletter-status-message {
@@ -398,17 +321,8 @@ export default function Footer() {
           font-weight: 500;
         }
 
-        .newsletter-status-message.success {
-          color: #dcfce7;
-        }
-
-        .newsletter-status-message.error {
-          color: #fecaca;
-        }
-
-        .newsletter-status-message.loading {
-          color: rgba(255, 255, 255, 0.7);
-        }
+        .newsletter-status-message.success { color: #dcfce7; }
+        .newsletter-status-message.error { color: #fecaca; }
 
         .footer-bottom {
           border-top: 1px solid rgba(255,255,255,0.25);
@@ -432,9 +346,7 @@ export default function Footer() {
             align-items: center;
             text-align: left;
           }
-          .footer-legal-links {
-            justify-content: flex-end;
-          }
+          .footer-legal-links { justify-content: flex-end; }
         }
 
         .footer-legal-links {
@@ -445,19 +357,15 @@ export default function Footer() {
           justify-content: center;
         }
 
-        .footer-legal-links a {
-          color: rgba(255,255,255,0.75);
-        }
-
-        .footer-legal-links a:hover {
-          color: #ffffff;
-        }
+        .footer-legal-links a { color: rgba(255,255,255,0.75); }
+        .footer-legal-links a:hover { color: #ffffff; }
 
         .bullet-dot {
           width: 4px;
           height: 4px;
           background-color: rgba(255,255,255,0.5);
           border-radius: 50%;
+          display: inline-block;
         }
       `}</style>
     </footer>

@@ -6,13 +6,28 @@ import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, Eye, R
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [adminUser, setAdminUser] = useState<any>(null);
+  const [adminUser, setAdminUser] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        try {
+          const u = JSON.parse(stored);
+          if (u.role === 'admin') {
+            return u;
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+    return null;
+  });
   const [bookings, setBookings] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'denied'>('pending');
   const [mounted, setMounted] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [adminSection, setAdminSection] = useState<'registrations' | 'events'>('registrations');
+  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs'>('registrations');
   const [events, setEvents] = useState<any[]>([]);
   const [eventSaving, setEventSaving] = useState(false);
   const [eventMessage, setEventMessage] = useState('');
@@ -26,6 +41,12 @@ export default function AdminDashboard() {
     price: '250',
     totalSeats: '60',
   });
+
+  // Payment configuration settings
+  const [upiSettings, setUpiSettings] = useState({ upiId: '', upiName: '', upiQrUrl: '' });
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsMessage, setSettingsMessage] = useState('');
+  const [isUploadingQr, setIsUploadingQr] = useState(false);
 
   // Statistic counters
   const [stats, setStats] = useState({
@@ -56,13 +77,13 @@ export default function AdminDashboard() {
       setAdminUser(u);
       fetchAdminBookings(u.id);
       fetchAdminEvents();
+      fetchAdminConfigs();
     } catch (e) {
       router.push('/admin/login');
     }
   };
 
   const fetchAdminBookings = async (adminId: string) => {
-    setLoading(true);
     try {
       const res = await fetch('/api/admin/bookings', {
         headers: {
@@ -83,8 +104,6 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error('Error fetching bookings:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -122,6 +141,85 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error('Error fetching seminar events:', err);
+    }
+  };
+
+  const fetchAdminConfigs = async () => {
+    try {
+      const res = await fetch('/api/admin/configs');
+      if (res.ok) {
+        const data = await res.json();
+        const upiId = data.configs.find((c: any) => c.key === 'upi_id')?.value || '';
+        const upiName = data.configs.find((c: any) => c.key === 'upi_name')?.value || '';
+        const upiQrUrl = data.configs.find((c: any) => c.key === 'upi_qr_url')?.value || '';
+        setUpiSettings({ upiId, upiName, upiQrUrl });
+      }
+    } catch (err) {
+      console.error('Error fetching configurations:', err);
+    }
+  };
+
+  const handleQrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingQr(true);
+    setSettingsMessage('');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/bookings/upload-proof', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setUpiSettings((prev) => ({ ...prev, upiQrUrl: data.url }));
+        setSettingsMessage('QR image uploaded successfully. Click Save Settings to persist.');
+      } else {
+        setSettingsMessage(data.error || 'Failed to upload QR image');
+      }
+    } catch (err) {
+      setSettingsMessage('Error uploading QR image');
+    } finally {
+      setIsUploadingQr(false);
+    }
+  };
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminUser?.id) return;
+
+    setSettingsLoading(true);
+    setSettingsMessage('');
+
+    try {
+      const res = await fetch('/api/admin/configs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-id': adminUser.id,
+        },
+        body: JSON.stringify({
+          upiId: upiSettings.upiId,
+          upiName: upiSettings.upiName,
+          upiQrUrl: upiSettings.upiQrUrl,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setSettingsMessage('Payment gateway settings saved successfully.');
+      } else {
+        setSettingsMessage(data.error || 'Failed to save settings');
+      }
+    } catch (err) {
+      setSettingsMessage('Network error saving settings');
+    } finally {
+      setSettingsLoading(false);
     }
   };
 
@@ -278,36 +376,7 @@ export default function AdminDashboard() {
     router.push('/admin/login');
   };
 
-  if (!mounted) return null;
-
-  if (loading && !adminUser) {
-    return (
-      <div className="admin-loading">
-        <div className="spinner"></div>
-        <p>Loading administrator workspace...</p>
-        <style jsx>{`
-          .admin-loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 10rem 0;
-            gap: 1rem;
-            color: var(--muted);
-          }
-          .spinner {
-            border: 3px solid rgba(16, 185, 129, 0.1);
-            border-left-color: var(--primary);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          }
-          @keyframes spin { to { transform: rotate(360deg); } }
-        `}</style>
-      </div>
-    );
-  }
+  if (!mounted || !adminUser) return null;
 
   // Filter bookings strictly by active status tab
   const filteredBookings = bookings.filter((b) => b.status === activeTab);
@@ -318,7 +387,7 @@ export default function AdminDashboard() {
       <div className="admin-header-bar animate-slide-down">
         <div className="container header-flex">
           <div className="admin-title-logo">
-            <img src="/success-india-logo.jpeg" alt="Success India logo" className="brand-logo-img" />
+            <img src="/success-india-logo.jpeg?v=2" alt="Success India logo" className="brand-logo-img" />
             <div>
               <h1 className="admin-workspace-title">
                 Success<span className="text-primary-green"> India</span>
@@ -382,13 +451,19 @@ export default function AdminDashboard() {
             onClick={() => setAdminSection('registrations')}
             className={`section-tab ${adminSection === 'registrations' ? 'active' : ''}`}
           >
-            Registration Approvals
+            Payment Verification
           </button>
           <button
             onClick={() => setAdminSection('events')}
             className={`section-tab ${adminSection === 'events' ? 'active' : ''}`}
           >
             Manage Seminars / Add New Event
+          </button>
+          <button
+            onClick={() => setAdminSection('configs')}
+            className={`section-tab ${adminSection === 'configs' ? 'active' : ''}`}
+          >
+            Payment Gateway Settings
           </button>
         </div>
 
@@ -401,19 +476,19 @@ export default function AdminDashboard() {
                 onClick={() => setActiveTab('pending')} 
                 className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
               >
-                Pending Registrations ({stats.pendingCount})
+                Pending Verification ({stats.pendingCount})
               </button>
               <button 
                 onClick={() => setActiveTab('approved')} 
                 className={`tab-btn ${activeTab === 'approved' ? 'active' : ''}`}
               >
-                Approved History ({stats.approvedCount})
+                Confirmed Bookings ({stats.approvedCount})
               </button>
               <button 
                 onClick={() => setActiveTab('denied')} 
                 className={`tab-btn ${activeTab === 'denied' ? 'active' : ''}`}
               >
-                Rejected Log ({stats.deniedCount})
+                Payment Failed Logs ({stats.deniedCount})
               </button>
             </div>
             <button onClick={() => fetchAdminBookings(adminUser.id)} className="btn btn-secondary btn-refresh hover-spin-icon">
@@ -421,13 +496,7 @@ export default function AdminDashboard() {
             </button>
           </div>
 
-          {/* Bookings stream */}
-          {loading ? (
-            <div className="list-loading-spinner">
-              <div className="spinner"></div>
-              <p>Fetching database logs...</p>
-            </div>
-          ) : filteredBookings.length === 0 ? (
+          {filteredBookings.length === 0 ? (
             <div className="empty-stream-card glass-card">
               <Ticket size={48} className="empty-icon" />
               <h3 className="heading-sm">No Records Found</h3>
@@ -444,7 +513,9 @@ export default function AdminDashboard() {
                       <span className="item-booking-id">ORDER ID: {b.id.toUpperCase()}</span>
                       <span className="item-created-at">Received: {new Date(b.createdAt).toLocaleString()}</span>
                     </div>
-                    <span className={`badge badge-${b.status}`}>{b.status === 'pending' ? 'Pending Audit' : b.status}</span>
+                    <span className={`badge badge-${b.status}`}>
+                      {b.status === 'pending' ? 'Pending Verification' : b.status === 'approved' ? 'Confirmed' : 'Payment Failed'}
+                    </span>
                   </div>
 
                   {/* Main Grid: Details vs Screenshot */}
@@ -499,13 +570,13 @@ export default function AdminDashboard() {
                         onClick={() => handleStatusUpdate(b.id, 'denied')} 
                         className="btn btn-deny-action"
                       >
-                        <X size={16} /> Deny Booking
+                        <X size={16} /> Reject Payment
                       </button>
                       <button 
                         onClick={() => handleStatusUpdate(b.id, 'approved')} 
                         className="btn btn-approve-action"
                       >
-                        <Check size={16} /> Approve Booking
+                        <Check size={16} /> Approve Payment
                       </button>
                     </div>
                   )}
@@ -515,7 +586,7 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
-        ) : (
+        ) : adminSection === 'events' ? (
           <div className="event-manager-area animate-slide-up">
             <div className="event-form-card glass-card">
               <div className="event-manager-header">
@@ -600,7 +671,7 @@ export default function AdminDashboard() {
                         Cancel Edit
                       </button>
                     )}
-                    <button type="submit" disabled={eventSaving} className="btn btn-primary publish-event-btn">
+                    <button type="submit" disabled={eventSaving} className="btn btn-primary publish-event-btn" style={{ height: '44px' }}>
                       {eventSaving ? 'Saving Seminar...' : editingEventId ? 'Update Seminar Event' : 'Publish Seminar Event'}
                     </button>
                   </div>
@@ -638,6 +709,86 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        ) : (
+          <div className="payment-settings-area animate-slide-up">
+            <div className="event-form-card glass-card">
+              <div className="event-manager-header">
+                <div>
+                  <span className="manager-kicker">Payment Configuration</span>
+                  <h2 className="heading-md">Payment Gateway Settings</h2>
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveSettings} className="event-form-grid">
+                <div className="event-form-group">
+                  <label className="form-label">UPI ID Address</label>
+                  <input
+                    type="text"
+                    value={upiSettings.upiId}
+                    onChange={(e) => setUpiSettings({ ...upiSettings, upiId: e.target.value })}
+                    className="form-control"
+                    placeholder="successindia@upi"
+                    required
+                  />
+                </div>
+
+                <div className="event-form-group">
+                  <label className="form-label">Account Beneficiary Name</label>
+                  <input
+                    type="text"
+                    value={upiSettings.upiName}
+                    onChange={(e) => setUpiSettings({ ...upiSettings, upiName: e.target.value })}
+                    className="form-control"
+                    placeholder="david"
+                    required
+                  />
+                </div>
+
+                <div className="event-form-group span-2">
+                  <label className="form-label">Custom QR Code Image (Optional)</label>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.25rem' }}>
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp"
+                      onChange={handleQrUpload}
+                      style={{ display: 'none' }}
+                      id="admin-qr-file"
+                    />
+                    <label htmlFor="admin-qr-file" className="btn btn-secondary" style={{ cursor: 'pointer', margin: 0 }}>
+                      {isUploadingQr ? 'Uploading Image...' : 'Choose QR Image file'}
+                    </label>
+                    {upiSettings.upiQrUrl && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <img 
+                          src={upiSettings.upiQrUrl} 
+                          alt="Configured QR Code" 
+                          style={{ width: '50px', height: '50px', borderRadius: '6px', border: '1px solid #d1d5db', objectFit: 'cover' }} 
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => setUpiSettings(prev => ({ ...prev, upiQrUrl: '' }))} 
+                          className="btn btn-secondary" 
+                          style={{ padding: '4px 8px', fontSize: '0.75rem', color: '#dc2626', border: '1px solid #fca5a5' }}
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <p style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: '0.5rem', lineHeight: '1.4' }}>
+                    If no custom QR code image is uploaded, the booking portal will automatically generate a dynamic UPI scan-and-pay QR code for the customer&apos;s total fee amount!
+                  </p>
+                </div>
+
+                <div className="event-form-actions span-2" style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+                  {settingsMessage && <span className="event-message">{settingsMessage}</span>}
+                  <button type="submit" className="btn btn-primary" disabled={settingsLoading} style={{ height: '44px' }}>
+                    {settingsLoading ? 'Saving Settings...' : 'Save Payment Settings'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
