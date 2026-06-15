@@ -220,6 +220,12 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Added Console Logs for debugging as requested
+    console.log('--- Client Upload Debug ---');
+    console.log('Selected file:', file.name);
+    console.log('File size:', file.size, 'bytes');
+    console.log('File type:', file.type);
+
     setIsUploading(true);
     setUploadError(null);
 
@@ -233,13 +239,18 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       });
 
       const data = await res.json();
+      console.log('API response status:', res.status);
+      console.log('API response data:', data);
+
       if (res.ok && data.url) {
+        console.log('Upload path / base64 URL:', data.url.substring(0, 100) + '...');
         setScreenshotUrl(data.url);
       } else {
         setUploadError(data.error || 'Failed to upload screenshot');
       }
-    } catch (err) {
-      setUploadError('Network error uploading screenshot');
+    } catch (err: any) {
+      console.error('Upload request failed:', err);
+      setUploadError(`Network error: ${err.message || String(err)}`);
     } finally {
       setIsUploading(false);
     }
