@@ -257,7 +257,6 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   };
 
   const handleConfirmBooking = async () => {
-    if (!screenshotUrl) return;
     setIsSubmitting(true);
     const newBookingId = generateBookingId();
     const ts = formatTimestamp();
@@ -274,7 +273,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       time: event.eventTime || '10:00 AM',
       seats: selectedSeats,
       totalPrice,
-      screenshot: screenshotUrl,
+      screenshot: screenshotUrl || 'DIRECT_BOOKING',
     };
 
     try {
@@ -705,7 +704,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
               <button 
                 className="sbm-confirm-btn" 
                 onClick={handleConfirmBooking} 
-                disabled={isSubmitting || !screenshotUrl}
+                disabled={isSubmitting}
                 style={{ maxWidth: '300px' }}
               >
                 {isSubmitting ? 'Verifying Booking...' : 'Confirm Booking'}
