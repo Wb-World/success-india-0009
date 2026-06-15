@@ -247,9 +247,12 @@ export default function AdminDashboard() {
       <div className="admin-header-bar animate-slide-down">
         <div className="container header-flex">
           <div className="admin-title-logo">
-            <Shield className="logo-shield animate-pulse" />
+            <img src="/success-india-logo.jpeg" alt="Success India logo" className="brand-logo-img" />
             <div>
-              <h1 className="admin-workspace-title">Success India Operations Console</h1>
+              <h1 className="admin-workspace-title">
+                Success<span className="text-primary-green"> India</span>
+                <span className="workspace-suffix">Operations Console</span>
+              </h1>
               <span className="admin-user-tag">Administrator Node: {adminUser?.name}</span>
             </div>
           </div>
@@ -565,16 +568,17 @@ export default function AdminDashboard() {
 
       <style jsx>{`
         .admin-dashboard-page {
-          background-color: var(--background);
+          background: linear-gradient(to bottom, #f0fdf4 0%, #ffffff 100%);
           min-height: 100vh;
           padding-bottom: 5rem;
         }
 
         .admin-header-bar {
-          background: #022c22;
-          color: white;
-          padding: 1.25rem 0;
-          box-shadow: var(--shadow-md);
+          background: #ffffff;
+          color: #000000;
+          padding: 1rem 0;
+          box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+          border-bottom: 1px solid var(--border);
         }
 
         .header-flex {
@@ -589,10 +593,31 @@ export default function AdminDashboard() {
           gap: 0.75rem;
         }
 
-        .logo-shield {
+        .brand-logo-img {
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1px solid rgba(22, 163, 74, 0.22);
+          filter: drop-shadow(0 2px 6px rgba(22, 163, 74, 0.25));
+          flex-shrink: 0;
+        }
+
+        .text-primary-green {
           color: var(--primary);
-          width: 32px;
-          height: 32px;
+        }
+
+        .workspace-suffix {
+          font-weight: 500;
+          color: var(--muted);
+          margin-left: 0.35rem;
+          font-size: 1.15rem;
+        }
+
+        @media (max-width: 640px) {
+          .workspace-suffix {
+            display: none;
+          }
         }
 
         .admin-workspace-title {
@@ -600,18 +625,22 @@ export default function AdminDashboard() {
           font-size: 1.4rem;
           font-weight: 800;
           line-height: 1.2;
+          color: #000000;
+          margin: 0;
+          display: inline-flex;
+          align-items: center;
         }
 
         .admin-user-tag {
           font-size: 0.75rem;
-          color: #a7f3d0;
+          color: var(--muted);
           font-weight: 500;
         }
 
         .btn-admin-logout {
-          background: rgba(239, 68, 68, 0.1);
-          color: #fca5a5;
-          border: 1px solid rgba(239, 68, 68, 0.25);
+          background: #ffffff;
+          color: #ef4444;
+          border: 1px solid #fee2e2;
           padding: 0.5rem 1rem;
           border-radius: var(--radius-lg);
           font-weight: 600;
@@ -624,10 +653,10 @@ export default function AdminDashboard() {
         }
 
         .btn-admin-logout:hover {
-          background: #ef4444;
-          color: white;
-          border-color: #ef4444;
+          background: #fee2e2;
+          border-color: #fca5a5;
           transform: translateY(-1px);
+          color: #ef4444;
         }
 
         .dashboard-content {
