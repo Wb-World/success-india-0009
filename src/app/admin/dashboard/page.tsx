@@ -17,6 +17,8 @@ export default function AdminDashboard() {
   const [eventSaving, setEventSaving] = useState(false);
   const [eventMessage, setEventMessage] = useState('');
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [eventForm, setEventForm] = useState({
     title: 'Success India Leadership Development Seminar',
     venue: 'Chromepet, Chennai',
@@ -209,13 +211,11 @@ export default function AdminDashboard() {
     });
   };
 
-  const handleDeleteEvent = async (eventId: string) => {
-    if (!confirm('Are you sure you want to permanently delete this seminar event? This cannot be undone.')) {
-      return;
-    }
+  const handleConfirmDelete = async () => {
+    if (!selectedEventId || !adminUser?.id) return;
 
     try {
-      const res = await fetch(`/api/events?eventId=${eventId}`, {
+      const res = await fetch(`/api/events?eventId=${selectedEventId}`, {
         method: 'DELETE',
         headers: {
           'x-admin-id': adminUser.id,
@@ -223,11 +223,12 @@ export default function AdminDashboard() {
       });
 
       if (res.ok) {
-        alert('Event deleted successfully');
         fetchAdminEvents();
-        if (editingEventId === eventId) {
+        if (editingEventId === selectedEventId) {
           handleCancelEdit();
         }
+        setDeleteModalOpen(false);
+        setSelectedEventId(null);
       } else {
         const data = await res.json();
         alert(data.error || 'Failed to delete event');
@@ -622,7 +623,7 @@ export default function AdminDashboard() {
                            <button onClick={() => handleEditClick(event)} className="btn-edit-event">
                              Edit
                            </button>
-                           <button onClick={() => handleDeleteEvent(event.id)} className="btn-delete-event">
+                           <button onClick={() => { setSelectedEventId(event.id); setDeleteModalOpen(true); }} className="btn-delete-event">
                              Delete
                            </button>
                          </div>
@@ -648,6 +649,43 @@ export default function AdminDashboard() {
           <div className="lightbox-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <button className="lightbox-close" onClick={() => setZoomedImage(null)}>&times;</button>
             <img src={zoomedImage} alt="Receipt Full Size" className="lightbox-image" />
+          </div>
+        </div>
+      )}
+
+      {/* Custom Delete Confirmation Modal */}
+      {deleteModalOpen && (
+        <div className="confirm-modal-overlay" onClick={() => { setDeleteModalOpen(false); setSelectedEventId(null); }}>
+          <div className="confirm-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-modal-header">
+              <div className="confirm-modal-icon-box">
+                <svg className="confirm-modal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </div>
+              <h2 className="confirm-modal-title">Permanently Delete Event?</h2>
+              <p className="confirm-modal-desc">
+                Are you sure you want to permanently delete this seminar event? This action cannot be undone.
+              </p>
+            </div>
+            <div className="confirm-modal-actions">
+              <button 
+                type="button" 
+                onClick={() => { setDeleteModalOpen(false); setSelectedEventId(null); }} 
+                className="btn-modal-cancel"
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={handleConfirmDelete} 
+                className="btn-modal-delete"
+              >
+                Confirm Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -788,6 +826,130 @@ export default function AdminDashboard() {
           color: white;
           border-color: #ef4444;
           transform: translateY(-1px);
+        }
+
+        /* Custom Deletion Confirmation Modal */
+        .confirm-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.4);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10000;
+          animation: modalFadeIn 0.2s ease-out forwards;
+        }
+
+        .confirm-modal-card {
+          background: #ffffff;
+          border-radius: var(--radius-xl);
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+          max-width: 400px;
+          width: 100%;
+          padding: 1.5rem;
+          margin: 0 1rem;
+          text-align: center;
+          animation: modalZoomIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .confirm-modal-header {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .confirm-modal-icon-box {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          background: #fee2e2;
+          color: #ef4444;
+          margin-bottom: 0.25rem;
+        }
+
+        .confirm-modal-icon {
+          width: 24px;
+          height: 24px;
+        }
+
+        .confirm-modal-title {
+          font-family: var(--font-heading);
+          font-size: 1.25rem;
+          font-weight: 800;
+          color: var(--foreground);
+          margin: 0;
+        }
+
+        .confirm-modal-desc {
+          font-size: 0.9rem;
+          color: var(--muted);
+          line-height: 1.5;
+          margin: 0 0 1.5rem 0;
+        }
+
+        .confirm-modal-actions {
+          display: flex;
+          gap: 0.75rem;
+          justify-content: center;
+        }
+
+        .btn-modal-cancel {
+          background: #ffffff;
+          color: var(--muted);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          padding: 0.55rem 1.25rem;
+          font-size: 0.875rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+          flex: 1;
+        }
+        .btn-modal-cancel:hover {
+          background: #f9fafb;
+          color: var(--foreground);
+          border-color: #a7f3d0;
+        }
+
+        .btn-modal-delete {
+          background: #ef4444;
+          color: #ffffff;
+          border: none;
+          border-radius: var(--radius-lg);
+          padding: 0.55rem 1.25rem;
+          font-size: 0.875rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+          flex: 1;
+        }
+        .btn-modal-delete:hover {
+          background: #dc2626;
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+          transform: translateY(-1px);
+          color: #ffffff;
+        }
+
+        @keyframes modalFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes modalZoomIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
 
         .admin-section-tabs {
