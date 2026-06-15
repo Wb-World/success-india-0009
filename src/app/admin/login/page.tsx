@@ -129,10 +129,6 @@ export default function AdminLogin() {
               <span>{loading ? 'Verifying console keys...' : 'Establish Secure Connection'}</span>
             </button>
           </form>
-
-          <div className="login-footer-info">
-            <span>Demo Console: <strong>admin</strong> / <strong>admin123</strong></span>
-          </div>
         </div>
       </div>
 
