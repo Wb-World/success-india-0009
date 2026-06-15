@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock, User, AlertCircle, ArrowLeft, Key } from 'lucide-react';
+import { Lock, User, AlertCircle, ArrowLeft, Key, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminLogin() {
@@ -12,6 +12,7 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -113,16 +114,24 @@ export default function AdminLogin() {
 
             <div className="form-group">
               <label className="form-label font-label-custom">Security Key / Password</label>
-              <div className="input-with-icon">
+              <div className="input-with-icon relative w-full">
                 <Lock size={18} className="input-field-icon" />
                 <input 
-                  type="password" 
+                  type={showPassword ? "text" : "password"} 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="form-control padded-input custom-input-style"
+                  className="form-control padded-input padded-input-right custom-input-style"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="pwd-toggle-btn absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 z-10"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 
@@ -295,6 +304,57 @@ export default function AdminLogin() {
 
         .input-with-icon {
           position: relative;
+        }
+
+        .relative {
+          position: relative;
+        }
+
+        .w-full {
+          width: 100%;
+        }
+
+        .absolute {
+          position: absolute;
+        }
+
+        .right-3 {
+          right: 0.75rem;
+        }
+
+        .top-1\/2 {
+          top: 50%;
+        }
+
+        .-translate-y-1\/2 {
+          transform: translateY(-50%);
+        }
+
+        .text-gray-400 {
+          color: #9ca3af;
+        }
+
+        .hover\:text-gray-200:hover {
+          color: #e5e7eb;
+        }
+
+        .z-10 {
+          z-index: 10;
+        }
+
+        .pwd-toggle-btn {
+          background: none;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: color 0.2s ease;
+        }
+
+        .padded-input-right {
+          padding-right: 2.75rem;
         }
 
         .input-field-icon {
