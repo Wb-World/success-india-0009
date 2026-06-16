@@ -309,7 +309,7 @@ export default function AdminDashboard() {
     setEditingEventId(null);
     setEventMessage('');
     setEventForm({
-      title: 'Success Team. Leadership Development Seminar',
+      title: 'Success Teamihugug Leadership Development Seminar',
       venue: 'Chromepet, Chennai',
       eventDateTime: '',
       price: '250',
