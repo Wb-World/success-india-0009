@@ -198,12 +198,7 @@ export default function Home() {
             <div className="hero-image-col animate-scale-in">
               <div className="hero-image-wrapper">
                 <img
-                  src="/hero-leader.jpg"
-                  alt="AccessIndia Success Team Leader - Professional Portrait"
-                  className="hero-image"
-                />
-                <img
-                  src="/image2.png"
+                  src="/image.png"
                   alt="AccessIndia Success Team Leader"
                   className="hero-image"
                 />
@@ -463,28 +458,21 @@ export default function Home() {
           align-items: center;
           width: 100%;
           justify-content: center;
+          padding: 1rem 0;
         }
 
         .hero-image-wrapper {
           width: 100%;
           max-width: 520px;
-          aspect-ratio: 16 / 10;
-          display: flex;
-          align-items: flex-end;
-          justify-content: center;
-          gap: 12px;
+          display: inline-block;
           transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
           position: relative;
-          overflow: hidden;
           border-radius: 24px;
-          background-image: url('/image.png');
-          background-size: cover;
-          background-position: center;
-          background-repeat: no-repeat;
+          overflow: hidden;
           box-shadow:
             0 20px 40px rgba(0, 0, 0, 0.25),
             0 1px 3px rgba(0, 0, 0, 0.1);
-          padding: 12px;
+          line-height: 0;
         }
 
         .hero-image-wrapper:hover {
@@ -495,19 +483,15 @@ export default function Home() {
         }
 
         .hero-image {
-          width: calc(50% - 6px);
-          height: 100%;
-          object-fit: cover;
-          object-position: center;
+          width: 100%;
+          height: auto;
           display: block;
-          mix-blend-mode: screen;
-          filter: brightness(1.05) contrast(1.1) drop-shadow(0 10px 30px rgba(0, 0, 0, 0.25));
-          transition: transform 0.4s ease, filter 0.4s ease;
+          object-fit: contain;
+          transition: transform 0.4s ease;
         }
 
         .hero-image-wrapper:hover .hero-image {
           transform: scale(1.03);
-          filter: brightness(1.15) contrast(1.2) drop-shadow(0 15px 40px rgba(0, 0, 0, 0.3));
         }
 
         .card-kicker {
