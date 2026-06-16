@@ -67,8 +67,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const [bookingTimestamp, setBookingTimestamp] = useState('');
   const [confirmedData, setConfirmedData] = useState<any>(null);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
-  const [attendeeNames, setAttendeeNames] = useState<Record<string, string>>({});
-  const [attendeePhones, setAttendeePhones] = useState<Record<string, string>>({});
+  const [attendeeDetails, setAttendeeDetails] = useState<Record<string, { name: string; whatsapp: string }>>({});
   const [currentAttendeeIndex, setCurrentAttendeeIndex] = useState(0);
 
   // User auth states
@@ -397,11 +396,11 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
     const attendeesObj = selectedSeats.reduce((acc, seat) => {
       acc[seat] = {
-        name: attendeeNames[seat] || '',
-        phone: attendeePhones[seat] || '',
+        name: attendeeDetails[seat]?.name || '',
+        whatsapp: attendeeDetails[seat]?.whatsapp || '',
       };
       return acc;
-    }, {} as Record<string, { name: string; phone: string }>);
+    }, {} as Record<string, { name: string; whatsapp: string }>);
 
     const payload = {
       bookingId: newBookingId,
@@ -416,6 +415,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       seats: selectedSeats,
       totalPrice,
       screenshot: (screenshotUrl || 'DIRECT_BOOKING') + '|' + JSON.stringify(attendeesObj),
+      attendeeDetails: attendeesObj,
     };
 
     // Retrieve logged-in user from localStorage to pass x-user-id header
@@ -927,8 +927,8 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
             <form onSubmit={(e) => {
               e.preventDefault();
-              const currentName = attendeeNames[selectedSeats[currentAttendeeIndex]] || '';
-              const currentPhone = attendeePhones[selectedSeats[currentAttendeeIndex]] || '';
+              const currentName = attendeeDetails[selectedSeats[currentAttendeeIndex]]?.name || '';
+              const currentPhone = attendeeDetails[selectedSeats[currentAttendeeIndex]]?.whatsapp || '';
               if (!currentName.trim()) {
                 alert('Please enter the name of the attendee.');
                 return;
@@ -992,12 +992,15 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                   <input 
                     type="tel" 
                     placeholder="E.g., +919876543210 or 9876543210" 
-                    value={attendeePhones[selectedSeats[currentAttendeeIndex]] || ''}
+                    value={attendeeDetails[selectedSeats[currentAttendeeIndex]]?.whatsapp || ''}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^\d+]/g, '');
-                      setAttendeePhones(prev => ({
+                      setAttendeeDetails(prev => ({
                         ...prev,
-                        [selectedSeats[currentAttendeeIndex]]: val
+                        [selectedSeats[currentAttendeeIndex]]: {
+                          name: prev[selectedSeats[currentAttendeeIndex]]?.name || '',
+                          whatsapp: val
+                        }
                       }));
                     }}
                     required
@@ -1235,9 +1238,9 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                   <span className="td-label" style={{ marginBottom: '6px' }}>Attendees</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#f9fafb', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                     {(confirmedData?.seats || selectedSeats).map((s: string) => {
-                      const info = (confirmedData?.attendees || attendeeNames)[s];
+                      const info = (confirmedData?.attendees || attendeeDetails)[s];
                       const nameText = typeof info === 'object' && info !== null ? info.name : (info || 'N/A');
-                      const phoneText = typeof info === 'object' && info !== null ? info.phone : '';
+                      const phoneText = typeof info === 'object' && info !== null ? (info.whatsapp || info.phone || '') : '';
                       return (
                         <div key={s} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                           <span style={{ fontWeight: '600', color: '#374151' }}>Seat {s}:</span>
