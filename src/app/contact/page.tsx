@@ -60,7 +60,7 @@ export default function Contact() {
               <CheckCircle2 size={56} className="success-icon" />
               <h3 className="heading-md">Inquiry Received</h3>
               <p>
-                Thank you for contacting Success India support. A member support representative will review your event query and reply by email within the next 2 hours.
+                Thank you for contacting Success Team support. A member support representative will review your event query and reply by email within the next 2 hours.
               </p>
               <button onClick={() => setSubmitted(false)} className="btn btn-primary">
                 Send Another Message
@@ -133,7 +133,7 @@ export default function Contact() {
             <Phone size={22} className="info-card-icon" />
             <div>
               <h4 className="info-card-title">Event Support Desk</h4>
-              <p className="info-card-detail">Support through official Success India channels</p>
+              <p className="info-card-detail">Support through official Success Team channels</p>
               <p className="info-card-sub">Monday to Sunday support window</p>
             </div>
           </div>

@@ -4,9 +4,9 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 export const metadata: Metadata = {
-  title: 'Success India - Official Seminar & Leadership Portal',
-  description: 'Reserve seats for Success India leadership development seminars, recruitment training, weekly strategy sessions, and local Tamil Nadu chapter meetups.',
-  keywords: 'Success India, seminar booking, leadership development, chapter meetups, Tamil Nadu, Chromepet Chennai, direct selling workshops',
+  title: 'Success Team - Official Seminar & Leadership Portal',
+  description: 'Reserve seats for Success Team leadership development seminars, recruitment training, weekly strategy sessions, and local Tamil Nadu chapter meetups.',
+  keywords: 'Success Team, seminar booking, leadership development, chapter meetups, Tamil Nadu, Chromepet Chennai, direct selling workshops',
   icons: {
     icon: [
       { url: '/favicon.png?v=2', type: 'image/png', sizes: '32x32' },
@@ -16,8 +16,8 @@ export const metadata: Metadata = {
     apple: { url: '/favicon.png?v=2', sizes: '180x180' },
   },
   openGraph: {
-    title: 'Success India - Official Seminar & Leadership Portal',
-    description: 'Official seminar registration, leadership development, and chapter meetup portal for Success India.',
+    title: 'Success Team - Official Seminar & Leadership Portal',
+    description: 'Official seminar registration, leadership development, and chapter meetup portal for Success Team.',
     type: 'website',
     images: ['/favicon.png?v=2'],
   },

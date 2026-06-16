@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   X, Calendar, MapPin, CheckCircle2,
   Download, Printer, Ticket, Clock, AlertCircle, Upload
 } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 // ─── Seat Configuration ───────────────────────────────────────────────────────
 const ROWS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -73,7 +74,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const eventName = event.title || event.name || 'Success India Seminar';
+  const eventName = event.title || event.name || 'Success Team Seminar';
   const pricePerSeat = event.price;
   const totalPrice = selectedSeats.length * pricePerSeat;
 
@@ -386,78 +387,60 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     document.body.removeChild(a);
   };
 
-  const handleDownloadTicket = () => {
-    const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<title>Success India Ticket – ${bookingId}</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0fdf4; padding: 32px; color: #111827; }
-  .ticket { max-width: 640px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
-  .ticket-header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 32px; text-align: center; }
-  .ticket-header h1 { font-size: 28px; font-weight: 800; letter-spacing: 2px; margin-bottom: 4px; }
-  .ticket-header p { font-size: 13px; opacity: 0.85; }
-  .booking-id { font-size: 26px; font-weight: 900; letter-spacing: 4px; background: rgba(255,255,255,0.15); padding: 12px 24px; border-radius: 8px; margin: 16px auto; display: inline-block; }
-  .ticket-body { padding: 32px; }
-  .status-badge { display: inline-flex; align-items: center; gap: 6px; background: #dcfce7; color: #047857; padding: 6px 16px; border-radius: 999px; font-weight: 700; font-size: 14px; margin-bottom: 24px; }
-  .detail-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #f3f4f6; gap: 16px; }
-  .detail-row:last-child { border-bottom: none; }
-  .detail-label { color: #6b7280; font-size: 13px; font-weight: 500; flex-shrink: 0; }
-  .detail-value { font-weight: 600; color: #111827; text-align: right; }
-  .total-row { background: #ecfdf5; border-radius: 8px; padding: 16px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center; }
-  .total-label { font-size: 15px; font-weight: 600; color: #374151; }
-  .total-value { font-size: 24px; font-weight: 800; color: #10b981; }
-  .seats-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
-  .seat-chip { background: #dcfce7; color: #047857; padding: 3px 10px; border-radius: 6px; font-size: 13px; font-weight: 700; }
-  .qr-section { text-align: center; padding: 24px; border-top: 2px dashed #a7f3d0; }
-  .qr-section img { width: 160px; height: 160px; }
-  .qr-caption { font-size: 12px; color: #9ca3af; margin-top: 8px; }
-  .footer-note { text-align: center; font-size: 12px; color: #9ca3af; padding: 16px 32px; background: #f9fafb; }
-</style>
-</head>
-<body>
-<div class="ticket">
-  <div class="ticket-header">
-    <h1>SUCCESS INDIA</h1>
-    <p>Official Event Booking Confirmation</p>
-    <div class="booking-id">${bookingId}</div>
-  </div>
-  <div class="ticket-body">
-    <div style="text-align:center;margin-bottom:20px"><span class="status-badge">✓ PENDING VERIFICATION</span></div>
-    <div class="detail-row"><span class="detail-label">Event</span><span class="detail-value">${eventName}</span></div>
-    <div class="detail-row"><span class="detail-label">Venue</span><span class="detail-value">${event.venue}</span></div>
-    <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${event.eventDate || 'To Be Confirmed'}</span></div>
-    <div class="detail-row"><span class="detail-label">Time</span><span class="detail-value">${event.eventTime || '10:00 AM'}</span></div>
-    <div class="detail-row">
-      <span class="detail-label">Seats (${selectedSeats.length})</span>
-      <span class="detail-value">
-        <div class="seats-list">${selectedSeats.map((s) => `<span class="seat-chip">${s}</span>`).join('')}</div>
-      </span>
-    </div>
-    <div class="detail-row"><span class="detail-label">Price per Seat</span><span class="detail-value">₹${pricePerSeat}</span></div>
-    <div class="detail-row"><span class="detail-label">Booked At</span><span class="detail-value">${bookingTimestamp}</span></div>
-    <div class="total-row"><span class="total-label">Total Amount</span><span class="total-value">₹${totalPrice}</span></div>
-  </div>
-  <div class="qr-section">
-    <img src="${qrImageUrl}" alt="Booking QR Code" />
-    <p class="qr-caption">Scan QR code for verification audit</p>
-  </div>
-  <div class="footer-note">This is a ticket receipt showing status as Pending Verification. Once approved by administration, it compiles as Confirmed.</div>
-</div>
-</body>
-</html>`;
+  const handleDownloadTicket = async () => {
+    // Build a temporary off-screen ticket element
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'fixed';
+    wrapper.style.left = '-9999px';
+    wrapper.style.top = '0';
+    wrapper.style.zIndex = '-1';
+    wrapper.style.background = '#f0fdf4';
+    wrapper.style.padding = '32px';
+    wrapper.style.fontFamily = "'Segoe UI', Arial, sans-serif";
+    wrapper.style.color = '#111827';
+    wrapper.style.width = '640px';
 
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `SuccessIndia-Ticket-${bookingId}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const seatsHtml = selectedSeats.map(s => `<span style="background:#dcfce7;color:#047857;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:700;margin:2px">${s}</span>`).join('');
+
+    wrapper.innerHTML = `
+      <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
+        <div style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:white;padding:32px;text-align:center;">
+          <h1 style="font-size:28px;font-weight:800;letter-spacing:2px;margin:0 0 4px;">SUCCESS TEAM</h1>
+          <p style="font-size:13px;opacity:0.85;margin:0;">Official Event Booking Confirmation</p>
+          <div style="font-size:26px;font-weight:900;letter-spacing:4px;background:rgba(255,255,255,0.15);padding:12px 24px;border-radius:8px;margin:16px auto;display:inline-block;">${bookingId}</div>
+        </div>
+        <div style="padding:32px;">
+          <div style="text-align:center;margin-bottom:20px;"><span style="display:inline-flex;align-items:center;gap:6px;background:#dcfce7;color:#047857;padding:6px 16px;border-radius:999px;font-weight:700;font-size:14px;">✓ PENDING VERIFICATION</span></div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Event</span><span style="font-weight:600;">${eventName}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Venue</span><span style="font-weight:600;">${event.venue}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Date</span><span style="font-weight:600;">${event.eventDate || 'To Be Confirmed'}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Time</span><span style="font-weight:600;">${event.eventTime || '10:00 AM'}</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f3f4f6;gap:16px;"><span style="color:#6b7280;font-size:13px;flex-shrink:0;">Seats (${selectedSeats.length})</span><div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;">${seatsHtml}</div></div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Price per Seat</span><span style="font-weight:600;">₹${pricePerSeat}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Booked At</span><span style="font-weight:600;">${bookingTimestamp}</span></div>
+          <div style="background:#ecfdf5;border-radius:8px;padding:16px;margin-top:16px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:15px;font-weight:600;color:#374151;">Total Amount</span><span style="font-size:24px;font-weight:800;color:#10b981;">₹${totalPrice}</span></div>
+        </div>
+        ${qrImageUrl ? `<div style="text-align:center;padding:24px;border-top:2px dashed #a7f3d0;"><img src="${qrImageUrl}" alt="QR Code" width="160" height="160" crossorigin="anonymous" /><p style="font-size:12px;color:#9ca3af;margin-top:8px;">Scan QR code for verification</p></div>` : ''}
+        <div style="text-align:center;font-size:12px;color:#9ca3af;padding:16px 32px;background:#f9fafb;">This is a ticket receipt showing status as Pending Verification. Once approved by administration, it compiles as Confirmed.</div>
+      </div>
+    `;
+
+    document.body.appendChild(wrapper);
+
+    try {
+      const canvas = await html2canvas(wrapper, {
+        useCORS: true,
+        backgroundColor: '#f0fdf4',
+        scale: 2,
+        logging: false,
+      });
+      const link = document.createElement('a');
+      link.download = `SuccessTeam-Ticket-${bookingId}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } finally {
+      document.body.removeChild(wrapper);
+    }
   };
 
   const handlePrint = () => window.print();

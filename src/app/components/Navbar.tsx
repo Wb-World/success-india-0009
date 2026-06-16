@@ -17,8 +17,8 @@ export default function Navbar() {
     <header className="nav-header animate-slide-down">
       <div className="nav-container">
         <Link href="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
-          <img src="/success-india-logo.jpeg?v=2" alt="Success India logo" className="brand-logo-img" />
-          <span>Success<span className="text-primary"> India</span></span>
+          <img src="/success-india-logo.jpeg?v=2" alt="Success Team logo" className="brand-logo-img" />
+          <span>Success<span className="text-primary"> Team</span></span>
         </Link>
 
         {/* Desktop Nav Links */}

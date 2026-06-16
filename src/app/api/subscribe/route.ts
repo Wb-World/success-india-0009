@@ -22,14 +22,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Premium Success India Light Green & White HTML Email Body Template
+    // 3. Premium Success Team Light Green & White HTML Email Body Template
     const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Success India</title>
+  <title>Welcome to Success Team</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -140,13 +140,13 @@ export async function POST(request: Request) {
 <body>
   <div class="email-container">
     <div class="header">
-      <img src="https://raw.githubusercontent.com/Wb-World/bus-ticket-booking-0009/main/public/success-india-logo.jpeg" alt="Success India Logo" class="logo-img">
-      <h1>Success <span>India</span></h1>
+      <img src="https://raw.githubusercontent.com/Wb-World/bus-ticket-booking-0009/main/public/success-india-logo.jpeg" alt="Success Team Logo" class="logo-img">
+      <h1>Success <span>Team</span></h1>
     </div>
     <div class="content">
-      <h2>Welcome to Success India! ✨</h2>
+      <h2>Welcome to Success Team! ✨</h2>
       <p>Hello,</p>
-      <p>Thank you for subscribing to the <strong>Success India Official Seminar & Leadership Portal</strong> newsletter. We are thrilled to welcome you to our community of leaders and entrepreneurs!</p>
+      <p>Thank you for subscribing to the <strong>Success Team Official Seminar & Leadership Portal</strong> newsletter. We are thrilled to welcome you to our community of leaders and entrepreneurs!</p>
       <p>By subscribing, you will receive priority alerts and resources, including:</p>
       <div class="bullet-points">
         <ul>
@@ -160,11 +160,11 @@ export async function POST(request: Request) {
       <p style="text-align: center; margin-top: 30px; margin-bottom: 30px;">
         <a href="https://accsysindia.com/book" class="cta-button" target="_blank">Explore Seminars Now</a>
       </p>
-      <p>Warm regards,<br><strong>Success India Team</strong></p>
+      <p>Warm regards,<br><strong>Success Team</strong></p>
     </div>
     <div class="footer">
       <p>No 303, 2nd floor, Grand Southern Trunk Rd, Chromepet, Chennai, Tamil Nadu 600044</p>
-      <p>&copy; 2026 Success India. All rights reserved.</p>
+      <p>&copy; 2026 Success Team. All rights reserved.</p>
       <p>If you wish to stop receiving these updates, you can <a href="mailto:accsysindia.com?subject=Unsubscribe">unsubscribe here</a>.</p>
     </div>
   </div>
@@ -180,9 +180,9 @@ export async function POST(request: Request) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        from: 'Success India <onboarding@resend.dev>',
+        from: 'Success Team <onboarding@resend.dev>',
         to: [email],
-        subject: 'Welcome to Success India - Official Seminar & Leadership Portal ✨',
+        subject: 'Welcome to Success Team - Official Seminar & Leadership Portal ✨',
         html: htmlContent,
       }),
     });

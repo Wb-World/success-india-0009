@@ -35,7 +35,7 @@ export default function AdminDashboard() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [eventForm, setEventForm] = useState({
-    title: 'Success India Leadership Development Seminar',
+    title: 'Success Team Leadership Development Seminar',
     venue: 'Chromepet, Chennai',
     eventDateTime: '',
     price: '250',
@@ -268,7 +268,7 @@ export default function AdminDashboard() {
 
       setEventMessage(`Seminar event ${isEdit ? 'updated' : 'published'} successfully`);
       setEventForm({
-        title: 'Success India Leadership Development Seminar',
+        title: 'Success Team Leadership Development Seminar',
         venue: 'Chromepet, Chennai',
         eventDateTime: '',
         price: '250',
@@ -309,7 +309,7 @@ export default function AdminDashboard() {
     setEditingEventId(null);
     setEventMessage('');
     setEventForm({
-      title: 'Success India Leadership Development Seminar',
+      title: 'Success Team Leadership Development Seminar',
       venue: 'Chromepet, Chennai',
       eventDateTime: '',
       price: '250',
@@ -395,10 +395,10 @@ export default function AdminDashboard() {
       <div className="admin-header-bar animate-slide-down">
         <div className="container header-flex">
           <div className="admin-title-logo">
-            <img src="/success-india-logo.jpeg?v=2" alt="Success India logo" className="brand-logo-img" />
+            <img src="/success-india-logo.jpeg?v=2" alt="Success Team logo" className="brand-logo-img" />
             <div>
               <h1 className="admin-workspace-title">
-                Success<span className="text-primary-green"> India</span>
+                Success<span className="text-primary-green"> Team</span>
                 <span className="workspace-suffix">Operations Console</span>
               </h1>
             </div>
@@ -617,7 +617,7 @@ export default function AdminDashboard() {
                     value={eventForm.title}
                     onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
                     className="form-control"
-                    placeholder="Success India Leadership Development Seminar"
+                    placeholder="Success Team Leadership Development Seminar"
                     required
                   />
                 </div>
