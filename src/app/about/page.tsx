@@ -8,7 +8,7 @@ export default function About() {
       {/* Mini Hero */}
       <section className="about-hero">
         <div className="container">
-          <h1 className="heading-xl hero-title">AccessIndia & Success India</h1>
+          <h1 className="heading-xl hero-title">AccsysIndia & Success India</h1>
           <p className="hero-subtitle">
             Empowering individuals across Tamil Nadu through structured leadership programs, community chapter meetups, income strategy sessions, and professional development events.
           </p>
@@ -19,7 +19,7 @@ export default function About() {
       <section className="values-section container">
         <div className="section-header animate-slide-up">
           <h2 className="heading-lg text-green">Our Core Commitments</h2>
-          <p className="section-subtitle">The principles that guide every interaction, initiative, and individual journey within AccessIndia and Success India.</p>
+          <p className="section-subtitle">The principles that guide every interaction, initiative, and individual journey within accsysindia and Success India.</p>
         </div>
 
         <div className="values-grid">
@@ -49,7 +49,7 @@ export default function About() {
             </div>
             <h3 className="heading-sm value-title">Community-First Growth</h3>
             <p className="value-desc">
-              AccessIndia fosters a deeply human network one where members uplift one another, share knowledge freely, and grow together through collaboration, inclusion, and shared purpose.
+              accsysindia fosters a deeply human network one where members uplift one another, share knowledge freely, and grow together through collaboration, inclusion, and shared purpose.
             </p>
           </div>
         </div>
@@ -61,10 +61,10 @@ export default function About() {
           <div className="story-text-col animate-slide-up">
             <h2 className="heading-lg text-green">Who We Are</h2>
             <p className="story-para">
-              AccessIndia is a people-driven movement committed to making personal and professional development accessible to every individual, regardless of background or circumstance. We believe growth is not a privilege it is a right.
+              accsysindia is a people-driven movement committed to making personal and professional development accessible to every individual, regardless of background or circumstance. We believe growth is not a privilege it is a right.
             </p>
             <p className="story-para">
-              Success India works in alignment with AccessIndia to deliver on-ground programs, leadership seminars, and practical skill-building workshops that translate real-world knowledge into career and business momentum.
+              Success India works in alignment with accsysindia to deliver on-ground programs, leadership seminars, and practical skill-building workshops that translate real-world knowledge into career and business momentum.
             </p>
             <p className="story-para">
               Together, we serve a growing community of driven individuals across Tamil Nadu empowering them through structured events, mentorship circles, income-strategy sessions, and chapter-level gatherings that transform lives from the ground up.
@@ -72,7 +72,7 @@ export default function About() {
           </div>
           <div className="story-graphics-col animate-scale-in">
             <div className="story-graphic-box">
-              <div className="graphic-badge">AccessIndia</div>
+              <div className="graphic-badge">accsysindia</div>
               <Compass size={80} className="graphic-icon animate-pulse" />
               <div className="graphic-text">Empowering India, One Seat at a Time</div>
             </div>
@@ -106,7 +106,7 @@ export default function About() {
 
           <div className="event-category-card animate-slide-up hover-lift">
             <div className="event-category-badge gray-badge">Chapter Network</div>
-            <h3 className="heading-sm event-category-title">AccessIndia Community Meetups</h3>
+            <h3 className="heading-sm event-category-title">accsysindia Community Meetups</h3>
             <p className="event-category-desc">
               Grassroots chapter gatherings that bring together members at a local level to share experiences, celebrate milestones, collaborate on initiatives, and strengthen community bonds.
             </p>

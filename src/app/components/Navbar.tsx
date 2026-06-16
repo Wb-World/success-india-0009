@@ -1,13 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Menu, X, Calendar } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Menu, X, Calendar, User, LogOut, LayoutDashboard } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const checkUser = () => {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        try {
+          setUser(JSON.parse(stored));
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        setUser(null);
+      }
+    };
+
+    checkUser();
+    window.addEventListener('auth-change', checkUser);
+    return () => window.removeEventListener('auth-change', checkUser);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
+    window.dispatchEvent(new Event('auth-change'));
+    router.push('/');
+    setMenuOpen(false);
+  };
 
   // Suppress navbar completely on admin pages
   const isAdminRoute = pathname.startsWith('/admin');
@@ -30,10 +59,29 @@ export default function Navbar() {
         </nav>
 
         {/* Desktop CTA Button */}
-        <div className="nav-actions-desktop">
+        <div className="nav-actions-desktop" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <Link href="/book" className="btn btn-primary nav-book-btn">
             <Calendar size={16} /> Book a Seat
           </Link>
+          {user ? (
+            <>
+              {user.role === 'admin' && (
+                <Link href="/admin/dashboard" className="btn btn-secondary nav-book-btn" style={{ borderColor: 'var(--primary)' }}>
+                  <LayoutDashboard size={16} /> Admin
+                </Link>
+              )}
+              <Link href="/profile" className="btn btn-secondary nav-book-btn">
+                <User size={16} /> Profile
+              </Link>
+              <button onClick={handleLogout} className="btn btn-secondary nav-book-btn" style={{ color: '#ef4444', borderColor: '#fee2e2' }}>
+                <LogOut size={16} /> Logout
+              </button>
+            </>
+          ) : (
+            <Link href="/profile" className="btn btn-secondary nav-book-btn">
+              <User size={16} /> Sign In
+            </Link>
+          )}
         </div>
 
         {/* Mobile Hamburger Toggle */}
@@ -55,10 +103,29 @@ export default function Navbar() {
             <Link href="/contact" className={`mobile-link ${pathname === '/contact' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Contact Us</Link>
             <Link href="/book" className={`mobile-link ${pathname === '/book' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Book Seminars</Link>
             <hr className="mobile-divider" />
-            <div className="mobile-auth-actions">
+            <div className="mobile-auth-actions" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
               <Link href="/book" className="btn btn-primary mobile-book-btn" onClick={() => setMenuOpen(false)}>
                 <Calendar size={16} /> Book a Seat
               </Link>
+              {user ? (
+                <>
+                  {user.role === 'admin' && (
+                    <Link href="/admin/dashboard" className="btn btn-secondary mobile-book-btn" style={{ borderColor: 'var(--primary)' }} onClick={() => setMenuOpen(false)}>
+                      <LayoutDashboard size={16} /> Admin Console
+                    </Link>
+                  )}
+                  <Link href="/profile" className="btn btn-secondary mobile-book-btn" onClick={() => setMenuOpen(false)}>
+                    <User size={16} /> My Profile
+                  </Link>
+                  <button onClick={handleLogout} className="btn btn-secondary mobile-book-btn" style={{ color: '#ef4444', borderColor: '#fee2e2', width: '100%' }}>
+                    <LogOut size={16} /> Logout
+                  </button>
+                </>
+              ) : (
+                <Link href="/profile" className="btn btn-secondary mobile-book-btn" onClick={() => setMenuOpen(false)}>
+                  <User size={16} /> Sign In
+                </Link>
+              )}
             </div>
           </nav>
         </div>

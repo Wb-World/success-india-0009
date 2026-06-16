@@ -163,10 +163,10 @@ export default function Home() {
             <div className="hero-text-col animate-slide-up">
               <span className="hero-tagline">
                 <ShieldCheck size={16} />
-                Official AccessIndia Growth Platform
+                Official Succes Team Growth Platform
               </span>
               <h1 className="hero-title">
-                AccessIndia: Pioneering <span className="text-highlight">Enterprise Growth &amp; Professional</span> Leadership
+                AccsysIndia: Pioneering <span className="text-highlight">Enterprise Growth &amp; Professional</span> Leadership
               </h1>
               <p className="hero-subtitle">
                 Empowering India&apos;s entrepreneurial ecosystem through official chapter meetups, high-impact business strategy seminars, and curated networking forums designed for scalability and success.
@@ -199,7 +199,7 @@ export default function Home() {
               <div className="hero-image-wrapper">
                 <img
                   src="/image.png"
-                  alt="AccessIndia Success Team Leader"
+                  alt="accsysindia Success Team Leader"
                   className="hero-image"
                 />
               </div>
@@ -212,7 +212,7 @@ export default function Home() {
             <span className="section-eyebrow">Operational Focus</span>
             <h2 className="heading-lg">Built for leadership briefings and local chapter growth</h2>
             <p className="section-subtitle">
-              AccessIndia Success Team organizes core leadership briefings, networking workshops, and local chapter meetups into a premium reservation experience.
+              AccsysIndia Success Team organizes core leadership briefings, networking workshops, and local chapter meetups into a premium reservation experience.
             </p>
           </div>
 

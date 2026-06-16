@@ -73,7 +73,7 @@ export default function AdminLogin() {
       <div className="blur-circle circle-2"></div>
       <div className="blur-circle circle-3"></div>
 
-      <div className="container login-container">
+      <div className="login-wrapper">
         
         <Link href="/" className="back-home-link animate-slide-down">
           <ArrowLeft size={16} /> <span>Return to Main Website</span>
@@ -85,7 +85,7 @@ export default function AdminLogin() {
               <img src="/success-india-logo.jpeg?v=2" alt="Success Team Logo" className="login-logo-img" />
             </div>
             <h2 className="heading-md admin-title">
-              Success<span className="text-primary-green"> Team</span>
+              Success<span className="text-primary-green">Team</span>
             </h2>
             <p className="card-subtitle">Authorize credentials to access the administrative portal.</p>
           </div>
@@ -147,7 +147,7 @@ export default function AdminLogin() {
         .admin-login-page {
           background-color: #f0fdf4;
           background: radial-gradient(circle at center, #ffffff 0%, #dcfce7 100%);
-          min-height: 100vh;
+          min-height: 100dvh;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -197,7 +197,7 @@ export default function AdminLogin() {
           100% { transform: translateY(30px) scale(1.1); }
         }
 
-        .login-container {
+        .login-wrapper {
           max-width: 440px;
           width: 100%;
           display: flex;

@@ -175,6 +175,9 @@ function BookingEngine() {
             )
           );
         }
+        if (dateVal) {
+          filtered = filtered.filter((e) => e.eventDate === dateVal);
+        }
       }
       setSeminars(filtered);
       return;
@@ -282,7 +285,7 @@ function BookingEngine() {
           </div>
 
           <button type="submit" className="btn btn-primary search-submit-btn">
-            <Search size={16} /> Find Seminars
+            <Search size={16} /> Find Events
           </button>
         </form>
       </div>

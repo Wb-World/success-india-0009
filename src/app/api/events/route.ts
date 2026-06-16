@@ -128,9 +128,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ events: fallbackEvents });
     }
 
-    const eventIds = (data || []).map((event) => event.id);
-    const seatMap = await getApprovedSeatMap(eventIds, date);
-    const events = (data || []).map((event) => normalizeEvent(event, seatMap[event.id] || {}));
+    const events = (data || []).map((event) => normalizeEvent(event, {}));
 
     return NextResponse.json({ events });
   } catch (error: any) {

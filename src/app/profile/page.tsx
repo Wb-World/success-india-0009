@@ -567,11 +567,15 @@ export default function Profile() {
                           </div>
                           {booking.attendees && Object.keys(booking.attendees).length > 0 && (
                             <div className="booking-attendees-list" style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                              {Object.entries(booking.attendees).map(([seat, name]: any) => (
-                                <span key={seat} style={{ fontSize: '11px', color: '#047857', whiteSpace: 'nowrap', display: 'block' }}>
-                                  <strong>{seat}:</strong> {name}
-                                </span>
-                              ))}
+                              {Object.entries(booking.attendees).map(([seat, val]: any) => {
+                                const nameText = typeof val === 'object' && val !== null ? val.name : val;
+                                const phoneText = typeof val === 'object' && val !== null ? val.phone : '';
+                                return (
+                                  <span key={seat} style={{ fontSize: '11px', color: '#047857', whiteSpace: 'nowrap', display: 'block' }}>
+                                    <strong>{seat}:</strong> {nameText} {phoneText ? `(${phoneText})` : ''}
+                                  </span>
+                                );
+                              })}
                             </div>
                           )}
                         </td>

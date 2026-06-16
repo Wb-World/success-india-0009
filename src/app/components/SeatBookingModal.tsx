@@ -61,14 +61,89 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
   const [alreadyBookedSeats, setAlreadyBookedSeats] = useState<string[]>([]);
-  const [step, setStep] = useState<'quantity_select' | 'select' | 'attendee_details' | 'payment' | 'success'>('quantity_select');
+  const [step, setStep] = useState<'login_register' | 'quantity_select' | 'select' | 'attendee_details' | 'payment' | 'success'>('quantity_select');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState('');
   const [bookingTimestamp, setBookingTimestamp] = useState('');
   const [confirmedData, setConfirmedData] = useState<any>(null);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
   const [attendeeNames, setAttendeeNames] = useState<Record<string, string>>({});
+  const [attendeePhones, setAttendeePhones] = useState<Record<string, string>>({});
   const [currentAttendeeIndex, setCurrentAttendeeIndex] = useState(0);
+
+  // User auth states
+  const [user, setUser] = useState<any>(null);
+  const [isLoginTab, setIsLoginTab] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [registerForm, setRegisterForm] = useState({ username: '', password: '', name: '', email: '', phone: '' });
+
+  useEffect(() => {
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      try {
+        const u = JSON.parse(stored);
+        setUser(u);
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      setStep('login_register');
+    }
+  }, []);
+
+  const handleAuthLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthLoading(true);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginForm),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setUser(data.user);
+        window.dispatchEvent(new Event('auth-change'));
+        setStep('quantity_select');
+      } else {
+        setAuthError(data.error || 'Invalid username or password');
+      }
+    } catch (err) {
+      setAuthError('Connection failed. Please try again.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleAuthRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthLoading(true);
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(registerForm),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setUser(data.user);
+        window.dispatchEvent(new Event('auth-change'));
+        setStep('quantity_select');
+      } else {
+        setAuthError(data.error || 'Registration failed');
+      }
+    } catch (err) {
+      setAuthError('Connection failed. Please try again.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   // Payment configuration and upload states
   const [upiConfig, setUpiConfig] = useState({ upiId: 'shesh.dav07-1@okaxis', upiName: 'david', upiQrUrl: '/upi-qr-code.jpg?v=2' });
@@ -322,6 +397,14 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     const newBookingId = generateBookingId();
     const ts = formatTimestamp();
 
+    const attendeesObj = selectedSeats.reduce((acc, seat) => {
+      acc[seat] = {
+        name: attendeeNames[seat] || '',
+        phone: attendeePhones[seat] || '',
+      };
+      return acc;
+    }, {} as Record<string, { name: string; phone: string }>);
+
     const payload = {
       bookingId: newBookingId,
       eventId: event.id,
@@ -334,7 +417,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       time: event.eventTime || '10:00 AM',
       seats: selectedSeats,
       totalPrice,
-      screenshot: (screenshotUrl || 'DIRECT_BOOKING') + '|' + JSON.stringify(attendeeNames),
+      screenshot: (screenshotUrl || 'DIRECT_BOOKING') + '|' + JSON.stringify(attendeesObj),
     };
 
     // Retrieve logged-in user from localStorage to pass x-user-id header
@@ -368,7 +451,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
       setBookingId(newBookingId);
       setBookingTimestamp(ts);
-      setConfirmedData({ id: newBookingId, seats: selectedSeats, totalPrice, timestamp: ts, attendees: attendeeNames });
+      setConfirmedData({ id: newBookingId, seats: selectedSeats, totalPrice, timestamp: ts, attendees: attendeesObj });
       setIsSubmitting(false);
       setStep('success');
     } catch (err: any) {
@@ -410,8 +493,10 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     const seatsHtml = seatsToRender.map((s: string) => `<span style="background:#dcfce7;color:#047857;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:700;margin:2px">${s}</span>`).join('');
     const currentAttendees = confirmedData?.attendees || attendeeNames;
     const attendeesHtml = seatsToRender.map((s: string) => {
-      const name = currentAttendees[s] || 'N/A';
-      return `<div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;padding:2px 0;"><strong>Seat ${s}:</strong><span>${name}</span></div>`;
+      const info = currentAttendees[s];
+      const nameText = typeof info === 'object' && info !== null ? info.name : (info || 'N/A');
+      const phoneText = typeof info === 'object' && info !== null ? info.phone : '';
+      return `<div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;padding:2px 0;"><strong>Seat ${s}:</strong><span>${nameText}${phoneText ? ` (${phoneText})` : ''}</span></div>`;
     }).join('');
 
     wrapper.innerHTML = `
@@ -483,6 +568,162 @@ export default function SeatBookingModal({ event, onClose }: Props) {
         <button className="sbm-close-btn" onClick={onClose} aria-label="Close">
           <X size={20} />
         </button>
+
+        {/* ── STEP 0: Login / Registration ────── */}
+        {step === 'login_register' && (
+          <div className="auth-modal-container">
+            <div className="auth-modal-tabs">
+              <button
+                type="button"
+                className={`auth-modal-tab ${isLoginTab ? 'active' : ''}`}
+                onClick={() => { setIsLoginTab(true); setAuthError(''); }}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                className={`auth-modal-tab ${!isLoginTab ? 'active' : ''}`}
+                onClick={() => { setIsLoginTab(false); setAuthError(''); }}
+              >
+                Create Account
+              </button>
+            </div>
+
+            <div className="auth-modal-content">
+              <h2 className="payment-title" style={{ textAlign: 'center', marginBottom: '0.5rem', fontSize: '1.4rem', fontWeight: 'bold', color: '#1f2937' }}>
+                {isLoginTab ? 'Sign In to Book Seats' : 'Register a Free Account'}
+              </h2>
+              <p className="payment-subtitle" style={{ textAlign: 'center', marginBottom: '1.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                {isLoginTab ? 'Enter your account details to access our secure reservation engine.' : 'Create an account to book and manage your seminar seats.'}
+              </p>
+
+              {authError && (
+                <div className="error-alert animate-shake" style={{ marginBottom: '1.5rem', background: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
+                  <AlertCircle size={16} /> <span>{authError}</span>
+                </div>
+              )}
+
+              {isLoginTab ? (
+                <form onSubmit={handleAuthLogin} className="auth-modal-form">
+                  <div className="form-input-group">
+                    <label className="input-field-label">Username</label>
+                    <div className="input-field-wrap">
+                      <span className="input-field-icon">👤</span>
+                      <input
+                        type="text"
+                        placeholder="Enter your username (e.g. user)"
+                        value={loginForm.username}
+                        onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
+                        required
+                        className="text-input-field"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-input-group">
+                    <label className="input-field-label">Password</label>
+                    <div className="input-field-wrap">
+                      <span className="input-field-icon">🔒</span>
+                      <input
+                        type="password"
+                        placeholder="Enter your password (e.g. password)"
+                        value={loginForm.password}
+                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                        required
+                        className="text-input-field"
+                      />
+                    </div>
+                  </div>
+
+                  <button type="submit" className="sbm-proceed-btn" style={{ width: '100%', marginTop: '1rem' }} disabled={authLoading}>
+                    {authLoading ? 'Signing In...' : 'Sign In & Continue →'}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleAuthRegister} className="auth-modal-form">
+                  <div className="form-input-group">
+                    <label className="input-field-label">Choose Username <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-field-wrap">
+                      <span className="input-field-icon">👤</span>
+                      <input
+                        type="text"
+                        placeholder="e.g. janesmith"
+                        value={registerForm.username}
+                        onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })}
+                        required
+                        className="text-input-field"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-input-group">
+                    <label className="input-field-label">Create Password <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-field-wrap">
+                      <span className="input-field-icon">🔒</span>
+                      <input
+                        type="password"
+                        placeholder="Choose a password"
+                        value={registerForm.password}
+                        onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                        required
+                        className="text-input-field"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-input-group">
+                    <label className="input-field-label">Full Name <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-field-wrap">
+                      <span className="input-field-icon">🏷️</span>
+                      <input
+                        type="text"
+                        placeholder="e.g. Jane Smith"
+                        value={registerForm.name}
+                        onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
+                        required
+                        className="text-input-field"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-input-group">
+                    <label className="input-field-label">Email Address <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-field-wrap">
+                      <span className="input-field-icon">✉️</span>
+                      <input
+                        type="email"
+                        placeholder="e.g. jane@example.com"
+                        value={registerForm.email}
+                        onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
+                        required
+                        className="text-input-field"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-input-group">
+                    <label className="input-field-label">Phone Number <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-field-wrap">
+                      <span className="input-field-icon">📞</span>
+                      <input
+                        type="tel"
+                        placeholder="e.g. +919876543210"
+                        value={registerForm.phone}
+                        onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
+                        required
+                        className="text-input-field"
+                      />
+                    </div>
+                  </div>
+
+                  <button type="submit" className="sbm-proceed-btn" style={{ width: '100%', marginTop: '1.5rem' }} disabled={authLoading}>
+                    {authLoading ? 'Creating Account...' : 'Register & Continue →'}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ── STEP 1: Centered Quantity Selector ───────── */}
         {step === 'quantity_select' && (
@@ -670,7 +911,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           <div key={currentAttendeeIndex} className="attendee-container animate-slide-in-form">
             <h2 className="payment-title" style={{ marginBottom: '0.25rem' }}>Attendee Registration</h2>
             <p className="payment-subtitle" style={{ marginBottom: '1.5rem' }}>
-              Enter name for seat <strong style={{ color: '#10b981' }}>{selectedSeats[currentAttendeeIndex]}</strong>.
+              Enter details for seat <strong style={{ color: '#10b981' }}>{selectedSeats[currentAttendeeIndex]}</strong>.
             </p>
 
             <div className="attendee-progress-box">
@@ -689,8 +930,14 @@ export default function SeatBookingModal({ event, onClose }: Props) {
             <form onSubmit={(e) => {
               e.preventDefault();
               const currentName = attendeeNames[selectedSeats[currentAttendeeIndex]] || '';
+              const currentPhone = attendeePhones[selectedSeats[currentAttendeeIndex]] || '';
               if (!currentName.trim()) {
                 alert('Please enter the name of the attendee.');
+                return;
+              }
+              const phoneRegex = /^\+?[0-9]{10,15}$/;
+              if (!phoneRegex.test(currentPhone)) {
+                alert('Please enter a valid 10-15 digit WhatsApp mobile number (with optional + prefix).');
                 return;
               }
               if (currentAttendeeIndex < selectedSeats.length - 1) {
@@ -732,6 +979,27 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                     }}
                     required
                     autoFocus
+                    className="text-input-field"
+                  />
+                </div>
+              </div>
+
+              <div className="form-input-group">
+                <label className="input-field-label">WhatsApp Mobile Number <span style={{ color: '#ef4444' }}>*</span></label>
+                <div className="input-field-wrap">
+                  <span className="input-field-icon">📞</span>
+                  <input 
+                    type="tel" 
+                    placeholder="E.g., +919876543210 or 9876543210" 
+                    value={attendeePhones[selectedSeats[currentAttendeeIndex]] || ''}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^\d+]/g, '');
+                      setAttendeePhones(prev => ({
+                        ...prev,
+                        [selectedSeats[currentAttendeeIndex]]: val
+                      }));
+                    }}
+                    required
                     className="text-input-field"
                   />
                 </div>
@@ -966,11 +1234,15 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                   <span className="td-label" style={{ marginBottom: '6px' }}>Attendees</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#f9fafb', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                     {(confirmedData?.seats || selectedSeats).map((s: string) => {
-                      const name = (confirmedData?.attendees || attendeeNames)[s] || 'N/A';
+                      const info = (confirmedData?.attendees || attendeeNames)[s];
+                      const nameText = typeof info === 'object' && info !== null ? info.name : (info || 'N/A');
+                      const phoneText = typeof info === 'object' && info !== null ? info.phone : '';
                       return (
                         <div key={s} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                           <span style={{ fontWeight: '600', color: '#374151' }}>Seat {s}:</span>
-                          <span style={{ color: '#059669', fontWeight: '700' }}>{name}</span>
+                          <span style={{ color: '#059669', fontWeight: '700' }}>
+                            {nameText}{phoneText ? ` (${phoneText})` : ''}
+                          </span>
                         </div>
                       );
                     })}
@@ -1055,11 +1327,48 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
+        .sbm-card-login_register { max-width: 500px; }
         .sbm-card-quantity_select { max-width: 480px; }
         .sbm-card-select { max-width: 960px; }
         .sbm-card-attendee_details { max-width: 520px; }
         .sbm-card-payment { max-width: 840px; }
         .sbm-card-success { max-width: 760px; }
+
+        /* Auth Modal Steps */
+        .auth-modal-container {
+          padding: 2.5rem 2rem 1.5rem 2rem;
+        }
+        .auth-modal-tabs {
+          display: flex;
+          background: #f0fdf4;
+          border-radius: var(--radius-lg);
+          padding: 4px;
+          margin-bottom: 2rem;
+          border: 1px solid var(--border);
+        }
+        .auth-modal-tab {
+          flex: 1;
+          padding: 0.7rem;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-family: var(--font-heading);
+          font-weight: 700;
+          font-size: 0.95rem;
+          border-radius: var(--radius-md);
+          color: var(--muted);
+          transition: all 0.2s ease;
+        }
+        .auth-modal-tab.active {
+          background: white;
+          color: var(--primary-dark);
+          box-shadow: var(--shadow-sm);
+        }
+        .auth-modal-form {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
 
         @keyframes cardIn {
           from { opacity: 0; transform: scale(0.94) translateY(20px); }

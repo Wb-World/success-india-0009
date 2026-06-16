@@ -551,11 +551,15 @@ export default function AdminDashboard() {
                               <div className="info-row" style={{ gridColumn: 'span 2', marginTop: '6px' }}>
                                 <span>Seat Attendees:</span>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-                                  {Object.entries(b.attendees).map(([seat, name]: any) => (
-                                    <span key={seat} style={{ background: '#ecfdf5', border: '1px solid #10b981', color: '#047857', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
-                                      {seat}: {name}
-                                    </span>
-                                  ))}
+                                  {Object.entries(b.attendees).map(([seat, val]: any) => {
+                                    const nameText = typeof val === 'object' && val !== null ? val.name : val;
+                                    const phoneText = typeof val === 'object' && val !== null ? val.phone : '';
+                                    return (
+                                      <span key={seat} style={{ background: '#ecfdf5', border: '1px solid #10b981', color: '#047857', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                                        {seat}: {nameText} {phoneText ? `(${phoneText})` : ''}
+                                      </span>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             )}

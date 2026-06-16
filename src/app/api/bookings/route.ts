@@ -126,11 +126,13 @@ export async function POST(request: Request) {
       // Non-blocking: continue even if conflict check fails
     }
 
-    // Attempt to save booking to database (user_id required — default to 'usr_1' for guests)
     let savedBooking: any = null;
-    let userId = request.headers.get('x-user-id') || null;
+    let userId = request.headers.get('x-user-id');
     if (!userId) {
-      userId = 'usr_1'; // Guest fallback user to bypass database NOT NULL constraint
+      return NextResponse.json(
+        { error: 'Authentication required. Please register or log in to book seats.' },
+        { status: 401 }
+      );
     }
 
     try {
