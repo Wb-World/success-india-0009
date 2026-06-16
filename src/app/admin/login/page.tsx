@@ -82,10 +82,10 @@ export default function AdminLogin() {
         <div className="login-card glass-card animate-scale-in">
           <div className="card-header">
             <div className="login-logo-wrapper animate-pulse-green">
-              <img src="/success-india-logo.jpeg?v=2" alt="Success India Logo" className="login-logo-img" />
+              <img src="/success-india-logo.jpeg?v=2" alt="Success Team Logo" className="login-logo-img" />
             </div>
             <h2 className="heading-md admin-title">
-              Success<span className="text-primary-green"> India</span>
+              Success<span className="text-primary-green"> Team</span>
             </h2>
             <p className="card-subtitle">Authorize credentials to access the administrative portal.</p>
           </div>

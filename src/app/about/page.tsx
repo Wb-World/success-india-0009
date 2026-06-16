@@ -8,7 +8,7 @@ export default function About() {
       {/* Mini Hero */}
       <section className="about-hero">
         <div className="container">
-          <h1 className="heading-xl hero-title">Success India Seminar Booking Portal</h1>
+          <h1 className="heading-xl hero-title">Success Team Seminar Booking Portal</h1>
           <p className="hero-subtitle">
             Reserve seats for leadership programs, chapter meetups, business briefings, and professional development events across Tamil Nadu.
           </p>
@@ -39,7 +39,7 @@ export default function About() {
             </div>
             <h3 className="heading-sm value-title">Professional Growth Programs</h3>
             <p className="value-desc">
-              Success India focuses on leadership development, recruitment training, weekly strategy sessions, and digital business learning.
+              Success Team focuses on leadership development, recruitment training, weekly strategy sessions, and digital business learning.
             </p>
           </div>
 
@@ -59,9 +59,9 @@ export default function About() {
       <section className="story-section">
         <div className="container story-grid">
           <div className="story-text-col animate-slide-up">
-            <h2 className="heading-lg text-green">The Success India Vision</h2>
+            <h2 className="heading-lg text-green">The Success Team Vision</h2>
             <p className="story-para">
-              Success India brings seminar discovery, member registration, payment receipt review, and seat allocation into one focused portal for official events and local chapter sessions.
+              Success Team brings seminar discovery, member registration, payment receipt review, and seat allocation into one focused portal for official events and local chapter sessions.
             </p>
             <p className="story-para">
               The experience is designed for attendees who need simple event selection, clear approval tracking, and a trustworthy path from registration to confirmed seat allocation.
@@ -72,7 +72,7 @@ export default function About() {
           </div>
           <div className="story-graphics-col animate-scale-in">
             <div className="story-graphic-box">
-              <div className="graphic-badge">Success India</div>
+              <div className="graphic-badge">Success Team</div>
               <Compass size={80} className="graphic-icon animate-pulse" />
               <div className="graphic-text">60 Seat Seminar Registration Grid</div>
             </div>

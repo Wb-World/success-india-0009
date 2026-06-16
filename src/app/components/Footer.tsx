@@ -51,11 +51,11 @@ export default function Footer() {
       <div className="container footer-grid">
         <div className="footer-brand-col">
           <Link href="/" className="footer-logo">
-            <img src="/success-india-logo.jpeg?v=2" alt="Success India logo" className="footer-logo-img" />
-            <span>Success<span className="text-primary"> India</span></span>
+            <img src="/success-india-logo.jpeg?v=2" alt="Success Team logo" className="footer-logo-img" />
+            <span>Success<span className="text-primary"> Team</span></span>
           </Link>
           <p className="footer-desc">
-            Official networking and leadership seminar booking portal for Success India chapter programs, weekly strategy sessions, and local business briefings.
+            Official networking and leadership seminar booking portal for Success Team chapter programs, weekly strategy sessions, and local business briefings.
           </p>
           <div className="footer-contact-info">
             <div className="contact-item">
@@ -122,7 +122,7 @@ export default function Footer() {
       <div className="footer-bottom">
         <div className="container footer-bottom-flex">
           <p className="copyright-text">
-            &copy; {currentYear} Success India - Official Seminar &amp; Leadership Portal. All rights reserved.
+            &copy; {currentYear} Success Team - Official Seminar &amp; Leadership Portal. All rights reserved.
           </p>
           <div className="footer-legal-links">
             <Link href="/contact">Privacy Policy</Link>

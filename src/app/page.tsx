@@ -267,7 +267,7 @@ export default function Home() {
           <span className="section-eyebrow">Operational Focus</span>
           <h2 className="heading-lg">Built for leadership briefings and local chapter growth</h2>
           <p className="section-subtitle">
-            Success India organizes the key training themes from the provided Accsys India Success Team context into a clean booking experience for prospective members and local teams.
+            Success Team organizes the key training themes from the provided Accsys India Success Team context into a clean booking experience for prospective members and local teams.
           </p>
         </div>
 
@@ -333,7 +333,7 @@ export default function Home() {
       <section className="routes-section container">
         <div className="section-header">
           <span className="section-eyebrow">Popular Seminar Tracks</span>
-          <h2 className="heading-lg">Reserve seats for the next Success India session</h2>
+          <h2 className="heading-lg">Reserve seats for the next Success Team session</h2>
           <p className="section-subtitle">Click any event card to instantly open seat booking.</p>
         </div>
 

@@ -421,7 +421,7 @@ export default function Profile() {
     <div className="profile-dashboard container animate-fade-in">
       <div className="dashboard-welcome-banner animate-slide-down">
         <h1 className="welcome-title">Welcome back, {currentUser.name}! 👋</h1>
-        <p className="welcome-subtitle">Welcome to your Success India Member Portal. Here you can track your seminar registrations, event approvals, and update your professional profile details.</p>
+        <p className="welcome-subtitle">Welcome to your Success Team Member Portal. Here you can track your seminar registrations, event approvals, and update your professional profile details.</p>
       </div>
 
       <div className="dashboard-grid">
@@ -431,7 +431,7 @@ export default function Profile() {
           <div className="info-card glass-card hover-lift">
             <div className="avatar-section">
               <div className="avatar-circle">
-                <img src="/success-india-logo.jpeg?v=2" alt="Success India logo" className="member-logo" />
+                <img src="/success-india-logo.jpeg?v=2" alt="Success Team logo" className="member-logo" />
               </div>
               <h2 className="heading-md user-fullname">{currentUser.name}</h2>
               <span className="user-role-badge">Official Delegate</span>
