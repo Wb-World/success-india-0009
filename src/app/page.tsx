@@ -163,7 +163,7 @@ export default function Home() {
             <div className="hero-text-col animate-slide-up">
               <span className="hero-tagline">
                 <ShieldCheck size={16} />
-                Official AccessIndia Growth Platform
+                Official SUCCESS TEAM growth platform
               </span>
               <h1 className="hero-title">
                 AccessIndia: Pioneering <span className="text-highlight">Enterprise Growth &amp; Professional</span> Leadership
