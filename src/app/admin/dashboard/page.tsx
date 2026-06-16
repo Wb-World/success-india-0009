@@ -35,7 +35,7 @@ export default function AdminDashboard() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [eventForm, setEventForm] = useState({
-    title: 'Success .... Leadership Development Seminar',
+    title: 'success team Leadership Development Seminar',
     venue: 'Chromepet, Chennai',
     eventDateTime: '',
     price: '250',
