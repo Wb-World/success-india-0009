@@ -8,9 +8,9 @@ export default function About() {
       {/* Mini Hero */}
       <section className="about-hero">
         <div className="container">
-          <h1 className="heading-xl hero-title">Success Team Event Booking Portal</h1>
+          <h1 className="heading-xl hero-title">AccessIndia & Success India</h1>
           <p className="hero-subtitle">
-            Reserve seats for leadership programs, chapter meetups, business briefings, and professional development events across Tamil Nadu.
+            Empowering individuals across Tamil Nadu through structured leadership programs, community chapter meetups, income strategy sessions, and professional development events.
           </p>
         </div>
       </section>
@@ -18,8 +18,8 @@ export default function About() {
       {/* Core Values / Pillars */}
       <section className="values-section container">
         <div className="section-header animate-slide-up">
-          <h2 className="heading-lg text-green">Our Event Commitments</h2>
-          <p className="section-subtitle">The principles that guide every seminar registration, member update, and chapter gathering.</p>
+          <h2 className="heading-lg text-green">Our Core Commitments</h2>
+          <p className="section-subtitle">The principles that guide every interaction, initiative, and individual journey within AccessIndia and Success India.</p>
         </div>
 
         <div className="values-grid">
@@ -27,9 +27,9 @@ export default function About() {
             <div className="value-icon-circle">
               <Shield size={24} />
             </div>
-            <h3 className="heading-sm value-title">Verified Event Access</h3>
+            <h3 className="heading-sm value-title">Trust & Transparency</h3>
             <p className="value-desc">
-              Every registration request is reviewed with attendee details, selected seats, event timing, and uploaded payment receipt before approval.
+              Every registration, payment, and seat allocation is handled with full transparency. We uphold integrity at every stage of the participant journey — from sign-up to confirmation.
             </p>
           </div>
 
@@ -37,9 +37,9 @@ export default function About() {
             <div className="value-icon-circle">
               <Sparkles size={24} />
             </div>
-            <h3 className="heading-sm value-title">Professional Growth Programs</h3>
+            <h3 className="heading-sm value-title">Empowering Human Potential</h3>
             <p className="value-desc">
-              Success Team focuses on leadership development, recruitment training, weekly strategy sessions, and digital business learning.
+              Success India is built on the belief that every individual carries within them the capacity for greatness. Our programs are designed to awaken that potential through structured learning and mentorship.
             </p>
           </div>
 
@@ -47,9 +47,9 @@ export default function About() {
             <div className="value-icon-circle">
               <HeartHandshake size={24} />
             </div>
-            <h3 className="heading-sm value-title">Member Support</h3>
+            <h3 className="heading-sm value-title">Community-First Growth</h3>
             <p className="value-desc">
-              From seat selection to registration status updates, the portal helps members manage event participation with clarity and confidence.
+              AccessIndia fosters a deeply human network — one where members uplift one another, share knowledge freely, and grow together through collaboration, inclusion, and shared purpose.
             </p>
           </div>
         </div>
@@ -59,22 +59,22 @@ export default function About() {
       <section className="story-section">
         <div className="container story-grid">
           <div className="story-text-col animate-slide-up">
-            <h2 className="heading-lg text-green">The Success Team Vision</h2>
+            <h2 className="heading-lg text-green">Who We Are</h2>
             <p className="story-para">
-              Success Team brings seminar discovery, member registration, payment receipt review, and seat allocation into one focused portal for official events and local chapter sessions.
+              AccessIndia is a people-driven movement committed to making personal and professional development accessible to every individual, regardless of background or circumstance. We believe growth is not a privilege — it is a right.
             </p>
             <p className="story-para">
-              The experience is designed for attendees who need simple event selection, clear approval tracking, and a trustworthy path from registration to confirmed seat allocation.
+              Success India works in alignment with AccessIndia to deliver on-ground programs, leadership seminars, and practical skill-building workshops that translate real-world knowledge into career and business momentum.
             </p>
             <p className="story-para">
-              Today, the portal supports leadership seminars, income strategy sessions, BOSS Agro Hub chapter meetups, and digital marketing workshops for Tamil Nadu member networks.
+              Together, we serve a growing community of driven individuals across Tamil Nadu — empowering them through structured events, mentorship circles, income-strategy sessions, and chapter-level gatherings that transform lives from the ground up.
             </p>
           </div>
           <div className="story-graphics-col animate-scale-in">
             <div className="story-graphic-box">
-              <div className="graphic-badge">Success Team</div>
+              <div className="graphic-badge">AccessIndia</div>
               <Compass size={80} className="graphic-icon animate-pulse" />
-              <div className="graphic-text">60 Seat Event Registration Grid</div>
+              <div className="graphic-text">Empowering India, One Seat at a Time</div>
             </div>
           </div>
         </div>
@@ -83,32 +83,32 @@ export default function About() {
       {/* Event Overview */}
       <section className="event-categories-section container">
         <div className="section-header animate-slide-up">
-          <h2 className="heading-lg text-green">Event Categories</h2>
-          <p className="section-subtitle">Select the seminar format that matches your growth plan</p>
+          <h2 className="heading-lg text-green">What We Offer</h2>
+          <p className="section-subtitle">Programs and events crafted to build real people with real skills for a real future</p>
         </div>
 
         <div className="event-category-grid">
           <div className="event-category-card animate-slide-up hover-lift">
             <div className="event-category-badge">Leadership</div>
-            <h3 className="heading-sm event-category-title">Leadership Development Seminars</h3>
+            <h3 className="heading-sm event-category-title">Leadership & Life Mastery Seminars</h3>
             <p className="event-category-desc">
-              Structured programs for team growth, communication, recruitment training, and practical leadership habits.
+              Transformative programs led by experienced mentors that develop communication, decision-making, team leadership, and the mindset required to excel in business and life.
             </p>
           </div>
 
           <div className="event-category-card animate-slide-up hover-lift">
-            <div className="event-category-badge green-badge">Weekly Systems</div>
-            <h3 className="heading-sm event-category-title">Income Strategy Sessions</h3>
+            <div className="event-category-badge green-badge">Income Growth</div>
+            <h3 className="heading-sm event-category-title">Success India Income Strategy Sessions</h3>
             <p className="event-category-desc">
-              Weekly briefings focused on business volume, referrals, market connections, and member routines.
+              Practical, weekly briefings that equip members with proven income-generation strategies, referral systems, market insights, and financial independence roadmaps.
             </p>
           </div>
 
           <div className="event-category-card animate-slide-up hover-lift">
             <div className="event-category-badge gray-badge">Chapter Network</div>
-            <h3 className="heading-sm event-category-title">BOSS Agro Hub Meetups</h3>
+            <h3 className="heading-sm event-category-title">AccessIndia Community Meetups</h3>
             <p className="event-category-desc">
-              Local member gatherings for chapter updates, community learning, and business collaboration.
+              Grassroots chapter gatherings that bring together members at a local level to share experiences, celebrate milestones, collaborate on initiatives, and strengthen community bonds.
             </p>
           </div>
         </div>
