@@ -405,7 +405,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     wrapper.style.color = '#111827';
     wrapper.style.width = '640px';
 
-    const seatsHtml = seatsToRender.map(s => `<span style="background:#dcfce7;color:#047857;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:700;margin:2px">${s}</span>`).join('');
+    const seatsHtml = seatsToRender.map((s: String) => `<span style="background:#dcfce7;color:#047857;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:700;margin:2px">${s}</span>`).join('');
 
     wrapper.innerHTML = `
       <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
@@ -840,7 +840,11 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                 <div className="ticket-detail-row">
                   <span className="td-label">Seats</span>
                   <div className="td-seat-tags">
-                    {(confirmedData?.seats || selectedSeats).map((s) => <span key={s} className="seat-tag">{s}</span>)}
+                    {(confirmedData?.seats || selectedSeats).map((s: string) => (
+                      <span key={s} className="seat-tag">
+                        {s}
+                      </span>
+                    ))}
                   </div>
                 </div>
                 <div className="ticket-detail-row">
