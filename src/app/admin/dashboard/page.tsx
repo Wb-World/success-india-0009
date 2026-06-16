@@ -737,7 +737,7 @@ export default function AdminDashboard() {
                     value={upiSettings.upiId}
                     onChange={(e) => setUpiSettings({ ...upiSettings, upiId: e.target.value })}
                     className="form-control"
-                    placeholder="successindia@upi"
+                    placeholder="successteam@upi"
                     required
                   />
                 </div>

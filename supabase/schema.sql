@@ -119,7 +119,7 @@ CREATE POLICY "events_public_read"
 -- ── 5. SEED DATA — USERS ─────────────────────────────────────
 INSERT INTO public.users (id, username, password, name, email, phone, role) VALUES
   ('usr_1',       'user',    'password',   'Alex Mercer', 'alex.mercer@gmail.com', '+91 9876543210', 'user'),
-  ('adm_1',       'admin',   'admin123',   'Super Admin',  'admin@successindia.test', '+91 9999988888', 'admin'),
+  ('adm_1',       'admin',   'admin123',   'Super Admin',  'admin@team.test', '+91 9999988888', 'admin'),
   ('usr_mohamed', 'mohamed', 'mohamed123', 'Mohamed',     'mohamed@gmail.com',     '9944994778',     'user')
 ON CONFLICT (id) DO NOTHING;
 
