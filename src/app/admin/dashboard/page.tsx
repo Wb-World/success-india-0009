@@ -547,6 +547,18 @@ export default function AdminDashboard() {
                             <div className="info-row"><span>Venue / Event:</span><strong>{b.venue} <ArrowRight size={12} className="inline-arrow" /> {b.seminar}</strong></div>
                             <div className="info-row"><span>Event Date & Time:</span><strong>{b.date} &bull; {b.time}</strong></div>
                             <div className="info-row"><span>Allocated Seats:</span><span className="seats-span">{b.seats.join(', ')}</span></div>
+                            {b.attendees && Object.keys(b.attendees).length > 0 && (
+                              <div className="info-row" style={{ gridColumn: 'span 2', marginTop: '6px' }}>
+                                <span>Seat Attendees:</span>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                                  {Object.entries(b.attendees).map(([seat, name]: any) => (
+                                    <span key={seat} style={{ background: '#ecfdf5', border: '1px solid #10b981', color: '#047857', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                                      {seat}: {name}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
 

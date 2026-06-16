@@ -33,23 +33,38 @@ export async function GET(request: Request) {
     }
 
     // Map snake_case → camelCase for frontend
-    const bookings = (rawBookings || []).map((bk) => ({
-      id: bk.id,
-      userId: bk.user_id,
-      seminarId: bk.seminar_id,
-      eventId: bk.seminar_id || bk.bus_id,
-      eventName: bk.seminar_name || bk.bus_name,
-      seminarName: bk.seminar_name || bk.bus_name,
-      venue: bk.source,
-      seminar: bk.destination,
-      date: bk.date,
-      time: bk.time,
-      seats: bk.seats,
-      totalPrice: bk.total_price,
-      screenshot: bk.screenshot,
-      status: bk.status,
-      createdAt: bk.created_at,
-    }));
+    const bookings = (rawBookings || []).map((bk) => {
+      let cleanScreenshot = bk.screenshot || '';
+      let attendees = {};
+      if (cleanScreenshot.includes('|')) {
+        const parts = cleanScreenshot.split('|');
+        cleanScreenshot = parts[0];
+        try {
+          attendees = JSON.parse(parts[1] || '{}');
+        } catch (e) {
+          console.error('Failed to parse attendees json:', e);
+        }
+      }
+
+      return {
+        id: bk.id,
+        userId: bk.user_id,
+        seminarId: bk.seminar_id,
+        eventId: bk.seminar_id || bk.bus_id,
+        eventName: bk.seminar_name || bk.bus_name,
+        seminarName: bk.seminar_name || bk.bus_name,
+        venue: bk.source,
+        seminar: bk.destination,
+        date: bk.date,
+        time: bk.time,
+        seats: bk.seats,
+        totalPrice: bk.total_price,
+        screenshot: cleanScreenshot,
+        attendees: attendees,
+        status: bk.status,
+        createdAt: bk.created_at,
+      };
+    });
 
     return NextResponse.json({ user, bookings });
   } catch (error) {
