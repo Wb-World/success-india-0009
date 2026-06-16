@@ -281,21 +281,45 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       screenshot: screenshotUrl || 'DIRECT_BOOKING',
     };
 
-    try {
-      await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-    } catch (_) {
-      // Continue regardless — ticket is generated client-side
+    // Retrieve logged-in user from localStorage to pass x-user-id header
+    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+    let userId = null;
+    if (userStr) {
+      try {
+        const parsed = JSON.parse(userStr);
+        userId = parsed.id;
+      } catch (e) {
+        console.error('Failed to parse user from localStorage:', e);
+      }
     }
 
-    setBookingId(newBookingId);
-    setBookingTimestamp(ts);
-    setConfirmedData({ id: newBookingId, seats: selectedSeats, totalPrice, timestamp: ts });
-    setIsSubmitting(false);
-    setStep('success');
+    const headers: any = { 'Content-Type': 'application/json' };
+    if (userId) {
+      headers['x-user-id'] = userId;
+    }
+
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Server rejected the booking request');
+      }
+
+      setBookingId(newBookingId);
+      setBookingTimestamp(ts);
+      setConfirmedData({ id: newBookingId, seats: selectedSeats, totalPrice, timestamp: ts });
+      setIsSubmitting(false);
+      setStep('success');
+    } catch (err: any) {
+      console.error('Booking submission failed:', err);
+      alert(`Booking Failed: ${err.message || String(err)}`);
+      setIsSubmitting(false);
+    }
   };
 
   const handleDownloadQR = () => {

@@ -95,9 +95,12 @@ export async function POST(request: Request) {
       // Non-blocking: continue even if conflict check fails
     }
 
-    // Attempt to save booking to database (user_id optional / may be null)
+    // Attempt to save booking to database (user_id required — default to 'usr_1' for guests)
     let savedBooking: any = null;
-    const userId = request.headers.get('x-user-id') || null;
+    let userId = request.headers.get('x-user-id') || null;
+    if (!userId) {
+      userId = 'usr_1'; // Guest fallback user to bypass database NOT NULL constraint
+    }
 
     try {
       const { data: newBooking, error: insertError } = await supabaseAdmin
@@ -125,7 +128,7 @@ export async function POST(request: Request) {
       if (!insertError) {
         savedBooking = newBooking;
       } else {
-        // Attempt legacy-compatible insert (buses table)
+        console.error("BOOKING_INSERTION_FAILED (primary):", insertError);
         console.warn('Primary booking insert failed, attempting legacy insert:', insertError.message);
 
         await supabaseAdmin.from('buses').upsert(
@@ -164,6 +167,9 @@ export async function POST(request: Request) {
 
         if (!legacyResult.error) {
           savedBooking = legacyResult.data;
+        } else {
+          console.error("BOOKING_INSERTION_FAILED (legacy):", legacyResult.error);
+          throw new Error(`Database insertions failed. Primary error: ${insertError.message}. Legacy error: ${legacyResult.error.message}`);
         }
       }
 
@@ -179,13 +185,18 @@ export async function POST(request: Request) {
         } catch (proofErr) {
           console.warn('Non-fatal: Failed to save to payment_proofs table:', proofErr);
         }
+      } else {
+        throw new Error('Database write operation could not be completed.');
       }
-    } catch (dbErr) {
-      // DB save failed — still return success with generated booking data
-      console.error('Booking DB save error (non-fatal):', dbErr);
+    } catch (dbErr: any) {
+      console.error("BOOKING_INSERTION_FAILED:", dbErr);
+      return NextResponse.json(
+        { error: dbErr.message || 'Database write operation failed' },
+        { status: 500 }
+      );
     }
 
-    // Return booking confirmation regardless of DB save outcome
+    // Return booking confirmation only when DB save succeeds
     const booking = {
       id: bookingRefId,
       bookingId: bookingRefId,
@@ -199,20 +210,15 @@ export async function POST(request: Request) {
       totalPrice,
       status: 'confirmed',
       createdAt: new Date().toISOString(),
-      // Include DB record fields if saved successfully
-      ...(savedBooking
-        ? {
-            dbId: savedBooking.id,
-            dbStatus: savedBooking.status,
-          }
-        : {}),
+      dbId: savedBooking.id,
+      dbStatus: savedBooking.status,
     };
 
     return NextResponse.json({ booking }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Booking submission error:', error);
     return NextResponse.json(
-      { error: 'An error occurred submitting the booking' },
+      { error: error?.message || 'An error occurred submitting the booking' },
       { status: 500 }
     );
   }

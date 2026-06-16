@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, Eye, RefreshCw } from 'lucide-react';
+import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, Eye, RefreshCw, AlertCircle } from 'lucide-react';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -56,6 +56,8 @@ export default function AdminDashboard() {
     deniedCount: 0,
   });
 
+  const [toastMessage, setToastMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+
   useEffect(() => {
     setMounted(true);
     verifyAdminAuth();
@@ -96,14 +98,20 @@ export default function AdminDashboard() {
         const bookingsList = data.bookings || [];
         setBookings(bookingsList);
         calculateStats(bookingsList);
+        if (bookingsList.length === 0) {
+          setToastMessage({ type: 'error', text: 'Database fetch returned an empty bookings list.' });
+        }
       } else {
+        const data = await res.json().catch(() => ({}));
+        setToastMessage({ type: 'error', text: data.error || 'Failed to fetch bookings from server' });
         if (res.status === 401 || res.status === 403) {
           localStorage.removeItem('user');
           router.push('/admin/login');
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching bookings:', err);
+      setToastMessage({ type: 'error', text: `Network error fetching bookings: ${err.message || String(err)}` });
     }
   };
 
@@ -838,6 +846,14 @@ export default function AdminDashboard() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {toastMessage && (
+        <div className={`admin-toast admin-toast-${toastMessage.type} animate-slide-up`}>
+          <AlertCircle size={18} />
+          <span>{toastMessage.text}</span>
+          <button onClick={() => setToastMessage(null)} className="toast-close-btn">&times;</button>
         </div>
       )}
 
@@ -1787,6 +1803,42 @@ export default function AdminDashboard() {
           max-height: 80vh;
           object-fit: contain;
           border-radius: var(--radius-lg);
+        }
+
+        .admin-toast {
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 1rem 1.25rem;
+          background: white;
+          border-radius: var(--radius-lg);
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+          z-index: 9999;
+          font-weight: 600;
+          font-size: 0.9rem;
+          max-width: 380px;
+          border-left: 4px solid #10b981;
+          color: #1f2937;
+        }
+
+        .admin-toast-error {
+          border-left-color: #ef4444;
+          background: #fef2f2;
+          color: #991b1b;
+        }
+
+        .toast-close-btn {
+          background: none;
+          border: none;
+          color: inherit;
+          font-size: 1.2rem;
+          cursor: pointer;
+          margin-left: auto;
+          padding-left: 0.5rem;
+          line-height: 1;
         }
       `}</style>
     </div>
