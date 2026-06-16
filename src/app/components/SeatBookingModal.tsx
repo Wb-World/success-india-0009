@@ -211,9 +211,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
   // UPI Link payload & Dynamic QR Image (emerald green color combo #10b981)
   const upiPayload = `upi://pay?pa=${upiConfig.upiId}&pn=${encodeURIComponent(upiConfig.upiName)}&am=${totalPrice}&cu=INR`;
-  const qrCodeUrl = upiConfig.upiQrUrl 
-    ? upiConfig.upiQrUrl 
-    : `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayload)}&qzone=1&format=png&color=10b981`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayload)}&qzone=1&format=png&color=10b981`;
 
   // QR code data for ticket validation
   const qrPayload = confirmedData
@@ -491,7 +489,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     wrapper.style.width = '640px';
 
     const seatsHtml = seatsToRender.map((s: string) => `<span style="background:#dcfce7;color:#047857;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:700;margin:2px">${s}</span>`).join('');
-    const currentAttendees = confirmedData?.attendees || attendeeNames;
+    const currentAttendees = confirmedData?.attendees || attendeeDetails;
     const attendeesHtml = seatsToRender.map((s: string) => {
       const info = currentAttendees[s];
       const nameText = typeof info === 'object' && info !== null ? info.name : (info || 'N/A');
@@ -969,12 +967,15 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                   <input 
                     type="text" 
                     placeholder="Enter full name of the attendee" 
-                    value={attendeeNames[selectedSeats[currentAttendeeIndex]] || ''}
+                    value={attendeeDetails[selectedSeats[currentAttendeeIndex]]?.name || ''}
                     onChange={(e) => {
                       const val = e.target.value;
-                      setAttendeeNames(prev => ({
+                      setAttendeeDetails(prev => ({
                         ...prev,
-                        [selectedSeats[currentAttendeeIndex]]: val
+                        [selectedSeats[currentAttendeeIndex]]: {
+                          name: val,
+                          whatsapp: prev[selectedSeats[currentAttendeeIndex]]?.whatsapp || '+91'
+                        }
                       }));
                     }}
                     required

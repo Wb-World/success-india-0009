@@ -563,6 +563,17 @@ export default function AdminDashboard() {
                                 </div>
                               </div>
                             )}
+
+                            <div className="info-row" style={{ gridColumn: 'span 2', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                              <span>Booking Audit QR:</span>
+                              <div style={{ padding: '6px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', display: 'inline-block' }}>
+                                <img 
+                                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(b.qrCodePayload || `BOOKING:${b.id}|EVENT:${b.seminarName || b.eventName}|SEATS:${b.seats.join(',')}|VENUE:${b.venue}|DATE:${b.date}|AMOUNT:INR${b.totalPrice}|STATUS:${b.status.toUpperCase()}`)}&qzone=1&format=png&color=10b981`} 
+                                  alt="Audit QR Code" 
+                                  style={{ width: '80px', height: '80px', display: 'block' }} 
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
 
