@@ -2048,7 +2048,6 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           color: #111827;
           text-align: right;
         }
-
         .td-small { font-size: 0.75rem; }
 
         .td-seat-tags {
