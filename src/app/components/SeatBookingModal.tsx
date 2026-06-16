@@ -61,12 +61,14 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
   const [alreadyBookedSeats, setAlreadyBookedSeats] = useState<string[]>([]);
-  const [step, setStep] = useState<'quantity_select' | 'select' | 'payment' | 'success'>('quantity_select');
+  const [step, setStep] = useState<'quantity_select' | 'select' | 'attendee_details' | 'payment' | 'success'>('quantity_select');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState('');
   const [bookingTimestamp, setBookingTimestamp] = useState('');
   const [confirmedData, setConfirmedData] = useState<any>(null);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
+  const [attendeeNames, setAttendeeNames] = useState<Record<string, string>>({});
+  const [currentAttendeeIndex, setCurrentAttendeeIndex] = useState(0);
 
   // Payment configuration and upload states
   const [upiConfig, setUpiConfig] = useState({ upiId: 'shesh.dav07-1@okaxis', upiName: 'david', upiQrUrl: '/upi-qr-code.jpg?v=2' });
@@ -140,7 +142,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
   // QR code data for ticket validation
   const qrPayload = confirmedData
-    ? `BOOKING:${confirmedData.id}|EVENT:${eventName}|SEATS:${confirmedData.seats.join(',')}|VENUE:${event.venue}|DATE:${event.eventDate || 'TBD'}|AMOUNT:INR${confirmedData.totalPrice}|STATUS:PENDING_VERIFICATION`
+    ? `BOOKING:${confirmedData.id}|EVENT:${eventName}|SEATS:${confirmedData.seats.join(',')}|ATTENDEES:${confirmedData.seats.map((s: string) => `${s}=${confirmedData.attendees?.[s] || 'N/A'}`).join(',')}|VENUE:${event.venue}|DATE:${event.eventDate || 'TBD'}|AMOUNT:INR${confirmedData.totalPrice}|STATUS:PENDING_VERIFICATION`
     : '';
   const qrImageUrl = qrPayload
     ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrPayload)}&qzone=1&format=png&color=10b981`
@@ -332,7 +334,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       time: event.eventTime || '10:00 AM',
       seats: selectedSeats,
       totalPrice,
-      screenshot: screenshotUrl || 'DIRECT_BOOKING',
+      screenshot: (screenshotUrl || 'DIRECT_BOOKING') + '|' + JSON.stringify(attendeeNames),
     };
 
     // Retrieve logged-in user from localStorage to pass x-user-id header
@@ -366,7 +368,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
       setBookingId(newBookingId);
       setBookingTimestamp(ts);
-      setConfirmedData({ id: newBookingId, seats: selectedSeats, totalPrice, timestamp: ts });
+      setConfirmedData({ id: newBookingId, seats: selectedSeats, totalPrice, timestamp: ts, attendees: attendeeNames });
       setIsSubmitting(false);
       setStep('success');
     } catch (err: any) {
@@ -405,7 +407,12 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     wrapper.style.color = '#111827';
     wrapper.style.width = '640px';
 
-    const seatsHtml = seatsToRender.map((s: String) => `<span style="background:#dcfce7;color:#047857;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:700;margin:2px">${s}</span>`).join('');
+    const seatsHtml = seatsToRender.map((s: string) => `<span style="background:#dcfce7;color:#047857;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:700;margin:2px">${s}</span>`).join('');
+    const currentAttendees = confirmedData?.attendees || attendeeNames;
+    const attendeesHtml = seatsToRender.map((s: string) => {
+      const name = currentAttendees[s] || 'N/A';
+      return `<div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;padding:2px 0;"><strong>Seat ${s}:</strong><span>${name}</span></div>`;
+    }).join('');
 
     wrapper.innerHTML = `
       <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
@@ -421,6 +428,12 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Date</span><span style="font-weight:600;">${event.eventDate || 'To Be Confirmed'}</span></div>
           <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Time</span><span style="font-weight:600;">${event.eventTime || '10:00 AM'}</span></div>
           <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f3f4f6;gap:16px;"><span style="color:#6b7280;font-size:13px;flex-shrink:0;">Seats (${seatsLength})</span><div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;">${seatsHtml}</div></div>
+          <div style="padding:12px 0;border-bottom:1px solid #f3f4f6;">
+            <span style="color:#6b7280;font-size:13px;display:block;margin-bottom:6px;">Attendee Details:</span>
+            <div style="background:#f9fafb;border-radius:8px;padding:8px 12px;">
+              ${attendeesHtml}
+            </div>
+          </div>
           <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Price per Seat</span><span style="font-weight:600;">₹${pricePerSeat}</span></div>
           <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Booked At</span><span style="font-weight:600;">${timestampToRender}</span></div>
           <div style="background:#ecfdf5;border-radius:8px;padding:16px;margin-top:16px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:15px;font-weight:600;color:#374151;">Total Amount</span><span style="font-size:24px;font-weight:800;color:#10b981;">₹${priceToRender}</span></div>
@@ -460,12 +473,12 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   return (
     <div
       className="sbm-overlay"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => { if (e.target === e.currentTarget && step === 'success') onClose(); }}
       role="dialog"
       aria-modal="true"
       aria-label="Seat Booking Modal"
     >
-      <div className={`sbm-card sbm-card-${step}`}>
+      <div className={`sbm-card sbm-card-${step}`} onClick={(e) => e.stopPropagation()}>
         {/* Close button */}
         <button className="sbm-close-btn" onClick={onClose} aria-label="Close">
           <X size={20} />
@@ -636,7 +649,10 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
                 <button
                   className="sbm-proceed-btn"
-                  onClick={() => setStep('payment')}
+                  onClick={() => {
+                    setCurrentAttendeeIndex(0);
+                    setStep('attendee_details');
+                  }}
                   disabled={selectedSeats.length !== quantity}
                 >
                   {selectedSeats.length === quantity 
@@ -647,6 +663,105 @@ export default function SeatBookingModal({ event, onClose }: Props) {
               </div>
             </div>
           </>
+        )}
+
+        {/* ── STEP 2.5: Attendee Details (Sequential Forms) ────── */}
+        {step === 'attendee_details' && (
+          <div key={currentAttendeeIndex} className="attendee-container animate-slide-in-form">
+            <h2 className="payment-title" style={{ marginBottom: '0.25rem' }}>Attendee Registration</h2>
+            <p className="payment-subtitle" style={{ marginBottom: '1.5rem' }}>
+              Enter name for seat <strong style={{ color: '#10b981' }}>{selectedSeats[currentAttendeeIndex]}</strong>.
+            </p>
+
+            <div className="attendee-progress-box">
+              <div className="progress-info">
+                <span>Seat Assignment Progress</span>
+                <span className="progress-fraction">{currentAttendeeIndex + 1} of {selectedSeats.length}</span>
+              </div>
+              <div className="progress-track-bar">
+                <div 
+                  className="progress-fill" 
+                  style={{ width: `${((currentAttendeeIndex + 1) / selectedSeats.length) * 100}%` }}
+                />
+              </div>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const currentName = attendeeNames[selectedSeats[currentAttendeeIndex]] || '';
+              if (!currentName.trim()) {
+                alert('Please enter the name of the attendee.');
+                return;
+              }
+              if (currentAttendeeIndex < selectedSeats.length - 1) {
+                setCurrentAttendeeIndex(prev => prev + 1);
+              } else {
+                setStep('payment');
+              }
+            }} className="attendee-fields-form">
+              <div className="form-input-group">
+                <label className="input-field-label">Selected Event</label>
+                <div className="input-readonly-wrap">
+                  <span className="input-field-icon">📅</span>
+                  <input type="text" value={eventName} readOnly disabled className="readonly-input" />
+                </div>
+              </div>
+
+              <div className="form-input-group">
+                <label className="input-field-label">Assigned Seat ID</label>
+                <div className="input-readonly-wrap">
+                  <span className="input-field-icon">🎟️</span>
+                  <input type="text" value={selectedSeats[currentAttendeeIndex]} readOnly disabled className="readonly-input" style={{ fontWeight: 'bold', color: '#10b981' }} />
+                </div>
+              </div>
+
+              <div className="form-input-group">
+                <label className="input-field-label">Attendee Name <span style={{ color: '#ef4444' }}>*</span></label>
+                <div className="input-field-wrap">
+                  <span className="input-field-icon">👤</span>
+                  <input 
+                    type="text" 
+                    placeholder="Enter full name of the attendee" 
+                    value={attendeeNames[selectedSeats[currentAttendeeIndex]] || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setAttendeeNames(prev => ({
+                        ...prev,
+                        [selectedSeats[currentAttendeeIndex]]: val
+                      }));
+                    }}
+                    required
+                    autoFocus
+                    className="text-input-field"
+                  />
+                </div>
+              </div>
+
+              <div className="attendee-form-buttons">
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    if (currentAttendeeIndex > 0) {
+                      setCurrentAttendeeIndex(prev => prev - 1);
+                    } else {
+                      setStep('select');
+                    }
+                  }}
+                  className="sbm-back-btn"
+                  style={{ maxWidth: '140px', margin: 0 }}
+                >
+                  ← Back
+                </button>
+                <button 
+                  type="submit" 
+                  className="sbm-proceed-btn"
+                  style={{ maxWidth: '240px', margin: 0 }}
+                >
+                  {currentAttendeeIndex < selectedSeats.length - 1 ? 'Next Attendee' : 'Proceed to Payment'}
+                </button>
+              </div>
+            </form>
+          </div>
         )}
 
         {/* ── STEP 3: Payment Page (Light Green & White Theme) ────── */}
@@ -763,7 +878,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
             <div className="confirm-actions" style={{ marginTop: '2.5rem', width: '100%', maxWidth: 'none', justifyContent: 'center', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', width: '100%' }}>
-                <button className="sbm-back-btn" onClick={() => setStep('select')} style={{ maxWidth: '180px' }}>
+                <button className="sbm-back-btn" onClick={() => setStep('attendee_details')} style={{ maxWidth: '180px' }}>
                   ← Back
                 </button>
                 <button 
@@ -847,6 +962,20 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                     ))}
                   </div>
                 </div>
+                <div className="ticket-detail-row" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                  <span className="td-label" style={{ marginBottom: '6px' }}>Attendees</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#f9fafb', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                    {(confirmedData?.seats || selectedSeats).map((s: string) => {
+                      const name = (confirmedData?.attendees || attendeeNames)[s] || 'N/A';
+                      return (
+                        <div key={s} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                          <span style={{ fontWeight: '600', color: '#374151' }}>Seat {s}:</span>
+                          <span style={{ color: '#059669', fontWeight: '700' }}>{name}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
                 <div className="ticket-detail-row">
                   <span className="td-label">No. of Seats</span>
                   <strong className="td-value">{confirmedData?.seats?.length || quantity}</strong>
@@ -928,6 +1057,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
         .sbm-card-quantity_select { max-width: 480px; }
         .sbm-card-select { max-width: 960px; }
+        .sbm-card-attendee_details { max-width: 520px; }
         .sbm-card-payment { max-width: 840px; }
         .sbm-card-success { max-width: 760px; }
 
@@ -2048,6 +2178,133 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           animation: fadeIn 0.3s ease;
           text-align: center;
           gap: 0.5rem;
+        }
+
+        /* Attendee Details Step styles */
+        .attendee-container {
+          padding: 2.25rem 2rem;
+        }
+
+        .attendee-progress-box {
+          margin-bottom: 1.5rem;
+          background: #f0fdf4;
+          padding: 0.85rem;
+          border-radius: 10px;
+          border: 1px solid #bbf7d0;
+        }
+
+        .progress-info {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #1e293b;
+          margin-bottom: 0.5rem;
+        }
+
+        .progress-fraction {
+          color: #059669;
+          font-weight: 700;
+        }
+
+        .progress-track-bar {
+          background: #e2e8f0;
+          height: 8px;
+          border-radius: 999px;
+          overflow: hidden;
+        }
+
+        .progress-fill {
+          background: #10b981;
+          height: 100%;
+          border-radius: 999px;
+          transition: width 0.35s ease;
+        }
+
+        .attendee-fields-form {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        .form-input-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+        }
+
+        .input-field-label {
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: #475569;
+        }
+
+        .input-readonly-wrap,
+        .input-field-wrap {
+          display: flex;
+          align-items: center;
+          border: 1.5px solid #cbd5e1;
+          border-radius: 8px;
+          padding: 0 0.75rem;
+          background: #ffffff;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-readonly-wrap {
+          background: #f8fafc;
+        }
+
+        .input-field-wrap:focus-within {
+          border-color: #10b981;
+          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+
+        .input-field-icon {
+          font-size: 1.1rem;
+          margin-right: 0.5rem;
+          flex-shrink: 0;
+        }
+
+        .readonly-input,
+        .text-input-field {
+          width: 100%;
+          height: 42px;
+          border: none;
+          background: transparent;
+          font-size: 0.95rem;
+          color: #1e293b;
+          outline: none;
+        }
+
+        .readonly-input {
+          cursor: not-allowed;
+          font-weight: 500;
+        }
+
+        .text-input-field {
+          font-weight: 600;
+        }
+
+        .attendee-form-buttons {
+          display: flex;
+          gap: 1rem;
+          justify-content: flex-end;
+          margin-top: 1.5rem;
+        }
+
+        @keyframes slideInForm {
+          from {
+            opacity: 0;
+            transform: translateY(15px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-slide-in-form {
+          animation: slideInForm 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         /* Print styles */

@@ -565,6 +565,15 @@ export default function Profile() {
                               <span key={seat} className="seat-item-tag">{seat}</span>
                             ))}
                           </div>
+                          {booking.attendees && Object.keys(booking.attendees).length > 0 && (
+                            <div className="booking-attendees-list" style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                              {Object.entries(booking.attendees).map(([seat, name]: any) => (
+                                <span key={seat} style={{ fontSize: '11px', color: '#047857', whiteSpace: 'nowrap', display: 'block' }}>
+                                  <strong>{seat}:</strong> {name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </td>
                         <td>
                           <div className="date-cell">
