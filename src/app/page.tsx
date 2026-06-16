@@ -163,28 +163,28 @@ export default function Home() {
             <div className="hero-text-col animate-slide-up">
               <span className="hero-tagline">
                 <ShieldCheck size={16} />
-                Official Networking &amp; Leadership Portal
+                Official AccessIndia Growth Platform
               </span>
               <h1 className="hero-title">
-                Empowering Your Growth: Book Your Next <span className="text-highlight">Success Event</span> &amp; Chapter Meetup
+                AccessIndia: Pioneering <span className="text-highlight">Enterprise Growth &amp; Professional</span> Leadership
               </h1>
               <p className="hero-subtitle">
-                Reserve your seats for official leadership development programs, recruitment training, and weekly income-generation strategy sessions hosted across Tamil Nadu.
+                Empowering India&apos;s entrepreneurial ecosystem through official chapter meetups, high-impact business strategy seminars, and curated networking forums designed for scalability and success.
               </p>
               <div className="hero-proof-row">
                 <div className="proof-item">
                   <MapPin size={18} />
-                  <span>Chromepet, Chennai based operations</span>
+                  <span>Chromepet, Chennai operations hub</span>
                 </div>
                 <div className="proof-item">
                   <Globe2 size={18} />
-                  <span>Online portal and mobile app ecosystem</span>
+                  <span>Online network portal and mobile ecosystem</span>
                 </div>
               </div>
               <div className="hero-cta-buttons">
                 <button
                   onClick={handleReserveClick}
-                  className="btn btn-primary btn-lg-premium"
+                  className="btn btn-primary btn-lg-premium animate-pulse-green"
                   style={{ cursor: 'pointer' }}
                 >
                   <Calendar size={18} /> Reserve a Seat
@@ -195,68 +195,13 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="hero-search-col animate-scale-in">
-              <div className="registration-card">
-                <div className="card-kicker">Event Registration Hub</div>
-                <h3 className="search-card-title">Find a chapter session near you</h3>
-                <form onSubmit={handleSearch}>
-                  <div className="form-group">
-                    <label className="form-label">
-                      <MapPin size={14} className="input-label-icon" /> Location Selection
-                    </label>
-                    <select
-                      value={venue}
-                      onChange={(e) => handleLocationSelect(e.target.value)}
-                      className="form-control select-field"
-                    >
-                      {eventLocations.map((location) => (
-                        <option key={location} value={location}>{location}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">
-                      <BriefcaseBusiness size={14} className="input-label-icon" /> Event Event
-                    </label>
-                    <select
-                      value={selectedEventId || seminar}
-                      onChange={(e) => handleEventSelect(e.target.value)}
-                      className="form-control select-field"
-                    >
-                      {eventOptions.length > 0
-                        ? eventOptions.map((event) => (
-                          <option key={event.id} value={event.id}>
-                            {event.title || event.name} • ₹{event.price}
-                          </option>
-                        ))
-                        : fallbackEventCategories.map((category) => (
-                          <option key={category} value={category}>{category}</option>
-                        ))}
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">
-                      <Calendar size={14} className="input-label-icon" /> Select Event Date
-                    </label>
-                    <input
-                      type="date"
-                      value={date}
-                      min={new Date().toISOString().split('T')[0]}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="form-control date-field"
-                      required
-                    />
-                  </div>
-
-                  <button type="submit" className="btn btn-primary search-btn">
-                    <Search size={18} /> Find Available Seminars
-                  </button>
-                </form>
-                <p className="registration-note">
-                  Program details are based on the Success Team operations described in the provided business context.
-                </p>
+            <div className="hero-image-col animate-scale-in">
+              <div className="hero-image-wrapper">
+                <img
+                  src="/image.png"
+                  alt="AccessIndia Success Team Branding"
+                  className="hero-image"
+                />
               </div>
             </div>
           </div>
@@ -267,7 +212,7 @@ export default function Home() {
             <span className="section-eyebrow">Operational Focus</span>
             <h2 className="heading-lg">Built for leadership briefings and local chapter growth</h2>
             <p className="section-subtitle">
-              Success Team organizes the key training themes from the provided Accsys India Success Team context into a clean booking experience for prospective members and local teams.
+              AccessIndia Success Team organizes core leadership briefings, networking workshops, and local chapter meetups into a premium reservation experience.
             </p>
           </div>
 
@@ -508,23 +453,31 @@ export default function Home() {
           border-radius: var(--radius-md);
         }
 
-        .hero-search-col {
+        .hero-image-col {
           display: flex;
-          align-items: stretch;
+          align-items: center;
           width: 100%;
           justify-content: center;
         }
 
-        .registration-card {
+        .hero-image-wrapper {
           width: 100%;
-          max-width: 500px;
-          margin: 0 auto;
-          padding: 2rem 2rem 1.5rem;
-          background: rgba(255, 255, 255, 0.98);
-          color: var(--foreground);
-          border-radius: var(--radius-xl);
-          box-shadow: 0 28px 70px rgba(2, 8, 23, 0.32);
-          border: 1px solid rgba(255, 255, 255, 0.72);
+          max-width: 480px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .hero-image-wrapper:hover {
+          transform: translateY(-8px) scale(1.03);
+        }
+
+        .hero-image {
+          width: 100%;
+          height: auto;
+          object-fit: contain;
+          filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.35));
         }
 
         .card-kicker {
