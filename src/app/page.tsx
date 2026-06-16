@@ -198,8 +198,8 @@ export default function Home() {
             <div className="hero-image-col animate-scale-in">
               <div className="hero-image-wrapper">
                 <img
-                  src="/image.png"
-                  alt="AccessIndia Success Team Branding"
+                  src="/image2.png"
+                  alt="AccessIndia Success Team Leader"
                   className="hero-image"
                 />
               </div>
@@ -462,11 +462,14 @@ export default function Home() {
 
         .hero-image-wrapper {
           width: 100%;
-          max-width: 480px;
+          max-width: 420px;
           display: flex;
-          align-items: center;
+          align-items: flex-end;
           justify-content: center;
           transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+          position: relative;
+          overflow: hidden;
+          border-radius: 24px;
         }
 
         .hero-image-wrapper:hover {
@@ -476,8 +479,14 @@ export default function Home() {
         .hero-image {
           width: 100%;
           height: auto;
-          object-fit: contain;
-          filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.35));
+          object-fit: cover;
+          mix-blend-mode: screen;
+          filter: brightness(1.1) contrast(1.15) drop-shadow(0 10px 30px rgba(0, 0, 0, 0.25));
+          transition: filter 0.3s ease;
+        }
+
+        .hero-image-wrapper:hover .hero-image {
+          filter: brightness(1.15) contrast(1.2) drop-shadow(0 15px 40px rgba(0, 0, 0, 0.3));
         }
 
         .card-kicker {
