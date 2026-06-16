@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     const { data: bookings, error } = await supabaseAdmin
       .from('bookings')
       .select('seats')
-      .or(`seminar_id.eq.${eventId},bus_id.eq.${eventId}`)
+      .eq('bus_id', eventId)
       .in('status', ['approved', 'pending']);
 
     if (error) {
@@ -108,10 +108,10 @@ export async function POST(request: Request) {
       const { data: conflicting } = await supabaseAdmin
         .from('bookings')
         .select('seats')
-        .or(`seminar_id.eq.${resolvedSeminarId},bus_id.eq.${resolvedSeminarId}`)
+        .eq('bus_id', resolvedSeminarId)
         .eq('date', date)
         .eq('time', time)
-        .eq('status', 'approved');
+        .in('status', ['approved', 'pending']);
 
       const alreadyBooked = (conflicting || []).flatMap((bk: any) => bk.seats || []);
       const hasConflict = seats.some((s: string) => alreadyBooked.includes(s));

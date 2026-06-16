@@ -61,7 +61,7 @@ async function getApprovedSeatMap(eventIds: string[], date?: string) {
 
   let query = supabaseAdmin
     .from('bookings')
-    .select('seminar_id, bus_id, time, seats')
+    .select('bus_id, time, seats')
     .in('status', ['approved', 'pending']);
 
   if (date) query = query.eq('date', date);
