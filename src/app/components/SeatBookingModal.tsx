@@ -695,7 +695,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                 <div className="upload-section">
                   <label className="upload-header">
                     <Upload size={16} />
-                    <span>Upload Payment Screenshot</span>
+                    <span>Upload Payment Screenshot <span className="upload-required-badge">Required</span></span>
                   </label>
                   
                   <div className="upload-dropzone">
@@ -708,10 +708,11 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                     />
                     
                     {!screenshotUrl ? (
-                      <label htmlFor="screenshot-file-input" className="file-input-label">
+                      <label htmlFor="screenshot-file-input" className="file-input-label file-input-label-required">
                         <Upload size={24} className="upload-zone-icon" />
                         <strong>{isUploading ? 'Uploading proof image...' : 'Choose Receipt Screenshot file'}</strong>
                         <span>Supports JPG, JPEG, PNG, WEBP (max 3MB)</span>
+                        <span className="upload-required-hint">⚠ Upload is required to confirm booking</span>
                       </label>
                     ) : (
                       <div className="upload-preview-container animate-fade-in">
@@ -760,18 +761,26 @@ export default function SeatBookingModal({ event, onClose }: Props) {
               </div>
             </div>
 
-            <div className="confirm-actions" style={{ marginTop: '2.5rem', width: '100%', maxWidth: 'none', justifyContent: 'center' }}>
-              <button className="sbm-back-btn" onClick={() => setStep('select')} style={{ maxWidth: '180px' }}>
-                ← Back
-              </button>
-              <button 
-                className="sbm-confirm-btn" 
-                onClick={handleConfirmBooking} 
-                disabled={isSubmitting}
-                style={{ maxWidth: '300px' }}
-              >
-                {isSubmitting ? 'Verifying Booking...' : 'Confirm Booking'}
-              </button>
+            <div className="confirm-actions" style={{ marginTop: '2.5rem', width: '100%', maxWidth: 'none', justifyContent: 'center', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', width: '100%' }}>
+                <button className="sbm-back-btn" onClick={() => setStep('select')} style={{ maxWidth: '180px' }}>
+                  ← Back
+                </button>
+                <button 
+                  className="sbm-confirm-btn" 
+                  onClick={handleConfirmBooking} 
+                  disabled={isSubmitting || !screenshotUrl}
+                  style={{ maxWidth: '300px' }}
+                  title={!screenshotUrl ? 'Please upload payment proof screenshot first' : ''}
+                >
+                  {isSubmitting ? 'Verifying Booking...' : 'Confirm Booking'}
+                </button>
+              </div>
+              {!screenshotUrl && (
+                <div className="proof-required-notice">
+                  <span>📎 Please upload your payment screenshot above to enable confirmation.</span>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1988,6 +1997,54 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           transition: all 0.15s;
         }
         .sbm-done-btn:hover { background: #374151; transform: translateY(-2px); }
+
+        /* Required upload badge */
+        .upload-required-badge {
+          display: inline-block;
+          background: #fef2f2;
+          color: #dc2626;
+          font-size: 0.65rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          padding: 2px 7px;
+          border-radius: 4px;
+          border: 1px solid #fecaca;
+          margin-left: 6px;
+          vertical-align: middle;
+        }
+
+        /* Hint inside dropzone when no upload */
+        .upload-required-hint {
+          display: block;
+          margin-top: 6px;
+          font-size: 0.78rem;
+          color: #dc2626;
+          font-weight: 600;
+        }
+
+        /* Highlighted dropzone border when required and empty */
+        .file-input-label-required {
+          border-color: #fca5a5 !important;
+          background: #fff9f9 !important;
+        }
+
+        /* Notice below confirm button */
+        .proof-required-notice {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #fff3cd;
+          border: 1px solid #ffd57e;
+          color: #92400e;
+          font-size: 0.85rem;
+          font-weight: 600;
+          padding: 0.6rem 1.25rem;
+          border-radius: 8px;
+          animation: fadeIn 0.3s ease;
+          text-align: center;
+          gap: 0.5rem;
+        }
 
         /* Print styles */
         @media print {
