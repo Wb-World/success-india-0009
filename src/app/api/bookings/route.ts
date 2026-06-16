@@ -137,6 +137,12 @@ export async function POST(request: Request) {
       );
     }
 
+    // Sanitize screenshot URL (strip any pipe-delimited legacy suffix)
+    const cleanScreenshot = (screenshot || 'DIRECT_BOOKING').split('|')[0];
+
+    // Build QR payload for ticket validation
+    const qrCodePayload = `BOOKING:${bookingRefId}|EVENT:${resolvedSeminarName}|SEATS:${seats.join(',')}|VENUE:${resolvedVenue}|DATE:${date}|AMOUNT:INR${totalPrice}|STATUS:PENDING_VERIFICATION`;
+
     try {
       const { data: newBooking, error: insertError } = await supabaseAdmin
         .from('bookings')
