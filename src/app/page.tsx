@@ -198,8 +198,13 @@ export default function Home() {
             <div className="hero-image-col animate-scale-in">
               <div className="hero-image-wrapper">
                 <img
+<<<<<<< HEAD
                   src="/image2.png"
                   alt="AccessIndia Success Team Leader"
+=======
+                  src="/hero-leader.png"
+                  alt="AccessIndia Success Team Leader - Professional Portrait"
+>>>>>>> b5726373bfc9fe5ba35af226df62f8f8e1ea3f82
                   className="hero-image"
                 />
               </div>
@@ -462,24 +467,40 @@ export default function Home() {
 
         .hero-image-wrapper {
           width: 100%;
+<<<<<<< HEAD
           max-width: 420px;
+=======
+          max-width: 400px;
+>>>>>>> b5726373bfc9fe5ba35af226df62f8f8e1ea3f82
           display: flex;
           align-items: flex-end;
           justify-content: center;
           transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
           position: relative;
           overflow: hidden;
+<<<<<<< HEAD
           border-radius: 24px;
+=======
+          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.1);
+          box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.18),
+            0 2px 8px rgba(0, 0, 0, 0.08);
+>>>>>>> b5726373bfc9fe5ba35af226df62f8f8e1ea3f82
         }
 
         .hero-image-wrapper:hover {
-          transform: translateY(-8px) scale(1.03);
+          transform: translateY(-6px) scale(1.02);
+          box-shadow:
+            0 16px 48px rgba(0, 0, 0, 0.22),
+            0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .hero-image {
           width: 100%;
           height: auto;
           object-fit: cover;
+<<<<<<< HEAD
           mix-blend-mode: screen;
           filter: brightness(1.1) contrast(1.15) drop-shadow(0 10px 30px rgba(0, 0, 0, 0.25));
           transition: filter 0.3s ease;
@@ -487,6 +508,16 @@ export default function Home() {
 
         .hero-image-wrapper:hover .hero-image {
           filter: brightness(1.15) contrast(1.2) drop-shadow(0 15px 40px rgba(0, 0, 0, 0.3));
+=======
+          object-position: top;
+          display: block;
+          border-radius: 20px;
+          transition: transform 0.4s ease;
+        }
+
+        .hero-image-wrapper:hover .hero-image {
+          transform: scale(1.03);
+>>>>>>> b5726373bfc9fe5ba35af226df62f8f8e1ea3f82
         }
 
         .card-kicker {
