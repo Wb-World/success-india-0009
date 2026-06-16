@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Calendar, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { Menu, X, Calendar, User, LogOut } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -65,11 +65,6 @@ export default function Navbar() {
           </Link>
           {user ? (
             <>
-              {user.role === 'admin' && (
-                <Link href="/admin/dashboard" className="btn btn-secondary nav-book-btn" style={{ borderColor: 'var(--primary)' }}>
-                  <LayoutDashboard size={16} /> Admin
-                </Link>
-              )}
               <Link href="/profile" className="btn btn-secondary nav-book-btn">
                 <User size={16} /> Profile
               </Link>
@@ -109,11 +104,6 @@ export default function Navbar() {
               </Link>
               {user ? (
                 <>
-                  {user.role === 'admin' && (
-                    <Link href="/admin/dashboard" className="btn btn-secondary mobile-book-btn" style={{ borderColor: 'var(--primary)' }} onClick={() => setMenuOpen(false)}>
-                      <LayoutDashboard size={16} /> Admin Console
-                    </Link>
-                  )}
                   <Link href="/profile" className="btn btn-secondary mobile-book-btn" onClick={() => setMenuOpen(false)}>
                     <User size={16} /> My Profile
                   </Link>
