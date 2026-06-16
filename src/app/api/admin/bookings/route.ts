@@ -51,6 +51,18 @@ export async function GET(request: Request) {
             phone: 'N/A',
           };
 
+      let cleanScreenshot = b.screenshot || '';
+      let attendees = {};
+      if (cleanScreenshot.includes('|')) {
+        const parts = cleanScreenshot.split('|');
+        cleanScreenshot = parts[0];
+        try {
+          attendees = JSON.parse(parts[1] || '{}');
+        } catch (e) {
+          console.error('Failed to parse attendees json:', e);
+        }
+      }
+
       return {
         id: b.id,
         userId: b.user_id,
@@ -64,7 +76,8 @@ export async function GET(request: Request) {
         time: b.time,
         seats: b.seats || [],
         totalPrice: b.total_price,
-        screenshot: b.screenshot,
+        screenshot: cleanScreenshot,
+        attendees: attendees,
         status: b.status,
         createdAt: b.created_at,
         user: userObj,

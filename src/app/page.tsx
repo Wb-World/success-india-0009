@@ -163,13 +163,13 @@ export default function Home() {
             <div className="hero-text-col animate-slide-up">
               <span className="hero-tagline">
                 <ShieldCheck size={16} />
-                Official AccessIndia Networking Portal
+                Official AccessIndia Growth Platform
               </span>
               <h1 className="hero-title">
-                AccessIndia Success Team: Cultivating <span className="text-highlight">Leadership &amp; Business</span> Synergy
+                AccessIndia: Pioneering <span className="text-highlight">Enterprise Growth &amp; Professional</span> Leadership
               </h1>
               <p className="hero-subtitle">
-                Connect with ambitious leaders, expand your professional network, and reserve your seats for official AccessIndia chapter meetups, training sessions, and weekly strategy programs across Tamil Nadu.
+                Empowering India's entrepreneurial ecosystem through official chapter meetups, high-impact business strategy seminars, and curated networking forums designed for scalability and success.
               </p>
               <div className="hero-proof-row">
                 <div className="proof-item">
@@ -462,31 +462,22 @@ export default function Home() {
 
         .hero-image-wrapper {
           width: 100%;
-          max-width: 520px;
-          border-radius: var(--radius-2xl);
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-          backdrop-filter: blur(8px);
-          padding: 1.25rem;
+          max-width: 480px;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .hero-image-wrapper:hover {
-          transform: translateY(-8px) scale(1.02);
-          box-shadow: 0 35px 60px -15px rgba(22, 163, 74, 0.45);
-          border-color: rgba(255, 255, 255, 0.3);
+          transform: translateY(-8px) scale(1.03);
         }
 
         .hero-image {
           width: 100%;
           height: auto;
           object-fit: contain;
-          border-radius: var(--radius-xl);
-          filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.3));
+          filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.35));
         }
 
         .card-kicker {

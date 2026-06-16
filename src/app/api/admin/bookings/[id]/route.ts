@@ -51,6 +51,18 @@ export async function PATCH(
       );
     }
 
+    let cleanScreenshot = updatedBooking.screenshot || '';
+    let attendees = {};
+    if (cleanScreenshot.includes('|')) {
+      const parts = cleanScreenshot.split('|');
+      cleanScreenshot = parts[0];
+      try {
+        attendees = JSON.parse(parts[1] || '{}');
+      } catch (e) {
+        console.error('Failed to parse attendees json:', e);
+      }
+    }
+
     // Map snake_case -> camelCase for the frontend
     const mappedBooking = {
       id: updatedBooking.id,
@@ -65,7 +77,8 @@ export async function PATCH(
       time: updatedBooking.time,
       seats: updatedBooking.seats || [],
       totalPrice: updatedBooking.total_price,
-      screenshot: updatedBooking.screenshot,
+      screenshot: cleanScreenshot,
+      attendees: attendees,
       status: updatedBooking.status,
       createdAt: updatedBooking.created_at,
     };
