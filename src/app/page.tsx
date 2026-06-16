@@ -202,6 +202,11 @@ export default function Home() {
                   alt="AccessIndia Success Team Leader - Professional Portrait"
                   className="hero-image"
                 />
+                <img
+                  src="/image2.png"
+                  alt="AccessIndia Success Team Leader"
+                  className="hero-image"
+                />
               </div>
             </div>
           </div>
@@ -462,11 +467,12 @@ export default function Home() {
 
         .hero-image-wrapper {
           width: 100%;
-          max-width: 420px;
-          aspect-ratio: 4 / 5;
+          max-width: 520px;
+          aspect-ratio: 16 / 10;
           display: flex;
           align-items: flex-end;
           justify-content: center;
+          gap: 12px;
           transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
           position: relative;
           overflow: hidden;
@@ -478,6 +484,7 @@ export default function Home() {
           box-shadow:
             0 20px 40px rgba(0, 0, 0, 0.25),
             0 1px 3px rgba(0, 0, 0, 0.1);
+          padding: 12px;
         }
 
         .hero-image-wrapper:hover {
@@ -488,19 +495,19 @@ export default function Home() {
         }
 
         .hero-image {
-          width: 100%;
+          width: calc(50% - 6px);
           height: 100%;
           object-fit: cover;
           object-position: center;
           display: block;
           mix-blend-mode: screen;
-          filter: brightness(1.05) contrast(1.1);
+          filter: brightness(1.05) contrast(1.1) drop-shadow(0 10px 30px rgba(0, 0, 0, 0.25));
           transition: transform 0.4s ease, filter 0.4s ease;
         }
 
         .hero-image-wrapper:hover .hero-image {
           transform: scale(1.03);
-          filter: brightness(1.15) contrast(1.2);
+          filter: brightness(1.15) contrast(1.2) drop-shadow(0 15px 40px rgba(0, 0, 0, 0.3));
         }
 
         .card-kicker {

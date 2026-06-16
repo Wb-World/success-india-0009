@@ -473,12 +473,12 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   return (
     <div
       className="sbm-overlay"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => { if (e.target === e.currentTarget && step === 'success') onClose(); }}
       role="dialog"
       aria-modal="true"
       aria-label="Seat Booking Modal"
     >
-      <div className={`sbm-card sbm-card-${step}`}>
+      <div className={`sbm-card sbm-card-${step}`} onClick={(e) => e.stopPropagation()}>
         {/* Close button */}
         <button className="sbm-close-btn" onClick={onClose} aria-label="Close">
           <X size={20} />
@@ -2048,7 +2048,6 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           color: #111827;
           text-align: right;
         }
-
         .td-small { font-size: 0.75rem; }
 
         .td-seat-tags {
