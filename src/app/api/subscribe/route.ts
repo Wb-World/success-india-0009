@@ -146,7 +146,7 @@ export async function POST(request: Request) {
     <div class="content">
       <h2>Welcome to Success Team! ✨</h2>
       <p>Hello,</p>
-      <p>Thank you for subscribing to the <strong>Success Team Official Seminar & Leadership Portal</strong> newsletter. We are thrilled to welcome you to our community of leaders and entrepreneurs!</p>
+      <p>Thank you for subscribing to the <strong>Success Team Official Event & Leadership Portal</strong> newsletter. We are thrilled to welcome you to our community of leaders and entrepreneurs!</p>
       <p>By subscribing, you will receive priority alerts and resources, including:</p>
       <div class="bullet-points">
         <ul>
@@ -182,7 +182,7 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         from: 'Success Team <onboarding@resend.dev>',
         to: [email],
-        subject: 'Welcome to Success Team - Official Seminar & Leadership Portal ✨',
+        subject: 'Welcome to Success Team - Official Event & Leadership Portal ✨',
         html: htmlContent,
       }),
     });

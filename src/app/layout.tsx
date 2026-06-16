@@ -4,7 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 export const metadata: Metadata = {
-  title: 'Success Team - Official Seminar & Leadership Portal',
+  title: 'Success Team - Official Event & Leadership Portal',
   description: 'Reserve seats for Success Team leadership development seminars, recruitment training, weekly strategy sessions, and local Tamil Nadu chapter meetups.',
   keywords: 'Success Team, seminar booking, leadership development, chapter meetups, Tamil Nadu, Chromepet Chennai, direct selling workshops',
   icons: {
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     apple: { url: '/favicon.png?v=2', sizes: '180x180' },
   },
   openGraph: {
-    title: 'Success Team - Official Seminar & Leadership Portal',
+    title: 'Success Team - Official Event & Leadership Portal',
     description: 'Official seminar registration, leadership development, and chapter meetup portal for Success Team.',
     type: 'website',
     images: ['/favicon.png?v=2'],

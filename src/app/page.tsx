@@ -159,226 +159,171 @@ export default function Home() {
 
       <div className="landing-page-content">
         <section className="hero-section">
-        <div className="container hero-container">
-          <div className="hero-text-col animate-slide-up">
-            <span className="hero-tagline">
-              <ShieldCheck size={16} />
-              Official Networking &amp; Leadership Portal
-            </span>
-            <h1 className="hero-title">
-              Empowering Your Growth: Book Your Next <span className="text-highlight">Success Seminar</span> &amp; Chapter Meetup
-            </h1>
-            <p className="hero-subtitle">
-              Reserve your seats for official leadership development programs, recruitment training, and weekly income-generation strategy sessions hosted across Tamil Nadu.
-            </p>
-            <div className="hero-proof-row">
-              <div className="proof-item">
-                <MapPin size={18} />
-                <span>Chromepet, Chennai based operations</span>
+          <div className="container hero-container">
+            <div className="hero-text-col animate-slide-up">
+              <span className="hero-tagline">
+                <ShieldCheck size={16} />
+                Official AccessIndia Networking Portal
+              </span>
+              <h1 className="hero-title">
+                AccessIndia Success Team: Cultivating <span className="text-highlight">Leadership &amp; Business</span> Synergy
+              </h1>
+              <p className="hero-subtitle">
+                Connect with ambitious leaders, expand your professional network, and reserve your seats for official AccessIndia chapter meetups, training sessions, and weekly strategy programs across Tamil Nadu.
+              </p>
+              <div className="hero-proof-row">
+                <div className="proof-item">
+                  <MapPin size={18} />
+                  <span>Chromepet, Chennai operations hub</span>
+                </div>
+                <div className="proof-item">
+                  <Globe2 size={18} />
+                  <span>Online network portal and mobile ecosystem</span>
+                </div>
               </div>
-              <div className="proof-item">
-                <Globe2 size={18} />
-                <span>Online portal and mobile app ecosystem</span>
+              <div className="hero-cta-buttons">
+                <button
+                  onClick={handleReserveClick}
+                  className="btn btn-primary btn-lg-premium animate-pulse-green"
+                  style={{ cursor: 'pointer' }}
+                >
+                  <Calendar size={18} /> Reserve a Seat
+                </button>
+                <Link href="/about" className="btn btn-secondary btn-lg-premium">
+                  View Portal Context
+                </Link>
               </div>
             </div>
-            <div className="hero-cta-buttons">
-              <button
-                onClick={handleReserveClick}
-                className="btn btn-primary btn-lg-premium"
-                style={{ cursor: 'pointer' }}
-              >
-                <Calendar size={18} /> Reserve a Seat
-              </button>
-              <Link href="/about" className="btn btn-secondary btn-lg-premium">
-                View Portal Context
-              </Link>
+
+            <div className="hero-image-col animate-scale-in">
+              <div className="hero-image-wrapper">
+                <img
+                  src="/image.png"
+                  alt="AccessIndia Success Team Branding"
+                  className="hero-image"
+                />
+              </div>
             </div>
           </div>
+        </section>
 
-          <div className="hero-search-col animate-scale-in">
-            <div className="registration-card">
-              <div className="card-kicker">Seminar Registration Hub</div>
-              <h3 className="search-card-title">Find a chapter session near you</h3>
-              <form onSubmit={handleSearch}>
-                <div className="form-group">
-                  <label className="form-label">
-                    <MapPin size={14} className="input-label-icon" /> Location Selection
-                  </label>
-                  <select
-                    value={venue}
-                    onChange={(e) => handleLocationSelect(e.target.value)}
-                    className="form-control select-field"
-                  >
-                    {eventLocations.map((location) => (
-                      <option key={location} value={location}>{location}</option>
-                    ))}
-                  </select>
-                </div>
+        <section className="features-section container">
+          <div className="section-header">
+            <span className="section-eyebrow">Operational Focus</span>
+            <h2 className="heading-lg">Built for leadership briefings and local chapter growth</h2>
+            <p className="section-subtitle">
+              AccessIndia Success Team organizes core leadership briefings, networking workshops, and local chapter meetups into a premium reservation experience.
+            </p>
+          </div>
 
-                <div className="form-group">
-                  <label className="form-label">
-                    <BriefcaseBusiness size={14} className="input-label-icon" /> Seminar Event
-                  </label>
-                  <select
-                    value={selectedEventId || seminar}
-                    onChange={(e) => handleEventSelect(e.target.value)}
-                    className="form-control select-field"
-                  >
-                    {eventOptions.length > 0
-                      ? eventOptions.map((event) => (
-                          <option key={event.id} value={event.id}>
-                            {event.title || event.name} • ₹{event.price}
-                          </option>
-                        ))
-                      : fallbackEventCategories.map((category) => (
-                          <option key={category} value={category}>{category}</option>
-                        ))}
-                  </select>
-                </div>
+          <div className="features-grid">
+            <div className="feature-card">
+              <div className="feature-icon-wrapper">
+                <Users size={28} className="feature-icon" />
+              </div>
+              <h4 className="heading-sm feature-title">Leadership Development</h4>
+              <p className="feature-desc">
+                Seat reservations for leadership programs, team updates, recruitment training, and business-volume focused briefings.
+              </p>
+            </div>
 
-                <div className="form-group">
-                  <label className="form-label">
-                    <Calendar size={14} className="input-label-icon" /> Select Seminar Date
-                  </label>
-                  <input
-                    type="date"
-                    value={date}
-                    min={new Date().toISOString().split('T')[0]}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="form-control date-field"
-                    required
-                  />
-                </div>
+            <div className="feature-card">
+              <div className="feature-icon-wrapper">
+                <BarChart3 size={28} className="feature-icon" />
+              </div>
+              <h4 className="heading-sm feature-title">Weekly Strategy Systems</h4>
+              <p className="feature-desc">
+                Weekly income-generation sessions centered on referrals, payouts, market connections, and practical member routines.
+              </p>
+            </div>
 
-                <button type="submit" className="btn btn-primary search-btn">
-                  <Search size={18} /> Find Available Seminars
-                </button>
-              </form>
-              <p className="registration-note">
-                Program details are based on the Success Team operations described in the provided business context.
+            <div className="feature-card">
+              <div className="feature-icon-wrapper">
+                <Handshake size={28} className="feature-icon" />
+              </div>
+              <h4 className="heading-sm feature-title">Chapter Networking</h4>
+              <p className="feature-desc">
+                Local meetup access for chapter networks, including BOSS Agro Hub style chapter gatherings noted in the business context.
               </p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="features-section container">
-        <div className="section-header">
-          <span className="section-eyebrow">Operational Focus</span>
-          <h2 className="heading-lg">Built for leadership briefings and local chapter growth</h2>
-          <p className="section-subtitle">
-            Success Team organizes the key training themes from the provided Accsys India Success Team context into a clean booking experience for prospective members and local teams.
-          </p>
-        </div>
-
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon-wrapper">
-              <Users size={28} className="feature-icon" />
+        <section className="stats-section">
+          <div className="container trust-container">
+            <div className="trust-copy">
+              <span className="section-eyebrow">Trust &amp; Due Diligence</span>
+              <h2 className="heading-lg">Clear information before every registration</h2>
+              <p>
+                The provided context notes mixed consumer reviews and recommends careful due diligence. This portal presents seminar categories, locations, dates, and official resources plainly so attendees can review details before reserving seats.
+              </p>
             </div>
-            <h4 className="heading-sm feature-title">Leadership Development</h4>
-            <p className="feature-desc">
-              Seat reservations for leadership programs, team updates, recruitment training, and business-volume focused briefings.
-            </p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon-wrapper">
-              <BarChart3 size={28} className="feature-icon" />
-            </div>
-            <h4 className="heading-sm feature-title">Weekly Strategy Systems</h4>
-            <p className="feature-desc">
-              Weekly income-generation sessions centered on referrals, payouts, market connections, and practical member routines.
-            </p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon-wrapper">
-              <Handshake size={28} className="feature-icon" />
-            </div>
-            <h4 className="heading-sm feature-title">Chapter Networking</h4>
-            <p className="feature-desc">
-              Local meetup access for chapter networks, including BOSS Agro Hub style chapter gatherings noted in the business context.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="stats-section">
-        <div className="container trust-container">
-          <div className="trust-copy">
-            <span className="section-eyebrow">Trust &amp; Due Diligence</span>
-            <h2 className="heading-lg">Clear information before every registration</h2>
-            <p>
-              The provided context notes mixed consumer reviews and recommends careful due diligence. This portal presents seminar categories, locations, dates, and official resources plainly so attendees can review details before reserving seats.
-            </p>
-          </div>
-          <div className="trust-list">
-            <div className="trust-item">
-              <CheckCircle2 size={20} />
-              <span>Official resource links and company-detail context</span>
-            </div>
-            <div className="trust-item">
-              <CheckCircle2 size={20} />
-              <span>Local Tamil Nadu chapter and briefing filters</span>
-            </div>
-            <div className="trust-item">
-              <CheckCircle2 size={20} />
-              <span>Transparent session categories before seat selection</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="routes-section container">
-        <div className="section-header">
-          <span className="section-eyebrow">Popular Seminar Tracks</span>
-          <h2 className="heading-lg">Reserve seats for the next Success Team session</h2>
-          <p className="section-subtitle">Click any event card to instantly open seat booking.</p>
-        </div>
-
-        <div className="routes-grid">
-          {(events.length ? events.slice(0, 3) : fallbackEventCategories.slice(0, 3)).map((item, index) => {
-            const event = typeof item === 'string' ? null : item;
-            const category = event ? event.title || event.name || fallbackEventCategories[index] : String(item);
-            const location = event ? event.venue || event.legacySource || fallbackLocations[index] : fallbackLocations[index];
-            return (
-              <div
-                key={category}
-                className="seminar-track-card"
-                onClick={() => {
-                  if (event) {
-                    handleEventCardClick(event);
-                  } else {
-                    window.location.href = `/book?seminar=${encodeURIComponent(category)}`;
-                  }
-                }}
-              >
-                <div className="seminar-track-info">
-                  <div className="seminar-track-title">{category}</div>
-                  <div className="seminar-track-details">{location} <ArrowRight size={13} /> Seat registration</div>
-                </div>
-                <div className="seminar-fee-tag">
-                  <span>{event ? 'Fee' : 'Track'}</span>
-                  <span className="price-num">{event ? `₹${event.price}` : `0${index + 1}`}</span>
-                </div>
+            <div className="trust-list">
+              <div className="trust-item">
+                <CheckCircle2 size={20} />
+                <span>Official resource links and company-detail context</span>
               </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="office-section">
-        <div className="container office-container">
-          <div className="office-card">
-            <Target size={26} />
-            <div>
-              <span className="office-label">Head Office Reference</span>
-              <p>No 303, 2nd floor, Grand Southern Trunk Rd, Chromepet, Chennai, Tamil Nadu 600044.</p>
+              <div className="trust-item">
+                <CheckCircle2 size={20} />
+                <span>Local Tamil Nadu chapter and briefing filters</span>
+              </div>
+              <div className="trust-item">
+                <CheckCircle2 size={20} />
+                <span>Transparent session categories before seat selection</span>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        <section className="routes-section container">
+          <div className="section-header">
+            <span className="section-eyebrow">Popular Event Tracks</span>
+            <h2 className="heading-lg">Reserve seats for the next Success Team session</h2>
+            <p className="section-subtitle">Click any event card to instantly open seat booking.</p>
+          </div>
+
+          <div className="routes-grid">
+            {(events.length ? events.slice(0, 3) : fallbackEventCategories.slice(0, 3)).map((item, index) => {
+              const event = typeof item === 'string' ? null : item;
+              const category = event ? event.title || event.name || fallbackEventCategories[index] : String(item);
+              const location = event ? event.venue || event.legacySource || fallbackLocations[index] : fallbackLocations[index];
+              return (
+                <div
+                  key={category}
+                  className="seminar-track-card"
+                  onClick={() => {
+                    if (event) {
+                      handleEventCardClick(event);
+                    } else {
+                      window.location.href = `/book?seminar=${encodeURIComponent(category)}`;
+                    }
+                  }}
+                >
+                  <div className="seminar-track-info">
+                    <div className="seminar-track-title">{category}</div>
+                    <div className="seminar-track-details">{location} <ArrowRight size={13} /> Seat registration</div>
+                  </div>
+                  <div className="seminar-fee-tag">
+                    <span>{event ? 'Fee' : 'Track'}</span>
+                    <span className="price-num">{event ? `₹${event.price}` : `0${index + 1}`}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="office-section">
+          <div className="container office-container">
+            <div className="office-card">
+              <Target size={26} />
+              <div>
+                <span className="office-label">Head Office Reference</span>
+                <p>No 303, 2nd floor, Grand Southern Trunk Rd, Chromepet, Chennai, Tamil Nadu 600044.</p>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
 
       <style jsx>{`
@@ -508,23 +453,40 @@ export default function Home() {
           border-radius: var(--radius-md);
         }
 
-        .hero-search-col {
+        .hero-image-col {
           display: flex;
-          align-items: stretch;
+          align-items: center;
           width: 100%;
           justify-content: center;
         }
 
-        .registration-card {
+        .hero-image-wrapper {
           width: 100%;
-          max-width: 500px;
-          margin: 0 auto;
-          padding: 2rem 2rem 1.5rem;
-          background: rgba(255, 255, 255, 0.98);
-          color: var(--foreground);
+          max-width: 520px;
+          border-radius: var(--radius-2xl);
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          backdrop-filter: blur(8px);
+          padding: 1.25rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+        }
+
+        .hero-image-wrapper:hover {
+          transform: translateY(-8px) scale(1.02);
+          box-shadow: 0 35px 60px -15px rgba(22, 163, 74, 0.45);
+          border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .hero-image {
+          width: 100%;
+          height: auto;
+          object-fit: contain;
           border-radius: var(--radius-xl);
-          box-shadow: 0 28px 70px rgba(2, 8, 23, 0.32);
-          border: 1px solid rgba(255, 255, 255, 0.72);
+          filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.3));
         }
 
         .card-kicker {

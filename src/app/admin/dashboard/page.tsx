@@ -35,7 +35,7 @@ export default function AdminDashboard() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [eventForm, setEventForm] = useState({
-    title: 'success team Leadership Development Seminar',
+    title: 'success team Leadership Development Event',
     venue: 'Chromepet, Chennai',
     eventDateTime: '',
     price: '250',
@@ -266,9 +266,9 @@ export default function AdminDashboard() {
         return;
       }
 
-      setEventMessage(`Seminar event ${isEdit ? 'updated' : 'published'} successfully`);
+      setEventMessage(`Event event ${isEdit ? 'updated' : 'published'} successfully`);
       setEventForm({
-        title: 'Success Team Leadership Development Seminar',
+        title: 'Success Team Leadership Development Event',
         venue: 'Chromepet, Chennai',
         eventDateTime: '',
         price: '250',
@@ -286,7 +286,7 @@ export default function AdminDashboard() {
   const handleEditClick = (event: any) => {
     setEditingEventId(event.id);
     setEventMessage('');
-    
+
     // Format the eventDateTime for datetime-local input (YYYY-MM-DDThh:mm)
     let formattedDateTime = '';
     if (event.eventDateTime) {
@@ -309,7 +309,7 @@ export default function AdminDashboard() {
     setEditingEventId(null);
     setEventMessage('');
     setEventForm({
-      title: 'Success Teamihugug Leadership Development Seminar',
+      title: 'Success Team Leadership Development Event',
       venue: 'Chromepet, Chennai',
       eventDateTime: '',
       price: '250',
@@ -410,7 +410,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="container dashboard-content">
-        
+
         {/* Metric Cards Row */}
         <div className="metrics-cards-grid animate-slide-up">
           <div className="metric-card hover-lift">
@@ -477,123 +477,123 @@ export default function AdminDashboard() {
 
         {/* List Controls */}
         {adminSection === 'registrations' ? (
-        <div className="dashboard-main-area animate-slide-up">
-          <div className="list-controls-bar">
-            <div className="tab-buttons">
-              <button 
-                onClick={() => setActiveTab('pending')} 
-                className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
-              >
-                Pending Verification ({stats.pendingCount})
-              </button>
-              <button 
-                onClick={() => setActiveTab('approved')} 
-                className={`tab-btn ${activeTab === 'approved' ? 'active' : ''}`}
-              >
-                Confirmed Bookings ({stats.approvedCount})
-              </button>
-              <button 
-                onClick={() => setActiveTab('denied')} 
-                className={`tab-btn ${activeTab === 'denied' ? 'active' : ''}`}
-              >
-                Payment Failed Logs ({stats.deniedCount})
+          <div className="dashboard-main-area animate-slide-up">
+            <div className="list-controls-bar">
+              <div className="tab-buttons">
+                <button
+                  onClick={() => setActiveTab('pending')}
+                  className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
+                >
+                  Pending Verification ({stats.pendingCount})
+                </button>
+                <button
+                  onClick={() => setActiveTab('approved')}
+                  className={`tab-btn ${activeTab === 'approved' ? 'active' : ''}`}
+                >
+                  Confirmed Bookings ({stats.approvedCount})
+                </button>
+                <button
+                  onClick={() => setActiveTab('denied')}
+                  className={`tab-btn ${activeTab === 'denied' ? 'active' : ''}`}
+                >
+                  Payment Failed Logs ({stats.deniedCount})
+                </button>
+              </div>
+              <button onClick={() => fetchAdminBookings(adminUser.id)} className="btn btn-secondary btn-refresh hover-spin-icon">
+                <RefreshCw size={14} className="refresh-icon-spin" /> <span>Sync Live Logs</span>
               </button>
             </div>
-            <button onClick={() => fetchAdminBookings(adminUser.id)} className="btn btn-secondary btn-refresh hover-spin-icon">
-              <RefreshCw size={14} className="refresh-icon-spin" /> <span>Sync Live Logs</span>
-            </button>
-          </div>
 
-          {filteredBookings.length === 0 ? (
-            <div className="empty-stream-card glass-card">
-              <Ticket size={48} className="empty-icon" />
-              <h3 className="heading-sm">No Records Found</h3>
-              <p>There are no booking entries matching the &quot;{activeTab}&quot; filter currently registered in the database.</p>
-            </div>
-          ) : (
-            <div className="bookings-stream-list">
-              {filteredBookings.map((b) => (
-                <div key={b.id} className={`stream-item-card glass-card ${b.status} hover-glow-card`}>
-                  
-                  {/* Item top header info */}
-                  <div className="item-card-header">
-                    <div className="header-left">
-                      <span className="item-booking-id">ORDER ID: {b.id.toUpperCase()}</span>
-                      <span className="item-created-at">Received: {new Date(b.createdAt).toLocaleString()}</span>
-                    </div>
-                    <span className={`badge badge-${b.status}`}>
-                      {b.status === 'pending' ? 'Pending Verification' : b.status === 'approved' ? 'Confirmed' : 'Payment Failed'}
-                    </span>
-                  </div>
+            {filteredBookings.length === 0 ? (
+              <div className="empty-stream-card glass-card">
+                <Ticket size={48} className="empty-icon" />
+                <h3 className="heading-sm">No Records Found</h3>
+                <p>There are no booking entries matching the &quot;{activeTab}&quot; filter currently registered in the database.</p>
+              </div>
+            ) : (
+              <div className="bookings-stream-list">
+                {filteredBookings.map((b) => (
+                  <div key={b.id} className={`stream-item-card glass-card ${b.status} hover-glow-card`}>
 
-                  {/* Main Grid: Details vs Screenshot */}
-                  <div className="item-card-body">
-                    
-                    {/* Member and seminar booking info */}
-                    <div className="details-col">
-                      <div className="details-group">
-                        <h4 className="group-title">Member / Attendee Profile</h4>
-                        <div className="info-grid">
-                          <div className="info-row"><span>Attendee Name:</span><strong>{b.user.name}</strong></div>
-                          <div className="info-row"><span>Email Contact:</span><strong>{b.user.email}</strong></div>
-                          <div className="info-row"><span>Helpline Mobile:</span><strong>{b.user.phone}</strong></div>
-                        </div>
+                    {/* Item top header info */}
+                    <div className="item-card-header">
+                      <div className="header-left">
+                        <span className="item-booking-id">ORDER ID: {b.id.toUpperCase()}</span>
+                        <span className="item-created-at">Received: {new Date(b.createdAt).toLocaleString()}</span>
                       </div>
-
-                      <div className="details-group">
-                        <h4 className="group-title">Seminar Details & Seat Allocation</h4>
-                        <div className="info-grid">
-                          <div className="info-row"><span>Seminar Program:</span><strong>{b.seminarName || b.eventName}</strong></div>
-                          <div className="info-row"><span>Venue / Seminar:</span><strong>{b.venue} <ArrowRight size={12} className="inline-arrow" /> {b.seminar}</strong></div>
-                          <div className="info-row"><span>Seminar Date & Time:</span><strong>{b.date} &bull; {b.time}</strong></div>
-                          <div className="info-row"><span>Allocated Seats:</span><span className="seats-span">{b.seats.join(', ')}</span></div>
-                        </div>
-                      </div>
-
-                      <div className="details-group price-group">
-                        <div className="price-display">
-                          <span>Verified Total Paid:</span>
-                          <span className="price-amount">₹{b.totalPrice}</span>
-                        </div>
-                      </div>
+                      <span className={`badge badge-${b.status}`}>
+                        {b.status === 'pending' ? 'Pending Verification' : b.status === 'approved' ? 'Confirmed' : 'Payment Failed'}
+                      </span>
                     </div>
 
-                    {/* Screenshot Preview */}
-                    <div className="screenshot-col">
-                      <h4 className="group-title">Payment Screenshot Verification</h4>
-                      <div className="receipt-image-container">
-                        <img src={b.screenshot} alt="Payment Receipt" />
-                        <button className="btn-zoom-receipt" onClick={() => setZoomedImage(b.screenshot)} title="Zoom Receipt">
-                          <Eye size={16} /> View Fullscreen Receipt
+                    {/* Main Grid: Details vs Screenshot */}
+                    <div className="item-card-body">
+
+                      {/* Member and seminar booking info */}
+                      <div className="details-col">
+                        <div className="details-group">
+                          <h4 className="group-title">Member / Attendee Profile</h4>
+                          <div className="info-grid">
+                            <div className="info-row"><span>Attendee Name:</span><strong>{b.user.name}</strong></div>
+                            <div className="info-row"><span>Email Contact:</span><strong>{b.user.email}</strong></div>
+                            <div className="info-row"><span>Helpline Mobile:</span><strong>{b.user.phone}</strong></div>
+                          </div>
+                        </div>
+
+                        <div className="details-group">
+                          <h4 className="group-title">Event Details & Seat Allocation</h4>
+                          <div className="info-grid">
+                            <div className="info-row"><span>Event Program:</span><strong>{b.seminarName || b.eventName}</strong></div>
+                            <div className="info-row"><span>Venue / Event:</span><strong>{b.venue} <ArrowRight size={12} className="inline-arrow" /> {b.seminar}</strong></div>
+                            <div className="info-row"><span>Event Date & Time:</span><strong>{b.date} &bull; {b.time}</strong></div>
+                            <div className="info-row"><span>Allocated Seats:</span><span className="seats-span">{b.seats.join(', ')}</span></div>
+                          </div>
+                        </div>
+
+                        <div className="details-group price-group">
+                          <div className="price-display">
+                            <span>Verified Total Paid:</span>
+                            <span className="price-amount">₹{b.totalPrice}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Screenshot Preview */}
+                      <div className="screenshot-col">
+                        <h4 className="group-title">Payment Screenshot Verification</h4>
+                        <div className="receipt-image-container">
+                          <img src={b.screenshot} alt="Payment Receipt" />
+                          <button className="btn-zoom-receipt" onClick={() => setZoomedImage(b.screenshot)} title="Zoom Receipt">
+                            <Eye size={16} /> View Fullscreen Receipt
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* Action footer for pending bookings */}
+                    {b.status === 'pending' && (
+                      <div className="item-card-footer animate-fade-in">
+                        <button
+                          onClick={() => handleStatusUpdate(b.id, 'denied')}
+                          className="btn btn-deny-action"
+                        >
+                          <X size={16} /> Reject Payment
+                        </button>
+                        <button
+                          onClick={() => handleStatusUpdate(b.id, 'approved')}
+                          className="btn btn-approve-action"
+                        >
+                          <Check size={16} /> Approve Payment
                         </button>
                       </div>
-                    </div>
+                    )}
 
                   </div>
-
-                  {/* Action footer for pending bookings */}
-                  {b.status === 'pending' && (
-                    <div className="item-card-footer animate-fade-in">
-                      <button 
-                        onClick={() => handleStatusUpdate(b.id, 'denied')} 
-                        className="btn btn-deny-action"
-                      >
-                        <X size={16} /> Reject Payment
-                      </button>
-                      <button 
-                        onClick={() => handleStatusUpdate(b.id, 'approved')} 
-                        className="btn btn-approve-action"
-                      >
-                        <Check size={16} /> Approve Payment
-                      </button>
-                    </div>
-                  )}
-
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
         ) : adminSection === 'events' ? (
           <div className="event-manager-area animate-slide-up">
             <div className="event-form-card glass-card">
@@ -601,7 +601,7 @@ export default function AdminDashboard() {
                 <div>
                   <span className="manager-kicker">Event Management</span>
                   <h2 className="heading-md">
-                    {editingEventId ? 'Edit / Modify Seminar Event' : 'Add New Event'}
+                    {editingEventId ? 'Edit / Modify Event Event' : 'Add New Event'}
                   </h2>
                 </div>
                 <button onClick={fetchAdminEvents} className="btn btn-secondary btn-refresh">
@@ -611,13 +611,13 @@ export default function AdminDashboard() {
 
               <form onSubmit={handlePublishEvent} className="event-form-grid">
                 <div className="event-form-group span-2">
-                  <label className="form-label">Seminar Title</label>
+                  <label className="form-label">Event Title</label>
                   <input
                     type="text"
                     value={eventForm.title}
                     onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
                     className="form-control"
-                    placeholder="Success Team Leadership Development Seminar"
+                    placeholder="Success Team Leadership Development Event"
                     required
                   />
                 </div>
@@ -680,7 +680,7 @@ export default function AdminDashboard() {
                       </button>
                     )}
                     <button type="submit" disabled={eventSaving} className="btn btn-primary publish-event-btn" style={{ height: '44px' }}>
-                      {eventSaving ? 'Saving Seminar...' : editingEventId ? 'Update Seminar Event' : 'Publish Seminar Event'}
+                      {eventSaving ? 'Saving Event...' : editingEventId ? 'Update Event Event' : 'Publish Event Event'}
                     </button>
                   </div>
                 </div>
@@ -695,18 +695,18 @@ export default function AdminDashboard() {
                 <div className="events-table-list">
                   {events.map((event) => (
                     <div key={event.id} className="event-row">
-                       <div>
-                         <strong>{event.title || event.name}</strong>
-                         <span>{event.venue}</span>
-                         <div className="event-row-actions">
-                           <button onClick={() => handleEditClick(event)} className="btn-edit-event">
-                             Edit
-                           </button>
-                           <button onClick={() => { setSelectedEventId(event.id); setDeleteModalOpen(true); }} className="btn-delete-event">
-                             Delete
-                           </button>
-                         </div>
-                       </div>
+                      <div>
+                        <strong>{event.title || event.name}</strong>
+                        <span>{event.venue}</span>
+                        <div className="event-row-actions">
+                          <button onClick={() => handleEditClick(event)} className="btn-edit-event">
+                            Edit
+                          </button>
+                          <button onClick={() => { setSelectedEventId(event.id); setDeleteModalOpen(true); }} className="btn-delete-event">
+                            Delete
+                          </button>
+                        </div>
+                      </div>
                       <div className="event-row-meta">
                         <span>{event.eventDate || 'Scheduled'}</span>
                         <span>{event.eventTime || ''}</span>
@@ -769,15 +769,15 @@ export default function AdminDashboard() {
                     </label>
                     {upiSettings.upiQrUrl && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <img 
-                          src={upiSettings.upiQrUrl} 
-                          alt="Configured QR Code" 
-                          style={{ width: '50px', height: '50px', borderRadius: '6px', border: '1px solid #d1d5db', objectFit: 'cover' }} 
+                        <img
+                          src={upiSettings.upiQrUrl}
+                          alt="Configured QR Code"
+                          style={{ width: '50px', height: '50px', borderRadius: '6px', border: '1px solid #d1d5db', objectFit: 'cover' }}
                         />
-                        <button 
-                          type="button" 
-                          onClick={() => setUpiSettings(prev => ({ ...prev, upiQrUrl: '' }))} 
-                          className="btn btn-secondary" 
+                        <button
+                          type="button"
+                          onClick={() => setUpiSettings(prev => ({ ...prev, upiQrUrl: '' }))}
+                          className="btn btn-secondary"
                           style={{ padding: '4px 8px', fontSize: '0.75rem', color: '#dc2626', border: '1px solid #fca5a5' }}
                         >
                           Clear
@@ -830,16 +830,16 @@ export default function AdminDashboard() {
               </p>
             </div>
             <div className="confirm-modal-actions">
-              <button 
-                type="button" 
-                onClick={() => { setDeleteModalOpen(false); setSelectedEventId(null); }} 
+              <button
+                type="button"
+                onClick={() => { setDeleteModalOpen(false); setSelectedEventId(null); }}
                 className="btn-modal-cancel"
               >
                 Cancel
               </button>
-              <button 
-                type="button" 
-                onClick={handleConfirmDelete} 
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
                 className="btn-modal-delete"
               >
                 Confirm Delete

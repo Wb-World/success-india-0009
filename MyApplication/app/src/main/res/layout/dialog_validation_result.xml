@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dim_background">
+
+    <!-- Dim background click dismiss -->
+    <View
+        android:id="@+id/viewDismissDimResult"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <!-- Center Card container -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardResultContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="16dp"
+        app:cardBackgroundColor="@color/white"
+        app:layout_constraintWidth_percent="0.85"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:gravity="center_horizontal">
+
+            <!-- Status Circle Indicator -->
+            <FrameLayout
+                android:id="@+id/layoutStatusIconBg"
+                android:layout_width="74dp"
+                android:layout_height="74dp"
+                android:background="@drawable/circle_primary_bg"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:id="@+id/tvStatusIndicatorText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="✓"
+                    android:textColor="@color/white"
+                    android:textSize="38sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+            <!-- Verification Title -->
+            <TextView
+                android:id="@+id/tvValidationTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Valid QR Code"
+                android:textColor="@color/primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <!-- Verification Subtitle -->
+            <TextView
+                android:id="@+id/tvValidationSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="16dp"
+                android:text="Entry Authorized"
+                android:textColor="@color/muted"
+                android:textSize="13sp"
+                android:gravity="center" />
+
+            <!-- Attendee Details Card Container -->
+            <LinearLayout
+                android:id="@+id/layoutAttendeeDetails"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@color/gray_light"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TICKET INFO"
+                    android:textColor="@color/muted"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Attendee Name -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="6dp">
+                    <TextView
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="Attendee"
+                        android:textColor="@color/muted"
+                        android:textSize="12sp" />
+                    <TextView
+                        android:id="@+id/tvValAttendeeName"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="John Doe"
+                        android:textColor="@color/foreground"
+                        android:textStyle="bold"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- Event -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="6dp">
+                    <TextView
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="Event"
+                        android:textColor="@color/muted"
+                        android:textSize="12sp" />
+                    <TextView
+                        android:id="@+id/tvValSeminar"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Event"
+                        android:textColor="@color/foreground"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- Venue -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="6dp">
+                    <TextView
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="Venue"
+                        android:textColor="@color/muted"
+                        android:textSize="12sp" />
+                    <TextView
+                        android:id="@+id/tvValVenue"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Venue"
+                        android:textColor="@color/foreground"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- Date & Seats -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="6dp">
+                    <TextView
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="Seats"
+                        android:textColor="@color/muted"
+                        android:textSize="12sp" />
+                    <TextView
+                        android:id="@+id/tvValSeats"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="A10, A11"
+                        android:textColor="@color/foreground"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/gray_divider"
+                    android:layout_marginVertical="8dp" />
+
+                <!-- Total Paid -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="Amount Paid"
+                        android:textColor="@color/muted"
+                        android:textSize="12sp" />
+                    <TextView
+                        android:id="@+id/tvValPrice"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="₹1,500"
+                        android:textColor="@color/primary"
+                        android:textStyle="bold"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Error panel (visible for invalid state) -->
+            <LinearLayout
+                android:id="@+id/layoutErrorReason"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@color/danger_bg"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tvErrorReasonHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="REJECTION DETAILS"
+                    android:textColor="@color/danger"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/tvErrorReasonText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="This ticket was rejected or not found."
+                    android:textColor="@color/foreground"
+                    android:textSize="12sp"
+                    android:lineSpacingExtra="3dp" />
+
+            </LinearLayout>
+
+            <!-- Close Button -->
+            <TextView
+                android:id="@+id/btnDismissResult"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/btn_gradient_bg"
+                android:text="Done"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -96,7 +96,7 @@ export default function Profile() {
         setCurrentUser(data.user);
         // Dispatch custom auth event to update Navbar
         window.dispatchEvent(new Event('auth-change'));
-        
+
         if (data.user.role === 'admin') {
           router.push('/admin/dashboard');
         } else {
@@ -217,13 +217,13 @@ export default function Profile() {
       <div className="auth-page container animate-slide-up">
         <div className="auth-card glass-card">
           <div className="auth-tabs">
-            <button 
+            <button
               className={`auth-tab-btn ${isLoginTab ? 'active' : ''}`}
               onClick={() => { setIsLoginTab(true); setAuthError(''); }}
             >
               Sign In
             </button>
-            <button 
+            <button
               className={`auth-tab-btn ${!isLoginTab ? 'active' : ''}`}
               onClick={() => { setIsLoginTab(false); setAuthError(''); }}
             >
@@ -242,24 +242,24 @@ export default function Profile() {
               <form onSubmit={handleLoginSubmit}>
                 <div className="form-group">
                   <label className="form-label">Username</label>
-                  <input 
+                  <input
                     type="text"
                     value={loginForm.username}
                     onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-                    placeholder="Enter your username (e.g. user)" 
-                    className="form-control" 
-                    required 
+                    placeholder="Enter your username (e.g. user)"
+                    className="form-control"
+                    required
                   />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Password</label>
-                  <input 
+                  <input
                     type="password"
                     value={loginForm.password}
                     onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                    placeholder="Enter your password (e.g. password)" 
-                    className="form-control" 
-                    required 
+                    placeholder="Enter your password (e.g. password)"
+                    className="form-control"
+                    required
                   />
                 </div>
                 <button type="submit" className="btn btn-primary auth-submit-btn" disabled={authLoading}>
@@ -270,57 +270,57 @@ export default function Profile() {
               <form onSubmit={handleRegisterSubmit}>
                 <div className="form-group">
                   <label className="form-label">Username</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={registerForm.username}
                     onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })}
-                    placeholder="Select a username" 
-                    className="form-control" 
-                    required 
+                    placeholder="Select a username"
+                    className="form-control"
+                    required
                   />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Password</label>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     value={registerForm.password}
                     onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                    placeholder="Choose a strong password" 
-                    className="form-control" 
-                    required 
+                    placeholder="Choose a strong password"
+                    className="form-control"
+                    required
                   />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Full Name</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={registerForm.name}
                     onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
-                    placeholder="John Doe" 
-                    className="form-control" 
-                    required 
+                    placeholder="John Doe"
+                    className="form-control"
+                    required
                   />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Email Address</label>
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     value={registerForm.email}
                     onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                    placeholder="john@example.com" 
-                    className="form-control" 
-                    required 
+                    placeholder="john@example.com"
+                    className="form-control"
+                    required
                   />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Phone Number</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={registerForm.phone}
                     onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
-                    placeholder="+91 98765 43210" 
-                    className="form-control" 
-                    required 
+                    placeholder="+91 98765 43210"
+                    className="form-control"
+                    required
                   />
                 </div>
                 <button type="submit" className="btn btn-primary auth-submit-btn" disabled={authLoading}>
@@ -425,7 +425,7 @@ export default function Profile() {
       </div>
 
       <div className="dashboard-grid">
-        
+
         {/* Left Side: Profile Info Card */}
         <div className="profile-info-column">
           <div className="info-card glass-card hover-lift">
@@ -454,32 +454,32 @@ export default function Profile() {
               <form onSubmit={handleProfileUpdate} className="profile-edit-form">
                 <div className="form-group">
                   <label className="form-label"><User size={12} /> Full Name</label>
-                  <input 
-                    type="text" 
-                    value={editForm.name} 
+                  <input
+                    type="text"
+                    value={editForm.name}
                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="form-control" 
-                    required 
+                    className="form-control"
+                    required
                   />
                 </div>
                 <div className="form-group">
                   <label className="form-label"><Mail size={12} /> Email Address</label>
-                  <input 
-                    type="email" 
-                    value={editForm.email} 
+                  <input
+                    type="email"
+                    value={editForm.email}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    className="form-control" 
-                    required 
+                    className="form-control"
+                    required
                   />
                 </div>
                 <div className="form-group">
                   <label className="form-label"><Phone size={12} /> Phone Number</label>
-                  <input 
-                    type="text" 
-                    value={editForm.phone} 
+                  <input
+                    type="text"
+                    value={editForm.phone}
                     onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                    className="form-control" 
-                    required 
+                    className="form-control"
+                    required
                   />
                 </div>
                 <div className="form-actions">
@@ -517,11 +517,11 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Right Side: Seminar Bookings History */}
+        {/* Right Side: Event Bookings History */}
         <div className="bookings-history-column">
           <div className="history-card glass-card hover-lift">
-            <h2 className="heading-md history-card-title">My Seminar Bookings</h2>
-            
+            <h2 className="heading-md history-card-title">My Event Bookings</h2>
+
             {bookings.length === 0 ? (
               <div className="empty-bookings">
                 <Calendar size={48} className="empty-icon" />

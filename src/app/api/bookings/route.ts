@@ -170,7 +170,7 @@ export async function POST(request: Request) {
             source: resolvedVenue,
             destination: resolvedSeminarTopic,
             price: Number(totalPrice) || 0,
-            duration: 'Seminar session',
+            duration: 'Event session',
             times: [time],
           },
           { onConflict: 'id' }

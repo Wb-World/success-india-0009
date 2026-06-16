@@ -84,7 +84,7 @@ export default function Footer() {
         </div>
 
         <div className="footer-links-col">
-          <h4 className="footer-title">Seminar Categories</h4>
+          <h4 className="footer-title">Event Categories</h4>
           <ul className="footer-links">
             <li><Link href="/book?seminar=Leadership%20Development%20Seminars">Leadership Development</Link></li>
             <li><Link href="/book?seminar=Weekly%20Income-Generation%20Systems">Weekly Income-Generation</Link></li>
@@ -122,7 +122,7 @@ export default function Footer() {
       <div className="footer-bottom">
         <div className="container footer-bottom-flex">
           <p className="copyright-text">
-            &copy; {currentYear} Success Team - Official Seminar &amp; Leadership Portal. All rights reserved.
+            &copy; {currentYear} Success Team - Official Event &amp; Leadership Portal. All rights reserved.
           </p>
           <div className="footer-legal-links">
             <Link href="/contact">Privacy Policy</Link>

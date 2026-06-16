@@ -47,7 +47,7 @@ function normalizeEvent(event: any, bookedSeatsByTime: Record<string, string[]> 
 
     // Compatibility shape consumed by existing seat selection components.
     name: event.title,
-    type: 'success team Seminar Event',
+    type: 'success team Event Event',
     duration: 'Scheduled Program',
     times: [eventTime],
     bookedSeatsByTime: {
@@ -169,7 +169,7 @@ export async function POST(request: Request) {
 
     if (!title || !venue || !eventDateTime || Number.isNaN(price) || price < 0) {
       return NextResponse.json(
-        { error: 'Seminar title, venue, event date time, and valid fee are required' },
+        { error: 'Event title, venue, event date time, and valid fee are required' },
         { status: 400 }
       );
     }
@@ -212,7 +212,7 @@ export async function POST(request: Request) {
       .upsert({
         id: event.id,
         name: event.title,
-        type: 'success team Seminar Event',
+        type: 'success team Event Event',
         status: DEFAULT_STATUS,
         source: event.venue,
         destination: event.title,
@@ -267,7 +267,7 @@ export async function PATCH(request: Request) {
 
     if (!title || !venue || !eventDateTime || Number.isNaN(price) || price < 0) {
       return NextResponse.json(
-        { error: 'Seminar title, venue, event date time, and valid fee are required' },
+        { error: 'Event title, venue, event date time, and valid fee are required' },
         { status: 400 }
       );
     }
@@ -305,7 +305,7 @@ export async function PATCH(request: Request) {
       .upsert({
         id: eventId,
         name: title,
-        type: 'success team Seminar Event',
+        type: 'success team Event Event',
         status: DEFAULT_STATUS,
         source: venue,
         destination: title,

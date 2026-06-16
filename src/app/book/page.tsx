@@ -67,20 +67,20 @@ function BookingEngine() {
       const data = await res.json();
       const fetchedEvents = res.ok
         ? (data.events || []).map((event: any) => ({
-            ...event,
-            legacySource: event.venue,
-            legacyDestination: event.title,
-          }))
+          ...event,
+          legacySource: event.venue,
+          legacyDestination: event.title,
+        }))
         : [];
       setEvents(fetchedEvents);
 
       const matchedEvent = eParam
         ? fetchedEvents.find((event: any) => event.id === eParam)
         : fetchedEvents.find(
-            (event: any) =>
-              (!sParam || event.venue === sParam || event.legacySource === sParam) &&
-              (!dParam || event.title === dParam || event.legacyDestination === dParam)
-          );
+          (event: any) =>
+            (!sParam || event.venue === sParam || event.legacySource === sParam) &&
+            (!dParam || event.title === dParam || event.legacyDestination === dParam)
+        );
 
       const resolvedVenue = sParam || matchedEvent?.venue || matchedEvent?.legacySource || venue;
       const resolvedSeminar = dParam || matchedEvent?.title || matchedEvent?.legacyDestination || seminar;
@@ -190,7 +190,7 @@ function BookingEngine() {
 
       {/* Page Header */}
       <div className="page-header animate-slide-up">
-        <span className="page-kicker">Seminar Booking Portal</span>
+        <span className="page-kicker">Event Booking Portal</span>
         <h1 className="page-title">Find &amp; Reserve Your Seat</h1>
         <p className="page-subtitle">
           Search for available seminar sessions, then click <strong>Reserve Seats</strong> to instantly book with auto-assigned consecutive seats.
@@ -220,7 +220,7 @@ function BookingEngine() {
           </div>
 
           <div className="inline-group">
-            <label className="inline-label">Seminar Event</label>
+            <label className="inline-label">Event Event</label>
             <select
               value={selectedEventId || seminar}
               onChange={(e) => handleEventSelect(e.target.value)}
@@ -241,7 +241,7 @@ function BookingEngine() {
           </div>
 
           <div className="inline-group">
-            <label className="inline-label">Seminar Date</label>
+            <label className="inline-label">Event Date</label>
             <input
               type="date"
               value={date}
@@ -272,7 +272,7 @@ function BookingEngine() {
           searchTriggered ? (
             <div className="empty-results glass-card animate-scale-in">
               <AlertCircle size={40} className="empty-icon" />
-              <h3 className="heading-sm">No Seminar Scheduled</h3>
+              <h3 className="heading-sm">No Event Scheduled</h3>
               <p>
                 There are no listed {seminar} sessions at {venue} on {date}. Modify your
                 location, seminar, or date filters.
@@ -281,7 +281,7 @@ function BookingEngine() {
           ) : (
             <div className="welcome-search-callout glass-card animate-scale-in">
               <MapPin size={40} className="callout-icon" />
-              <h3 className="heading-sm">Plan Your Seminar Visit</h3>
+              <h3 className="heading-sm">Plan Your Event Visit</h3>
               <p>
                 Select a location, seminar category, and date above to view available sessions
                 and reserve seats.
@@ -291,7 +291,7 @@ function BookingEngine() {
         ) : (
           <div className="seminars-list animate-slide-up">
             <h3 className="heading-sm list-title">
-              Available Seminar Sessions for {date}
+              Available Event Sessions for {date}
             </h3>
             {seminars.map((seminarEvent) => (
               <div key={seminarEvent.id} className="seminar-card-item hover-glow-card">

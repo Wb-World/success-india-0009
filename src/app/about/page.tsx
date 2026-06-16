@@ -8,7 +8,7 @@ export default function About() {
       {/* Mini Hero */}
       <section className="about-hero">
         <div className="container">
-          <h1 className="heading-xl hero-title">Success Team Seminar Booking Portal</h1>
+          <h1 className="heading-xl hero-title">Success Team Event Booking Portal</h1>
           <p className="hero-subtitle">
             Reserve seats for leadership programs, chapter meetups, business briefings, and professional development events across Tamil Nadu.
           </p>
@@ -27,7 +27,7 @@ export default function About() {
             <div className="value-icon-circle">
               <Shield size={24} />
             </div>
-            <h3 className="heading-sm value-title">Verified Seminar Access</h3>
+            <h3 className="heading-sm value-title">Verified Event Access</h3>
             <p className="value-desc">
               Every registration request is reviewed with attendee details, selected seats, event timing, and uploaded payment receipt before approval.
             </p>
@@ -74,7 +74,7 @@ export default function About() {
             <div className="story-graphic-box">
               <div className="graphic-badge">Success Team</div>
               <Compass size={80} className="graphic-icon animate-pulse" />
-              <div className="graphic-text">60 Seat Seminar Registration Grid</div>
+              <div className="graphic-text">60 Seat Event Registration Grid</div>
             </div>
           </div>
         </div>

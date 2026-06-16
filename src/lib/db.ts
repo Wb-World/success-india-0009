@@ -11,7 +11,7 @@ export interface User {
   role: 'user' | 'admin';
 }
 
-export interface Seminar {
+export interface Event {
   id: string;
   name: string;
   type: string;
@@ -43,7 +43,7 @@ export interface Booking {
 
 export interface DbSchema {
   users: User[];
-  seminars: Seminar[];
+  seminars: Event[];
   bookings: Booking[];
 }
 

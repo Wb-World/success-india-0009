@@ -10,7 +10,7 @@ const FAQS = [
   },
   {
     q: 'How long does receipt approval take?',
-    a: 'Administrators review receipts throughout the day. Most approvals are completed within 15 minutes. During busy seminar periods, it may take up to 1 hour. You can check the live status under My Seminar Bookings in your profile.'
+    a: 'Administrators review receipts throughout the day. Most approvals are completed within 15 minutes. During busy seminar periods, it may take up to 1 hour. You can check the live status under My Event Bookings in your profile.'
   },
   {
     q: 'Can I update or cancel my seminar registration?',
@@ -73,49 +73,49 @@ export default function Contact() {
                 <div className="form-row">
                   <div className="form-group flex-1">
                     <label className="form-label">Full Name</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="John Doe" 
-                      className="form-control" 
-                      required 
+                      placeholder="John Doe"
+                      className="form-control"
+                      required
                     />
                   </div>
                   <div className="form-group flex-1">
                     <label className="form-label">Email Address</label>
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="john@example.com" 
-                      className="form-control" 
-                      required 
+                      placeholder="john@example.com"
+                      className="form-control"
+                      required
                     />
                   </div>
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Subject</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    placeholder="Example, seminar booking help, payment status, event update" 
-                    className="form-control" 
-                    required 
+                    placeholder="Example, seminar booking help, payment status, event update"
+                    className="form-control"
+                    required
                   />
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Message Details</label>
-                  <textarea 
+                  <textarea
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    placeholder="Write the details of your enquiry here..." 
-                    rows={5} 
-                    className="form-control textarea-field" 
-                    required 
+                    placeholder="Write the details of your enquiry here..."
+                    rows={5}
+                    className="form-control textarea-field"
+                    required
                   ></textarea>
                 </div>
 

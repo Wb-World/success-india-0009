@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Success Team Brand Palette — matches website theme -->
+    <color name="primary">#16a34a</color>
+    <color name="primary_dark">#14532d</color>
+    <color name="primary_hover">#15803d</color>
+    <color name="primary_light">#dcfce7</color>
+    <color name="secondary">#22c55e</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+    <color name="background">#FFFFFFFF</color>
+    <color name="foreground">#FF111827</color>
+    <color name="border">#FFbbf7d0</color>
+    <color name="muted">#FF4b7c5a</color>
+    <color name="success">#16a34a</color>
+    <color name="warning">#f59e0b</color>
+    <color name="danger">#ef4444</color>
+    <color name="card_bg">#FFF0FDF4</color>
+    <color name="status_bar">#15803d</color>
+    
+    <!-- Premium UI additions -->
+    <color name="gradient_start">#16a34a</color>
+    <color name="gradient_end">#10b981</color>
+    <color name="success_bg">#dcfce7</color>
+    <color name="danger_bg">#fee2e2</color>
+    <color name="warning_bg">#fef3c7</color>
+    <color name="gray_light">#f3f4f6</color>
+    <color name="gray_divider">#e5e7eb</color>
+    <color name="dim_background">#99000000</color>
+</resources>
