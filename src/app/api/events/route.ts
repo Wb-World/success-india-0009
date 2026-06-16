@@ -47,7 +47,7 @@ function normalizeEvent(event: any, bookedSeatsByTime: Record<string, string[]> 
 
     // Compatibility shape consumed by existing seat selection components.
     name: event.title,
-    type: 'Success India Seminar Event',
+    type: 'success team Seminar Event',
     duration: 'Scheduled Program',
     times: [eventTime],
     bookedSeatsByTime: {
@@ -212,7 +212,7 @@ export async function POST(request: Request) {
       .upsert({
         id: event.id,
         name: event.title,
-        type: 'Success India Seminar Event',
+        type: 'success team Seminar Event',
         status: DEFAULT_STATUS,
         source: event.venue,
         destination: event.title,
@@ -305,7 +305,7 @@ export async function PATCH(request: Request) {
       .upsert({
         id: eventId,
         name: title,
-        type: 'Success India Seminar Event',
+        type: 'success team Seminar Event',
         status: DEFAULT_STATUS,
         source: venue,
         destination: title,

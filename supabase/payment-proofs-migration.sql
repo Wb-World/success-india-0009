@@ -1,5 +1,5 @@
 -- ============================================================
--- Success India Payment Verification Migration
+-- success team Payment Verification Migration
 -- Run this in your Supabase SQL Editor.
 -- ============================================================
 

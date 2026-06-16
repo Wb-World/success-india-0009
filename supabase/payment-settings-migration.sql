@@ -1,4 +1,4 @@
--- Migration to create payment_settings table for Success India seminar gateway settings:
+-- Migration to create payment_settings table for success team seminar gateway settings:
 CREATE TABLE IF NOT EXISTS public.payment_settings (
   id               TEXT        PRIMARY KEY,
   upi_id           TEXT        NOT NULL,

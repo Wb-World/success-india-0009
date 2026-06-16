@@ -1,4 +1,4 @@
--- Success India seminar booking migration
+-- success team seminar booking migration
 -- Run this once against the deployed Supabase/Postgres database.
 
 ALTER TABLE public.bookings
