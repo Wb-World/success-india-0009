@@ -52,14 +52,19 @@ export async function GET(request: Request) {
           };
 
       let cleanScreenshot = b.screenshot || '';
-      let attendees = {};
-      if (cleanScreenshot.includes('|')) {
+      let attendees = b.attendee_details || {};
+      let qrCodePayload = b.qr_code_payload || '';
+
+      if ((!attendees || Object.keys(attendees).length === 0) && cleanScreenshot.includes('|')) {
         const parts = cleanScreenshot.split('|');
         cleanScreenshot = parts[0];
         try {
           attendees = JSON.parse(parts[1] || '{}');
+          if (parts[2]) {
+            qrCodePayload = parts[2];
+          }
         } catch (e) {
-          console.error('Failed to parse attendees json:', e);
+          console.error('Failed to parse fallback attendees JSON:', e);
         }
       }
 
@@ -78,6 +83,7 @@ export async function GET(request: Request) {
         totalPrice: b.total_price,
         screenshot: cleanScreenshot,
         attendees: attendees,
+        qrCodePayload: qrCodePayload,
         status: b.status,
         createdAt: b.created_at,
         user: userObj,

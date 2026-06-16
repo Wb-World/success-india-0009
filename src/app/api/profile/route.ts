@@ -35,14 +35,19 @@ export async function GET(request: Request) {
     // Map snake_case → camelCase for frontend
     const bookings = (rawBookings || []).map((bk) => {
       let cleanScreenshot = bk.screenshot || '';
-      let attendees = {};
-      if (cleanScreenshot.includes('|')) {
+      let attendees = bk.attendee_details || {};
+      let qrCodePayload = bk.qr_code_payload || '';
+
+      if ((!attendees || Object.keys(attendees).length === 0) && cleanScreenshot.includes('|')) {
         const parts = cleanScreenshot.split('|');
         cleanScreenshot = parts[0];
         try {
           attendees = JSON.parse(parts[1] || '{}');
+          if (parts[2]) {
+            qrCodePayload = parts[2];
+          }
         } catch (e) {
-          console.error('Failed to parse attendees json:', e);
+          console.error('Failed to parse fallback attendees JSON:', e);
         }
       }
 
@@ -61,6 +66,7 @@ export async function GET(request: Request) {
         totalPrice: bk.total_price,
         screenshot: cleanScreenshot,
         attendees: attendees,
+        qrCodePayload: qrCodePayload,
         status: bk.status,
         createdAt: bk.created_at,
       };

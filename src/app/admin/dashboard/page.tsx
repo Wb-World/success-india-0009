@@ -551,14 +551,29 @@ export default function AdminDashboard() {
                               <div className="info-row" style={{ gridColumn: 'span 2', marginTop: '6px' }}>
                                 <span>Seat Attendees:</span>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-                                  {Object.entries(b.attendees).map(([seat, name]: any) => (
-                                    <span key={seat} style={{ background: '#ecfdf5', border: '1px solid #10b981', color: '#047857', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
-                                      {seat}: {name}
-                                    </span>
-                                  ))}
+                                  {Object.entries(b.attendees).map(([seat, info]: any) => {
+                                    const name = typeof info === 'object' && info !== null ? info.name : info;
+                                    const whatsapp = typeof info === 'object' && info !== null ? info.whatsapp : '';
+                                    return (
+                                      <span key={seat} style={{ background: '#ecfdf5', border: '1px solid #10b981', color: '#047857', padding: '4px 10px', borderRadius: '6px', fontSize: '12.5px', fontWeight: 'bold' }}>
+                                        <strong>{seat}:</strong> {name} {whatsapp && <span style={{ color: '#059669', fontSize: '11px', marginLeft: '4px' }}>(WA: {whatsapp})</span>}
+                                      </span>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             )}
+
+                            <div className="info-row" style={{ gridColumn: 'span 2', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                              <span>Booking Audit QR:</span>
+                              <div style={{ padding: '6px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', display: 'inline-block' }}>
+                                <img 
+                                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(b.qrCodePayload || `BOOKING:${b.id}|EVENT:${b.seminarName || b.eventName}|SEATS:${b.seats.join(',')}|VENUE:${b.venue}|DATE:${b.date}|AMOUNT:INR${b.totalPrice}|STATUS:${b.status.toUpperCase()}`)}&qzone=1&format=png&color=10b981`} 
+                                  alt="Audit QR Code" 
+                                  style={{ width: '80px', height: '80px', display: 'block' }} 
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
 

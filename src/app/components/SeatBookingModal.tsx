@@ -67,7 +67,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const [bookingTimestamp, setBookingTimestamp] = useState('');
   const [confirmedData, setConfirmedData] = useState<any>(null);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
-  const [attendeeNames, setAttendeeNames] = useState<Record<string, string>>({});
+  const [attendeeDetails, setAttendeeDetails] = useState<Record<string, { name: string; whatsapp: string }>>({});
   const [currentAttendeeIndex, setCurrentAttendeeIndex] = useState(0);
 
   // Payment configuration and upload states
@@ -136,9 +136,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
   // UPI Link payload & Dynamic QR Image (emerald green color combo #10b981)
   const upiPayload = `upi://pay?pa=${upiConfig.upiId}&pn=${encodeURIComponent(upiConfig.upiName)}&am=${totalPrice}&cu=INR`;
-  const qrCodeUrl = upiConfig.upiQrUrl 
-    ? upiConfig.upiQrUrl 
-    : `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayload)}&qzone=1&format=png&color=10b981`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayload)}&qzone=1&format=png&color=10b981`;
 
   // QR code data for ticket validation
   const qrPayload = confirmedData
@@ -334,7 +332,8 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       time: event.eventTime || '10:00 AM',
       seats: selectedSeats,
       totalPrice,
-      screenshot: (screenshotUrl || 'DIRECT_BOOKING') + '|' + JSON.stringify(attendeeNames),
+      screenshot: (screenshotUrl || 'DIRECT_BOOKING') + '|' + JSON.stringify(attendeeDetails),
+      attendeeDetails: attendeeDetails,
     };
 
     // Retrieve logged-in user from localStorage to pass x-user-id header
@@ -368,7 +367,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
       setBookingId(newBookingId);
       setBookingTimestamp(ts);
-      setConfirmedData({ id: newBookingId, seats: selectedSeats, totalPrice, timestamp: ts, attendees: attendeeNames });
+      setConfirmedData({ id: newBookingId, seats: selectedSeats, totalPrice, timestamp: ts, attendees: attendeeDetails });
       setIsSubmitting(false);
       setStep('success');
     } catch (err: any) {
@@ -408,10 +407,12 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     wrapper.style.width = '640px';
 
     const seatsHtml = seatsToRender.map((s: string) => `<span style="background:#dcfce7;color:#047857;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:700;margin:2px">${s}</span>`).join('');
-    const currentAttendees = confirmedData?.attendees || attendeeNames;
+    const currentAttendees = confirmedData?.attendees || attendeeDetails;
     const attendeesHtml = seatsToRender.map((s: string) => {
-      const name = currentAttendees[s] || 'N/A';
-      return `<div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;padding:2px 0;"><strong>Seat ${s}:</strong><span>${name}</span></div>`;
+      const info = currentAttendees[s];
+      const name = typeof info === 'object' && info !== null ? info.name : (info || 'N/A');
+      const whatsapp = typeof info === 'object' && info !== null ? info.whatsapp : '';
+      return `<div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;padding:2px 0;"><strong>Seat ${s}:</strong><span>${name} ${whatsapp ? `(${whatsapp})` : ''}</span></div>`;
     }).join('');
 
     wrapper.innerHTML = `
@@ -688,11 +689,27 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
             <form onSubmit={(e) => {
               e.preventDefault();
-              const currentName = attendeeNames[selectedSeats[currentAttendeeIndex]] || '';
-              if (!currentName.trim()) {
-                alert('Please enter the name of the attendee.');
+              const currentAttendee = attendeeDetails[selectedSeats[currentAttendeeIndex]];
+              const name = currentAttendee?.name || '';
+              const whatsapp = currentAttendee?.whatsapp || '';
+
+              if (!name.trim()) {
+                alert('Attendee Name is mandatory.');
                 return;
               }
+
+              const cleanPhone = whatsapp.replace(/[\s\-\(\)\+]/g, '');
+              if (!cleanPhone) {
+                alert('WhatsApp number is mandatory.');
+                return;
+              }
+
+              const isValid = /^\+?[0-9]{10,15}$/.test(whatsapp.replace(/[\s\-\(\)]/g, ''));
+              if (!isValid || cleanPhone.length < 10) {
+                alert('Please enter a valid WhatsApp mobile number (at least 10 digits).');
+                return;
+              }
+
               if (currentAttendeeIndex < selectedSeats.length - 1) {
                 setCurrentAttendeeIndex(prev => prev + 1);
               } else {
@@ -722,16 +739,43 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                   <input 
                     type="text" 
                     placeholder="Enter full name of the attendee" 
-                    value={attendeeNames[selectedSeats[currentAttendeeIndex]] || ''}
+                    value={attendeeDetails[selectedSeats[currentAttendeeIndex]]?.name || ''}
                     onChange={(e) => {
                       const val = e.target.value;
-                      setAttendeeNames(prev => ({
+                      setAttendeeDetails(prev => ({
                         ...prev,
-                        [selectedSeats[currentAttendeeIndex]]: val
+                        [selectedSeats[currentAttendeeIndex]]: {
+                          name: val,
+                          whatsapp: prev[selectedSeats[currentAttendeeIndex]]?.whatsapp || '+91'
+                        }
                       }));
                     }}
                     required
                     autoFocus
+                    className="text-input-field"
+                  />
+                </div>
+              </div>
+
+              <div className="form-input-group">
+                <label className="input-field-label">WhatsApp Mobile Number <span style={{ color: '#ef4444' }}>*</span></label>
+                <div className="input-field-wrap">
+                  <span className="input-field-icon">💬</span>
+                  <input 
+                    type="text" 
+                    placeholder="Enter WhatsApp number (e.g. +91 9876543210)" 
+                    value={attendeeDetails[selectedSeats[currentAttendeeIndex]]?.whatsapp !== undefined ? attendeeDetails[selectedSeats[currentAttendeeIndex]]?.whatsapp : '+91'}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setAttendeeDetails(prev => ({
+                        ...prev,
+                        [selectedSeats[currentAttendeeIndex]]: {
+                          name: prev[selectedSeats[currentAttendeeIndex]]?.name || '',
+                          whatsapp: val
+                        }
+                      }));
+                    }}
+                    required
                     className="text-input-field"
                   />
                 </div>
@@ -966,11 +1010,15 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                   <span className="td-label" style={{ marginBottom: '6px' }}>Attendees</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#f9fafb', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                     {(confirmedData?.seats || selectedSeats).map((s: string) => {
-                      const name = (confirmedData?.attendees || attendeeNames)[s] || 'N/A';
+                      const info = (confirmedData?.attendees || attendeeDetails)[s];
+                      const name = typeof info === 'object' && info !== null ? info.name : (info || 'N/A');
+                      const whatsapp = typeof info === 'object' && info !== null ? info.whatsapp : '';
                       return (
                         <div key={s} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                           <span style={{ fontWeight: '600', color: '#374151' }}>Seat {s}:</span>
-                          <span style={{ color: '#059669', fontWeight: '700' }}>{name}</span>
+                          <span style={{ color: '#059669', fontWeight: '700' }}>
+                            {name} {whatsapp && <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 'normal' }}>({whatsapp})</span>}
+                          </span>
                         </div>
                       );
                     })}
