@@ -13,6 +13,37 @@ function generateBookingId(): string {
   return `EVT-${year}-${random}`;
 }
 
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const eventId = searchParams.get('eventId');
+
+    if (!eventId) {
+      return NextResponse.json({ error: 'eventId parameter is required' }, { status: 400 });
+    }
+
+    const { data: bookings, error } = await supabaseAdmin
+      .from('bookings')
+      .select('seats')
+      .or(`seminar_id.eq.${eventId},bus_id.eq.${eventId}`)
+      .in('status', ['approved', 'pending']);
+
+    if (error) {
+      console.error('Failed to fetch booked seats:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    const takenSeats = (bookings || []).flatMap((bk: any) => bk.seats || []);
+    const uniqueSeats = Array.from(new Set(takenSeats));
+
+    return NextResponse.json({ seats: uniqueSeats });
+  } catch (err: any) {
+    console.error('Error in GET /api/bookings:', err);
+    return NextResponse.json({ error: err.message || 'An error occurred' }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

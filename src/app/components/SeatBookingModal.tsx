@@ -59,6 +59,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const [quantity, setQuantity] = useState(2); // Default to 2
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
+  const [alreadyBookedSeats, setAlreadyBookedSeats] = useState<string[]>([]);
   const [step, setStep] = useState<'quantity_select' | 'select' | 'payment' | 'success'>('quantity_select');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState('');
@@ -83,6 +84,37 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       setBookedSeats(allBooked);
     }
   }, [event]);
+
+  // Fetch taken seats on load & set up 5s polling
+  useEffect(() => {
+    if (!event.id) return;
+
+    const fetchBookedSeats = async () => {
+      try {
+        const res = await fetch(`/api/bookings?eventId=${encodeURIComponent(event.id)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setAlreadyBookedSeats(data.seats || []);
+        } else {
+          console.error('Failed to fetch booked seats');
+        }
+      } catch (err) {
+        console.error('Error fetching booked seats:', err);
+      }
+    };
+
+    fetchBookedSeats();
+
+    const interval = setInterval(fetchBookedSeats, 5000);
+    return () => clearInterval(interval);
+  }, [event.id]);
+
+  // Sanitize selected seats array if a seat gets booked by someone else
+  useEffect(() => {
+    if (alreadyBookedSeats.length > 0) {
+      setSelectedSeats((prev) => prev.filter((s) => !alreadyBookedSeats.includes(s)));
+    }
+  }, [alreadyBookedSeats]);
 
   // Fetch UPI configs
   useEffect(() => {
@@ -122,7 +154,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   };
 
   const handleSeatClick = (seatId: string) => {
-    if (bookedSeats.includes(seatId)) return;
+    if (bookedSeats.includes(seatId) || alreadyBookedSeats.includes(seatId)) return;
 
     const row = seatId[0];
     const col = parseInt(seatId.slice(1), 10);
@@ -141,7 +173,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       rowSeats.push({
         col: c,
         seatId: sId,
-        isAvailable: !bookedSeats.includes(sId)
+        isAvailable: !bookedSeats.includes(sId) && !alreadyBookedSeats.includes(sId)
       });
     }
 
@@ -263,6 +295,27 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
   const handleConfirmBooking = async () => {
     setIsSubmitting(true);
+
+    // Dynamic pre-booking validation check
+    try {
+      const checkRes = await fetch(`/api/bookings?eventId=${encodeURIComponent(event.id)}`);
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        const latestBooked = checkData.seats || [];
+        const hasConflict = selectedSeats.some((s) => latestBooked.includes(s));
+        if (hasConflict) {
+          alert('One or more of your selected seats have just been booked by another attendee. Please select different seats.');
+          setAlreadyBookedSeats(latestBooked);
+          setSelectedSeats([]);
+          setStep('select');
+          setIsSubmitting(false);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Conflict verification failed, proceeding with caution:', err);
+    }
+
     const newBookingId = generateBookingId();
     const ts = formatTimestamp();
 
@@ -493,16 +546,16 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                       <span className="row-label">{row}</span>
                       <div className="seat-row">
                         {Array.from({ length: SEATS_PER_ROW }, (_, i) => {
-                          const seatId = `${row}${i + 1}`;
-                          const isBooked = bookedSeats.includes(seatId);
-                          const isSelected = selectedSeats.includes(seatId);
+                          const currentSeatId = `${row}${i + 1}`;
+                          const isSeatAlreadyBooked = alreadyBookedSeats.includes(currentSeatId) || bookedSeats.includes(currentSeatId);
+                          const isSelected = selectedSeats.includes(currentSeatId);
                           return (
                             <button
-                              key={seatId}
-                              className={`sbm-seat ${isBooked ? 'seat-booked' : isSelected ? 'seat-selected' : 'seat-available'}`}
-                              onClick={() => handleSeatClick(seatId)}
-                              disabled={isBooked}
-                              title={`${seatId} – ${isBooked ? 'Booked' : isSelected ? 'Selected' : 'Available'}`}
+                              key={currentSeatId}
+                              className={`sbm-seat ${isSeatAlreadyBooked ? 'seat-booked pointer-events-none' : isSelected ? 'seat-selected' : 'seat-available'}`}
+                              onClick={() => handleSeatClick(currentSeatId)}
+                              disabled={isSeatAlreadyBooked}
+                              title={`${currentSeatId} – ${isSeatAlreadyBooked ? 'Booked' : isSelected ? 'Selected' : 'Available'}`}
                             >
                               {i + 1}
                             </button>
@@ -1206,12 +1259,16 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
         .seat-booked {
           background: #e5e7eb;
-          border-color: #d1d5db;
-          color: #9ca3af;
+          border-color: #9ca3af;
+          color: #4b5563;
           cursor: not-allowed;
         }
         .seat-booked::before {
           background: rgba(0, 0, 0, 0.05);
+        }
+
+        .pointer-events-none {
+          pointer-events: none;
         }
 
         .seat-legend {
@@ -1240,7 +1297,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
         .ld-available { background: #ffffff; border-color: #10b981; }
         .ld-selected { background: #10b981; border-color: #059669; }
-        .ld-booked { background: #e5e7eb; border-color: #d1d5db; }
+        .ld-booked { background: #e5e7eb; border-color: #9ca3af; }
 
         /* Right Panel */
         .sbm-right {
