@@ -333,7 +333,7 @@ export default function Home() {
 
         .hero-section {
           position: relative;
-          padding: 6rem 0 7rem;
+          padding: 4rem 0 5rem;
           background:
             linear-gradient(135deg, #1e9e48 0%, #25b454 50%, #28a745 100%);
           color: white;
@@ -345,6 +345,7 @@ export default function Home() {
 
         @media (min-width: 768px) {
           .hero-section {
+            padding: 6rem 0 7rem;
             min-height: 640px;
           }
         }
@@ -363,9 +364,15 @@ export default function Home() {
           z-index: 2;
           display: grid;
           grid-template-columns: 1fr;
-          gap: 3rem;
+          gap: 2rem;
           align-items: center;
           width: 100%;
+        }
+
+        @media (min-width: 768px) {
+          .hero-container {
+            gap: 3rem;
+          }
         }
 
         @media (min-width: 992px) {
@@ -458,21 +465,37 @@ export default function Home() {
           align-items: center;
           width: 100%;
           justify-content: center;
-          padding: 1rem 0;
+          padding: 0.5rem 0 0;
+        }
+
+        @media (min-width: 992px) {
+          .hero-image-col {
+            padding: 1rem 0;
+          }
         }
 
         .hero-image-wrapper {
           width: 100%;
-          max-width: 520px;
+          max-width: min(85vw, 420px);
           display: inline-block;
           transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
           position: relative;
-          border-radius: 24px;
+          border-radius: 16px;
           overflow: hidden;
           box-shadow:
-            0 20px 40px rgba(0, 0, 0, 0.25),
+            0 12px 28px rgba(0, 0, 0, 0.22),
             0 1px 3px rgba(0, 0, 0, 0.1);
           line-height: 0;
+        }
+
+        @media (min-width: 768px) {
+          .hero-image-wrapper {
+            max-width: 520px;
+            border-radius: 24px;
+            box-shadow:
+              0 20px 40px rgba(0, 0, 0, 0.25),
+              0 1px 3px rgba(0, 0, 0, 0.1);
+          }
         }
 
         .hero-image-wrapper:hover {

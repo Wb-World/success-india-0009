@@ -141,7 +141,7 @@ function BookingEngine() {
     : [];
 
   // ── Search Seminars ─────────────────────────────────────────────────────────
-  const handleSearchSeminars = async (
+  const handleSearchSeminars = (
     venueVal = venue,
     seminarVal = seminar,
     dateVal = date,
@@ -153,27 +153,56 @@ function BookingEngine() {
     }
     setErrorMsg('');
     setSearchTriggered(true);
-    setSeminars([]);
 
-    try {
-      const eventParam = eventIdVal ? `&eventId=${encodeURIComponent(eventIdVal)}` : '';
-      const res = await fetch(
-        `/api/events?venue=${encodeURIComponent(venueVal)}&seminar=${encodeURIComponent(seminarVal)}&date=${encodeURIComponent(dateVal)}${eventParam}`
-      );
-      const data = await res.json();
-      if (res.ok) {
-        const fetchedSeminars = (data.events || data.seminars || []).map((event: any) => ({
-          ...event,
-          legacySource: event.venue,
-          legacyDestination: event.title,
-        }));
-        setSeminars(fetchedSeminars);
+    // If events are already loaded, filter client-side immediately (no API delay)
+    if (events.length > 0) {
+      let filtered = events;
+      if (eventIdVal) {
+        filtered = events.filter((e) => e.id === eventIdVal);
       } else {
-        setErrorMsg(data.error || 'Failed to fetch seminar listings');
+        if (venueVal) {
+          filtered = filtered.filter((e) =>
+            (e.venue || e.legacySource || '').toLowerCase() === venueVal.toLowerCase()
+          );
+        }
+        if (seminarVal && seminarVal !== venueVal) {
+          filtered = filtered.filter((e) =>
+            (e.title || e.name || e.legacyDestination || '')
+              .toLowerCase()
+              .includes(seminarVal.toLowerCase()) ||
+            seminarVal.toLowerCase().includes(
+              (e.title || e.name || e.legacyDestination || '').toLowerCase()
+            )
+          );
+        }
       }
-    } catch (err) {
-      setErrorMsg('A connection error occurred while searching seminars.');
+      setSeminars(filtered);
+      return;
     }
+
+    // Fallback: fetch from API only if events weren't loaded on mount
+    setSeminars([]);
+    (async () => {
+      try {
+        const eventParam = eventIdVal ? `&eventId=${encodeURIComponent(eventIdVal)}` : '';
+        const res = await fetch(
+          `/api/events?venue=${encodeURIComponent(venueVal)}&seminar=${encodeURIComponent(seminarVal)}&date=${encodeURIComponent(dateVal)}${eventParam}`
+        );
+        const data = await res.json();
+        if (res.ok) {
+          const fetchedSeminars = (data.events || data.seminars || []).map((event: any) => ({
+            ...event,
+            legacySource: event.venue,
+            legacyDestination: event.title,
+          }));
+          setSeminars(fetchedSeminars);
+        } else {
+          setErrorMsg(data.error || 'Failed to fetch seminar listings');
+        }
+      } catch (err) {
+        setErrorMsg('A connection error occurred while searching seminars.');
+      }
+    })();
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────

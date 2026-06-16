@@ -49,7 +49,7 @@ export default function About() {
             </div>
             <h3 className="heading-sm value-title">Community-First Growth</h3>
             <p className="value-desc">
-              AccessIndia fosters a deeply human network — one where members uplift one another, share knowledge freely, and grow together through collaboration, inclusion, and shared purpose.
+              AccessIndia fosters a deeply human network one where members uplift one another, share knowledge freely, and grow together through collaboration, inclusion, and shared purpose.
             </p>
           </div>
         </div>
@@ -61,13 +61,13 @@ export default function About() {
           <div className="story-text-col animate-slide-up">
             <h2 className="heading-lg text-green">Who We Are</h2>
             <p className="story-para">
-              AccessIndia is a people-driven movement committed to making personal and professional development accessible to every individual, regardless of background or circumstance. We believe growth is not a privilege — it is a right.
+              AccessIndia is a people-driven movement committed to making personal and professional development accessible to every individual, regardless of background or circumstance. We believe growth is not a privilege it is a right.
             </p>
             <p className="story-para">
               Success India works in alignment with AccessIndia to deliver on-ground programs, leadership seminars, and practical skill-building workshops that translate real-world knowledge into career and business momentum.
             </p>
             <p className="story-para">
-              Together, we serve a growing community of driven individuals across Tamil Nadu — empowering them through structured events, mentorship circles, income-strategy sessions, and chapter-level gatherings that transform lives from the ground up.
+              Together, we serve a growing community of driven individuals across Tamil Nadu empowering them through structured events, mentorship circles, income-strategy sessions, and chapter-level gatherings that transform lives from the ground up.
             </p>
           </div>
           <div className="story-graphics-col animate-scale-in">
