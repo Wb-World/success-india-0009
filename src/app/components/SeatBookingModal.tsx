@@ -388,6 +388,11 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   };
 
   const handleDownloadTicket = async () => {
+    const seatsToRender = confirmedData?.seats || selectedSeats;
+    const seatsLength = confirmedData?.seats?.length || selectedSeats.length;
+    const priceToRender = confirmedData?.totalPrice || totalPrice;
+    const timestampToRender = confirmedData?.timestamp || bookingTimestamp;
+
     // Build a temporary off-screen ticket element
     const wrapper = document.createElement('div');
     wrapper.style.position = 'fixed';
@@ -400,7 +405,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     wrapper.style.color = '#111827';
     wrapper.style.width = '640px';
 
-    const seatsHtml = selectedSeats.map(s => `<span style="background:#dcfce7;color:#047857;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:700;margin:2px">${s}</span>`).join('');
+    const seatsHtml = seatsToRender.map(s => `<span style="background:#dcfce7;color:#047857;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:700;margin:2px">${s}</span>`).join('');
 
     wrapper.innerHTML = `
       <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
@@ -415,10 +420,10 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Venue</span><span style="font-weight:600;">${event.venue}</span></div>
           <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Date</span><span style="font-weight:600;">${event.eventDate || 'To Be Confirmed'}</span></div>
           <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Time</span><span style="font-weight:600;">${event.eventTime || '10:00 AM'}</span></div>
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f3f4f6;gap:16px;"><span style="color:#6b7280;font-size:13px;flex-shrink:0;">Seats (${selectedSeats.length})</span><div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;">${seatsHtml}</div></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f3f4f6;gap:16px;"><span style="color:#6b7280;font-size:13px;flex-shrink:0;">Seats (${seatsLength})</span><div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;">${seatsHtml}</div></div>
           <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Price per Seat</span><span style="font-weight:600;">₹${pricePerSeat}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Booked At</span><span style="font-weight:600;">${bookingTimestamp}</span></div>
-          <div style="background:#ecfdf5;border-radius:8px;padding:16px;margin-top:16px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:15px;font-weight:600;color:#374151;">Total Amount</span><span style="font-size:24px;font-weight:800;color:#10b981;">₹${totalPrice}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Booked At</span><span style="font-weight:600;">${timestampToRender}</span></div>
+          <div style="background:#ecfdf5;border-radius:8px;padding:16px;margin-top:16px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:15px;font-weight:600;color:#374151;">Total Amount</span><span style="font-size:24px;font-weight:800;color:#10b981;">₹${priceToRender}</span></div>
         </div>
         ${qrImageUrl ? `<div style="text-align:center;padding:24px;border-top:2px dashed #a7f3d0;"><img src="${qrImageUrl}" alt="QR Code" width="160" height="160" crossorigin="anonymous" /><p style="font-size:12px;color:#9ca3af;margin-top:8px;">Scan QR code for verification</p></div>` : ''}
         <div style="text-align:center;font-size:12px;color:#9ca3af;padding:16px 32px;background:#f9fafb;">This is a ticket receipt showing status as Pending Verification. Once approved by administration, it compiles as Confirmed.</div>
@@ -826,12 +831,12 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                 <div className="ticket-detail-row">
                   <span className="td-label">Seats</span>
                   <div className="td-seat-tags">
-                    {selectedSeats.map((s) => <span key={s} className="seat-tag">{s}</span>)}
+                    {(confirmedData?.seats || selectedSeats).map((s) => <span key={s} className="seat-tag">{s}</span>)}
                   </div>
                 </div>
                 <div className="ticket-detail-row">
                   <span className="td-label">No. of Seats</span>
-                  <strong className="td-value">{quantity}</strong>
+                  <strong className="td-value">{confirmedData?.seats?.length || quantity}</strong>
                 </div>
                 <div className="ticket-detail-row">
                   <span className="td-label">Price / Seat</span>
@@ -839,11 +844,11 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                 </div>
                 <div className="ticket-detail-row ticket-total-row">
                   <span className="td-label">Total Amount</span>
-                  <strong className="td-value td-total">₹{totalPrice}</strong>
+                  <strong className="td-value td-total">₹{confirmedData?.totalPrice !== undefined ? confirmedData.totalPrice : totalPrice}</strong>
                 </div>
                 <div className="ticket-detail-row">
                   <span className="td-label">Booked At</span>
-                  <strong className="td-value td-small">{bookingTimestamp}</strong>
+                  <strong className="td-value td-small">{confirmedData?.timestamp || bookingTimestamp}</strong>
                 </div>
                 <div className="ticket-detail-row">
                   <span className="td-label">Status</span>
