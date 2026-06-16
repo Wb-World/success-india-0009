@@ -169,7 +169,7 @@ export default function Home() {
                 AccessIndia: Pioneering <span className="text-highlight">Enterprise Growth &amp; Professional</span> Leadership
               </h1>
               <p className="hero-subtitle">
-                Empowering India's entrepreneurial ecosystem through official chapter meetups, high-impact business strategy seminars, and curated networking forums designed for scalability and success.
+                Empowering India&apos;s entrepreneurial ecosystem through official chapter meetups, high-impact business strategy seminars, and curated networking forums designed for scalability and success.
               </p>
               <div className="hero-proof-row">
                 <div className="proof-item">
