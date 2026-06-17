@@ -79,23 +79,23 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const [bookerPhone, setBookerPhone] = useState('');
   const [bookerError, setBookerError] = useState('');
 
-  // Auto-generate a unique 6-character member ID on mount to prevent hydration mismatch
+  // Auto-generate a unique 8-9 character member ID (2-3 letters + rest digits)
   useEffect(() => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const digits = '0123456789';
-    const randLetter = letters[Math.floor(Math.random() * letters.length)];
-    const randDigit = digits[Math.floor(Math.random() * digits.length)];
-    let rest = '';
-    for (let i = 0; i < 4; i++) {
-      rest += chars[Math.floor(Math.random() * chars.length)];
+    // Randomly choose total length: 8 or 9
+    const totalLen = Math.random() < 0.5 ? 8 : 9;
+    // Randomly choose number of leading letters: 2 or 3
+    const numLetters = Math.random() < 0.5 ? 2 : 3;
+    const numDigits = totalLen - numLetters;
+    let id = '';
+    for (let i = 0; i < numLetters; i++) {
+      id += letters[Math.floor(Math.random() * letters.length)];
     }
-    const arr = (randLetter + randDigit + rest).split('');
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
+    for (let i = 0; i < numDigits; i++) {
+      id += digits[Math.floor(Math.random() * digits.length)];
     }
-    setBookerMemberId(arr.join(''));
+    setBookerMemberId(id);
   }, []);
 
   // Scroll card back to top on every step change (removes visual layout jumping/scrolling issues)
@@ -116,10 +116,10 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       setBookerError('Please enter your full name (at least 2 characters).');
       return;
     }
-    // 6-char alphanumeric with at least one letter and one digit
-    const memberIdRegex = /^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{6}$/;
-    if (!memberIdRegex.test(trimmedId)) {
-      setBookerError('Member ID must be exactly 6 characters with both letters & numbers (e.g., AH8987).');
+    // 8-9 char: 2-3 letters at start, rest digits
+    const memberIdRegex = /^[A-Z]{2,3}[0-9]{5,7}$/;
+    if (!memberIdRegex.test(trimmedId) || trimmedId.length < 8 || trimmedId.length > 9) {
+      setBookerError('Member ID must be 8-9 characters: 2-3 letters followed by digits (e.g., AB123456).');
       return;
     }
     const phoneRegex = /^\+?[0-9]{10,15}$/;
@@ -199,7 +199,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
   // UPI Link payload & Dynamic QR Image (emerald green color combo #10b981)
   const upiPayload = `upi://pay?pa=${upiConfig.upiId}&pn=${encodeURIComponent(upiConfig.upiName)}&am=${totalPrice}&cu=INR`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayload)}&qzone=1&format=png&color=10b981`;
+  const qrCodeUrl = `/upi-qr-code.jpg`;
 
   // QR code data for ticket validation
   const qrPayload = confirmedData
@@ -547,25 +547,14 @@ export default function SeatBookingModal({ event, onClose }: Props) {
         {/* ── STEP 0: Booker Identity Registration ────── */}
         {step === 'booker_info' && (
           <div className="booker-info-container">
-            {/* Animated header */}
-            <div className="booker-info-header">
-              <div className="booker-header-glow" />
-              <div className="booker-particles">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className={`booker-particle booker-particle-${i + 1}`} />
-                ))}
-              </div>
-              <div className="booker-icon-ring">
-                <span className="booker-icon-emoji">🎟️</span>
-              </div>
-              <h2 className="booker-title">Register to Book</h2>
-              <p className="booker-subtitle">
-                Enter your identity details to begin the seat reservation process.
-              </p>
+            {/* Image header */}
+            <div className="booker-img-header">
+              <img src="/img.png" alt="Register to Book" className="booker-header-img" />
             </div>
 
             {/* Form body */}
             <div className="booker-form-body">
+              <h2 className="booker-title-under">Register to Book</h2>
               {bookerError && (
                 <div className="booker-error-alert animate-shake-x">
                   <AlertCircle size={15} />
@@ -619,33 +608,32 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                 <div className="form-input-group">
                   <label className="input-field-label">
                     Member ID <span style={{ color: '#ef4444' }}>*</span>
-                    <span className="member-id-badge">6 chars · letters + numbers</span>
                   </label>
                   <div className="input-field-wrap member-id-wrap">
                     <span className="input-field-icon">🪪</span>
                     <input
                       type="text"
-                      placeholder="e.g. AH8987"
+                      placeholder="e.g. AB123456"
                       value={bookerMemberId}
                       onChange={(e) => {
-                        const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
-                        setBookerMemberId(val);
+                        const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9);
+                        setBookerMemberId(raw);
                         setBookerError('');
                       }}
-                      maxLength={6}
+                      maxLength={9}
                       required
                       className="text-input-field member-id-input"
                     />
                   </div>
                   {/* Character pip indicators */}
                   <div className="member-id-pips">
-                    {Array.from({ length: 6 }).map((_, i) => (
+                    {Array.from({ length: 9 }).map((_, i) => (
                       <span
                         key={i}
                         className={`char-pip ${i < bookerMemberId.length ? 'char-pip-filled' : ''}`}
                       />
                     ))}
-                    <span className="pips-count">{bookerMemberId.length}/6</span>
+                    <span className="pips-count">{bookerMemberId.length}/9</span>
                   </div>
                 </div>
 
@@ -1061,6 +1049,11 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
               {/* Right: QR Code and Account Info */}
               <div className="payment-right-panel">
+                {/* Professional event image placement */}
+                {/* <div className="payment-event-img-wrap">
+                  <img src="/image.png" alt="Event" className="payment-event-img" />
+                </div> */}
+
                 <div className="qr-container-box">
                   <div className="qr-image-wrap">
                     <img src={qrCodeUrl} alt="UPI Payment QR Code" className="payment-qr-img" />
@@ -1282,105 +1275,32 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           border-radius: 20px;
         }
 
-        .booker-info-header {
+        .booker-img-header {
           position: relative;
-          background: linear-gradient(135deg, #064e3b 0%, #065f46 30%, #10b981 70%, #34d399 100%);
-          padding: 1.5rem 1.5rem 1.75rem;
-          text-align: center;
-          color: white;
+          width: 100%;
+          height: 220px;
           overflow: hidden;
+          background: #f3f4f6;
+          border-top-left-radius: 20px;
+          border-top-right-radius: 20px;
         }
 
-        .booker-header-glow {
-          position: absolute;
-          top: -80px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 260px;
-          height: 260px;
-          background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
-          pointer-events: none;
-          animation: bookerGlowPulse 3s ease-in-out infinite;
+        .booker-header-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center top;
+          display: block;
         }
 
-        @keyframes bookerGlowPulse {
-          0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.5; }
-          50% { transform: translateX(-50%) scale(1.3); opacity: 1; }
-        }
-
-        /* Floating particles */
-        .booker-particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-        .booker-particle {
-          position: absolute;
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.35);
-          animation: particleFloat 6s ease-in-out infinite;
-        }
-        .booker-particle-1 { top: 10%; left: 15%; animation-delay: 0s; animation-duration: 5s; }
-        .booker-particle-2 { top: 25%; right: 18%; animation-delay: 1s; animation-duration: 7s; width: 4px; height: 4px; }
-        .booker-particle-3 { top: 60%; left: 8%; animation-delay: 2s; animation-duration: 6s; width: 8px; height: 8px; }
-        .booker-particle-4 { top: 70%; right: 12%; animation-delay: 0.5s; animation-duration: 8s; }
-        .booker-particle-5 { top: 40%; left: 75%; animation-delay: 3s; animation-duration: 5.5s; width: 5px; height: 5px; }
-        .booker-particle-6 { top: 15%; right: 40%; animation-delay: 1.5s; animation-duration: 6.5s; width: 7px; height: 7px; }
-
-        @keyframes particleFloat {
-          0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
-          33% { transform: translateY(-14px) scale(1.2); opacity: 0.8; }
-          66% { transform: translateY(8px) scale(0.85); opacity: 0.3; }
-        }
-
-        .booker-icon-ring {
-          width: 54px;
-          height: 54px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.18);
-          border: 2px solid rgba(255, 255, 255, 0.45);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 0.75rem;
-          animation: bookerIconBounce 2.2s ease-in-out infinite;
-          backdrop-filter: blur(8px);
-          position: relative;
-          z-index: 2;
-          box-shadow: 0 0 28px rgba(255,255,255,0.2), inset 0 1px 0 rgba(255,255,255,0.3);
-        }
-
-        @keyframes bookerIconBounce {
-          0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-8px) scale(1.06); }
-        }
-
-        .booker-icon-emoji {
-          font-size: 1.6rem;
-          line-height: 1;
-          filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
-        }
-
-        .booker-title {
+        .booker-title-under {
           font-family: var(--font-heading);
-          font-size: 1.5rem;
+          font-size: 1.35rem;
           font-weight: 800;
-          color: white;
-          margin: 0 0 0.25rem;
-          position: relative;
-          z-index: 2;
-          text-shadow: 0 2px 12px rgba(0,0,0,0.2);
-          letter-spacing: -0.3px;
-        }
-
-        .booker-subtitle {
-          font-size: 0.8rem;
-          color: rgba(255,255,255,0.82);
-          margin: 0;
-          line-height: 1.45;
-          position: relative;
-          z-index: 2;
-          max-width: 280px;
-          margin-left: auto;
-          margin-right: auto;
+          color: #111827;
+          text-align: center;
+          margin-bottom: 1.25rem;
+          margin-top: 0.25rem;
         }
 
         .booker-form-body {
@@ -2051,7 +1971,9 @@ export default function SeatBookingModal({ event, onClose }: Props) {
         /* Proceed Button */
         .sbm-proceed-btn {
           width: 100%;
-          padding: 0.875rem;
+          box-sizing: border-box;
+          min-height: 48px;
+          padding: 0.875rem 1rem;
           background: linear-gradient(135deg, #10b981, #059669);
           color: white;
           border: none;
@@ -2061,6 +1983,10 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           cursor: pointer;
           transition: all 0.15s;
           box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+          display: block;
+          text-align: center;
+          line-height: 1.4;
+          overflow: visible;
         }
         .sbm-proceed-btn:hover:not(:disabled) {
           transform: translateY(-2px);
@@ -2225,6 +2151,29 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           display: flex;
           flex-direction: column;
           gap: 1.25rem;
+        }
+
+        /* Professional event image in payment panel */
+        .payment-event-img-wrap {
+          width: 100%;
+          border-radius: 14px;
+          overflow: hidden;
+          background: #f0fdf4;
+          border: 1.5px solid #a7f3d0;
+          box-shadow: 0 4px 16px rgba(16, 185, 129, 0.1);
+          flex-shrink: 0;
+          aspect-ratio: 16 / 9;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .payment-event-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          border-radius: 12px;
         }
 
         .qr-container-box {
