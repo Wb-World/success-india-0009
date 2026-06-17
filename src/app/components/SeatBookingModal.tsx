@@ -1326,7 +1326,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
         .booker-img-header {
           position: relative;
           width: 100%;
-          height: 220px;
+          height: auto;
           overflow: hidden;
           background: #f3f4f6;
           border-top-left-radius: 20px;
@@ -1335,9 +1335,8 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
         .booker-header-img {
           width: 100%;
-          height: 100%;
-          object-fit: cover;
-          object-position: center top;
+          height: auto;
+          object-fit: contain;
           display: block;
         }
 
