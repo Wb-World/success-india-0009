@@ -79,6 +79,27 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const [bookerPhone, setBookerPhone] = useState('');
   const [bookerError, setBookerError] = useState('');
 
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+
+  const checkScroll = () => {
+    if (step === 'booker_info' && cardRef.current) {
+      const target = cardRef.current;
+      const canScrollMore = target.scrollHeight - target.scrollTop - target.clientHeight > 30;
+      setShowScrollBtn(canScrollMore);
+    } else {
+      setShowScrollBtn(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(checkScroll, 100);
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [step]);
+
   // Auto-generate a unique 8-9 character member ID (2-3 letters + rest digits)
   useEffect(() => {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -538,11 +559,18 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       aria-modal="true"
       aria-label="Seat Booking Modal"
     >
-      <div ref={cardRef} className={`sbm-card sbm-card-${step}`} onClick={(e) => e.stopPropagation()}>
+      <div 
+        ref={cardRef} 
+        className={`sbm-card sbm-card-${step}`} 
+        onClick={(e) => e.stopPropagation()}
+        onScroll={checkScroll}
+      >
         {/* Close button */}
         <button className="sbm-close-btn" onClick={onClose} aria-label="Close">
           <X size={20} />
         </button>
+
+
 
         {/* ── STEP 0: Booker Identity Registration ────── */}
         {step === 'booker_info' && (
@@ -1224,6 +1252,26 @@ export default function SeatBookingModal({ event, onClose }: Props) {
             </button>
           </div>
         )}
+
+        {showScrollBtn && (
+          <div className="booker-scroll-btn-wrap">
+            {/* <button 
+              type="button" 
+              className="booker-scroll-btn animate-bounce"
+              onClick={() => {
+                if (cardRef.current) {
+                  cardRef.current.scrollTo({
+                    top: cardRef.current.scrollHeight,
+                    behavior: 'smooth'
+                  });
+                }
+              }}
+              aria-label="Scroll to bottom"
+            >
+              Scroll Down ↓
+            </button> */}
+          </div>
+        )}
       </div>
 
       {/* ─── Styles ─────────────────────────────────────────────────────────── */}
@@ -1262,7 +1310,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .sbm-card-booker_info { max-width: 480px; overflow: hidden !important; }
+        .sbm-card-booker_info { max-width: 480px; overflow-y: auto !important; }
         .sbm-card-quantity_select { max-width: 480px; overflow: hidden !important; }
         .sbm-card-select { max-width: 960px; }
         .sbm-card-attendee_details { max-width: 520px; }
@@ -1305,6 +1353,55 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
         .booker-form-body {
           padding: 1.25rem 1.5rem 1.25rem;
+        }
+
+        .booker-scroll-btn-wrap {
+          position: sticky;
+          bottom: 1rem;
+          left: 0;
+          right: 0;
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          pointer-events: none;
+          z-index: 50;
+        }
+
+        .booker-scroll-btn {
+          pointer-events: auto;
+          background: rgba(16, 185, 129, 0.95);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 999px;
+          border: none;
+          font-size: 0.8rem;
+          font-weight: 700;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          transition: all 0.2s ease;
+          backdrop-filter: blur(4px);
+        }
+
+        .booker-scroll-btn:hover {
+          background: rgba(5, 150, 105, 1);
+          transform: scale(1.05);
+          box-shadow: 0 6px 16px rgba(5, 150, 105, 0.45);
+        }
+
+        .animate-bounce {
+          animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-6px);
+          }
         }
 
         .booker-error-alert {
