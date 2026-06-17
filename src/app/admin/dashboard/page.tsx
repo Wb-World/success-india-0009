@@ -532,11 +532,11 @@ export default function AdminDashboard() {
                       {/* Member and seminar booking info */}
                       <div className="details-col">
                         <div className="details-group">
-                          <h4 className="group-title">Member / Attendee Profile</h4>
+                          <h4 className="group-title">Booker / Member Profile</h4>
                           <div className="info-grid">
-                            <div className="info-row"><span>Attendee Name:</span><strong>{b.user.name}</strong></div>
-                            <div className="info-row"><span>Email Contact:</span><strong>{b.user.email}</strong></div>
-                            <div className="info-row"><span>Helpline Mobile:</span><strong>{b.user.phone}</strong></div>
+                            <div className="info-row"><span>Booker Name:</span><strong>{b.bookerName || (b.user.name !== 'Unknown User' ? b.user.name : 'Guest')}</strong></div>
+                            <div className="info-row"><span>Member ID:</span><strong>{b.bookerMemberId || 'N/A'}</strong></div>
+                            <div className="info-row"><span>Mobile Number:</span><strong>{b.bookerPhone || (b.user.phone !== 'N/A' ? b.user.phone : 'N/A')}</strong></div>
                           </div>
                         </div>
 

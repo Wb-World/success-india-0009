@@ -1,35 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Calendar, User, LogOut } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Menu, X, Calendar } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    const checkUser = () => {
-      const stored = localStorage.getItem('user');
-      if (stored) {
-        try {
-          setUser(JSON.parse(stored));
-        } catch (error) {
-          console.error(error);
-          setUser(null);
-        }
-      } else {
-        setUser(null);
-      }
-    };
-
-    checkUser();
-    window.addEventListener('auth-change', checkUser);
-    return () => window.removeEventListener('auth-change', checkUser);
-  }, []);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -39,15 +17,10 @@ export default function Navbar() {
     if (!menuOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setMenuOpen(false);
-      }
+      if (event.key === 'Escape') setMenuOpen(false);
     };
-
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setMenuOpen(false);
-      }
+      if (window.innerWidth >= 1024) setMenuOpen(false);
     };
 
     document.body.style.overflow = 'hidden';
@@ -63,14 +36,6 @@ export default function Navbar() {
   }, [menuOpen]);
 
   const closeMenu = () => setMenuOpen(false);
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    window.dispatchEvent(new Event('auth-change'));
-    closeMenu();
-    router.push('/');
-  };
 
   // Suppress navbar completely on admin pages
   const isAdminRoute = pathname.startsWith('/admin');
@@ -95,24 +60,6 @@ export default function Navbar() {
           <Link href="/book" className="btn btn-primary nav-book-btn">
             <Calendar size={16} /> Book a Event
           </Link>
-          {user ? (
-            <>
-              <Link href="/profile" className="btn btn-secondary nav-book-btn">
-                <User size={16} /> Profile
-              </Link>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="btn btn-secondary nav-book-btn nav-logout-btn"
-              >
-                <LogOut size={16} /> Logout
-              </button>
-            </>
-          ) : (
-            <Link href="/profile" className="btn btn-secondary nav-book-btn">
-              <User size={16} /> Sign In
-            </Link>
-          )}
         </div>
 
         <button
@@ -168,24 +115,6 @@ export default function Navbar() {
                 <Link href="/book" className="btn btn-primary mobile-book-btn" onClick={closeMenu}>
                   <Calendar size={16} /> Book a Event
                 </Link>
-                {user ? (
-                  <>
-                    <Link href="/profile" className="btn btn-secondary mobile-book-btn" onClick={closeMenu}>
-                      <User size={16} /> My Profile
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="btn btn-secondary mobile-book-btn mobile-logout-btn"
-                    >
-                      <LogOut size={16} /> Logout
-                    </button>
-                  </>
-                ) : (
-                  <Link href="/profile" className="btn btn-secondary mobile-book-btn" onClick={closeMenu}>
-                    <User size={16} /> Sign In
-                  </Link>
-                )}
               </div>
             </div>
           </div>

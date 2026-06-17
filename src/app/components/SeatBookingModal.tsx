@@ -57,11 +57,11 @@ type Props = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function SeatBookingModal({ event, onClose }: Props) {
-  const [quantity, setQuantity] = useState(2); // Default to 2
+  const [quantity, setQuantity] = useState(2);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
   const [alreadyBookedSeats, setAlreadyBookedSeats] = useState<string[]>([]);
-  const [step, setStep] = useState<'login_register' | 'quantity_select' | 'select' | 'attendee_details' | 'payment' | 'success'>('quantity_select');
+  const [step, setStep] = useState<'booker_info' | 'quantity_select' | 'select' | 'attendee_details' | 'payment' | 'success'>('booker_info');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState('');
   const [bookingTimestamp, setBookingTimestamp] = useState('');
@@ -70,79 +70,68 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const [attendeeDetails, setAttendeeDetails] = useState<Record<string, { name: string; whatsapp: string }>>({});
   const [currentAttendeeIndex, setCurrentAttendeeIndex] = useState(0);
 
-  // User auth states
-  const [user, setUser] = useState<any>(null);
-  const [isLoginTab, setIsLoginTab] = useState(true);
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authError, setAuthError] = useState('');
-  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
-  const [registerForm, setRegisterForm] = useState({ username: '', password: '', name: '', email: '', phone: '' });
+  // Card ref for scroll reset on step transition
+  const cardRef = useRef<HTMLDivElement>(null);
 
+  // Booker identity states (replaces login/register)
+  const [bookerName, setBookerName] = useState('');
+  const [bookerMemberId, setBookerMemberId] = useState('');
+  const [bookerPhone, setBookerPhone] = useState('');
+  const [bookerError, setBookerError] = useState('');
+
+  // Auto-generate a unique 6-character member ID on mount to prevent hydration mismatch
   useEffect(() => {
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      try {
-        const u = JSON.parse(stored);
-        setUser(u);
-      } catch (e) {
-        console.error(e);
-      }
-    } else {
-      setStep('login_register');
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const digits = '0123456789';
+    const randLetter = letters[Math.floor(Math.random() * letters.length)];
+    const randDigit = digits[Math.floor(Math.random() * digits.length)];
+    let rest = '';
+    for (let i = 0; i < 4; i++) {
+      rest += chars[Math.floor(Math.random() * chars.length)];
     }
+    const arr = (randLetter + randDigit + rest).split('');
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    setBookerMemberId(arr.join(''));
   }, []);
 
-  const handleAuthLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthError('');
-    setAuthLoading(true);
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginForm),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setUser(data.user);
-        window.dispatchEvent(new Event('auth-change'));
-        setStep('quantity_select');
-      } else {
-        setAuthError(data.error || 'Invalid username or password');
-      }
-    } catch (err) {
-      setAuthError('Connection failed. Please try again.');
-    } finally {
-      setAuthLoading(false);
+  // Scroll card back to top on every step change (removes visual layout jumping/scrolling issues)
+  useEffect(() => {
+    if (cardRef.current) {
+      cardRef.current.scrollTop = 0;
     }
+  }, [step]);
+
+  const handleBookerSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setBookerError('');
+    const trimmedName = bookerName.trim();
+    const trimmedId = bookerMemberId.trim().toUpperCase();
+    const trimmedPhone = bookerPhone.trim();
+
+    if (!trimmedName || trimmedName.length < 2) {
+      setBookerError('Please enter your full name (at least 2 characters).');
+      return;
+    }
+    // 6-char alphanumeric with at least one letter and one digit
+    const memberIdRegex = /^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{6}$/;
+    if (!memberIdRegex.test(trimmedId)) {
+      setBookerError('Member ID must be exactly 6 characters with both letters & numbers (e.g., AH8987).');
+      return;
+    }
+    const phoneRegex = /^\+?[0-9]{10,15}$/;
+    if (!phoneRegex.test(trimmedPhone)) {
+      setBookerError('Please enter a valid 10-15 digit mobile number (with optional + prefix).');
+      return;
+    }
+    setBookerMemberId(trimmedId);
+    setBookerPhone(trimmedPhone);
+    setStep('quantity_select');
   };
 
-  const handleAuthRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthError('');
-    setAuthLoading(true);
-    try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(registerForm),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setUser(data.user);
-        window.dispatchEvent(new Event('auth-change'));
-        setStep('quantity_select');
-      } else {
-        setAuthError(data.error || 'Registration failed');
-      }
-    } catch (err) {
-      setAuthError('Connection failed. Please try again.');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
 
   // Payment configuration and upload states
   const [upiConfig, setUpiConfig] = useState({ upiId: 'shesh.dav07-1@okaxis', upiName: 'david', upiQrUrl: '/upi-qr-code.jpg?v=2' });
@@ -416,24 +405,12 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       totalPrice,
       screenshot: (screenshotUrl || 'DIRECT_BOOKING') + '|' + JSON.stringify(attendeesObj),
       attendeeDetails: attendeesObj,
+      bookerName,
+      bookerMemberId,
+      bookerPhone,
     };
 
-    // Retrieve logged-in user from localStorage to pass x-user-id header
-    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-    let userId = null;
-    if (userStr) {
-      try {
-        const parsed = JSON.parse(userStr);
-        userId = parsed.id;
-      } catch (e) {
-        console.error('Failed to parse user from localStorage:', e);
-      }
-    }
-
     const headers: any = { 'Content-Type': 'application/json' };
-    if (userId) {
-      headers['x-user-id'] = userId;
-    }
 
     try {
       const res = await fetch('/api/bookings', {
@@ -556,169 +533,130 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   return (
     <div
       className="sbm-overlay"
-      onClick={(e) => { if (e.target === e.currentTarget && step === 'success') onClose(); }}
+      onClick={(e) => { /* Only close when X is clicked */ }}
       role="dialog"
       aria-modal="true"
       aria-label="Seat Booking Modal"
     >
-      <div className={`sbm-card sbm-card-${step}`} onClick={(e) => e.stopPropagation()}>
+      <div ref={cardRef} className={`sbm-card sbm-card-${step}`} onClick={(e) => e.stopPropagation()}>
         {/* Close button */}
         <button className="sbm-close-btn" onClick={onClose} aria-label="Close">
           <X size={20} />
         </button>
 
-        {/* ── STEP 0: Login / Registration ────── */}
-        {step === 'login_register' && (
-          <div className="auth-modal-container">
-            <div className="auth-modal-tabs">
-              <button
-                type="button"
-                className={`auth-modal-tab ${isLoginTab ? 'active' : ''}`}
-                onClick={() => { setIsLoginTab(true); setAuthError(''); }}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                className={`auth-modal-tab ${!isLoginTab ? 'active' : ''}`}
-                onClick={() => { setIsLoginTab(false); setAuthError(''); }}
-              >
-                Create Account
-              </button>
+        {/* ── STEP 0: Booker Identity Registration ────── */}
+        {step === 'booker_info' && (
+          <div className="booker-info-container">
+            {/* Animated header */}
+            <div className="booker-info-header">
+              <div className="booker-header-glow" />
+              <div className="booker-particles">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className={`booker-particle booker-particle-${i + 1}`} />
+                ))}
+              </div>
+              <div className="booker-icon-ring">
+                <span className="booker-icon-emoji">🎟️</span>
+              </div>
+              <h2 className="booker-title">Register to Book</h2>
+              <p className="booker-subtitle">
+                Enter your identity details to begin the seat reservation process.
+              </p>
             </div>
 
-            <div className="auth-modal-content">
-              <h2 className="payment-title" style={{ textAlign: 'center', marginBottom: '0.5rem', fontSize: '1.4rem', fontWeight: 'bold', color: '#1f2937' }}>
-                {isLoginTab ? 'Sign In to Book Seats' : 'Register a Free Account'}
-              </h2>
-              <p className="payment-subtitle" style={{ textAlign: 'center', marginBottom: '1.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                {isLoginTab ? 'Enter your account details to access our secure reservation engine.' : 'Create an account to book and manage your seminar seats.'}
-              </p>
-
-              {authError && (
-                <div className="error-alert animate-shake" style={{ marginBottom: '1.5rem', background: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
-                  <AlertCircle size={16} /> <span>{authError}</span>
+            {/* Form body */}
+            <div className="booker-form-body">
+              {bookerError && (
+                <div className="booker-error-alert animate-shake-x">
+                  <AlertCircle size={15} />
+                  <span>{bookerError}</span>
                 </div>
               )}
 
-              {isLoginTab ? (
-                <form onSubmit={handleAuthLogin} className="auth-modal-form">
-                  <div className="form-input-group">
-                    <label className="input-field-label">Username</label>
-                    <div className="input-field-wrap">
-                      <span className="input-field-icon">👤</span>
-                      <input
-                        type="text"
-                        placeholder="Enter your username"
-                        value={loginForm.username}
-                        onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-                        required
-                        className="text-input-field"
-                      />
-                    </div>
+              <form onSubmit={handleBookerSubmit} className="booker-form">
+                {/* Full Name */}
+                <div className="form-input-group">
+                  <label className="input-field-label">
+                    Full Name <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <div className="input-field-wrap">
+                    <span className="input-field-icon">👤</span>
+                    <input
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={bookerName}
+                      onChange={(e) => { setBookerName(e.target.value); setBookerError(''); }}
+                      required
+                      autoFocus
+                      className="text-input-field"
+                    />
                   </div>
+                </div>
 
-                  <div className="form-input-group">
-                    <label className="input-field-label">Password</label>
-                    <div className="input-field-wrap">
-                      <span className="input-field-icon">🔒</span>
-                      <input
-                        type="password"
-                        placeholder="Enter your password"
-                        value={loginForm.password}
-                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                        required
-                        className="text-input-field"
-                      />
-                    </div>
+                {/* Mobile Number */}
+                <div className="form-input-group">
+                  <label className="input-field-label">
+                    Mobile Number <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <div className="input-field-wrap">
+                    <span className="input-field-icon">📞</span>
+                    <input
+                      type="tel"
+                      placeholder="Enter your 10-15 digit mobile number"
+                      value={bookerPhone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^\d+]/g, '');
+                        setBookerPhone(val);
+                        setBookerError('');
+                      }}
+                      required
+                      className="text-input-field"
+                    />
                   </div>
+                </div>
 
-                  <button type="submit" className="sbm-proceed-btn" style={{ width: '100%', marginTop: '1rem' }} disabled={authLoading}>
-                    {authLoading ? 'Signing In...' : 'Sign In & Continue →'}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleAuthRegister} className="auth-modal-form">
-                  <div className="form-input-group">
-                    <label className="input-field-label">Choose Username <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="input-field-wrap">
-                      <span className="input-field-icon">👤</span>
-                      <input
-                        type="text"
-                        placeholder="e.g. janesmith"
-                        value={registerForm.username}
-                        onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })}
-                        required
-                        className="text-input-field"
-                      />
-                    </div>
+                {/* Member ID */}
+                <div className="form-input-group">
+                  <label className="input-field-label">
+                    Member ID <span style={{ color: '#ef4444' }}>*</span>
+                    <span className="member-id-badge">6 chars · letters + numbers</span>
+                  </label>
+                  <div className="input-field-wrap member-id-wrap">
+                    <span className="input-field-icon">🪪</span>
+                    <input
+                      type="text"
+                      placeholder="e.g. AH8987"
+                      value={bookerMemberId}
+                      onChange={(e) => {
+                        const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+                        setBookerMemberId(val);
+                        setBookerError('');
+                      }}
+                      maxLength={6}
+                      required
+                      className="text-input-field member-id-input"
+                    />
                   </div>
-
-                  <div className="form-input-group">
-                    <label className="input-field-label">Create Password <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="input-field-wrap">
-                      <span className="input-field-icon">🔒</span>
-                      <input
-                        type="password"
-                        placeholder="Choose a password"
-                        value={registerForm.password}
-                        onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                        required
-                        className="text-input-field"
+                  {/* Character pip indicators */}
+                  <div className="member-id-pips">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <span
+                        key={i}
+                        className={`char-pip ${i < bookerMemberId.length ? 'char-pip-filled' : ''}`}
                       />
-                    </div>
+                    ))}
+                    <span className="pips-count">{bookerMemberId.length}/6</span>
                   </div>
+                </div>
 
-                  <div className="form-input-group">
-                    <label className="input-field-label">Full Name <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="input-field-wrap">
-                      <span className="input-field-icon">🏷️</span>
-                      <input
-                        type="text"
-                        placeholder="e.g. Jane Smith"
-                        value={registerForm.name}
-                        onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
-                        required
-                        className="text-input-field"
-                      />
-                    </div>
-                  </div>
+                <button type="submit" className="sbm-proceed-btn booker-submit-btn">
+                  Continue to Seat Selection →
+                </button>
+              </form>
 
-                  <div className="form-input-group">
-                    <label className="input-field-label">Email Address <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="input-field-wrap">
-                      <span className="input-field-icon">✉️</span>
-                      <input
-                        type="email"
-                        placeholder="e.g. jane@example.com"
-                        value={registerForm.email}
-                        onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                        required
-                        className="text-input-field"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-input-group">
-                    <label className="input-field-label">Phone Number <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="input-field-wrap">
-                      <span className="input-field-icon">📞</span>
-                      <input
-                        type="tel"
-                        placeholder="e.g. +919876543210"
-                        value={registerForm.phone}
-                        onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
-                        required
-                        className="text-input-field"
-                      />
-                    </div>
-                  </div>
-
-                  <button type="submit" className="sbm-proceed-btn" style={{ width: '100%', marginTop: '1.5rem' }} disabled={authLoading}>
-                    {authLoading ? 'Creating Account...' : 'Register & Continue →'}
-                  </button>
-                </form>
-              )}
+              <div className="booker-info-note">
+                <span>🔒 Your identity is linked to your booking receipt only.</span>
+              </div>
             </div>
           </div>
         )}
@@ -1331,47 +1269,236 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .sbm-card-login_register { max-width: 500px; }
-        .sbm-card-quantity_select { max-width: 480px; }
+        .sbm-card-booker_info { max-width: 480px; overflow: hidden !important; }
+        .sbm-card-quantity_select { max-width: 480px; overflow: hidden !important; }
         .sbm-card-select { max-width: 960px; }
         .sbm-card-attendee_details { max-width: 520px; }
         .sbm-card-payment { max-width: 840px; }
         .sbm-card-success { max-width: 760px; }
 
-        /* Auth Modal Steps */
-        .auth-modal-container {
-          padding: 2.5rem 2rem 1.5rem 2rem;
+        /* ── Booker Info Step ─────────────────────────────────────── */
+        .booker-info-container {
+          overflow: hidden;
+          border-radius: 20px;
         }
-        .auth-modal-tabs {
+
+        .booker-info-header {
+          position: relative;
+          background: linear-gradient(135deg, #064e3b 0%, #065f46 30%, #10b981 70%, #34d399 100%);
+          padding: 1.5rem 1.5rem 1.75rem;
+          text-align: center;
+          color: white;
+          overflow: hidden;
+        }
+
+        .booker-header-glow {
+          position: absolute;
+          top: -80px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 260px;
+          height: 260px;
+          background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+          pointer-events: none;
+          animation: bookerGlowPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes bookerGlowPulse {
+          0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.5; }
+          50% { transform: translateX(-50%) scale(1.3); opacity: 1; }
+        }
+
+        /* Floating particles */
+        .booker-particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+        .booker-particle {
+          position: absolute;
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.35);
+          animation: particleFloat 6s ease-in-out infinite;
+        }
+        .booker-particle-1 { top: 10%; left: 15%; animation-delay: 0s; animation-duration: 5s; }
+        .booker-particle-2 { top: 25%; right: 18%; animation-delay: 1s; animation-duration: 7s; width: 4px; height: 4px; }
+        .booker-particle-3 { top: 60%; left: 8%; animation-delay: 2s; animation-duration: 6s; width: 8px; height: 8px; }
+        .booker-particle-4 { top: 70%; right: 12%; animation-delay: 0.5s; animation-duration: 8s; }
+        .booker-particle-5 { top: 40%; left: 75%; animation-delay: 3s; animation-duration: 5.5s; width: 5px; height: 5px; }
+        .booker-particle-6 { top: 15%; right: 40%; animation-delay: 1.5s; animation-duration: 6.5s; width: 7px; height: 7px; }
+
+        @keyframes particleFloat {
+          0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
+          33% { transform: translateY(-14px) scale(1.2); opacity: 0.8; }
+          66% { transform: translateY(8px) scale(0.85); opacity: 0.3; }
+        }
+
+        .booker-icon-ring {
+          width: 54px;
+          height: 54px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.18);
+          border: 2px solid rgba(255, 255, 255, 0.45);
           display: flex;
-          background: #f0fdf4;
-          border-radius: var(--radius-lg);
-          padding: 4px;
-          margin-bottom: 2rem;
-          border: 1px solid var(--border);
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 0.75rem;
+          animation: bookerIconBounce 2.2s ease-in-out infinite;
+          backdrop-filter: blur(8px);
+          position: relative;
+          z-index: 2;
+          box-shadow: 0 0 28px rgba(255,255,255,0.2), inset 0 1px 0 rgba(255,255,255,0.3);
         }
-        .auth-modal-tab {
-          flex: 1;
-          padding: 0.7rem;
-          background: none;
-          border: none;
-          cursor: pointer;
+
+        @keyframes bookerIconBounce {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-8px) scale(1.06); }
+        }
+
+        .booker-icon-emoji {
+          font-size: 1.6rem;
+          line-height: 1;
+          filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+        }
+
+        .booker-title {
           font-family: var(--font-heading);
-          font-weight: 700;
-          font-size: 0.95rem;
-          border-radius: var(--radius-md);
-          color: var(--muted);
-          transition: all 0.2s ease;
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: white;
+          margin: 0 0 0.25rem;
+          position: relative;
+          z-index: 2;
+          text-shadow: 0 2px 12px rgba(0,0,0,0.2);
+          letter-spacing: -0.3px;
         }
-        .auth-modal-tab.active {
-          background: white;
-          color: var(--primary-dark);
-          box-shadow: var(--shadow-sm);
+
+        .booker-subtitle {
+          font-size: 0.8rem;
+          color: rgba(255,255,255,0.82);
+          margin: 0;
+          line-height: 1.45;
+          position: relative;
+          z-index: 2;
+          max-width: 280px;
+          margin-left: auto;
+          margin-right: auto;
         }
-        .auth-modal-form {
+
+        .booker-form-body {
+          padding: 1.25rem 1.5rem 1.25rem;
+        }
+
+        .booker-error-alert {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: #fee2e2;
+          border: 1px solid #fca5a5;
+          color: #b91c1c;
+          padding: 10px 14px;
+          border-radius: 10px;
+          margin-bottom: 1.25rem;
+          font-size: 0.85rem;
+          font-weight: 500;
+        }
+
+        .animate-shake-x {
+          animation: shakeX 0.4s ease;
+        }
+
+        @keyframes shakeX {
+          0%, 100% { transform: translateX(0); }
+          20%, 60% { transform: translateX(-7px); }
+          40%, 80% { transform: translateX(7px); }
+        }
+
+        .booker-form {
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
+          gap: 1.35rem;
+        }
+
+        .member-id-badge {
+          display: inline-block;
+          font-size: 0.7rem;
+          font-weight: 600;
+          color: white;
+          background: #10b981;
+          border-radius: 999px;
+          padding: 1px 8px;
+          margin-left: 0.5rem;
+          letter-spacing: 0.02em;
+          vertical-align: middle;
+        }
+
+        .member-id-wrap .input-field-icon {
+          font-size: 1.1rem;
+        }
+
+        .member-id-input {
+          font-family: 'Courier New', 'Consolas', monospace !important;
+          letter-spacing: 0.22em !important;
+          font-weight: 800 !important;
+          font-size: 1.15rem !important;
+          text-transform: uppercase !important;
+          color: #065f46 !important;
+        }
+
+        .member-id-pips {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 8px;
+          padding-left: 2px;
+        }
+
+        .char-pip {
+          width: 30px;
+          height: 5px;
+          border-radius: 999px;
+          background: #e5e7eb;
+          transition: background 0.18s ease, transform 0.18s ease;
+          flex-shrink: 0;
+        }
+
+        .char-pip-filled {
+          background: linear-gradient(90deg, #10b981, #34d399);
+          transform: scaleY(1.3);
+        }
+
+        .pips-count {
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: var(--muted);
+          margin-left: 4px;
+          font-family: 'Courier New', monospace;
+        }
+
+        .booker-submit-btn {
+          background: linear-gradient(135deg, #059669, #10b981) !important;
+          box-shadow: 0 6px 24px rgba(16, 185, 129, 0.45) !important;
+          animation: bookerBtnPulse 2.5s ease-in-out infinite;
+          border: none !important;
+        }
+
+        .booker-submit-btn:hover {
+          background: linear-gradient(135deg, #047857, #059669) !important;
+          box-shadow: 0 8px 32px rgba(5, 150, 105, 0.6) !important;
+          animation: none;
+        }
+
+        @keyframes bookerBtnPulse {
+          0%, 100% { box-shadow: 0 6px 24px rgba(16, 185, 129, 0.45); }
+          50% { box-shadow: 0 8px 36px rgba(16, 185, 129, 0.7); }
+        }
+
+        .booker-info-note {
+          text-align: center;
+          font-size: 0.78rem;
+          color: var(--muted);
+          margin-top: 1.35rem;
+          padding-top: 1rem;
+          border-top: 1px solid #f3f4f6;
+          line-height: 1.5;
         }
 
         @keyframes cardIn {

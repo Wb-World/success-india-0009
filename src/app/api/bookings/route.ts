@@ -67,6 +67,9 @@ export async function POST(request: Request) {
       totalPrice,
       screenshot,
       attendeeDetails,
+      bookerName,
+      bookerMemberId,
+      bookerPhone,
     } = body;
 
     // Resolve field aliases (backward compatible with legacy shape)
@@ -129,13 +132,10 @@ export async function POST(request: Request) {
     }
 
     let savedBooking: any = null;
-    let userId = request.headers.get('x-user-id');
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Authentication required. Please register or log in to book seats.' },
-        { status: 401 }
-      );
-    }
+    // No auth required — booker identity comes from the request body
+    const resolvedBookerName = (bookerName || 'Guest').trim();
+    const resolvedBookerMemberId = (bookerMemberId || 'GUEST0').trim().toUpperCase();
+    const resolvedBookerPhone = (bookerPhone || '').trim();
 
     // Sanitize screenshot URL (strip any pipe-delimited legacy suffix)
     const cleanScreenshot = (screenshot || 'DIRECT_BOOKING').split('|')[0];
@@ -144,11 +144,11 @@ export async function POST(request: Request) {
     const qrCodePayload = `BOOKING:${bookingRefId}|EVENT:${resolvedSeminarName}|SEATS:${seats.join(',')}|VENUE:${resolvedVenue}|DATE:${date}|AMOUNT:INR${totalPrice}|STATUS:PENDING_VERIFICATION`;
 
     try {
-      const { data: newBooking, error: insertError } = await supabaseAdmin
+      let { data: newBooking, error: insertError } = await supabaseAdmin
         .from('bookings')
         .insert({
           id: bookingRefId,
-          user_id: userId,
+          user_id: null,
           seminar_id: resolvedSeminarId,
           seminar_name: resolvedSeminarName,
           bus_id: null,
@@ -164,9 +164,48 @@ export async function POST(request: Request) {
           created_at: new Date().toISOString(),
           attendee_details: attendeeDetails || {},
           qr_code_payload: qrCodePayload,
+          booker_name: resolvedBookerName,
+          booker_member_id: resolvedBookerMemberId,
+          booker_phone: resolvedBookerPhone,
         })
         .select('*')
         .single();
+
+      // If insert failed due to column missing or general schema issue, retry without booker_phone
+      if (insertError && (insertError.message.includes('booker_phone') || insertError.code === 'PGRST204' || insertError.message.includes('column'))) {
+        console.warn('Primary insert failed with column error, retrying without booker_phone column');
+        const retryResult = await supabaseAdmin
+          .from('bookings')
+          .insert({
+            id: bookingRefId,
+            user_id: null,
+            seminar_id: resolvedSeminarId,
+            seminar_name: resolvedSeminarName,
+            bus_id: null,
+            bus_name: null,
+            source: resolvedVenue,
+            destination: resolvedSeminarTopic,
+            date,
+            time,
+            seats,
+            total_price: totalPrice,
+            screenshot: cleanScreenshot,
+            status: 'pending',
+            created_at: new Date().toISOString(),
+            attendee_details: {
+              ...(attendeeDetails || {}),
+              __booker_phone: resolvedBookerPhone,
+            },
+            qr_code_payload: qrCodePayload,
+            booker_name: resolvedBookerName,
+            booker_member_id: resolvedBookerMemberId,
+          })
+          .select('*')
+          .single();
+
+        newBooking = retryResult.data;
+        insertError = retryResult.error;
+      }
 
       if (!insertError) {
         savedBooking = newBooking;
@@ -174,7 +213,10 @@ export async function POST(request: Request) {
         console.error("BOOKING_INSERTION_FAILED (primary):", insertError);
         console.warn('Primary insert failed, attempting legacy insert with serialization fallback');
 
-        const serializedScreenshot = `${cleanScreenshot}|${JSON.stringify(attendeeDetails || {})}|${qrCodePayload}`;
+        const serializedScreenshot = `${cleanScreenshot}|${JSON.stringify({
+          ...(attendeeDetails || {}),
+          __booker_phone: resolvedBookerPhone,
+        })}|${qrCodePayload}`;
 
         await supabaseAdmin.from('buses').upsert(
           {
@@ -194,7 +236,7 @@ export async function POST(request: Request) {
           .from('bookings')
           .insert({
             id: bookingRefId,
-            user_id: userId,
+            user_id: null,
             bus_id: resolvedSeminarId,
             bus_name: resolvedSeminarName,
             source: resolvedVenue,
@@ -206,6 +248,8 @@ export async function POST(request: Request) {
             screenshot: serializedScreenshot,
             status: 'pending',
             created_at: new Date().toISOString(),
+            booker_name: resolvedBookerName,
+            booker_member_id: resolvedBookerMemberId,
           })
           .select('*')
           .single();

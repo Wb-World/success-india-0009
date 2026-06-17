@@ -68,6 +68,10 @@ export async function GET(request: Request) {
         }
       }
 
+      const bookerPhone = b.booker_phone || attendees.__booker_phone || '';
+      const cleanAttendees = { ...attendees };
+      delete cleanAttendees.__booker_phone;
+
       return {
         id: b.id,
         userId: b.user_id,
@@ -82,11 +86,14 @@ export async function GET(request: Request) {
         seats: b.seats || [],
         totalPrice: b.total_price,
         screenshot: cleanScreenshot,
-        attendees: attendees,
+        attendees: cleanAttendees,
         qrCodePayload: qrCodePayload,
         status: b.status,
         createdAt: b.created_at,
         user: userObj,
+        bookerName: b.booker_name || '',
+        bookerMemberId: b.booker_member_id || '',
+        bookerPhone: bookerPhone,
       };
     });
 
