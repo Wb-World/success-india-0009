@@ -93,7 +93,7 @@ export default function Navbar() {
 
         <div className="nav-actions-desktop">
           <Link href="/book" className="btn btn-primary nav-book-btn">
-            <Calendar size={16} /> Book a Seat
+            <Calendar size={16} /> Book a Event
           </Link>
           {user ? (
             <>
@@ -166,7 +166,7 @@ export default function Navbar() {
 
               <div className="mobile-drawer-actions">
                 <Link href="/book" className="btn btn-primary mobile-book-btn" onClick={closeMenu}>
-                  <Calendar size={16} /> Book a Seat
+                  <Calendar size={16} /> Book a Event
                 </Link>
                 {user ? (
                   <>
