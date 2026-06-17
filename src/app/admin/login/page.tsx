@@ -76,7 +76,7 @@ export default function AdminLogin() {
       <div className="login-wrapper">
         
         <Link href="/" className="back-home-link animate-slide-down">
-          <ArrowLeft size={16} /> <span>Return to Main Website</span>
+          <ArrowLeft size={16} /> <span>back to home</span>
         </Link>
 
         <div className="login-card glass-card animate-scale-in">
@@ -100,7 +100,9 @@ export default function AdminLogin() {
             <div className="form-group">
               <label className="form-label font-label-custom">Admin Username</label>
               <div className="input-with-icon">
-                <User size={18} className="input-field-icon" />
+                <div className="icon-badge">
+                  <User size={15} className="input-field-icon" />
+                </div>
                 <input 
                   type="text" 
                   value={username}
@@ -115,7 +117,9 @@ export default function AdminLogin() {
             <div className="form-group">
               <label className="form-label font-label-custom">Security Key / Password</label>
               <div className="input-with-icon">
-                <Lock size={18} className="input-field-icon" />
+                <div className="icon-badge">
+                  <Lock size={15} className="input-field-icon" />
+                </div>
                 <input 
                   type={showPassword ? "text" : "password"} 
                   value={password}
@@ -130,14 +134,16 @@ export default function AdminLogin() {
                   className="pwd-toggle-btn"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
             </div>
 
             <button type="submit" className="btn btn-primary login-btn hover-glow" disabled={loading}>
-              <Key size={16} />
-              <span>{loading ? 'Verifying console keys...' : 'Establish Secure Connection'}</span>
+              <span className="btn-icon-badge">
+                <Key size={14} />
+              </span>
+              <span>{loading ? 'Verifying console keys...' : 'Login to portal'}</span>
             </button>
           </form>
         </div>
@@ -164,6 +170,7 @@ export default function AdminLogin() {
           z-index: 1;
           opacity: 0.4;
           animation: float 12s infinite alternate ease-in-out;
+          pointer-events: none;
         }
         
         .circle-1 {
@@ -221,6 +228,7 @@ export default function AdminLogin() {
           background: rgba(255, 255, 255, 0.7);
           border: 1px solid rgba(22, 163, 74, 0.2);
           backdrop-filter: blur(10px);
+          line-height: 1;
         }
 
         .back-home-link:hover {
@@ -230,6 +238,8 @@ export default function AdminLogin() {
         }
 
         .login-card {
+          width: 100%;
+          box-sizing: border-box;
           background: rgba(255, 255, 255, 0.85);
           border-radius: var(--radius-2xl);
           border: 1px solid rgba(22, 163, 74, 0.25);
@@ -260,6 +270,7 @@ export default function AdminLogin() {
           justify-content: center;
           width: 80px;
           height: 80px;
+          flex-shrink: 0;
           background: #ffffff;
           border-radius: 50%;
           border: 2px solid rgba(22, 163, 74, 0.3);
@@ -273,6 +284,7 @@ export default function AdminLogin() {
           height: 100%;
           border-radius: 50%;
           object-fit: cover;
+          display: block;
         }
 
         .text-primary-green {
@@ -285,6 +297,8 @@ export default function AdminLogin() {
           font-weight: 800;
           font-size: 1.5rem;
           letter-spacing: -0.5px;
+          margin: 0;
+          line-height: 1.2;
         }
 
         .card-subtitle {
@@ -293,6 +307,20 @@ export default function AdminLogin() {
           line-height: 1.6;
           opacity: 0.9;
           max-width: 290px;
+          margin: 0;
+        }
+
+        .login-form {
+          display: flex;
+          flex-direction: column;
+          gap: 1.4rem;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.55rem;
+          width: 100%;
         }
 
         .font-label-custom {
@@ -305,6 +333,32 @@ export default function AdminLogin() {
 
         .input-with-icon {
           position: relative;
+          display: flex;
+          align-items: center;
+          width: 100%;
+        }
+
+        /* Refined icon presentation: a soft rounded badge instead of a bare floating glyph */
+        .icon-badge {
+          position: absolute;
+          left: 7px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 9px;
+          background: linear-gradient(160deg, rgba(22, 163, 74, 0.14), rgba(22, 163, 74, 0.05));
+          border: 1px solid rgba(22, 163, 74, 0.18);
+          pointer-events: none;
+          transition: background 0.25s ease, border-color 0.25s ease;
+        }
+
+        .input-field-icon {
+          color: var(--primary);
+          opacity: 0.9;
         }
 
         .pwd-toggle-btn {
@@ -312,97 +366,125 @@ export default function AdminLogin() {
           right: 14px;
           top: 50%;
           transform: translateY(-50%);
-          color: var(--primary);
-          opacity: 0.7;
+          color: #6b7280;
           background: none;
           border: none;
-          padding: 0;
+          padding: 4px;
+          margin: 0;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
+          border-radius: 7px;
           transition: all 0.2s ease;
           z-index: 10;
-          width: 18px;
-          height: 18px;
         }
 
         .pwd-toggle-btn:hover {
-          opacity: 1;
-          color: var(--primary-hover);
+          color: var(--primary);
+          background: rgba(22, 163, 74, 0.08);
         }
 
         .padded-input-right {
-          padding-right: 2.75rem;
-        }
-
-        .input-field-icon {
-          position: absolute;
-          left: 14px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: var(--primary);
-          opacity: 0.8;
-          transition: opacity 0.3s;
+          padding-right: 2.85rem;
         }
 
         .custom-input-style {
+          width: 100%;
+          box-sizing: border-box;
           background: #ffffff;
-          border: 1.5px solid rgba(22, 163, 74, 0.3);
+          border: 1.5px solid rgba(22, 163, 74, 0.22);
           color: #1f2937;
-          height: 46px;
+          height: 50px;
+          font-size: 0.95rem;
           font-weight: 500;
           border-radius: var(--radius-lg);
-          transition: all 0.3s;
+          transition: all 0.25s ease;
+          margin: 0;
+        }
+
+        .custom-input-style::placeholder {
+          color: #9ca3af;
+          font-weight: 400;
         }
 
         .custom-input-style:focus {
+          outline: none;
           border-color: var(--primary);
           background: #ffffff;
           box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
         }
         
-        .custom-input-style:focus + .input-field-icon {
-          opacity: 1;
+        .custom-input-style:focus ~ .icon-badge {
+          background: linear-gradient(160deg, rgba(22, 163, 74, 0.22), rgba(22, 163, 74, 0.1));
+          border-color: rgba(22, 163, 74, 0.32);
         }
 
         .padded-input {
-          padding-left: 2.75rem;
+          padding-left: 3.1rem;
+          padding-top: 0;
+          padding-bottom: 0;
         }
 
         .login-btn {
           width: 100%;
-          padding: 0.9rem;
-          font-size: 1.05rem;
+          box-sizing: border-box;
+          padding: 0.9rem 1.25rem;
+          font-size: 1.02rem;
           margin-top: 1.25rem;
           font-weight: 700;
           background: var(--primary);
           border: none;
+          border-radius: var(--radius-lg);
           box-shadow: var(--shadow-primary);
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 0.5rem;
+          gap: 0.65rem;
+          cursor: pointer;
           transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .login-btn:hover {
+        .login-btn:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
         }
 
+        .login-btn:disabled {
+          opacity: 0.75;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .btn-icon-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          border-radius: 7px;
+          background: rgba(255, 255, 255, 0.18);
+          flex-shrink: 0;
+        }
+
         .error-alert {
-          background: rgba(239, 68, 68, 0.15);
+          background: rgba(239, 68, 68, 0.1);
           border: 1px solid rgba(239, 68, 68, 0.3);
-          color: #fca5a5;
-          padding: 0.875rem;
+          color: #b91c1c;
+          padding: 0.875rem 1rem;
           border-radius: var(--radius-lg);
           font-size: 0.875rem;
           font-weight: 500;
+          line-height: 1.4;
           margin-bottom: 1.5rem;
           display: flex;
-          align-items: center;
-          gap: 0.5rem;
+          align-items: flex-start;
+          gap: 0.6rem;
+        }
+
+        .error-alert svg {
+          flex-shrink: 0;
+          margin-top: 1px;
         }
 
         .login-footer-info {
@@ -422,6 +504,12 @@ export default function AdminLogin() {
         }
         .animate-shake {
           animation: shake 0.4s ease;
+        }
+
+        @media (max-width: 420px) {
+          .login-card {
+            padding: 2.5rem 1.5rem;
+          }
         }
       `}</style>
     </div>

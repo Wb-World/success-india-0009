@@ -609,7 +609,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                       <span className="input-field-icon">👤</span>
                       <input
                         type="text"
-                        placeholder="Enter your username (e.g. user)"
+                        placeholder="Enter your username"
                         value={loginForm.username}
                         onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
                         required
@@ -624,7 +624,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                       <span className="input-field-icon">🔒</span>
                       <input
                         type="password"
-                        placeholder="Enter your password (e.g. password)"
+                        placeholder="Enter your password"
                         value={loginForm.password}
                         onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                         required
