@@ -8,7 +8,7 @@ export default function About() {
       {/* Mini Hero */}
       <section className="about-hero">
         <div className="container">
-          <h1 className="heading-xl hero-title">AccsysIndia & Success India</h1>
+          <h1 className="heading-xl hero-title">AccsysIndia & Success Team</h1>
           <p className="hero-subtitle">
             Empowering individuals across Tamil Nadu through structured leadership programs, community chapter meetups, income strategy sessions, and professional development events.
           </p>

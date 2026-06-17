@@ -481,6 +481,21 @@ function BookingEngine() {
           white-space: nowrap;
         }
 
+        @media (max-width: 767px) {
+          .booking-page {
+            padding: 2.5rem 1rem 5rem 1rem;
+          }
+
+          .search-bar-widget {
+            padding: 1.25rem 1rem;
+          }
+
+          .search-submit-btn {
+            width: 100%;
+            height: 46px;
+          }
+        }
+
         /* Results */
         .search-results-section {
           display: flex;
