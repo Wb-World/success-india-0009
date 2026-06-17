@@ -246,7 +246,7 @@ export default function Profile() {
                     type="text"
                     value={loginForm.username}
                     onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-                    placeholder="Enter your username (e.g. user)"
+                    placeholder="Enter your username"
                     className="form-control"
                     required
                   />
@@ -257,7 +257,7 @@ export default function Profile() {
                     type="password"
                     value={loginForm.password}
                     onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                    placeholder="Enter your password (e.g. password)"
+                    placeholder="Enter your password"
                     className="form-control"
                     required
                   />
