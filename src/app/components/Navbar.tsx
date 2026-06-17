@@ -96,11 +96,11 @@ export default function Navbar() {
             <Link href="/" className={`mobile-link ${pathname === '/' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Home</Link>
             <Link href="/about" className={`mobile-link ${pathname === '/about' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>About Us</Link>
             <Link href="/contact" className={`mobile-link ${pathname === '/contact' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Contact Us</Link>
-            <Link href="/book" className={`mobile-link ${pathname === '/book' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Book Seminars</Link>
+            {/* <Link href="/book" className={`mobile-link ${pathname === '/book' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Book Seminars</Link> */}
             <hr className="mobile-divider" />
             <div className="mobile-auth-actions" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
               <Link href="/book" className="btn btn-primary mobile-book-btn" onClick={() => setMenuOpen(false)}>
-                <Calendar size={16} /> Book a Seat
+                <Calendar size={16} /> Book a Event
               </Link>
               {user ? (
                 <>
