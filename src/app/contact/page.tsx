@@ -5,20 +5,20 @@ import { Mail, Phone, MapPin, Send, HelpCircle, CheckCircle2, ChevronDown } from
 
 const FAQS = [
   {
-    q: 'How does seminar registration approval work?',
-    a: 'After you select an event and seat numbers, the portal shows the payment step. Complete the transfer using your preferred UPI app or net banking, then upload the receipt screenshot. Our team reviews submissions and usually confirms seats within 10 to 30 minutes.'
+    q: 'What is AccsysIndia?',
+    a: 'AccsysIndia is the official event and leadership portal shown on this site. It is used for seminar information, seat booking, and member support.'
   },
   {
-    q: 'How long does receipt approval take?',
-    a: 'Administrators review receipts throughout the day. Most approvals are completed within 15 minutes. During busy seminar periods, it may take up to 1 hour. You can check the live status under My Event Bookings in your profile.'
+    q: 'How do I use the portal?',
+    a: 'Use the Home, Book Seminars, or Profile options to view event details, register an account, and reserve seats for available AccsysIndia sessions.'
   },
   {
-    q: 'Can I update or cancel my seminar registration?',
-    a: 'Yes. Please contact the event support desk before the seminar begins. Share your booking reference, selected seats, and preferred update request so the team can guide you.'
+    q: 'Where can I find official AccsysIndia details?',
+    a: 'The portal displays the official resources, contact information, and event references you should use when checking AccsysIndia details.'
   },
   {
-    q: 'What happens if my receipt upload is rejected?',
-    a: 'If your registration is marked as rejected, review the receipt image and payment amount. You can contact support for clarification and upload a new receipt if needed.'
+    q: 'Who should I contact for help?',
+    a: 'Use the contact form or the support details shown on the site for booking questions, profile updates, or any AccsysIndia portal issue.'
   }
 ];
 
@@ -164,7 +164,7 @@ export default function Contact() {
           <div className="faq-header animate-slide-up">
             <HelpCircle size={32} className="faq-header-icon animate-bounce" />
             <h2 className="heading-lg">Frequently Asked Questions</h2>
-            <p className="section-subtitle">Quick answers regarding seminar registrations, approvals, and UPI receipt validation</p>
+            <p className="section-subtitle">Quick answers about AccsysIndia, portal use, and official contact details</p>
           </div>
 
           <div className="faq-accordion-list">

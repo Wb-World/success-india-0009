@@ -612,6 +612,47 @@ export default function Profile() {
           padding: 4rem 1.5rem;
         }
 
+        @media (max-width: 640px) {
+          .profile-dashboard {
+            padding: 2.5rem 1rem;
+          }
+
+          .dashboard-welcome-banner {
+            padding: 1.25rem 1rem;
+            margin-bottom: 1.75rem;
+          }
+
+          .info-card,
+          .history-card {
+            padding: 1.5rem 1rem;
+          }
+
+          .card-divider {
+            margin: 1.5rem 0;
+          }
+
+          .form-actions {
+            flex-direction: column;
+          }
+
+          .form-actions button {
+            width: 100%;
+          }
+
+          .empty-bookings {
+            padding: 2.5rem 1rem;
+          }
+
+          .bookings-table th,
+          .bookings-table td {
+            padding: 0.8rem 0.65rem;
+          }
+
+          .history-card-title {
+            margin-bottom: 1.25rem;
+          }
+        }
+
         .dashboard-welcome-banner {
           margin-bottom: 2.5rem;
           background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);

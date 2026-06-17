@@ -23,6 +23,11 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -37,9 +42,9 @@ export default function RootLayout({
         <link rel="shortcut icon" href="/favicon.png?v=2" />
       </head>
       <body>
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
           <Navbar />
-          <main style={{ flex: 1 }}>{children}</main>
+          <main style={{ flex: 1, width: '100%' }}>{children}</main>
           <Footer />
         </div>
       </body>

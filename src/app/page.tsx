@@ -840,6 +840,25 @@ export default function Home() {
             font-size: 2.35rem;
           }
 
+          .hero-cta-buttons {
+            flex-direction: column;
+            align-items: stretch;
+            width: 100%;
+          }
+
+          .hero-cta-buttons .btn {
+            width: 100%;
+          }
+
+          .hero-proof-row {
+            width: 100%;
+          }
+
+          .proof-item {
+            width: 100%;
+            justify-content: flex-start;
+          }
+
           .registration-card {
             padding: 1.5rem 1.25rem;
           }

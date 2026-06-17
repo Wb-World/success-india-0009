@@ -213,6 +213,7 @@ export default function Footer() {
           gap: 0.625rem;
           color: rgba(255,255,255,0.9);
           line-height: 1.45;
+          overflow-wrap: anywhere;
         }
 
         .contact-item :global(svg) {
@@ -278,6 +279,35 @@ export default function Footer() {
           overflow: hidden;
           border: 1px solid rgba(255,255,255,0.35);
           transition: border-color var(--transition-fast);
+        }
+
+        @media (max-width: 640px) {
+          .site-footer {
+            padding: 3.5rem 0 1.25rem 0;
+          }
+
+          .footer-grid {
+            gap: 2rem;
+            margin-bottom: 2rem;
+          }
+
+          .newsletter-form {
+            flex-direction: column;
+          }
+
+          .newsletter-input {
+            width: 100%;
+          }
+
+          .newsletter-btn {
+            width: 100%;
+            min-height: 46px;
+            border-top: 1px solid rgba(22, 163, 74, 0.08);
+          }
+
+          .footer-bottom {
+            padding-top: 1.25rem;
+          }
         }
 
         .newsletter-form:focus-within {
