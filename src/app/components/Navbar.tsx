@@ -503,6 +503,7 @@ export default function Navbar() {
             justify-content: center;
             flex: 0 1 auto;
             margin: 0 auto;
+            transform: translateX(-90px);
           }
           .mobile-menu-toggle { display: none; }
         }
