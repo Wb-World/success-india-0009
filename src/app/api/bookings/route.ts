@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { sendMetaWhatsAppTicket } from '@/lib/whatsapp';
 
 export const dynamic = 'force-dynamic';
 
@@ -289,39 +288,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Dispatch Meta WhatsApp messages for each seat attendee in the background
-    if (savedBooking) {
-      const resolvedAttendeeDetails = attendeeDetails || {};
 
-      Promise.all(
-        seats.map(async (seat: string) => {
-          const detail = resolvedAttendeeDetails[seat];
-          if (detail && detail.name && detail.whatsapp) {
-            // Generate attendee-specific QR validation URL
-            // Format: BOOKING:<id>|EVENT:<event_name>|SEAT:<seat>|NAME:<name>|WHATSAPP:<whatsapp>
-            const seatQrPayload = `BOOKING:${bookingRefId}|EVENT:${resolvedSeminarName}|SEAT:${seat}|NAME:${detail.name}|WHATSAPP:${detail.whatsapp}`;
-            const seatQrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(seatQrPayload)}&qzone=1&format=png&color=10b981`;
-
-            try {
-              await sendMetaWhatsAppTicket({
-                attendeeName: detail.name,
-                seatNumber: seat,
-                eventDate: date,
-                venue: resolvedVenue,
-                whatsappNumber: detail.whatsapp,
-                qrImageUrl: seatQrImageUrl,
-              });
-            } catch (waErr: any) {
-              console.error(`[Meta WhatsApp Dispatch Fail] Seat ${seat}, Attendee ${detail.name}:`, waErr.message || waErr);
-            }
-          } else {
-            console.warn(`[Meta WhatsApp Skip] Missing name or whatsapp details for seat: ${seat}`);
-          }
-        })
-      ).catch(err => {
-        console.error('Unhandled background Promise.all error in WhatsApp dispatcher:', err);
-      });
-    }
 
     // Return booking confirmation only when DB save succeeds
     const booking = {

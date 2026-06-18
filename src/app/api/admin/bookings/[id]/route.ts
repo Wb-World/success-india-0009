@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { sendBookingApprovalNotification } from '@/lib/whatsapp';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +36,25 @@ export async function PATCH(
       );
     }
 
+    // Fetch current booking state to verify existing status and whatsapp_sent flag
+    const { data: currentBooking, error: fetchError } = await supabaseAdmin
+      .from('bookings')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !currentBooking) {
+      console.error('Database fetch error for booking:', fetchError);
+      return NextResponse.json(
+        { error: 'Booking not found' },
+        { status: 404 }
+      );
+    }
+
+    const wasAlreadyApproved = currentBooking.status === 'approved';
+    const isWhatsappAlreadySent = currentBooking.whatsapp_sent === true ||
+      (currentBooking.attendee_details && (currentBooking.attendee_details as any).__whatsapp_sent === true);
+
     // Update booking in Supabase
     const { data: updatedBooking, error: updateError } = await supabaseAdmin
       .from('bookings')
@@ -46,9 +66,70 @@ export async function PATCH(
     if (updateError || !updatedBooking) {
       console.error('Database update error for booking:', updateError);
       return NextResponse.json(
-        { error: 'Booking not found or failed to update' },
-        { status: 404 }
+        { error: 'Failed to update booking status' },
+        { status: 500 }
       );
+    }
+
+    // Trigger WhatsApp notification if status is updated to 'approved' and was not sent yet
+    if (status === 'approved' && !isWhatsappAlreadySent) {
+      let resolvedPhone = updatedBooking.booker_phone || (updatedBooking.attendee_details && (updatedBooking.attendee_details as any).__booker_phone) || '';
+      
+      // Fallback: If no booker_phone, check attendee_details for the first available whatsapp number
+      if (!resolvedPhone && updatedBooking.attendee_details) {
+        try {
+          const details = updatedBooking.attendee_details as Record<string, any>;
+          for (const seat of Object.keys(details)) {
+            if (details[seat]?.whatsapp) {
+              resolvedPhone = details[seat].whatsapp;
+              break;
+            }
+          }
+        } catch (_) {}
+      }
+
+      if (resolvedPhone) {
+        try {
+          console.log(`[WhatsApp Approval] Dispatched notification for booking ID: ${id} to recipient: ${resolvedPhone}`);
+          await sendBookingApprovalNotification({
+            bookingId: updatedBooking.id,
+            eventName: updatedBooking.seminar_name || updatedBooking.bus_name || 'Seminar Event',
+            venue: updatedBooking.source,
+            date: updatedBooking.date,
+            time: updatedBooking.time,
+            seats: updatedBooking.seats || [],
+            totalPrice: updatedBooking.total_price,
+            bookerName: updatedBooking.booker_name || 'Guest',
+            bookerPhone: resolvedPhone,
+          });
+
+          // Attempt to update whatsapp_sent flag in database column
+          const { error: columnError } = await supabaseAdmin
+            .from('bookings')
+            .update({ whatsapp_sent: true })
+            .eq('id', id);
+
+          if (columnError) {
+            console.warn('[WhatsApp Approval] whatsapp_sent column is likely missing. Using attendee_details fallback.', columnError.message);
+            // Fallback: Store sent flag inside attendee_details JSONB metadata
+            const currentDetails = updatedBooking.attendee_details || {};
+            await supabaseAdmin
+              .from('bookings')
+              .update({
+                attendee_details: {
+                  ...(currentDetails as any),
+                  __whatsapp_sent: true
+                }
+              })
+              .eq('id', id);
+          }
+        } catch (waErr: any) {
+          console.error(`[WhatsApp Approval Failed] Error sending confirmation to ${resolvedPhone} for booking ${id}:`, waErr.message || waErr);
+          // Non-blocking: Do not fail the API response if the external WhatsApp service fails
+        }
+      } else {
+        console.warn(`[WhatsApp Approval Warning] No phone number available to notify for booking ID: ${id}`);
+      }
     }
 
     let cleanScreenshot = updatedBooking.screenshot || '';
