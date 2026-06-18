@@ -8,7 +8,11 @@ import {
 import html2canvas from 'html2canvas';
 
 // ─── Seat Configuration ───────────────────────────────────────────────────────
-const ROWS = ['A', 'B', 'C', 'D', 'E', 'F'];
+const ROWS = [
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+  'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+  'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'BB', 'CC', 'DD'
+];
 const SEATS_PER_ROW = 10;
 const ALL_SEATS: string[] = ROWS.flatMap((row) =>
   Array.from({ length: SEATS_PER_ROW }, (_, i) => `${row}${i + 1}`)
@@ -126,9 +130,9 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       setBookerError('Member ID must be 8-9 characters: 2-3 letters followed by digits (e.g., AB123456).');
       return;
     }
-    const phoneRegex = /^\+?[0-9]{10,15}$/;
+    const phoneRegex = /^[0-9]{10}$/;
     if (!phoneRegex.test(trimmedPhone)) {
-      setBookerError('Please enter a valid 10-15 digit mobile number (with optional + prefix).');
+      setBookerError('Please enter a valid 10-digit mobile number.');
       return;
     }
     setBookerMemberId(trimmedId);
@@ -151,6 +155,8 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const basePrice = selectedSeats.length * pricePerSeat;
   const gstAmount = Math.round(basePrice * 0.18);
   const totalPrice = basePrice + gstAmount;
+  // Dynamic QR scanner image based on seat count (1 seat=1000.png, 2=2000.png, …10=10000.png)
+  const scannerImage = selectedSeats.length > 0 ? `/UPIs/${selectedSeats.length * pricePerSeat}.png` : '/UPIs/1000.png';
 
   // Build booked seats from event data
   useEffect(() => {
@@ -208,7 +214,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
   // UPI Link payload & Dynamic QR Image (emerald green color combo #10b981)
   const upiPayload = `upi://pay?pa=${upiConfig.upiId}&pn=${encodeURIComponent(upiConfig.upiName)}&am=${totalPrice}&cu=INR`;
-  const qrCodeUrl = `/upi-qr-code.jpg`;
+  const qrCodeUrl = `/UPIs/${(selectedSeats.length || quantity) * 1000}.png`;
 
   // QR code data for ticket validation
   const qrPayload = confirmedData
@@ -621,10 +627,16 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                     <span className="input-field-icon">📞</span>
                     <input
                       type="tel"
-                      placeholder="Enter your 10-15 digit mobile number"
+                      placeholder="Enter your 10-digit mobile number"
                       value={bookerPhone}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/[^\d+]/g, '');
+                        let val = e.target.value.trim();
+                        if (val.startsWith('+91')) {
+                          val = val.substring(3);
+                        } else if (val.startsWith('91') && val.length > 10) {
+                          val = val.substring(2);
+                        }
+                        val = val.replace(/[^0-9]/g, '').slice(0, 10);
                         setBookerPhone(val);
                         setBookerError('');
                       }}
@@ -897,9 +909,9 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                 alert('Please enter the name of the attendee.');
                 return;
               }
-              const phoneRegex = /^\+?[0-9]{10,15}$/;
+              const phoneRegex = /^[0-9]{10}$/;
               if (!phoneRegex.test(currentPhone)) {
-                alert('Please enter a valid 10-15 digit WhatsApp mobile number (with optional + prefix).');
+                alert('Please enter a valid 10-digit WhatsApp mobile number.');
                 return;
               }
               if (currentAttendeeIndex < selectedSeats.length - 1) {
@@ -938,7 +950,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                         ...prev,
                         [selectedSeats[currentAttendeeIndex]]: {
                           name: val,
-                          whatsapp: prev[selectedSeats[currentAttendeeIndex]]?.whatsapp || '+91'
+                          whatsapp: prev[selectedSeats[currentAttendeeIndex]]?.whatsapp || ''
                         }
                       }));
                     }}
@@ -955,10 +967,16 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                   <span className="input-field-icon">📞</span>
                   <input 
                     type="tel" 
-                    placeholder="E.g., +919876543210 or 9876543210" 
+                    placeholder="Enter 10-digit mobile number" 
                     value={attendeeDetails[selectedSeats[currentAttendeeIndex]]?.whatsapp || ''}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/[^\d+]/g, '');
+                      let val = e.target.value.trim();
+                      if (val.startsWith('+91')) {
+                        val = val.substring(3);
+                      } else if (val.startsWith('91') && val.length > 10) {
+                        val = val.substring(2);
+                      }
+                      val = val.replace(/[^0-9]/g, '').slice(0, 10);
                       setAttendeeDetails(prev => ({
                         ...prev,
                         [selectedSeats[currentAttendeeIndex]]: {
@@ -1016,7 +1034,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                     <span className="summary-val">{eventName}</span>
                   </div>
                   <div className="summary-row">
-                    <span>Venue Venue:</span>
+                    <span>Venue:</span>
                     <span className="summary-val">{event.venue}</span>
                   </div>
                   {event.eventDate && (
@@ -1103,7 +1121,8 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
                 <div className="qr-container-box">
                   <div className="qr-image-wrap">
-                    <img src={qrCodeUrl} alt="UPI Payment QR Code" className="payment-qr-img" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={scannerImage} alt={`UPI QR Code for ₹${basePrice}`} className="payment-qr-img" />
                   </div>
                   <div className="qr-pay-caption">Scan the QR code and complete the payment.</div>
                 </div>
@@ -1182,6 +1201,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
               <div className="ticket-left">
                 <div className="qr-wrapper">
                   {qrImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={qrImageUrl}
                       alt="Booking QR Code"
@@ -2337,9 +2357,13 @@ export default function SeatBookingModal({ event, onClose }: Props) {
         }
 
         .payment-qr-img {
-          width: 180px;
-          height: 180px;
+          width: clamp(240px, 32vw, 290px);
+          height: clamp(240px, 32vw, 290px);
           display: block;
+          transition: transform 0.2s ease;
+        }
+        .payment-qr-img:hover {
+          transform: scale(1.05);
         }
 
         .qr-pay-caption {

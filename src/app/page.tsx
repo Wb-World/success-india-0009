@@ -4,17 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
-  BarChart3,
-  BriefcaseBusiness,
-  Calendar,
   CheckCircle2,
-  Globe2,
-  Handshake,
-  MapPin,
-  Search,
-  ShieldCheck,
   Target,
-  Users,
 } from 'lucide-react';
 import SeatBookingModal from './components/SeatBookingModal';
 
@@ -138,14 +129,7 @@ export default function Home() {
     setModalEvent(event);
   };
 
-  // Open modal for hero CTA — use first available event or navigate to /book
-  const handleReserveClick = () => {
-    if (events.length > 0) {
-      setModalEvent(events[0]);
-    } else {
-      window.location.href = '/book';
-    }
-  };
+
 
   return (
     <div className="landing-page">
@@ -160,91 +144,53 @@ export default function Home() {
       <div className="landing-page-content">
         <section className="hero-section">
           <div className="container hero-container">
-            <div className="hero-text-col animate-slide-up">
-              <span className="hero-tagline">
-                <ShieldCheck size={16} />
-                Official Succes Team Growth Platform
-              </span>
-              <h1 className="hero-title">
-                AccsysIndia: Pioneering <span className="text-highlight">Enterprise Growth &amp; Professional</span> Leadership
-              </h1>
-              <p className="hero-subtitle">
-                Empowering India&apos;s entrepreneurial ecosystem through official chapter meetups, high-impact business strategy seminars, and curated networking forums designed for scalability and success.
-              </p>
-              <div className="hero-proof-row">
-                <div className="proof-item">
-                  <MapPin size={18} />
-                  <span>Chromepet, Chennai operations hub</span>
-                </div>
-                <div className="proof-item">
-                  <Globe2 size={18} />
-                  <span>Online network portal and mobile ecosystem</span>
-                </div>
-              </div>
-              <div className="hero-cta-buttons">
-                <button
-                  onClick={handleReserveClick}
-                  className="btn btn-primary btn-lg-premium animate-pulse-green"
-                  style={{ cursor: 'pointer' }}
-                >
-                  <Calendar size={18} /> Reserve a Seat
-                </button>
-                <Link href="/about" className="btn btn-secondary btn-lg-premium">
-                  View Portal Context
-                </Link>
+            <div className="hero-logo-col animate-scale-in">
+              <div className="hero-logo-wrapper">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/success-india-logo.jpeg"
+                  alt="Success India Logo"
+                  className="hero-logo-main"
+                />
               </div>
             </div>
 
-            <div className="hero-image-col animate-scale-in">
-              <div className="hero-image-wrapper">
-                <img
-                  src="/image.png"
-                  alt="accsysindia Success Team Leader"
-                  className="hero-image"
-                />
-              </div>
+            <div className="hero-quote-col animate-slide-up">
+              <h1 className="hero-dream-title">
+                &ldquo;Our biggest dream is to make <span className="text-highlight-dream">your dream</span> come true&rdquo;
+              </h1>
             </div>
           </div>
         </section>
 
-        <section className="features-section container">
-          <div className="section-header">
-            <span className="section-eyebrow">Operational Focus</span>
-            <h2 className="heading-lg">Built for leadership briefings and local chapter growth</h2>
-            <p className="section-subtitle">
-              AccsysIndia Success Team organizes core leadership briefings, networking workshops, and local chapter meetups into a premium reservation experience.
-            </p>
-          </div>
-
-          <div className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon-wrapper">
-                <Users size={28} className="feature-icon" />
+        <section className="owner-profile-section container">
+          <div className="owner-profile-grid">
+            <div className="owner-profile-left">
+              <span className="profile-badge">Success Team Leadership</span>
+              <h2 className="owner-title">Super Star J.Surendar</h2>
+              <p className="owner-subtitle-role">Board of Vice President</p>
+              <div className="owner-history-card">
+                <h3 className="history-heading">History</h3>
+                <p className="history-text">
+                  J.Surendar is a visionary leader and the Board of Vice President of Success Team. With over a decade of dedicated experience in pioneering enterprise growth, professional leadership development, and community expansion across Tamil Nadu, he has empowered thousands of entrepreneurs to achieve financial independence and professional excellence.
+                </p>
+                <p className="history-text">
+                  Under his strategic guidance, Success Team has established a robust network of local chapters, Weekly Strategy Systems, and leadership training programs. His relentless commitment to building India&apos;s strongest business mentorship ecosystem continues to transform dreams into reality, leading members toward lasting growth and community-driven success.
+                </p>
               </div>
-              <h4 className="heading-sm feature-title">Leadership Development</h4>
-              <p className="feature-desc">
-                Seat reservations for leadership programs, team updates, recruitment training, and business-volume focused briefings.
-              </p>
             </div>
-
-            <div className="feature-card">
-              <div className="feature-icon-wrapper">
-                <BarChart3 size={28} className="feature-icon" />
+            <div className="owner-profile-right">
+              <div className="owner-image-wrapper">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/image.png"
+                  alt="Super Star J.Surendar - Board of Vice President"
+                  className="owner-profile-img"
+                />
+                <div className="owner-image-overlay">
+                  <span>J.Surendar</span>
+                </div>
               </div>
-              <h4 className="heading-sm feature-title">Weekly Strategy Systems</h4>
-              <p className="feature-desc">
-                Weekly income-generation sessions centered on referrals, payouts, market connections, and practical member routines.
-              </p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon-wrapper">
-                <Handshake size={28} className="feature-icon" />
-              </div>
-              <h4 className="heading-sm feature-title">Chapter Networking</h4>
-              <p className="feature-desc">
-                Local meetup access for chapter networks, including BOSS Agro Hub style chapter gatherings noted in the business context.
-              </p>
             </div>
           </div>
         </section>
@@ -364,157 +310,84 @@ export default function Home() {
           z-index: 2;
           display: grid;
           grid-template-columns: 1fr;
-          gap: 2rem;
+          gap: 2.5rem;
           align-items: center;
           width: 100%;
+          justify-items: center;
+          text-align: center;
         }
 
         @media (min-width: 768px) {
           .hero-container {
-            gap: 3rem;
+            gap: 3.5rem;
           }
         }
 
         @media (min-width: 992px) {
           .hero-container {
-            grid-template-columns: 1.1fr 0.9fr;
-            gap: 4rem;
+            grid-template-columns: 0.95fr 1.05fr;
+            gap: 5rem;
+            text-align: left;
+            justify-items: start;
           }
         }
 
-        .hero-text-col {
+        .hero-logo-col {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+        }
+
+        .hero-logo-wrapper {
+          position: relative;
+          display: inline-block;
+          border-radius: 50%;
+          padding: 8px;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          box-shadow: 
+            0 20px 50px rgba(0, 0, 0, 0.22),
+            0 0 40px rgba(253, 230, 138, 0.15);
+          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+        }
+
+        .hero-logo-wrapper:hover {
+          transform: scale(1.04) rotate(2deg);
+          box-shadow: 
+            0 30px 60px rgba(0, 0, 0, 0.28),
+            0 0 60px rgba(253, 230, 138, 0.35);
+        }
+
+        .hero-logo-main {
+          width: clamp(190px, 42vw, 300px);
+          height: clamp(190px, 42vw, 300px);
+          border-radius: 50%;
+          border: 6px solid #ffffff;
+          object-fit: cover;
+          display: block;
+        }
+
+        .hero-quote-col {
           display: flex;
           flex-direction: column;
-          gap: 1.45rem;
-        }
-
-        .hero-tagline {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-family: var(--font-heading);
-          font-size: 0.78rem;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: #fde68a;
-          background: rgba(255, 255, 255, 0.1);
-          padding: 0.55rem 0.85rem;
-          border-radius: 999px;
-          align-self: flex-start;
-          border: 1px solid rgba(253, 230, 138, 0.32);
-        }
-
-        .hero-title {
-          font-family: var(--font-heading);
-          font-size: clamp(2rem, 8vw, 4rem);
-          font-weight: 800;
-          line-height: 1.08;
-          letter-spacing: 0;
-          margin: 0;
-          max-width: 820px;
-        }
-
-        .text-highlight {
-          color: #bbf7d0;
-        }
-
-        .hero-subtitle {
-          font-size: 1.08rem;
-          line-height: 1.75;
-          color: #d1fae5;
-          max-width: 680px;
-          margin: 0;
-        }
-
-        .hero-proof-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.85rem;
-        }
-
-        .proof-item {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.55rem;
-          padding: 0.65rem 0.85rem;
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          border-radius: var(--radius-md);
-          background: rgba(255, 255, 255, 0.08);
-          color: #eff6ff;
-          font-size: 0.9rem;
-          font-weight: 600;
-        }
-
-        .hero-cta-buttons {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 1rem;
-          margin-top: 0.25rem;
-          align-items: center;
-        }
-
-        .btn-lg-premium {
-          padding: 0.9rem 1.5rem;
-          font-size: 0.96rem;
-          border-radius: var(--radius-md);
-        }
-
-        .hero-image-col {
-          display: flex;
-          align-items: center;
-          width: 100%;
           justify-content: center;
-          padding: 0.5rem 0 0;
-        }
-
-        @media (min-width: 992px) {
-          .hero-image-col {
-            padding: 1rem 0;
-          }
-        }
-
-        .hero-image-wrapper {
           width: 100%;
-          max-width: min(85vw, 420px);
-          display: inline-block;
-          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-          position: relative;
-          border-radius: 16px;
-          overflow: hidden;
-          box-shadow:
-            0 12px 28px rgba(0, 0, 0, 0.22),
-            0 1px 3px rgba(0, 0, 0, 0.1);
-          line-height: 0;
         }
 
-        @media (min-width: 768px) {
-          .hero-image-wrapper {
-            max-width: 520px;
-            border-radius: 24px;
-            box-shadow:
-              0 20px 40px rgba(0, 0, 0, 0.25),
-              0 1px 3px rgba(0, 0, 0, 0.1);
-          }
+        .hero-dream-title {
+          font-family: var(--font-heading), 'Inter', sans-serif;
+          font-size: clamp(2.3rem, 5.8vw, 3.9rem);
+          font-weight: 800;
+          line-height: 1.16;
+          color: #ffffff;
+          margin: 0;
+          font-style: italic;
+          text-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
         }
 
-        .hero-image-wrapper:hover {
-          transform: translateY(-8px) scale(1.03);
-          box-shadow:
-            0 30px 60px rgba(0, 0, 0, 0.3),
-            0 2px 6px rgba(0, 0, 0, 0.15);
-        }
-
-        .hero-image {
-          width: 100%;
-          height: auto;
-          display: block;
-          object-fit: contain;
-          transition: transform 0.4s ease;
-        }
-
-        .hero-image-wrapper:hover .hero-image {
-          transform: scale(1.03);
+        .text-highlight-dream {
+          color: #fde68a;
         }
 
         .card-kicker {
@@ -831,39 +704,145 @@ export default function Home() {
           color: rgba(255,255,255,0.9);
         }
 
+        /* ── Hero Dream Quote Box cleaned ── */
+
+        /* ── Owner Profile Section ────────────────────────── */
+        .owner-profile-section {
+          padding: 6rem 2rem;
+          background: #ffffff;
+        }
+
+        .owner-profile-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 3rem;
+          align-items: center;
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+
+        @media (min-width: 992px) {
+          .owner-profile-grid {
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 5rem;
+          }
+        }
+
+        .owner-profile-left {
+          display: flex;
+          flex-direction: column;
+          gap: 0.85rem;
+        }
+
+        .profile-badge {
+          display: inline-block;
+          align-self: flex-start;
+          background: #ecfdf5;
+          color: #059669;
+          font-size: 0.72rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          padding: 5px 14px;
+          border-radius: 99px;
+          border: 1px solid #a7f3d0;
+        }
+
+        .owner-title {
+          font-family: var(--font-heading), 'Inter', sans-serif;
+          font-size: clamp(1.8rem, 4.5vw, 2.75rem);
+          font-weight: 800;
+          color: #111827;
+          line-height: 1.15;
+          margin: 0;
+        }
+
+        .owner-subtitle-role {
+          font-size: 1.15rem;
+          font-weight: 700;
+          color: #10b981;
+          margin: 0 0 0.5rem;
+        }
+
+        .owner-history-card {
+          background: #f9fafb;
+          border: 1.5px solid #e5e7eb;
+          border-radius: 18px;
+          padding: 2rem 2.25rem;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.025);
+        }
+
+        .history-heading {
+          font-family: var(--font-heading), 'Inter', sans-serif;
+          font-size: 1.25rem;
+          font-weight: 800;
+          color: #1f2937;
+          margin: 0 0 1rem;
+          border-bottom: 2px solid #ecfdf5;
+          padding-bottom: 0.5rem;
+        }
+
+        .history-text {
+          font-size: 0.97rem;
+          line-height: 1.75;
+          color: #4b5563;
+          margin: 0 0 1rem;
+        }
+
+        .history-text:last-child { margin-bottom: 0; }
+
+        .owner-profile-right {
+          display: flex;
+          justify-content: center;
+        }
+
+        .owner-image-wrapper {
+          position: relative;
+          width: 100%;
+          max-width: 370px;
+          border-radius: 22px;
+          overflow: hidden;
+          box-shadow: 0 20px 50px rgba(0,0,0,0.14);
+          border: 4px solid #ffffff;
+          outline: 2px solid #10b981;
+          line-height: 0;
+          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .owner-image-wrapper:hover {
+          transform: translateY(-6px) scale(1.02);
+        }
+
+        .owner-profile-img {
+          width: 100%;
+          height: auto;
+          display: block;
+          object-fit: cover;
+        }
+
+        .owner-image-overlay {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: linear-gradient(180deg, transparent, rgba(0,0,0,0.82));
+          padding: 28px 16px 16px;
+          text-align: center;
+        }
+
+        .owner-image-overlay span {
+          color: #ffffff;
+          font-weight: 800;
+          font-size: 1.25rem;
+          text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+        }
+
         @media (max-width: 640px) {
           .hero-section {
             padding: 4.25rem 0 5.5rem;
           }
 
-          .hero-title {
-            font-size: 2.35rem;
-          }
-
-          .hero-cta-buttons {
-            flex-direction: column;
-            align-items: stretch;
-            width: 100%;
-          }
-
-          .hero-cta-buttons .btn {
-            width: 100%;
-          }
-
-          .hero-proof-row {
-            width: 100%;
-          }
-
-          .proof-item {
-            width: 100%;
-            justify-content: flex-start;
-          }
-
-          .registration-card {
-            padding: 1.5rem 1.25rem;
-          }
-
-          .features-section,
+          .owner-profile-section,
           .routes-section {
             padding: 4.5rem 1.25rem;
           }
