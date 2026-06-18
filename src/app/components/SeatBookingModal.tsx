@@ -1186,6 +1186,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                   {isSubmitting ? 'Submitting for Approval...' : 'Submit for Approval →'}
                 </button>
               </div>
+              <br />
               {!validateUTR(utrNumber) && (
                 <div className="proof-required-notice">
                   <span>🔢 Please enter your 12-digit UTR number above to proceed.</span>
