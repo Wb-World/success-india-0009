@@ -4,7 +4,7 @@ import { readDb } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-const DEFAULT_TOTAL_SEATS = 60;
+const DEFAULT_TOTAL_SEATS = 300;
 const DEFAULT_STATUS = 'Available to Register';
 
 function slugify(value: string) {

@@ -27,7 +27,40 @@ export default function EventsPage() {
         const res = await fetch('/api/events');
         const data = await res.json();
         if (res.ok) {
-          setEvents(data.events || []);
+          let list = data.events || [];
+          if (list.length === 0) {
+            list = [
+              {
+                id: "seminar_mega_mass_2026",
+                title: "SUCCESS TEAM MEGA MASS EDUCATIONAL TRAINING",
+                name: "SUCCESS TEAM MEGA MASS EDUCATIONAL TRAINING",
+                venue: "Hotel Chennai Deluxe",
+                eventDate: "2026-06-28",
+                eventTime: "09:00 AM",
+                price: 1000,
+                totalSeats: 300,
+              }
+            ];
+          } else {
+            list = list.map((ev: any, idx: number) => {
+              if (idx === 0) {
+                return {
+                  ...ev,
+                  title: "SUCCESS TEAM MEGA MASS EDUCATIONAL TRAINING",
+                  name: "SUCCESS TEAM MEGA MASS EDUCATIONAL TRAINING",
+                  venue: "Hotel Chennai Deluxe",
+                  eventDate: "2026-06-28",
+                  eventTime: "09:00 AM",
+                  totalSeats: 300,
+                };
+              }
+              return {
+                ...ev,
+                totalSeats: 300,
+              };
+            });
+          }
+          setEvents(list);
         }
       } catch (err) {
         console.error('Failed to fetch events:', err);
@@ -80,6 +113,12 @@ export default function EventsPage() {
                 className="event-card"
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
+                {index === 0 && (
+                  <div className="event-card-image-wrap">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/img.png" alt={event.title || event.name} className="event-card-image" />
+                  </div>
+                )}
                 <div className="event-card-badge">
                   <Ticket size={13} /> Open Registration
                 </div>
@@ -385,6 +424,26 @@ export default function EventsPage() {
           width: 100%;
           max-width: 1280px;
           margin: 0 auto;
+        }
+
+        .event-card-image-wrap {
+          width: 100%;
+          height: 200px;
+          border-radius: 12px;
+          overflow: hidden;
+          margin-bottom: 0.5rem;
+          border: 1px solid #e2e8f0;
+        }
+
+        .event-card-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        }
+
+        .event-card:hover .event-card-image {
+          transform: scale(1.05);
         }
       `}</style>
     </div>
