@@ -82,6 +82,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const [bookerName, setBookerName] = useState('');
   const [bookerMemberId, setBookerMemberId] = useState('');
   const [bookerPhone, setBookerPhone] = useState('');
+  const [bookerVpName, setBookerVpName] = useState('');
   const [bookerError, setBookerError] = useState('');
 
   const [showScrollBtn, setShowScrollBtn] = useState(false);
@@ -136,8 +137,14 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       setBookerError('Please enter a valid 10-digit mobile number.');
       return;
     }
+    const trimmedVpName = bookerVpName.trim();
+    if (!trimmedVpName || trimmedVpName.length < 2) {
+      setBookerError('Please enter your VP name (at least 2 characters).');
+      return;
+    }
     setBookerMemberId(trimmedId);
     setBookerPhone(trimmedPhone);
+    setBookerVpName(trimmedVpName);
     setStep('quantity_select');
   };
 
@@ -387,6 +394,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       bookerName,
       bookerMemberId,
       bookerPhone,
+      bookerVpName,
       utrNumber,
     };
 
@@ -652,6 +660,24 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                         setBookerPhone(val);
                         setBookerError('');
                       }}
+                      required
+                      className="text-input-field"
+                    />
+                  </div>
+                </div>
+
+                {/* VP Name */}
+                <div className="form-input-group">
+                  <label className="input-field-label">
+                    VP Name <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <div className="input-field-wrap">
+                    <span className="input-field-icon">🏅</span>
+                    <input
+                      type="text"
+                      placeholder="Enter your VP name"
+                      value={bookerVpName}
+                      onChange={(e) => { setBookerVpName(e.target.value); setBookerError(''); }}
                       required
                       className="text-input-field"
                     />

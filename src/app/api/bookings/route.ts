@@ -70,6 +70,7 @@ export async function POST(request: Request) {
       bookerName,
       bookerMemberId,
       bookerPhone,
+      bookerVpName,
     } = body;
 
     // Resolve field aliases (backward compatible with legacy shape)
@@ -136,6 +137,7 @@ export async function POST(request: Request) {
     const resolvedBookerName = (bookerName || 'Guest').trim();
     const resolvedBookerMemberId = (bookerMemberId || 'GUEST0').trim().toUpperCase();
     const resolvedBookerPhone = (bookerPhone || '').trim();
+    const resolvedBookerVpName = (bookerVpName || '').trim();
 
     // Sanitize screenshot URL (strip any pipe-delimited legacy suffix)
     const cleanScreenshot = (screenshot || 'DIRECT_BOOKING').split('|')[0];
@@ -167,6 +169,7 @@ export async function POST(request: Request) {
           booker_name: resolvedBookerName,
           booker_member_id: resolvedBookerMemberId,
           booker_phone: resolvedBookerPhone,
+          booker_vp_name: resolvedBookerVpName,
         })
         .select('*')
         .single();
@@ -199,6 +202,7 @@ export async function POST(request: Request) {
             qr_code_payload: qrCodePayload,
             booker_name: resolvedBookerName,
             booker_member_id: resolvedBookerMemberId,
+            booker_vp_name: resolvedBookerVpName,
           })
           .select('*')
           .single();
