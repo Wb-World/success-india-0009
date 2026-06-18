@@ -169,9 +169,10 @@ export default function Home() {
           <div className="owner-profile-grid">
             <div className="owner-profile-left">
               <span className="profile-badge">Success Team Leadership</span>
-              <h2 className="owner-title">Super Star J.Surendar</h2>
-              <p className="owner-subtitle-role">Board of Vice President</p>
-              <p className="owner-subtitle-role">Founder of Success Team</p>
+              <h2 className="owner-title">SUPER STAR</h2>
+              <h2 className="owner-title">J.SURENDAR</h2>
+              <p className="owner-subtitle-role">BOARD OF VICE PRESIDENT</p>
+              <p className="owner-subtitle-role">FOUNDER OF SUCCESS TEAM</p>
               <div className="owner-history-card">
                 <h3 className="history-heading">History</h3>
                 <p className="history-text">
