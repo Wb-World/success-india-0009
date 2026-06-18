@@ -66,7 +66,7 @@ export default function ContributionPage() {
               <HandHeart size={28} />
             </div>
             <h3>Community Impact</h3>
-            <p>Be part of the mission to build India's strongest entrepreneurial leadership network, chapter by chapter.</p>
+            <p>Be part of the mission to build India&apos;s strongest entrepreneurial leadership network, chapter by chapter.</p>
           </div>
         </div>
       </section>
