@@ -364,8 +364,8 @@ export default function Home() {
         }
 
         .hero-logo-main {
-          width: clamp(190px, 42vw, 300px);
-          height: clamp(190px, 42vw, 300px);
+          width: clamp(320px, 60vw, 550px);
+height: clamp(320px, 60vw, 550px);
           border: 6px solid #ffffff;
           // object-fit: cover;
           // display: block;
