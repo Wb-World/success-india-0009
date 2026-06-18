@@ -13,7 +13,7 @@ const ROWS = [
   'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
   'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'BB', 'CC', 'DD'
 ];
-const SEATS_PER_ROW = 10;
+const SEATS_PER_ROW = 20;
 const ALL_SEATS: string[] = ROWS.flatMap((row) =>
   Array.from({ length: SEATS_PER_ROW }, (_, i) => `${row}${i + 1}`)
 );
@@ -66,6 +66,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
   const [alreadyBookedSeats, setAlreadyBookedSeats] = useState<string[]>([]);
   const [step, setStep] = useState<'booker_info' | 'quantity_select' | 'select' | 'attendee_details' | 'payment' | 'success'>('booker_info');
+  const [bookingStatus, setBookingStatus] = useState<'pending' | 'approved' | 'denied'>('pending');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState('');
   const [bookingTimestamp, setBookingTimestamp] = useState('');
@@ -218,7 +219,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
   // QR code data for ticket validation
   const qrPayload = confirmedData
-    ? `BOOKING:${confirmedData.id}|EVENT:${eventName}|SEATS:${confirmedData.seats.join(',')}|ATTENDEES:${confirmedData.seats.map((s: string) => `${s}=${confirmedData.attendees?.[s] || 'N/A'}`).join(',')}|VENUE:${event.venue}|DATE:${event.eventDate || 'TBD'}|AMOUNT:INR${confirmedData.totalPrice}|STATUS:PENDING_VERIFICATION`
+    ? `BOOKING:${confirmedData.id}|EVENT:${eventName}|SEATS:${confirmedData.seats.join(',')}|ATTENDEES:${confirmedData.seats.map((s: string) => `${s}=${confirmedData.attendees?.[s]?.name || 'N/A'}`).join(',')}|VENUE:${event.venue}|DATE:${event.eventDate || 'TBD'}|AMOUNT:INR${confirmedData.totalPrice}|STATUS:${bookingStatus.toUpperCase()}`
     : '';
   const qrImageUrl = qrPayload
     ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrPayload)}&qzone=1&format=png&color=10b981`
@@ -406,6 +407,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       setBookingId(newBookingId);
       setBookingTimestamp(ts);
       setConfirmedData({ id: newBookingId, seats: selectedSeats, totalPrice, timestamp: ts, attendees: attendeesObj });
+      setBookingStatus('pending');
       setIsSubmitting(false);
       setStep('success');
 
@@ -417,6 +419,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
             const statusData = await statusRes.json();
             if (statusData.status === 'approved' || statusData.status === 'denied') {
               clearInterval(pollInterval);
+              setBookingStatus(statusData.status);
               setApprovalNotification({ show: true, status: statusData.status, bookingRef: newBookingId });
             }
           }
@@ -466,9 +469,18 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     const attendeesHtml = seatsToRender.map((s: string) => {
       const info = currentAttendees[s];
       const nameText = typeof info === 'object' && info !== null ? info.name : (info || 'N/A');
-      const phoneText = typeof info === 'object' && info !== null ? info.phone : '';
+      const phoneText = typeof info === 'object' && info !== null ? (info.whatsapp || info.phone || '') : '';
       return `<div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;padding:2px 0;"><strong>Seat ${s}:</strong><span>${nameText}${phoneText ? ` (${phoneText})` : ''}</span></div>`;
     }).join('');
+
+    const statusLabel = bookingStatus === 'approved' ? '✓ CONFIRMED & VERIFIED' : bookingStatus === 'denied' ? '✗ PAYMENT REJECTED' : '✓ PENDING VERIFICATION';
+    const statusBg = bookingStatus === 'approved' ? '#dcfce7' : bookingStatus === 'denied' ? '#fee2e2' : '#fef3c7';
+    const statusColor = bookingStatus === 'approved' ? '#047857' : bookingStatus === 'denied' ? '#b91c1c' : '#d97706';
+    const explanationText = bookingStatus === 'approved' 
+      ? 'This is a confirmed and verified ticket. Welcome to the Success Team Event!' 
+      : bookingStatus === 'denied' 
+        ? 'This ticket booking payment verification has been rejected by administration. Please check UTR or contact support.' 
+        : 'This is a ticket receipt showing status as Pending Verification. Once approved by administration, it compiles as Confirmed.';
 
     wrapper.innerHTML = `
       <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
@@ -478,7 +490,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           <div style="font-size:26px;font-weight:900;letter-spacing:4px;background:rgba(255,255,255,0.15);padding:12px 24px;border-radius:8px;margin:16px auto;display:inline-block;">${bookingId}</div>
         </div>
         <div style="padding:32px;">
-          <div style="text-align:center;margin-bottom:20px;"><span style="display:inline-flex;align-items:center;gap:6px;background:#dcfce7;color:#047857;padding:6px 16px;border-radius:999px;font-weight:700;font-size:14px;">✓ PENDING VERIFICATION</span></div>
+          <div style="text-align:center;margin-bottom:20px;"><span style="display:inline-flex;align-items:center;gap:6px;background:${statusBg};color:${statusColor};padding:6px 16px;border-radius:999px;font-weight:700;font-size:14px;">${statusLabel}</span></div>
           <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Event</span><span style="font-weight:600;">${eventName}</span></div>
           <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Venue</span><span style="font-weight:600;">${event.venue}</span></div>
           <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Date</span><span style="font-weight:600;">${event.eventDate || 'To Be Confirmed'}</span></div>
@@ -497,7 +509,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           <div style="background:#ecfdf5;border-radius:8px;padding:16px;margin-top:16px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:15px;font-weight:600;color:#374151;">Grand Total (with GST)</span><span style="font-size:24px;font-weight:800;color:#10b981;">₹${priceToRender}</span></div>
         </div>
         ${qrImageUrl ? `<div style="text-align:center;padding:24px;border-top:2px dashed #a7f3d0;"><img src="${qrImageUrl}" alt="QR Code" width="160" height="160" crossorigin="anonymous" /><p style="font-size:12px;color:#9ca3af;margin-top:8px;">Scan QR code for verification</p></div>` : ''}
-        <div style="text-align:center;font-size:12px;color:#9ca3af;padding:16px 32px;background:#f9fafb;">This is a ticket receipt showing status as Pending Verification. Once approved by administration, it compiles as Confirmed.</div>
+        <div style="text-align:center;font-size:12px;color:#9ca3af;padding:16px 32px;background:#f9fafb;">${explanationText}</div>
       </div>
     `;
 
@@ -1183,130 +1195,194 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           </div>
         )}
 
-        {/* ── STEP 4: Success + Ticket + QR ─────────────────────── */}
+        {/* ── STEP 4: Booking Registered — Awaiting Admin Approval ── */}
         {step === 'success' && confirmedData && (
           <div className="success-step">
-            {/* Success Header */}
-            <div className="success-header">
-              <div className="success-check-wrap">
-                <CheckCircle2 size={48} />
-              </div>
-              <h2 className="success-title">Booking Registered!</h2>
-              <div className="booking-id-display">{bookingId}</div>
-              <span className="status-confirmed-pill">✓ PENDING VERIFICATION</span>
-            </div>
 
-            {/* Ticket */}
-            <div className="ticket-display" id="printable-ticket">
-              <div className="ticket-left">
-                <div className="qr-wrapper">
-                  {qrImageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={qrImageUrl}
-                      alt="Booking QR Code"
-                      className="qr-img"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="qr-placeholder">Generating QR…</div>
-                  )}
-                  <span className="qr-caption">Scan to audit booking</span>
+            {/* ── Animated Hero Banner based on bookingStatus ── */}
+            {bookingStatus === 'pending' && (
+              <div className="success-hero-banner status-pending-banner">
+                <div className="success-anim-container">
+                  <div className="success-ring ring-outer" />
+                  <div className="success-ring ring-mid" />
+                  <div className="success-ring ring-inner" />
+                  <div className="success-check-wrap">
+                    <CheckCircle2 size={52} strokeWidth={2.5} />
+                  </div>
+                </div>
+                <h2 className="success-title">Booking Registered Successfully!</h2>
+                <p className="success-sub">Your seats have been reserved and sent to the admin for verification.</p>
+                <div className="booking-id-display">{bookingId}</div>
+                <div className="approval-waiting-badge">
+                  <span className="waiting-pulse-dot" />
+                  <span>Awaiting Admin Approval</span>
+                </div>
+                
+                {/* Sleek Dynamic Active Connection Loader */}
+                {/* <div className="live-verification-loader">
+                  <div className="loader-line-track">
+                    <div className="loader-line-fill" />
+                  </div>
+                </div> */}
+                
+                <div className="admin-sent-notice" style={{ marginTop: '1rem' }}>
+                  📋 All booking information has been sent to the admin panel for review.
                 </div>
               </div>
+            )}
 
-              <div className="ticket-right">
-                <div className="ticket-detail-row">
-                  <span className="td-label">Event</span>
-                  <strong className="td-value">{eventName}</strong>
-                </div>
-                <div className="ticket-detail-row">
-                  <span className="td-label">Venue</span>
-                  <strong className="td-value">{event.venue}</strong>
-                </div>
-                {event.eventDate && (
-                  <div className="ticket-detail-row">
-                    <span className="td-label">Date</span>
-                    <strong className="td-value">{event.eventDate}</strong>
-                  </div>
-                )}
-                {event.eventTime && (
-                  <div className="ticket-detail-row">
-                    <span className="td-label">Time</span>
-                    <strong className="td-value">{event.eventTime}</strong>
-                  </div>
-                )}
-                <div className="ticket-detail-row">
-                  <span className="td-label">Seats</span>
-                  <div className="td-seat-tags">
-                    {(confirmedData?.seats || selectedSeats).map((s: string) => (
-                      <span key={s} className="seat-tag">
-                        {s}
-                      </span>
-                    ))}
+            {bookingStatus === 'approved' && (
+              <div className="success-hero-banner status-approved-banner animate-pop-in">
+                <div className="success-anim-container approved-celebration">
+                  <div className="success-ring ring-outer-green" />
+                  <div className="success-ring ring-mid-green" />
+                  <div className="success-ring ring-inner-green" />
+                  <div className="success-check-wrap approved-check">
+                    <CheckCircle2 size={52} strokeWidth={2.5} />
                   </div>
                 </div>
-                <div className="ticket-detail-row" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-                  <span className="td-label" style={{ marginBottom: '6px' }}>Attendees</span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#f9fafb', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                <h2 className="success-title" style={{ color: '#047857' }}>Booking Confirmed & Verified!</h2>
+                <p className="success-sub" style={{ color: '#065f46' }}>Your payment was verified. Welcome to the event! 🎉</p>
+                <div className="booking-id-display" style={{ borderColor: '#34d399', color: '#047857' }}>{bookingId}</div>
+                <div className="approval-success-badge animate-bounce-subtle">
+                  <span>✅ Confirmed & Verified Ticket</span>
+                </div>
+              </div>
+            )}
+
+            {bookingStatus === 'denied' && (
+              <div className="success-hero-banner status-denied-banner animate-pop-in">
+                <div className="success-anim-container denied-error">
+                  <div className="error-circle-wrap">
+                    <X size={52} strokeWidth={2.5} />
+                  </div>
+                </div>
+                <h2 className="success-title" style={{ color: '#b91c1c' }}>Payment Verification Failed</h2>
+                <p className="success-sub" style={{ color: '#991b1b' }}>The payment transaction UTR could not be verified by the admin.</p>
+                <div className="booking-id-display" style={{ borderColor: '#fca5a5', color: '#b91c1c' }}>{bookingId}</div>
+                <div className="approval-failed-badge">
+                  <span>❌ Rejected / Action Required</span>
+                </div>
+                <p style={{ fontSize: '0.82rem', color: '#7f1d1d', marginTop: '0.85rem', fontWeight: 600 }}>
+                  Please double-check the UTR Number: <code style={{ background: '#fee2e2', padding: '2px 6px', borderRadius: '4px' }}>{utrNumber}</code> or contact our support team.
+                </p>
+              </div>
+            )}
+
+            {/* ── Full Booking Summary Card (Only shown when approved) ── */}
+            {bookingStatus === 'approved' && (
+              <div className="bsc-card" id="printable-ticket">
+                
+                <div className="bsc-header-bar" style={{
+                  background: 'linear-gradient(90deg, #065f46 0%, #10b981 100%)'
+                }}>
+                  <span className="bsc-title">Event E-Ticket</span>
+                  <span className="bsc-status-pill">CONFIRMED</span>
+                </div>
+
+                {/* Top Grid: QR + Identity + Event */}
+                <div className="bsc-top-grid">
+                  {/* QR Code */}
+                  <div className="bsc-qr-block" style={{
+                    background: 'linear-gradient(150deg, #f0fdf4 0%, #dcfce7 100%)',
+                    borderRightColor: '#a7f3d0'
+                  }}>
+                    {qrImageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={qrImageUrl} alt="Booking QR Code" className="bsc-qr-img" style={{
+                        borderColor: '#10b981'
+                      }} loading="lazy" />
+                    ) : (
+                      <div className="bsc-qr-placeholder">Generating QR…</div>
+                    )}
+                    <span className="bsc-qr-caption" style={{
+                      color: '#047857'
+                    }}>Booking Audit QR Code</span>
+                  </div>
+
+                  <div className="bsc-right-block">
+                    {/* Booker Identity */}
+                    <div className="bsc-group-label">👤 Booker Identity</div>
+                    <div className="bsc-info-row"><span>Booker Name</span><strong>{bookerName}</strong></div>
+                    <div className="bsc-info-row"><span>Member ID</span><strong style={{ fontFamily: 'monospace', letterSpacing: '0.06em' }}>{bookerMemberId}</strong></div>
+                    <div className="bsc-info-row"><span>Mobile Number</span><strong>{bookerPhone}</strong></div>
+
+                    {/* Event Details */}
+                    <div className="bsc-group-label" style={{ marginTop: '1.1rem' }}>🎫 Event Information</div>
+                    <div className="bsc-info-row"><span>Event Program</span><strong>{eventName}</strong></div>
+                    <div className="bsc-info-row"><span>Venue</span><strong>{event.venue}</strong></div>
+                    {event.eventDate && <div className="bsc-info-row"><span>Event Date</span><strong>{event.eventDate}</strong></div>}
+                    {event.eventTime && <div className="bsc-info-row"><span>Event Time</span><strong>{event.eventTime}</strong></div>}
+                    <div className="bsc-info-row">
+                      <span>Seats ({confirmedData?.seats?.length || quantity})</span>
+                      <div className="bsc-seat-tags">
+                        {(confirmedData?.seats || selectedSeats).map((s: string) => (
+                          <span key={s} className="bsc-seat-chip">{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Attendees */}
+                <div className="bsc-section">
+                  <div className="bsc-group-label">🧑‍🤝‍🧑 Registered Attendees</div>
+                  <div className="bsc-attendees-grid">
                     {(confirmedData?.seats || selectedSeats).map((s: string) => {
                       const info = (confirmedData?.attendees || attendeeDetails)[s];
                       const nameText = typeof info === 'object' && info !== null ? info.name : (info || 'N/A');
                       const phoneText = typeof info === 'object' && info !== null ? (info.whatsapp || info.phone || '') : '';
                       return (
-                        <div key={s} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                          <span style={{ fontWeight: '600', color: '#374151' }}>Seat {s}:</span>
-                          <span style={{ color: '#059669', fontWeight: '700' }}>
-                            {nameText}{phoneText ? ` (${phoneText})` : ''}
-                          </span>
+                        <div key={s} className="bsc-attendee-card">
+                          <span className="bsc-attendee-seat">{s}</span>
+                          <div className="bsc-attendee-details">
+                            <strong>{nameText}</strong>
+                            {phoneText && <span className="bsc-attendee-phone">📞 {phoneText}</span>}
+                          </div>
                         </div>
                       );
                     })}
                   </div>
                 </div>
-                <div className="ticket-detail-row">
-                  <span className="td-label">No. of Seats</span>
-                  <strong className="td-value">{confirmedData?.seats?.length || quantity}</strong>
-                </div>
-                <div className="ticket-detail-row">
-                  <span className="td-label">Price / Seat</span>
-                  <strong className="td-value">₹{pricePerSeat}</strong>
-                </div>
-                <div className="ticket-detail-row">
-                  <span className="td-label">Base Amount</span>
-                  <strong className="td-value">₹{(confirmedData?.seats?.length || quantity) * pricePerSeat}</strong>
-                </div>
-                <div className="ticket-detail-row">
-                  <span className="td-label">GST (18%)</span>
-                  <strong className="td-value">₹{Math.round((confirmedData?.seats?.length || quantity) * pricePerSeat * 0.18)}</strong>
-                </div>
-                <div className="ticket-detail-row ticket-total-row">
-                  <span className="td-label">Grand Total (with GST)</span>
-                  <strong className="td-value td-total">₹{confirmedData?.totalPrice !== undefined ? confirmedData.totalPrice : totalPrice}</strong>
-                </div>
-                <div className="ticket-detail-row">
-                  <span className="td-label">Booked At</span>
-                  <strong className="td-value td-small">{confirmedData?.timestamp || bookingTimestamp}</strong>
-                </div>
-                <div className="ticket-detail-row">
-                  <span className="td-label">Status</span>
-                  <strong className="td-value"><span className="td-status">✓ Pending Verification</span></strong>
+
+                {/* Payment Breakdown */}
+                <div className="bsc-section">
+                  <div className="bsc-group-label">💳 Payment Details</div>
+                  <div className="bsc-info-row"><span>Price / Seat</span><strong>₹{pricePerSeat}</strong></div>
+                  <div className="bsc-info-row"><span>No. of Seats</span><strong>{confirmedData?.seats?.length || quantity}</strong></div>
+                  <div className="bsc-info-row"><span>Base Amount</span><strong>₹{(confirmedData?.seats?.length || quantity) * pricePerSeat}</strong></div>
+                  <div className="bsc-info-row"><span>GST (18%)</span><strong>₹{Math.round((confirmedData?.seats?.length || quantity) * pricePerSeat * 0.18)}</strong></div>
+                  <div className="bsc-divider" />
+                  <div className="bsc-info-row bsc-total-row">
+                    <span>Grand Total (incl. GST)</span>
+                    <strong className="bsc-total-amount">₹{confirmedData?.totalPrice !== undefined ? confirmedData.totalPrice : totalPrice}</strong>
+                  </div>
+                  <div className="bsc-info-row" style={{ marginTop: '0.85rem' }}>
+                    <span>UPI Transaction ID (UTR)</span>
+                    <strong style={{ fontFamily: 'monospace', fontSize: '0.9rem', color: '#059669' }}>{utrNumber}</strong>
+                  </div>
+                  <div className="bsc-info-row">
+                    <span>Booking Registered At</span>
+                    <strong style={{ fontSize: '0.8rem' }}>{confirmedData?.timestamp || bookingTimestamp}</strong>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Action Buttons */}
-            <div className="ticket-action-row">
-              <button className="tkt-action-btn tkt-dl-qr" onClick={handleDownloadQR}>
-                <Download size={15} /> Download QR
-              </button>
-              <button className="tkt-action-btn tkt-dl-ticket" onClick={handleDownloadTicket}>
-                <Ticket size={15} /> Download Ticket
-              </button>
-              <button className="tkt-action-btn tkt-print" onClick={handlePrint}>
-                <Printer size={15} /> Print Ticket
-              </button>
-            </div>
+            {/* Action Buttons (Only shown when approved) ── */}
+            {bookingStatus === 'approved' && (
+              <div className="ticket-action-row">
+                <button className="tkt-action-btn tkt-dl-qr" onClick={handleDownloadQR}>
+                  <Download size={15} /> Download QR
+                </button>
+                <button className="tkt-action-btn tkt-dl-ticket" onClick={handleDownloadTicket}>
+                  <Ticket size={15} /> Download Ticket
+                </button>
+                <button className="tkt-action-btn tkt-print" onClick={handlePrint}>
+                  <Printer size={15} /> Print Ticket
+                </button>
+              </div>
+            )}
 
             <button className="sbm-done-btn" onClick={onClose}>
               Done
@@ -1373,9 +1449,32 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
         .sbm-card-booker_info { max-width: 480px; overflow-y: auto !important; }
         .sbm-card-quantity_select { max-width: 480px; overflow: hidden !important; }
-        .sbm-card-select { max-width: 960px; }
+        .sbm-card-select {
+          max-width: 1320px;
+          width: 96vw;
+          max-height: 96vh !important;
+          height: 96vh;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden !important;
+        }
+        .sbm-card-select .sbm-header { flex-shrink: 0; }
+        .sbm-card-select .sbm-warning-toast { flex-shrink: 0; }
+        .sbm-card-select .sbm-body {
+          flex: 1;
+          min-height: 0;
+          overflow: hidden;
+        }
+        .sbm-card-select .sbm-left {
+          overflow-y: auto;
+          min-height: 0;
+        }
+        .sbm-card-select .sbm-right {
+          overflow-y: auto;
+          min-height: 0;
+        }
         .sbm-card-attendee_details { max-width: 520px; }
-        .sbm-card-payment { max-width: 840px; }
+        .sbm-card-payment { max-width: 860px; }
         .sbm-card-success { max-width: 760px; }
 
         /* ── Booker Info Step ─────────────────────────────────────── */
@@ -1795,7 +1894,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
         @media (min-width: 720px) {
           .sbm-body {
-            grid-template-columns: 1.4fr 1fr;
+            grid-template-columns: 1.35fr 1fr;
           }
         }
 
@@ -1822,84 +1921,129 @@ export default function SeatBookingModal({ event, onClose }: Props) {
         .seat-map-wrapper {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 10px;
+          overflow-x: auto;
+          overflow-y: auto;
+          max-height: min(520px, calc(90vh - 280px));
+          padding: 1.25rem 0.75rem;
+          background: #f8fafc;
+          border-radius: 14px;
+          border: 1px dashed #cbd5e1;
+          scrollbar-width: thin;
+          scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+        
+        .seat-map-wrapper::-webkit-scrollbar {
+          width: 5px;
+          height: 5px;
+        }
+        .seat-map-wrapper::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 99px;
+        }
+        .seat-map-wrapper::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 99px;
         }
 
         .seat-row-group {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 12px;
+          min-width: max-content;
         }
 
         .row-label {
-          width: 18px;
-          font-size: 0.75rem;
+          width: 24px;
+          font-size: 0.8rem;
           font-weight: 800;
-          color: #4b5563;
+          color: #64748b;
           text-align: center;
           flex-shrink: 0;
         }
 
         .seat-row {
           display: flex;
-          gap: 6px;
+          gap: 8px;
           flex-wrap: nowrap;
         }
 
-        /* ─── Circular Theater Seat Styling ────────────────────────── */
+        /* ─── Professional Theater Seat Styling ────────────────────────── */
         .sbm-seat {
           position: relative;
           width: 28px;
           height: 28px;
-          border-radius: 50%;
+          border-radius: 6px 6px 2px 2px;
           border: 1.5px solid;
-          font-size: 0.65rem;
+          font-size: 0.62rem;
           font-weight: 800;
           cursor: pointer;
-          transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          transition: all 0.2s ease;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+          box-shadow: 0 1.5px 3px rgba(0,0,0,0.06);
         }
 
-        /* Top-down seat back cushion arc */
+        /* Cushion / back support effect */
         .sbm-seat::before {
           content: '';
           position: absolute;
-          top: 3px;
-          left: 5px;
-          right: 5px;
-          height: 5px;
+          top: 2px;
+          left: 4px;
+          right: 4px;
+          height: 6px;
           border-radius: 2px;
-          background: rgba(0, 0, 0, 0.12);
-          transition: background 0.2s;
+          background: rgba(255, 255, 255, 0.25);
+          pointer-events: none;
+        }
+        
+        /* Seat armrest effects */
+        .sbm-seat::after {
+          content: '';
+          position: absolute;
+          bottom: 2px;
+          left: 2px;
+          right: 2px;
+          height: 4px;
+          border-radius: 1px;
+          background: rgba(0, 0, 0, 0.08);
+          pointer-events: none;
         }
 
         @media (max-width: 480px) {
-          .sbm-seat { width: 22px; height: 22px; font-size: 0.55rem; }
-          .sbm-seat::before { top: 2px; left: 4px; right: 4px; height: 4px; }
-          .seat-row { gap: 4px; }
+          .sbm-seat { width: 25px; height: 25px; font-size: 0.55rem; border-width: 1px; }
+          .sbm-seat::before { top: 1.5px; left: 3px; right: 3px; height: 5px; }
+          .sbm-seat::after { bottom: 1.5px; left: 1.5px; right: 1.5px; height: 3px; }
+          .seat-row { gap: 6px; }
         }
 
         .seat-available {
-          background: #ffffff;
+          background: linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%);
           border-color: #10b981;
           color: #047857;
         }
+        .seat-available::before {
+          background: rgba(16, 185, 129, 0.08);
+        }
         .seat-available:hover:not(:disabled) {
-          background: #ecfdf5;
-          border-color: #059669;
-          transform: scale(1.18);
-          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+          background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+          border-color: #047857;
+          color: #ffffff;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(16, 185, 129, 0.25);
+        }
+        .seat-available:hover:not(:disabled)::before {
+          background: rgba(255, 255, 255, 0.3);
         }
 
         .seat-selected {
-          background: #10b981;
-          border-color: #059669;
+          background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+          border-color: #047857;
           color: white;
-          transform: scale(1.12);
-          box-shadow: 0 3px 10px rgba(16, 185, 129, 0.45);
+          transform: scale(1.06);
+          box-shadow: 0 3px 8px rgba(16, 185, 129, 0.4);
         }
         .seat-selected::before {
           background: rgba(255, 255, 255, 0.35);
@@ -2155,6 +2299,58 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           cursor: not-allowed;
         }
 
+        /* Back Button */
+        .sbm-back-btn {
+          width: 100%;
+          min-height: 44px;
+          padding: 0.75rem 1rem;
+          background: #f8fafc;
+          color: #475569;
+          border: 1.5px solid #cbd5e1;
+          border-radius: 10px;
+          font-size: 0.9rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .sbm-back-btn:hover {
+          background: #f1f5f9;
+          color: #1e293b;
+          border-color: #94a3b8;
+        }
+
+        /* Confirm Button */
+        .sbm-confirm-btn {
+          width: 100%;
+          min-height: 48px;
+          padding: 0.875rem 1rem;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 0.95rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s;
+          box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .sbm-confirm-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        .sbm-confirm-btn:disabled {
+          background: #cbd5db;
+          color: #94a3b8;
+          box-shadow: none;
+          cursor: not-allowed;
+        }
+
         /* ── STEP 3: Payment Page styles ──────────────────────────── */
         .payment-container {
           padding: 2.25rem 2rem;
@@ -2218,14 +2414,18 @@ export default function SeatBookingModal({ event, onClose }: Props) {
         }
 
         .upload-required-badge {
+          display: inline-block;
           background: #fef3c7;
           color: #92400e;
           font-size: 0.68rem;
           font-weight: 800;
-          padding: 2px 7px;
-          border-radius: 99px;
+          padding: 2px 8px;
+          border-radius: 6px;
+          border: 1px solid #fde68a;
           text-transform: uppercase;
           letter-spacing: 0.03em;
+          margin-left: 6px;
+          vertical-align: middle;
         }
 
         .utr-desc {
@@ -2342,25 +2542,44 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           background: #ecfdf5;
           border: 1.5px solid #a7f3d0;
           border-radius: 16px;
-          padding: 1.75rem;
+          padding: 1.75rem 1.25rem;
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 1rem;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .qr-image-wrap {
           background: white;
-          padding: 10px;
-          border-radius: 12px;
-          box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+          padding: 14px;
+          border-radius: 14px;
+          box-shadow: 0 10px 30px rgba(16, 185, 129, 0.15);
+          border: 2px solid #6ee7b7;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          max-width: 320px;
+          aspect-ratio: 1 / 1;
+          margin: 0 auto;
+          flex-shrink: 0;
+          box-sizing: border-box;
         }
 
         .payment-qr-img {
-          width: clamp(240px, 32vw, 290px);
-          height: clamp(240px, 32vw, 290px);
+          width: 100% !important;
+          height: 100% !important;
+          max-width: 290px;
+          max-height: 290px;
+          object-fit: contain !important;
+          image-rendering: -webkit-optimize-contrast;
+          image-rendering: crisp-edges;
           display: block;
-          transition: transform 0.2s ease;
+          margin: 0 auto;
+          flex-shrink: 0;
+          transition: transform 0.3s ease;
         }
         .payment-qr-img:hover {
           transform: scale(1.05);
@@ -2424,161 +2643,241 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           color: #1f2937;
         }
 
-        /* ── Confirm actions ───────────────────────────────────────── */
-        .confirm-actions {
-          display: flex;
-          gap: 0.75rem;
-          width: 100%;
-        }
-
-        .sbm-back-btn {
-          flex: 1;
-          padding: 0.875rem;
-          background: #f3f4f6;
-          color: #374151;
-          border: none;
-          border-radius: 10px;
-          font-size: 0.92rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.15s;
-        }
-        .sbm-back-btn:hover { background: #e5e7eb; }
-
-        .sbm-confirm-btn {
-          flex: 2;
-          padding: 0.875rem;
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
-          border: none;
-          border-radius: 10px;
-          font-size: 0.95rem;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.15s;
-          box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-        }
-        .sbm-confirm-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
-        }
-        .sbm-confirm-btn:disabled { background: #d1d5db; box-shadow: none; cursor: not-allowed; }
-
-        /* ── Success Step ─────────────────────────────────────────── */
+        /* ── Success / Confirmation Step ───────────────────────── */
         .success-step {
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 2rem;
+          padding: 1.5rem 1.75rem 2rem;
+          gap: 0;
+          width: 100%;
+          box-sizing: border-box;
+          animation: successSlideIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .success-header {
+        @keyframes successSlideIn {
+          from { opacity: 0; transform: translateY(28px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0)   scale(1); }
+        }
+
+        /* Hero banner */
+        .success-hero-banner {
+          width: 100%;
+          background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 60%, #d1fae5 100%);
+          border: 2px solid #a7f3d0;
+          border-radius: 18px;
+          padding: 2rem 1.5rem 1.75rem;
           text-align: center;
           margin-bottom: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        /* Animated rings around check */
+        .success-anim-container {
+          position: relative;
+          width: 100px;
+          height: 100px;
+          margin: 0 auto 1.25rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .success-ring {
+          position: absolute;
+          border-radius: 50%;
+          border: 2.5px solid #10b981;
+          animation: ringPulse 2.4s ease-out infinite;
+        }
+        .success-ring.ring-outer { width: 100px; height: 100px; opacity: 0.15; animation-delay: 0s; }
+        .success-ring.ring-mid   { width: 80px;  height: 80px;  opacity: 0.25; animation-delay: 0.4s; }
+        .success-ring.ring-inner { width: 64px;  height: 64px;  opacity: 0.4;  animation-delay: 0.8s; }
+
+        @keyframes ringPulse {
+          0%   { transform: scale(0.85); opacity: 0.4; }
+          50%  { transform: scale(1);    opacity: 0.15; }
+          100% { transform: scale(0.85); opacity: 0.4; }
         }
 
         .success-check-wrap {
-          width: 84px;
-          height: 84px;
-          background: #ecfdf5;
+          width: 64px;
+          height: 64px;
+          background: #10b981;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #10b981;
-          margin: 0 auto 0.875rem;
-          animation: checkIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+          color: white;
+          position: relative;
+          z-index: 1;
+          animation: checkBounceIn 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
+          box-shadow: 0 6px 24px rgba(16, 185, 129, 0.45);
         }
 
-        @keyframes checkIn {
-          from { transform: scale(0.4); opacity: 0; }
-          to { transform: scale(1); opacity: 1; }
+        @keyframes checkBounceIn {
+          from { transform: scale(0.3); opacity: 0; }
+          to   { transform: scale(1);   opacity: 1; }
         }
 
         .success-title {
-          font-size: 1.5rem;
-          font-weight: 800;
-          color: #111827;
-          margin-bottom: 0.75rem;
+          font-size: 1.55rem;
+          font-weight: 900;
+          color: #065f46;
+          margin: 0 0 0.4rem;
+          letter-spacing: -0.01em;
+        }
+
+        .success-sub {
+          font-size: 0.9rem;
+          color: #374151;
+          margin: 0 0 1rem;
+          line-height: 1.5;
         }
 
         .booking-id-display {
-          font-size: 1.35rem;
+          font-size: 1.25rem;
           font-weight: 900;
-          letter-spacing: 3px;
+          letter-spacing: 2.5px;
           color: #10b981;
-          background: #ecfdf5;
+          background: #ffffff;
           border: 2px solid #a7f3d0;
-          padding: 0.5rem 1.25rem;
+          padding: 0.5rem 1.5rem;
           border-radius: 10px;
           display: inline-block;
-          margin-bottom: 0.5rem;
-          font-family: monospace;
+          margin-bottom: 0.55rem;
+          margin-top: 0.25rem;
+          font-family: 'Courier New', monospace;
+          box-shadow: 0 2px 12px rgba(16, 185, 129, 0.15);
         }
 
-        .status-confirmed-pill {
-          display: inline-block;
-          background: #dcfce7;
-          color: #047857;
-          font-weight: 700;
-          font-size: 0.8rem;
-          padding: 4px 14px;
+        /* Pulsing Awaiting badge */
+        .approval-waiting-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: #fff7ed;
+          border: 1.5px solid #fed7aa;
+          color: #92400e;
+          font-weight: 800;
+          font-size: 0.88rem;
+          padding: 0.45rem 1.1rem;
           border-radius: 999px;
-          letter-spacing: 0.05em;
+          margin-top: 0.25rem;
+          margin-bottom: 0.85rem;
+          letter-spacing: 0.02em;
+          animation: badgePop 0.5s 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
         }
 
-        /* Ticket Layout */
-        .ticket-display {
-          display: flex;
-          flex-direction: column;
-          gap: 0;
+        @keyframes badgePop {
+          from { transform: scale(0.7); opacity: 0; }
+          to   { transform: scale(1);   opacity: 1; }
+        }
+
+        .waiting-pulse-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #f97316;
+          animation: dotPulse 1.2s ease-in-out infinite;
+          flex-shrink: 0;
+        }
+
+        @keyframes dotPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%       { opacity: 0.4; transform: scale(0.7); }
+        }
+
+        .admin-sent-notice {
+          font-size: 0.82rem;
+          color: #047857;
+          background: #d1fae5;
+          border: 1px solid #a7f3d0;
+          padding: 0.5rem 1rem;
+          border-radius: 8px;
+          display: inline-block;
+          font-weight: 600;
+        }
+
+        /* ── Booking Summary Card (bsc) ── */
+        .bsc-card {
           width: 100%;
-          max-width: 760px;
           background: #ffffff;
           border: 2px solid #e5e7eb;
           border-radius: 16px;
           overflow: hidden;
-          margin: 1rem 0;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+          margin-bottom: 1.25rem;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+          animation: successSlideIn 0.7s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
-        @media (min-width: 600px) {
-          .ticket-display {
+        .bsc-header-bar {
+          background: linear-gradient(90deg, #065f46 0%, #047857 100%);
+          color: white;
+          padding: 0.85rem 1.25rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+        }
+
+        .bsc-title {
+          font-size: 0.95rem;
+          font-weight: 700;
+          letter-spacing: 0.01em;
+        }
+
+        .bsc-status-pill {
+          font-size: 0.78rem;
+          font-weight: 700;
+          background: rgba(255,255,255,0.18);
+          border: 1.5px solid rgba(255,255,255,0.35);
+          padding: 3px 12px;
+          border-radius: 999px;
+          letter-spacing: 0.03em;
+        }
+
+        /* Top grid: QR left, info right */
+        .bsc-top-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+        }
+
+        @media (min-width: 580px) {
+          .bsc-top-grid {
             flex-direction: row;
+            align-items: flex-start;
           }
         }
 
-        .ticket-left {
-          background: linear-gradient(160deg, #ecfdf5 0%, #dcfce7 100%);
-          padding: 1.75rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          border-right: 2px dashed #a7f3d0;
-          min-width: 180px;
-        }
-
-        .qr-wrapper {
+        .bsc-qr-block {
+          background: linear-gradient(150deg, #f0fdf4 0%, #dcfce7 100%);
+          padding: 1.5rem;
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 0.5rem;
+          flex-shrink: 0;
+          border-right: 2px dashed #a7f3d0;
+          min-width: 160px;
         }
 
-        .qr-img {
-          width: 150px;
-          height: 150px;
-          border-radius: 8px;
+        .bsc-qr-img {
+          width: 140px;
+          height: 140px;
+          border-radius: 10px;
           border: 3px solid #10b981;
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+          box-shadow: 0 4px 12px rgba(16,185,129,0.2);
         }
 
-        .qr-placeholder {
-          width: 150px;
-          height: 150px;
+        .bsc-qr-placeholder {
+          width: 140px;
+          height: 140px;
           background: #f3f4f6;
-          border-radius: 8px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2586,11 +2885,28 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           color: #9ca3af;
         }
 
-        .qr-caption {
-          font-size: 0.72rem;
-          color: #6b7280;
+        .bsc-qr-caption {
+          font-size: 0.7rem;
+          color: #047857;
+          font-weight: 600;
           text-align: center;
-          font-weight: 500;
+        }
+
+        .bsc-right-block {
+          flex: 1;
+          padding: 1.25rem 1.5rem;
+        }
+
+        .bsc-group-label {
+          font-size: 0.7rem;
+          color: #6b7280;
+          text-align: left;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          padding: 0.2rem 0;
+          border-bottom: 1px solid #f3f4f6;
+          margin-bottom: 0.5rem;
         }
 
         .ticket-right {
@@ -2706,37 +3022,6 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           transition: all 0.15s;
         }
         .sbm-done-btn:hover { background: #374151; transform: translateY(-2px); }
-
-        /* Required upload badge */
-        .upload-required-badge {
-          display: inline-block;
-          background: #fef2f2;
-          color: #dc2626;
-          font-size: 0.65rem;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          padding: 2px 7px;
-          border-radius: 4px;
-          border: 1px solid #fecaca;
-          margin-left: 6px;
-          vertical-align: middle;
-        }
-
-        /* Hint inside dropzone when no upload */
-        .upload-required-hint {
-          display: block;
-          margin-top: 6px;
-          font-size: 0.78rem;
-          color: #dc2626;
-          font-weight: 600;
-        }
-
-        /* Highlighted dropzone border when required and empty */
-        .file-input-label-required {
-          border-color: #fca5a5 !important;
-          background: #fff9f9 !important;
-        }
 
         /* Notice below confirm button */
         .proof-required-notice {
@@ -2957,11 +3242,141 @@ export default function SeatBookingModal({ event, onClose }: Props) {
         }
         .toast-close-btn:hover { background: rgba(0,0,0,0.06); }
 
-        /* proof-required-notice */
-        .proof-required-notice {
-          font-size: 0.82rem;
-          color: #6b7280;
+        /* proof-required-notice (second definition — kept for specificity) */
+
+        /* Live verification loader inside success banner */
+        .live-verification-loader {
+          margin-top: 1.25rem;
+          width: 100%;
+          max-width: 320px;
+          margin-left: auto;
+          margin-right: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .loader-line-track {
+          height: 5px;
+          background: rgba(0, 0, 0, 0.06);
+          border-radius: 99px;
+          overflow: hidden;
+          position: relative;
+        }
+
+        .loader-line-fill {
+          height: 100%;
+          width: 40%;
+          background: #f97316;
+          border-radius: 99px;
+          position: absolute;
+          animation: slideLoaderFill 1.8s infinite ease-in-out;
+        }
+
+        @keyframes slideLoaderFill {
+          0% { left: -40%; }
+          100% { left: 100%; }
+        }
+
+        .loader-status-text {
+          font-size: 0.78rem;
+          font-weight: 700;
+          color: #d97706;
           text-align: center;
+        }
+
+        .blink-text {
+          animation: blinkTextAnim 1.4s infinite alternate;
+        }
+
+        @keyframes blinkTextAnim {
+          from { opacity: 0.5; }
+          to { opacity: 1; }
+        }
+
+        /* Approved celebration elements */
+        .ring-outer-green { border-color: #10b981 !important; }
+        .ring-mid-green { border-color: #34d399 !important; }
+        .ring-inner-green { border-color: #6ee7b7 !important; }
+        
+        .approved-check {
+          background: #10b981 !important;
+          box-shadow: 0 6px 24px rgba(16, 185, 129, 0.45) !important;
+        }
+
+        .status-approved-banner {
+          background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
+          border-color: #34d399 !important;
+        }
+
+        .approval-success-badge {
+          display: inline-flex;
+          align-items: center;
+          background: #dcfce7;
+          border: 1.5px solid #86efac;
+          color: #14532d;
+          font-weight: 800;
+          font-size: 0.88rem;
+          padding: 0.45rem 1.1rem;
+          border-radius: 999px;
+          margin-bottom: 0.85rem;
+          letter-spacing: 0.02em;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+
+        /* Denied error elements */
+        .denied-error {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .error-circle-wrap {
+          width: 64px;
+          height: 64px;
+          background: #ef4444;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          box-shadow: 0 6px 24px rgba(239, 68, 68, 0.4);
+          animation: errorShake 0.6s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes errorShake {
+          10%, 90% { transform: translate3d(-1px, 0, 0); }
+          20%, 80% { transform: translate3d(2px, 0, 0); }
+          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+          40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .status-denied-banner {
+          background: linear-gradient(135deg, #fff5f5 0%, #fee2e2 100%) !important;
+          border-color: #fca5a5 !important;
+        }
+
+        .approval-failed-badge {
+          display: inline-flex;
+          align-items: center;
+          background: #fee2e2;
+          border: 1.5px solid #fecaca;
+          color: #7f1d1d;
+          font-weight: 800;
+          font-size: 0.88rem;
+          padding: 0.45rem 1.1rem;
+          border-radius: 999px;
+          margin-bottom: 0.85rem;
+          letter-spacing: 0.02em;
+        }
+
+        .animate-pop-in {
+          animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        @keyframes popIn {
+          from { transform: scale(0.9); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
         }
 
         /* Print styles */

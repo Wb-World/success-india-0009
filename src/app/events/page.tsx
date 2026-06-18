@@ -87,7 +87,7 @@ export default function EventsPage() {
             Success Team <span className="events-hero-accent">Events</span>
           </h1>
           <p className="events-hero-subtitle">
-            Browse and reserve your seat for our upcoming leadership seminars, chapter meetups, and growth workshops.
+            Browse and reserve your seat for our upcoming leadership events, chapter meetups, and growth workshops.
           </p>
         </div>
       </section>
@@ -151,7 +151,7 @@ export default function EventsPage() {
 
                 <div className="event-card-footer">
                   <div className="event-price-tag">
-                    <span className="event-price-label">Fee</span>
+                    <span className="event-price-label">Amount</span>
                     <span className="event-price-amount">₹{event.price}</span>
                   </div>
                   <button

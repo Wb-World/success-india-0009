@@ -38,7 +38,7 @@ export default function AdminDashboard() {
     title: 'success team Leadership Development Event',
     venue: 'Chromepet, Chennai',
     eventDateTime: '',
-    price: '250',
+    price: '1000',
     totalSeats: '60',
   });
 
@@ -271,7 +271,7 @@ export default function AdminDashboard() {
         title: 'Success Team Leadership Development Event',
         venue: 'Chromepet, Chennai',
         eventDateTime: '',
-        price: '250',
+        price: '1000',
         totalSeats: '60',
       });
       setEditingEventId(null);
@@ -312,7 +312,7 @@ export default function AdminDashboard() {
       title: 'Success Team Leadership Development Event',
       venue: 'Chromepet, Chennai',
       eventDateTime: '',
-      price: '250',
+      price: '1000',
       totalSeats: '60',
     });
   };
@@ -553,7 +553,7 @@ export default function AdminDashboard() {
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
                                   {Object.entries(b.attendees).map(([seat, val]: any) => {
                                     const nameText = typeof val === 'object' && val !== null ? val.name : val;
-                                    const phoneText = typeof val === 'object' && val !== null ? val.phone : '';
+                                    const phoneText = typeof val === 'object' && val !== null ? (val.whatsapp || val.phone || '') : '';
                                     return (
                                       <span key={seat} style={{ background: '#ecfdf5', border: '1px solid #10b981', color: '#047857', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                                         {seat}: {nameText} {phoneText ? `(${phoneText})` : ''}
@@ -578,9 +578,16 @@ export default function AdminDashboard() {
                         </div>
 
                         <div className="details-group price-group">
-                          <div className="price-display">
-                            <span>Verified Total Paid:</span>
-                            <span className="price-amount">₹{b.totalPrice}</span>
+                          <h4 className="group-title">Invoice & Payment Summary</h4>
+                          <div className="info-grid" style={{ marginBottom: '8px', gap: '6px' }}>
+                            <div className="info-row"><span>Price / Seat:</span><strong>₹1,000</strong></div>
+                            <div className="info-row"><span>No. of Seats:</span><strong>{(b.seats || []).length} Seat{(b.seats || []).length === 1 ? '' : 's'}</strong></div>
+                            <div className="info-row"><span>Base Amount:</span><strong>₹{(b.seats || []).length * 1000}</strong></div>
+                            <div className="info-row"><span>GST (18%):</span><strong>₹{Math.round((b.seats || []).length * 1000 * 0.18)}</strong></div>
+                          </div>
+                          <div className="price-display" style={{ borderTop: '1px dashed #e5e7eb', paddingTop: '8px', marginTop: '4px' }}>
+                            <span>Verified Total Paid (incl. GST):</span>
+                            <span className="price-amount" style={{ color: '#10b981', fontSize: '1.25rem', fontWeight: '800' }}>₹{b.totalPrice}</span>
                           </div>
                         </div>
                       </div>

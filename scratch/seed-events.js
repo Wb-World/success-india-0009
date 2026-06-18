@@ -62,7 +62,7 @@ const events = [
     type: "Action / Drama Movie",
     source: "Mumbai",
     destination: "Movies",
-    price: 250,
+    price: 1000,
     duration: "2h 50m",
     times: ["11:00 AM", "03:00 PM", "07:00 PM", "10:30 PM"]
   },
@@ -92,7 +92,7 @@ const events = [
     type: "Action / Drama Movie",
     source: "Hyderabad",
     destination: "Movies",
-    price: 250,
+    price: 1000,
     duration: "2h 55m",
     times: ["11:30 AM", "03:15 PM", "07:30 PM", "11:00 PM"]
   },

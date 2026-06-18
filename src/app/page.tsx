@@ -145,7 +145,7 @@ export default function Home() {
         <section className="hero-section">
           <div className="container hero-container">
             <div className="hero-logo-col animate-scale-in">
-              <div className="hero-logo-wrapper">
+              <div className="">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/success-india-logo.jpeg"
@@ -157,8 +157,10 @@ export default function Home() {
 
             <div className="hero-quote-col animate-slide-up">
               <h1 className="hero-dream-title">
-                &ldquo;Our biggest dream is to make <span className="text-highlight-dream">your dream</span> come true&rdquo;
+                &ldquo;OUR BIGGEST DREAM IS TO MAKE <span className="text-highlight-dream">YOUR DREAM</span> YOUR DREAM COME TRUE&rdquo;
               </h1>
+              <br /><br />
+              <h1 className="hero-dream-title" style={{paddingLeft:"150px"}}>29.03.2020</h1>
             </div>
           </div>
         </section>
@@ -169,10 +171,11 @@ export default function Home() {
               <span className="profile-badge">Success Team Leadership</span>
               <h2 className="owner-title">Super Star J.Surendar</h2>
               <p className="owner-subtitle-role">Board of Vice President</p>
+              <p className="owner-subtitle-role">Founder of Success Team</p>
               <div className="owner-history-card">
                 <h3 className="history-heading">History</h3>
                 <p className="history-text">
-                  J.Surendar is a visionary leader and the Board of Vice President of Success Team. With over a decade of dedicated experience in pioneering enterprise growth, professional leadership development, and community expansion across Tamil Nadu, he has empowered thousands of entrepreneurs to achieve financial independence and professional excellence.
+                  J.Surendar is a visionary leader and the Board of Vice President of Accsys India. With over a decade of dedicated experience in pioneering enterprise growth, professional leadership development, and community expansion across Tamil Nadu, he has empowered thousands of entrepreneurs to achieve financial independence and professional excellence.
                 </p>
                 <p className="history-text">
                   Under his strategic guidance, Success Team has established a robust network of local chapters, Weekly Strategy Systems, and leadership training programs. His relentless commitment to building India&apos;s strongest business mentorship ecosystem continues to transform dreams into reality, leading members toward lasting growth and community-driven success.
@@ -362,10 +365,9 @@ export default function Home() {
         .hero-logo-main {
           width: clamp(190px, 42vw, 300px);
           height: clamp(190px, 42vw, 300px);
-          border-radius: 50%;
           border: 6px solid #ffffff;
-          object-fit: cover;
-          display: block;
+          // object-fit: cover;
+          // display: block;
         }
 
         .hero-quote-col {
