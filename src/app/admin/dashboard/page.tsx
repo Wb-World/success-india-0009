@@ -585,14 +585,31 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
-                      {/* Screenshot Preview */}
+
+                      {/* UTR / Payment Reference */}
                       <div className="screenshot-col">
-                        <h4 className="group-title">Payment Screenshot Verification</h4>
-                        <div className="receipt-image-container">
-                          <img src={b.screenshot} alt="Payment Receipt" />
-                          <button className="btn-zoom-receipt" onClick={() => setZoomedImage(b.screenshot)} title="Zoom Receipt">
-                            <Eye size={16} /> View Fullscreen Receipt
-                          </button>
+                        <h4 className="group-title">Payment Reference (UTR)</h4>
+                        <div className="utr-display-box">
+                          {b.screenshot && b.screenshot.startsWith('UTR:') ? (
+                            <>
+                              <div className="utr-number-display">
+                                <span className="utr-label-admin">UPI Transaction ID (UTR)</span>
+                                <span className="utr-value-admin">
+                                  {b.screenshot.split('|')[0].replace('UTR:', '')}
+                                </span>
+                              </div>
+                              <p className="utr-admin-hint">
+                                Verify this UTR in your UPI payment dashboard before approving.
+                              </p>
+                            </>
+                          ) : (
+                            <div className="utr-not-found">
+                              <span>⚠️ No UTR found for this booking.</span>
+                              <span style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '4px', display: 'block' }}>
+                                {b.screenshot && !b.screenshot.startsWith('UTR:') ? `Raw: ${b.screenshot.substring(0, 40)}...` : 'N/A'}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
 

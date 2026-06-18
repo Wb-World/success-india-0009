@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   X, Calendar, MapPin, CheckCircle2,
-  Download, Printer, Ticket, Clock, AlertCircle, Upload
+  Download, Printer, Ticket, Clock, AlertCircle, Hash
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
@@ -100,24 +100,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     };
   }, [step]);
 
-  // Auto-generate a unique 8-9 character member ID (2-3 letters + rest digits)
-  useEffect(() => {
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const digits = '0123456789';
-    // Randomly choose total length: 8 or 9
-    const totalLen = Math.random() < 0.5 ? 8 : 9;
-    // Randomly choose number of leading letters: 2 or 3
-    const numLetters = Math.random() < 0.5 ? 2 : 3;
-    const numDigits = totalLen - numLetters;
-    let id = '';
-    for (let i = 0; i < numLetters; i++) {
-      id += letters[Math.floor(Math.random() * letters.length)];
-    }
-    for (let i = 0; i < numDigits; i++) {
-      id += digits[Math.floor(Math.random() * digits.length)];
-    }
-    setBookerMemberId(id);
-  }, []);
+  // Member ID starts empty — user must enter their own 8-9 char ID
 
   // Scroll card back to top on every step change (removes visual layout jumping/scrolling issues)
   useEffect(() => {
@@ -154,15 +137,20 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   };
 
 
-  // Payment configuration and upload states
+  // Payment configuration and UTR states
   const [upiConfig, setUpiConfig] = useState({ upiId: 'shesh.dav07-1@okaxis', upiName: 'david', upiQrUrl: '/upi-qr-code.jpg?v=2' });
-  const [screenshotUrl, setScreenshotUrl] = useState<string>('');
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [utrNumber, setUtrNumber] = useState<string>('');
+  const [utrError, setUtrError] = useState<string | null>(null);
+
+  // Approval notification state
+  const [approvalNotification, setApprovalNotification] = useState<{ show: boolean; status: 'approved' | 'denied' | null; bookingRef: string }>({ show: false, status: null, bookingRef: '' });
+  const [pollingIntervalRef, setPollingIntervalRef] = useState<NodeJS.Timeout | null>(null);
 
   const eventName = event.title || event.name || 'Success Team Seminar';
-  const pricePerSeat = event.price;
-  const totalPrice = selectedSeats.length * pricePerSeat;
+  const pricePerSeat = 1000;
+  const basePrice = selectedSeats.length * pricePerSeat;
+  const gstAmount = Math.round(basePrice * 0.18);
+  const totalPrice = basePrice + gstAmount;
 
   // Build booked seats from event data
   useEffect(() => {
@@ -338,45 +326,8 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     }
   };
 
-  const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Added Console Logs for debugging as requested
-    console.log('--- Client Upload Debug ---');
-    console.log('Selected file:', file.name);
-    console.log('File size:', file.size, 'bytes');
-    console.log('File type:', file.type);
-
-    setIsUploading(true);
-    setUploadError(null);
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const res = await fetch('/api/bookings/upload-proof', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await res.json();
-      console.log('API response status:', res.status);
-      console.log('API response data:', data);
-
-      if (res.ok && data.url) {
-        console.log('Upload path / base64 URL:', data.url.substring(0, 100) + '...');
-        setScreenshotUrl(data.url);
-      } else {
-        setUploadError(data.error || 'Failed to upload screenshot');
-      }
-    } catch (err: any) {
-      console.error('Upload request failed:', err);
-      setUploadError(`Network error: ${err.message || String(err)}`);
-    } finally {
-      setIsUploading(false);
-    }
-  };
+  // UTR validation: must be exactly 12 digits
+  const validateUTR = (val: string) => /^[0-9]{12}$/.test(val);
 
   const handleConfirmBooking = async () => {
     setIsSubmitting(true);
@@ -424,11 +375,12 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       time: event.eventTime || '10:00 AM',
       seats: selectedSeats,
       totalPrice,
-      screenshot: (screenshotUrl || 'DIRECT_BOOKING') + '|' + JSON.stringify(attendeesObj),
+      screenshot: `UTR:${utrNumber}|` + JSON.stringify(attendeesObj),
       attendeeDetails: attendeesObj,
       bookerName,
       bookerMemberId,
       bookerPhone,
+      utrNumber,
     };
 
     const headers: any = { 'Content-Type': 'application/json' };
@@ -450,6 +402,23 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       setConfirmedData({ id: newBookingId, seats: selectedSeats, totalPrice, timestamp: ts, attendees: attendeesObj });
       setIsSubmitting(false);
       setStep('success');
+
+      // Start polling for admin approval notification
+      const pollInterval = setInterval(async () => {
+        try {
+          const statusRes = await fetch(`/api/bookings/status?bookingId=${encodeURIComponent(newBookingId)}`);
+          if (statusRes.ok) {
+            const statusData = await statusRes.json();
+            if (statusData.status === 'approved' || statusData.status === 'denied') {
+              clearInterval(pollInterval);
+              setApprovalNotification({ show: true, status: statusData.status, bookingRef: newBookingId });
+            }
+          }
+        } catch (e) {
+          // silent poll failure
+        }
+      }, 8000); // poll every 8 seconds
+      setPollingIntervalRef(pollInterval);
     } catch (err: any) {
       console.error('Booking submission failed:', err);
       alert(`Booking Failed: ${err.message || String(err)}`);
@@ -516,8 +485,10 @@ export default function SeatBookingModal({ event, onClose }: Props) {
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Price per Seat</span><span style="font-weight:600;">₹${pricePerSeat}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Base Amount</span><span style="font-weight:600;">₹${seatsLength * pricePerSeat}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">GST (18%)</span><span style="font-weight:600;">₹${Math.round(seatsLength * pricePerSeat * 0.18)}</span></div>
           <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Booked At</span><span style="font-weight:600;">${timestampToRender}</span></div>
-          <div style="background:#ecfdf5;border-radius:8px;padding:16px;margin-top:16px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:15px;font-weight:600;color:#374151;">Total Amount</span><span style="font-size:24px;font-weight:800;color:#10b981;">₹${priceToRender}</span></div>
+          <div style="background:#ecfdf5;border-radius:8px;padding:16px;margin-top:16px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:15px;font-weight:600;color:#374151;">Grand Total (with GST)</span><span style="font-size:24px;font-weight:800;color:#10b981;">₹${priceToRender}</span></div>
         </div>
         ${qrImageUrl ? `<div style="text-align:center;padding:24px;border-top:2px dashed #a7f3d0;"><img src="${qrImageUrl}" alt="QR Code" width="160" height="160" crossorigin="anonymous" /><p style="font-size:12px;color:#9ca3af;margin-top:8px;">Scan QR code for verification</p></div>` : ''}
         <div style="text-align:center;font-size:12px;color:#9ca3af;padding:16px 32px;background:#f9fafb;">This is a ticket receipt showing status as Pending Verification. Once approved by administration, it compiles as Confirmed.</div>
@@ -547,7 +518,11 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   // Prevent body scroll when modal is open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+      // Clean up polling interval when modal closes
+      if (pollingIntervalRef) clearInterval(pollingIntervalRef);
+    };
   }, []);
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -569,6 +544,33 @@ export default function SeatBookingModal({ event, onClose }: Props) {
         <button className="sbm-close-btn" onClick={onClose} aria-label="Close">
           <X size={20} />
         </button>
+
+        {/* ── Approval Notification Toast ── */}
+        {approvalNotification.show && (
+          <div className={`approval-notification-toast ${approvalNotification.status === 'approved' ? 'toast-approved' : 'toast-denied'}`}>
+            <div className="toast-icon">
+              {approvalNotification.status === 'approved' ? '✅' : '❌'}
+            </div>
+            <div className="toast-body">
+              <strong className="toast-title">
+                {approvalNotification.status === 'approved' ? 'Booking Approved!' : 'Booking Rejected'}
+              </strong>
+              <span className="toast-msg">
+                {approvalNotification.status === 'approved'
+                  ? `Your booking ${approvalNotification.bookingRef} has been confirmed by admin. Welcome aboard! 🎉`
+                  : `Your booking ${approvalNotification.bookingRef} was rejected. Please contact support.`
+                }
+              </span>
+            </div>
+            <button
+              className="toast-close-btn"
+              onClick={() => setApprovalNotification(prev => ({ ...prev, show: false }))}
+              aria-label="Dismiss notification"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
 
 
@@ -833,9 +835,17 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                     <span>Price / Seat</span>
                     <span className="summary-val">₹{pricePerSeat}</span>
                   </div>
+                  <div className="summary-row">
+                    <span>Base Amount</span>
+                    <span className="summary-val">₹{basePrice}</span>
+                  </div>
+                  <div className="summary-row">
+                    <span>GST (18%)</span>
+                    <span className="summary-val">₹{gstAmount}</span>
+                  </div>
                   <div className="summary-divider" />
                   <div className="summary-total-row">
-                    <span>Total Amount</span>
+                    <span>Grand Total</span>
                     <span className="summary-total-val">₹{totalPrice}</span>
                   </div>
                 </div>
@@ -1025,53 +1035,62 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                     <span>Price Per Seat:</span>
                     <span className="summary-val">₹{pricePerSeat}</span>
                   </div>
+                  <div className="summary-row">
+                    <span>Base Amount:</span>
+                    <span className="summary-val">₹{basePrice}</span>
+                  </div>
+                  <div className="summary-row">
+                    <span>GST (18%):</span>
+                    <span className="summary-val">₹{gstAmount}</span>
+                  </div>
                   <div className="summary-divider" />
                   <div className="summary-total-row">
-                    <span>Grand Total Price:</span>
+                    <span>Grand Total (with GST):</span>
                     <span className="summary-total-val" style={{ color: '#10b981' }}>₹{totalPrice}</span>
                   </div>
                 </div>
 
-                {/* File Uploader */}
-                <div className="upload-section">
-                  <label className="upload-header">
-                    <Upload size={16} />
-                    <span>Upload Payment Screenshot <span className="upload-required-badge">Required</span></span>
+                {/* UTR Input Section */}
+                <div className="utr-section">
+                  <label className="utr-header">
+                    {/* <Hash size={16} /> */}
+                    <span>UPI Transaction Reference (UTR) <span className="upload-required-badge">Required</span></span>
                   </label>
-                  
-                  <div className="upload-dropzone">
-                    <input 
-                      type="file" 
-                      accept=".jpg,.jpeg,.png,.webp" 
-                      onChange={handleScreenshotUpload}
-                      id="screenshot-file-input"
-                      className="hidden-file-input"
+                  <p className="utr-desc">
+                    After completing payment via GPay or any UPI app, enter the <strong>12-digit UTR / Transaction ID</strong> shown in your payment receipt.
+                  </p>
+                  <div className="utr-input-wrap">
+                    <span className="utr-input-icon">🔢</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Enter 12-digit UTR (e.g. 412345678901)"
+                      value={utrNumber}
+                      maxLength={12}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 12);
+                        setUtrNumber(val);
+                        setUtrError(null);
+                      }}
+                      className="utr-input-field"
                     />
-                    
-                    {!screenshotUrl ? (
-                      <label htmlFor="screenshot-file-input" className="file-input-label file-input-label-required">
-                        <Upload size={24} className="upload-zone-icon" />
-                        <strong>{isUploading ? 'Uploading proof image...' : 'Choose Receipt Screenshot file'}</strong>
-                        <span>Supports JPG, JPEG, PNG, WEBP (max 3MB)</span>
-                        <span className="upload-required-hint">⚠ Upload is required to confirm booking</span>
-                      </label>
-                    ) : (
-                      <div className="upload-preview-container animate-fade-in">
-                        <img src={screenshotUrl} alt="Screenshot Preview" className="uploaded-preview-img" />
-                        <div className="upload-preview-meta">
-                          <span className="upload-success-badge">✓ Payment proof uploaded successfully.</span>
-                          <button 
-                            type="button" 
-                            onClick={() => setScreenshotUrl('')}
-                            className="btn-clear-upload"
-                          >
-                            Upload Another File
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
-                  {uploadError && <span className="upload-error-text">⚠️ {uploadError}</span>}
+                  {/* UTR pip indicators */}
+                  <div className="utr-pips">
+                    {Array.from({ length: 12 }).map((_, i) => (
+                      <span
+                        key={i}
+                        className={`char-pip ${i < utrNumber.length ? 'char-pip-filled' : ''}`}
+                      />
+                    ))}
+                    <span className="pips-count">{utrNumber.length}/12</span>
+                  </div>
+                  {utrError && <span className="utr-error-text">⚠️ {utrError}</span>}
+                  {validateUTR(utrNumber) && (
+                    <div className="utr-valid-badge animate-fade-in">
+                      ✓ UTR entered — your booking will go to admin for approval
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1092,16 +1111,25 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                 <div className="upi-details-card">
                   <h4 className="upi-details-title">Beneficiary Details</h4>
                   <div className="upi-detail-row">
-                    <span>Merchant Name:</span>
-                    <strong>{upiConfig.upiName}</strong>
+                    <span className="upi-label">Merchant Name</span>
+                    <strong className="upi-value">{upiConfig.upiName}</strong>
                   </div>
                   <div className="upi-detail-row">
-                    <span>Payee UPI ID:</span>
-                    <strong>{upiConfig.upiId}</strong>
+                    <span className="upi-label">Payee UPI ID</span>
+                    <strong className="upi-value upi-id-value">{upiConfig.upiId}</strong>
+                  </div>
+                  <div className="upi-divider" style={{ borderTop: '1px dashed #e5e7eb', margin: '0.65rem 0' }} />
+                  <div className="upi-detail-row">
+                    <span className="upi-label">Base Amount</span>
+                    <strong className="upi-value">₹{basePrice}</strong>
                   </div>
                   <div className="upi-detail-row">
-                    <span>Payable Amount:</span>
-                    <strong style={{ color: '#10b981' }}>₹{totalPrice}</strong>
+                    <span className="upi-label">GST (18%)</span>
+                    <strong className="upi-value">₹{gstAmount}</strong>
+                  </div>
+                  <div className="upi-detail-row">
+                    <span className="upi-label">Payable Amount</span>
+                    <strong className="upi-value" style={{ color: '#10b981', fontSize: '1.05rem' }}>₹{totalPrice}</strong>
                   </div>
                 </div>
               </div>
@@ -1114,17 +1142,22 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                 </button>
                 <button 
                   className="sbm-confirm-btn" 
-                  onClick={handleConfirmBooking} 
-                  disabled={isSubmitting || !screenshotUrl}
+                  onClick={() => {
+                    if (!validateUTR(utrNumber)) {
+                      setUtrError('Please enter a valid 12-digit UTR number from your UPI payment receipt.');
+                      return;
+                    }
+                    handleConfirmBooking();
+                  }}
+                  disabled={isSubmitting}
                   style={{ maxWidth: '300px' }}
-                  title={!screenshotUrl ? 'Please upload payment proof screenshot first' : ''}
                 >
-                  {isSubmitting ? 'Verifying Booking...' : 'Confirm Booking'}
+                  {isSubmitting ? 'Submitting for Approval...' : 'Submit for Approval →'}
                 </button>
               </div>
-              {!screenshotUrl && (
+              {!validateUTR(utrNumber) && (
                 <div className="proof-required-notice">
-                  <span>📎 Please upload your payment screenshot above to enable confirmation.</span>
+                  <span>🔢 Please enter your 12-digit UTR number above to proceed.</span>
                 </div>
               )}
             </div>
@@ -1219,8 +1252,16 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                   <span className="td-label">Price / Seat</span>
                   <strong className="td-value">₹{pricePerSeat}</strong>
                 </div>
+                <div className="ticket-detail-row">
+                  <span className="td-label">Base Amount</span>
+                  <strong className="td-value">₹{(confirmedData?.seats?.length || quantity) * pricePerSeat}</strong>
+                </div>
+                <div className="ticket-detail-row">
+                  <span className="td-label">GST (18%)</span>
+                  <strong className="td-value">₹{Math.round((confirmedData?.seats?.length || quantity) * pricePerSeat * 0.18)}</strong>
+                </div>
                 <div className="ticket-detail-row ticket-total-row">
-                  <span className="td-label">Total Amount</span>
+                  <span className="td-label">Grand Total (with GST)</span>
                   <strong className="td-value td-total">₹{confirmedData?.totalPrice !== undefined ? confirmedData.totalPrice : totalPrice}</strong>
                 </div>
                 <div className="ticket-detail-row">
@@ -2135,111 +2176,116 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           gap: 1.25rem;
         }
 
-        .upload-section {
+        /* UTR Input Section */
+        .utr-section {
           background: #ffffff;
-          border: 1.5px dashed #a7f3d0;
+          border: 1.5px solid #a7f3d0;
           border-radius: 14px;
-          padding: 1.25rem;
+          padding: 1.35rem;
+          box-shadow: 0 2px 12px rgba(16, 185, 129, 0.06);
         }
 
-        .upload-header {
+        .utr-header {
           display: flex;
           align-items: center;
           gap: 8px;
           font-size: 0.85rem;
           font-weight: 700;
           color: #047857;
-          margin-bottom: 0.85rem;
+          margin-bottom: 0.55rem;
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
 
-        .upload-dropzone {
-          position: relative;
-          background: #fafafc;
-          border: 1px solid #e5e7eb;
-          border-radius: 10px;
-          padding: 1.5rem;
-          text-align: center;
-          cursor: pointer;
-          transition: border-color 0.15s;
-        }
-        .upload-dropzone:hover {
-          border-color: #10b981;
-        }
-
-        .hidden-file-input {
-          display: none;
-        }
-
-        .file-input-label {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 6px;
-          color: #4b5563;
-          font-size: 0.8rem;
-          cursor: pointer;
-        }
-
-        .file-input-label strong {
-          color: #111827;
-          font-size: 0.88rem;
-        }
-
-        .upload-zone-icon {
-          color: #10b981;
-          margin-bottom: 4px;
-        }
-
-        .upload-preview-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .uploaded-preview-img {
-          max-width: 140px;
-          max-height: 140px;
-          border-radius: 8px;
-          border: 1px solid #d1d5db;
-          object-fit: contain;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        .upload-preview-meta {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .upload-success-badge {
-          font-size: 0.8rem;
-          font-weight: 700;
-          color: #047857;
-          background: #ecfdf5;
-          padding: 4px 12px;
+        .upload-required-badge {
+          background: #fef3c7;
+          color: #92400e;
+          font-size: 0.68rem;
+          font-weight: 800;
+          padding: 2px 7px;
           border-radius: 99px;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
         }
 
-        .btn-clear-upload {
-          background: none;
+        .utr-desc {
+          font-size: 0.82rem;
+          color: #6b7280;
+          margin-bottom: 1rem;
+          line-height: 1.55;
+        }
+
+        .utr-desc strong {
+          color: #111827;
+        }
+
+        .utr-input-wrap {
+          display: flex;
+          align-items: center;
+          border: 2px solid #d1d5db;
+          border-radius: 10px;
+          padding: 0 0.85rem;
+          background: #f9fafb;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .utr-input-wrap:focus-within {
+          border-color: #10b981;
+          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+          background: #fff;
+        }
+
+        .utr-input-icon {
+          font-size: 1.2rem;
+          margin-right: 0.5rem;
+          flex-shrink: 0;
+        }
+
+        .utr-input-field {
+          width: 100%;
+          height: 48px;
           border: none;
-          color: #dc2626;
-          font-size: 0.75rem;
+          background: transparent;
+          font-size: 1.05rem;
           font-weight: 700;
-          text-decoration: underline;
-          cursor: pointer;
+          color: #111827;
+          outline: none;
+          letter-spacing: 0.08em;
+          font-family: 'Courier New', Courier, monospace;
         }
 
-        .upload-error-text {
+        .utr-input-field::placeholder {
+          font-family: inherit;
+          letter-spacing: normal;
+          font-weight: 400;
+          color: #9ca3af;
+          font-size: 0.85rem;
+        }
+
+        .utr-pips {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          margin-top: 0.6rem;
+        }
+
+        .utr-error-text {
           display: block;
-          margin-top: 0.5rem;
+          margin-top: 0.6rem;
           font-size: 0.78rem;
           color: #b91c1c;
           font-weight: 600;
+        }
+
+        .utr-valid-badge {
+          margin-top: 0.6rem;
+          background: #ecfdf5;
+          border: 1px solid #a7f3d0;
+          color: #047857;
+          font-size: 0.8rem;
+          font-weight: 700;
+          padding: 6px 12px;
+          border-radius: 8px;
           text-align: center;
         }
 
@@ -2305,32 +2351,53 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
         .upi-details-card {
           background: #ffffff;
-          border: 1px solid #e5e7eb;
-          border-radius: 12px;
-          padding: 1.15rem;
-          font-size: 0.85rem;
+          border: 1px solid #a7f3d0;
+          border-radius: 14px;
+          padding: 1.25rem;
+          font-size: 0.88rem;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.04);
         }
 
         .upi-details-title {
-          font-size: 0.78rem;
+          font-size: 0.8rem;
           font-weight: 800;
           text-transform: uppercase;
-          color: #374151;
+          color: #065f46;
           letter-spacing: 0.05em;
-          border-bottom: 1px solid #f3f4f6;
-          padding-bottom: 0.5rem;
-          margin-bottom: 0.75rem;
+          border-bottom: 1.5px solid #ecfdf5;
+          padding-bottom: 0.6rem;
+          margin-bottom: 0.85rem;
         }
 
         .upi-detail-row {
           display: flex;
           justify-content: space-between;
-          padding: 5px 0;
-          color: #4b5563;
+          align-items: center;
+          padding: 6px 0;
+          color: #374151;
+          gap: 1rem;
         }
 
-        .upi-detail-row strong {
+        .upi-label {
+          color: #6b7280;
+          font-weight: 500;
+          flex-shrink: 0;
+        }
+
+        .upi-value {
           color: #111827;
+          font-weight: 700;
+          text-align: right;
+        }
+
+        .upi-id-value {
+          word-break: break-all;
+          font-family: monospace;
+          font-size: 0.85rem;
+          background: #f3f4f6;
+          padding: 2px 6px;
+          border-radius: 4px;
+          color: #1f2937;
         }
 
         /* ── Confirm actions ───────────────────────────────────────── */
@@ -2789,6 +2856,88 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
         .animate-slide-in-form {
           animation: slideInForm 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* ── Approval Notification Toast ──────────────────────────── */
+        .approval-notification-toast {
+          position: sticky;
+          top: 0.75rem;
+          left: 0;
+          right: 0;
+          z-index: 200;
+          margin: 0.75rem 1rem 0;
+          display: flex;
+          align-items: flex-start;
+          gap: 0.85rem;
+          padding: 1rem 1.15rem;
+          border-radius: 14px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+          animation: toastSlideIn 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+
+        @keyframes toastSlideIn {
+          from { opacity: 0; transform: translateY(-16px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .toast-approved {
+          background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+          border: 1.5px solid #6ee7b7;
+        }
+
+        .toast-denied {
+          background: linear-gradient(135deg, #fff1f2, #ffe4e6);
+          border: 1.5px solid #fca5a5;
+        }
+
+        .toast-icon {
+          font-size: 1.5rem;
+          flex-shrink: 0;
+          line-height: 1;
+        }
+
+        .toast-body {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .toast-title {
+          font-size: 0.95rem;
+          font-weight: 800;
+          color: #111827;
+        }
+
+        .toast-approved .toast-title { color: #065f46; }
+        .toast-denied  .toast-title { color: #991b1b; }
+
+        .toast-msg {
+          font-size: 0.82rem;
+          color: #374151;
+          line-height: 1.5;
+        }
+
+        .toast-close-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #6b7280;
+          padding: 4px;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          transition: background 0.15s;
+        }
+        .toast-close-btn:hover { background: rgba(0,0,0,0.06); }
+
+        /* proof-required-notice */
+        .proof-required-notice {
+          font-size: 0.82rem;
+          color: #6b7280;
+          text-align: center;
         }
 
         /* Print styles */

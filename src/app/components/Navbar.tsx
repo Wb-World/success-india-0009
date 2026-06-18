@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Calendar } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -51,16 +51,13 @@ export default function Navbar() {
 
         <nav className="nav-links-desktop" aria-label="Primary navigation">
           <Link href="/" className={`nav-link ${pathname === '/' ? 'active' : ''}`}>Home</Link>
+          <Link href="/events" className={`nav-link ${pathname === '/events' ? 'active' : ''}`}>Event</Link>
+          <Link href="/contribution" className={`nav-link ${pathname === '/contribution' ? 'active' : ''}`}>Contribution</Link>
           <Link href="/about" className={`nav-link ${pathname === '/about' ? 'active' : ''}`}>About</Link>
           <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`}>Contact</Link>
-          {/* <Link href="/book" className={`nav-link ${pathname === '/book' ? 'active' : ''}`}>Book Seminars</Link> */}
         </nav>
 
-        <div className="nav-actions-desktop">
-          <Link href="/book" className="btn btn-primary nav-book-btn">
-            <Calendar size={16} /> Book a Event
-          </Link>
-        </div>
+
 
         <button
           className="mobile-menu-toggle"
@@ -106,16 +103,13 @@ export default function Navbar() {
 
               <nav className="mobile-drawer-links" aria-label="Mobile navigation">
                 <Link href="/" className={`mobile-link ${pathname === '/' ? 'active' : ''}`} onClick={closeMenu}>Home</Link>
+                <Link href="/events" className={`mobile-link ${pathname === '/events' ? 'active' : ''}`} onClick={closeMenu}>Event</Link>
+                <Link href="/contribution" className={`mobile-link ${pathname === '/contribution' ? 'active' : ''}`} onClick={closeMenu}>Contribution</Link>
                 <Link href="/about" className={`mobile-link ${pathname === '/about' ? 'active' : ''}`} onClick={closeMenu}>About</Link>
                 <Link href="/contact" className={`mobile-link ${pathname === '/contact' ? 'active' : ''}`} onClick={closeMenu}>Contact</Link>
-                {/* <Link href="/book" className={`mobile-link ${pathname === '/book' ? 'active' : ''}`} onClick={closeMenu}>Book Seminars</Link> */}
               </nav>
 
-              <div className="mobile-drawer-actions">
-                <Link href="/book" className="btn btn-primary mobile-book-btn" onClick={closeMenu}>
-                  <Calendar size={16} /> Book a Event
-                </Link>
-              </div>
+
             </div>
           </div>
         </>
@@ -491,8 +485,25 @@ export default function Navbar() {
         }
 
         @media (min-width: 1024px) {
-          .nav-links-desktop { display: flex; }
-          .nav-actions-desktop { display: flex; }
+          .nav-container {
+            position: relative;
+            justify-content: center;
+          }
+          .nav-logo {
+            position: absolute;
+            left: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+          }
+          .nav-logo:hover {
+            transform: translateY(-50%) scale(1.03);
+          }
+          .nav-links-desktop {
+            display: flex;
+            justify-content: center;
+            flex: 0 1 auto;
+            margin: 0 auto;
+          }
           .mobile-menu-toggle { display: none; }
         }
       `}</style>
