@@ -419,6 +419,33 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       setIsSubmitting(false);
       setStep('success');
 
+      // Asynchronously trigger server-side WhatsApp message confirmation (non-blocking)
+      fetch('/api/whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: newBookingId,
+          eventName,
+          venue: event.venue,
+          date: event.eventDate || new Date().toISOString().split('T')[0],
+          seats: selectedSeats,
+          totalPrice,
+          bookerName,
+          bookerPhone,
+        }),
+      })
+        .then(async (waRes) => {
+          if (!waRes.ok) {
+            const waData = await waRes.json().catch(() => ({}));
+            console.error('[WhatsApp Cloud API] Failed to send message:', waData.error || 'Unknown error');
+          } else {
+            console.log('[WhatsApp Cloud API] Message confirmation sent successfully.');
+          }
+        })
+        .catch((err) => {
+          console.error('[WhatsApp Cloud API] Error contacting server endpoint:', err);
+        });
+
       // Start polling for admin approval notification
       const pollInterval = setInterval(async () => {
         try {

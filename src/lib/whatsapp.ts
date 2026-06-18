@@ -20,11 +20,11 @@ export async function sendMetaWhatsAppTicket({
   whatsappNumber,
   qrImageUrl,
 }: SendWhatsAppParams) {
-  const metaToken = process.env.META_WHATSAPP_TOKEN;
-  const phoneNumberId = process.env.META_WHATSAPP_PHONE_NUMBER_ID;
+  const metaToken = process.env.META_WHATSAPP_TOKEN || process.env.WHATSAPP_TOKEN;
+  const phoneNumberId = process.env.META_WHATSAPP_PHONE_NUMBER_ID || process.env.WHATSAPP_PHONE_ID;
 
   if (!metaToken || !phoneNumberId) {
-    console.error('META_WHATSAPP_TOKEN or META_WHATSAPP_PHONE_NUMBER_ID is not configured in environment variables.');
+    console.error('WhatsApp API credentials (META_WHATSAPP_TOKEN/WHATSAPP_TOKEN or META_WHATSAPP_PHONE_NUMBER_ID/WHATSAPP_PHONE_ID) are not configured in environment variables.');
     throw new Error('Meta WhatsApp Cloud API credentials are not configured.');
   }
 
