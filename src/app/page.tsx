@@ -156,12 +156,45 @@ export default function Home() {
             </div>
 
             <div className="hero-quote-col animate-slide-up">
-              <h1 className="hero-dream-title">
-                &ldquo;OUR BIGGEST DREAM IS TO MAKE <span className="text-highlight-dream">YOUR DREAM</span> YOUR DREAM COME TRUE&rdquo;
-              </h1>
-              <br /><br />
-              <h1 className="hero-dream-title" style={{paddingLeft:"150px"}}>29.03.2020</h1>
-            </div>
+  <h1
+  style={{
+    fontFamily: "var(--font-heading), Inter, sans-serif",
+    fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
+    fontWeight: 800,
+    lineHeight: 1.16,
+    color: "#ffffff",
+    margin: 0,
+    fontStyle: "italic",
+    textShadow: "0 4px 14px rgba(0, 0, 0, 0.15)",
+    maxWidth: "1100px", // adjust this
+    width: "100%",
+  }}
+>
+  &ldquo;OUR BIGGEST DREAM IS
+  <br />
+  TO MAKE <span style={{ color: "#f7c948" }}>YOUR DREAM</span>
+  <br />
+  YOUR DREAM COME TRUE&rdquo;
+</h1>
+
+  <div
+    style={{
+      textAlign: "right",
+      marginTop: "12px",
+    }}
+  >
+    <span
+      style={{
+        fontSize: "clamp(0.9rem, 1.5vw, 1.3rem)",
+        fontWeight: 600,
+        fontStyle: "italic",
+        color: "#fff",
+      }}
+    >
+      29.03.2020
+    </span>
+  </div>
+</div>
           </div>
         </section>
 
