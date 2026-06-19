@@ -146,7 +146,7 @@ export default function ContributionPage() {
 
   // QR Code Payload
   const upiPayload = `upi://pay?pa=${upiConfig.upiId}&pn=${encodeURIComponent(upiConfig.upiName)}&am=${totalPrice}&cu=INR`;
-  const qrImageUrl = '/UPIs/contribution-qr.jpg';
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiPayload)}&qzone=1&format=png&color=16a34a`;
 
   const validateUTR = (val: string) => {
     return /^[0-9]{12}$/.test(val);
