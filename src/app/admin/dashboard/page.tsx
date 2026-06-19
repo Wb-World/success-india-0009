@@ -450,7 +450,7 @@ export default function AdminDashboard() {
 
         {/* Metric Cards Row */}
         <div className="metrics-cards-grid animate-slide-up">
-          <div className="metric-card hover-lift">
+          <div className="metric-card hover-lift rev-card">
             <div className="metric-icon-box rev">
               <DollarSign size={22} />
             </div>
@@ -460,7 +460,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="metric-card hover-lift">
+          <div className="metric-card hover-lift pend-card">
             <div className="metric-icon-box pend">
               <Clock size={22} />
             </div>
@@ -470,7 +470,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="metric-card hover-lift">
+          <div className="metric-card hover-lift app-card">
             <div className="metric-icon-box app">
               <Ticket size={22} />
             </div>
@@ -480,7 +480,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="metric-card hover-lift">
+          <div className="metric-card hover-lift den-card">
             <div className="metric-icon-box den">
               <X size={22} />
             </div>
@@ -1241,10 +1241,10 @@ export default function AdminDashboard() {
 
         .admin-header-bar {
           background: #ffffff;
-          color: #000000;
-          padding: 1rem 0;
-          box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
-          border-bottom: 1px solid var(--border);
+          color: #111827;
+          padding: 1.25rem 0;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+          border-bottom: 1px solid rgba(22, 163, 74, 0.1);
         }
 
         .header-flex {
@@ -1256,16 +1256,16 @@ export default function AdminDashboard() {
         .admin-title-logo {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: 0.85rem;
         }
 
         .brand-logo-img {
-          width: 38px;
-          height: 38px;
+          width: 40px;
+          height: 40px;
           border-radius: 50%;
           object-fit: cover;
-          border: 1px solid rgba(22, 163, 74, 0.22);
-          filter: drop-shadow(0 2px 6px rgba(22, 163, 74, 0.25));
+          border: 2px solid rgba(22, 163, 74, 0.2);
+          box-shadow: 0 4px 10px rgba(22, 163, 74, 0.15);
           flex-shrink: 0;
         }
 
@@ -1276,8 +1276,9 @@ export default function AdminDashboard() {
         .workspace-suffix {
           font-weight: 500;
           color: var(--muted);
-          margin-left: 0.35rem;
+          margin-left: 0.4rem;
           font-size: 1.15rem;
+          letter-spacing: -0.2px;
         }
 
         @media (max-width: 640px) {
@@ -1288,10 +1289,10 @@ export default function AdminDashboard() {
 
         .admin-workspace-title {
           font-family: var(--font-heading);
-          font-size: 1.4rem;
+          font-size: 1.45rem;
           font-weight: 800;
           line-height: 1.2;
-          color: #000000;
+          color: #111827;
           margin: 0;
           display: inline-flex;
           align-items: center;
@@ -1307,22 +1308,21 @@ export default function AdminDashboard() {
           background: #ffffff;
           color: #ef4444;
           border: 1px solid #fee2e2;
-          padding: 0.5rem 1rem;
-          border-radius: var(--radius-lg);
+          padding: 0.55rem 1.1rem;
+          border-radius: 10px;
           font-weight: 600;
           font-size: 0.85rem;
           cursor: pointer;
-          transition: all var(--transition-fast);
+          transition: all 0.2s ease;
           display: flex;
           align-items: center;
-          gap: 0.375rem;
+          gap: 0.4rem;
         }
 
         .btn-admin-logout:hover {
           background: #fee2e2;
           border-color: #fca5a5;
           transform: translateY(-1px);
-          color: #ef4444;
         }
 
         .dashboard-content {
@@ -1332,19 +1332,19 @@ export default function AdminDashboard() {
         .event-row-actions {
           display: flex;
           gap: 0.5rem;
-          margin-top: 0.625rem;
+          margin-top: 0.75rem;
         }
 
         .btn-edit-event {
           background: var(--primary-light);
           color: var(--primary-dark);
-          border: 1px solid var(--border);
-          padding: 0.35rem 0.75rem;
-          border-radius: var(--radius-md);
+          border: 1px solid rgba(22, 163, 74, 0.15);
+          padding: 0.4rem 0.85rem;
+          border-radius: 8px;
           font-size: 0.8rem;
           font-weight: 600;
           cursor: pointer;
-          transition: all var(--transition-fast);
+          transition: all 0.2s ease;
         }
         .btn-edit-event:hover {
           background: var(--primary);
@@ -1356,12 +1356,12 @@ export default function AdminDashboard() {
           background: #fee2e2;
           color: #ef4444;
           border: 1px solid #fca5a5;
-          padding: 0.35rem 0.75rem;
-          border-radius: var(--radius-md);
+          padding: 0.4rem 0.85rem;
+          border-radius: 8px;
           font-size: 0.8rem;
           font-weight: 600;
           cursor: pointer;
-          transition: all var(--transition-fast);
+          transition: all 0.2s ease;
         }
         .btn-delete-event:hover {
           background: #ef4444;
@@ -1374,9 +1374,9 @@ export default function AdminDashboard() {
         .confirm-modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.4);
-          backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
+          background: rgba(15, 23, 42, 0.35);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1386,13 +1386,14 @@ export default function AdminDashboard() {
 
         .confirm-modal-card {
           background: #ffffff;
-          border-radius: var(--radius-xl);
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-          max-width: 400px;
+          border-radius: 20px;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+          max-width: 440px;
           width: 100%;
-          padding: 1.5rem;
+          padding: 2rem;
           margin: 0 1rem;
           text-align: center;
+          border: 1px solid rgba(0, 0, 0, 0.05);
           animation: modalZoomIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
@@ -1407,8 +1408,8 @@ export default function AdminDashboard() {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 48px;
-          height: 48px;
+          width: 52px;
+          height: 52px;
           border-radius: 50%;
           background: #fee2e2;
           color: #ef4444;
@@ -1416,66 +1417,65 @@ export default function AdminDashboard() {
         }
 
         .confirm-modal-icon {
-          width: 24px;
-          height: 24px;
+          width: 26px;
+          height: 26px;
         }
 
         .confirm-modal-title {
           font-family: var(--font-heading);
-          font-size: 1.25rem;
+          font-size: 1.35rem;
           font-weight: 800;
-          color: var(--foreground);
+          color: #111827;
           margin: 0;
         }
 
         .confirm-modal-desc {
-          font-size: 0.9rem;
+          font-size: 0.925rem;
           color: var(--muted);
           line-height: 1.5;
-          margin: 0 0 1.5rem 0;
+          margin: 0.5rem 0 1.5rem 0;
         }
 
         .confirm-modal-actions {
           display: flex;
-          gap: 0.75rem;
+          gap: 0.85rem;
           justify-content: center;
         }
 
         .btn-modal-cancel {
           background: #ffffff;
-          color: var(--muted);
-          border: 1px solid var(--border);
-          border-radius: var(--radius-lg);
-          padding: 0.55rem 1.25rem;
+          color: #4b5563;
+          border: 1px solid rgba(0,0,0,0.1);
+          border-radius: 10px;
+          padding: 0.625rem 1.5rem;
           font-size: 0.875rem;
           font-weight: 600;
           cursor: pointer;
-          transition: all var(--transition-fast);
+          transition: all 0.2s ease;
           flex: 1;
         }
         .btn-modal-cancel:hover {
           background: #f9fafb;
-          color: var(--foreground);
-          border-color: #a7f3d0;
+          color: #111827;
+          border-color: rgba(22, 163, 74, 0.2);
         }
 
         .btn-modal-delete {
           background: #ef4444;
           color: #ffffff;
           border: none;
-          border-radius: var(--radius-lg);
-          padding: 0.55rem 1.25rem;
+          border-radius: 10px;
+          padding: 0.625rem 1.5rem;
           font-size: 0.875rem;
           font-weight: 600;
           cursor: pointer;
-          transition: all var(--transition-fast);
+          transition: all 0.2s ease;
           flex: 1;
         }
         .btn-modal-delete:hover {
           background: #dc2626;
-          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
           transform: translateY(-1px);
-          color: #ffffff;
         }
 
         @keyframes modalFadeIn {
@@ -1486,7 +1486,7 @@ export default function AdminDashboard() {
         @keyframes modalZoomIn {
           from {
             opacity: 0;
-            transform: scale(0.95);
+            transform: scale(0.96);
           }
           to {
             opacity: 1;
@@ -1496,37 +1496,39 @@ export default function AdminDashboard() {
 
         .admin-section-tabs {
           display: flex;
-          gap: 0.75rem;
+          gap: 0.5rem;
           flex-wrap: wrap;
-          margin-bottom: 2rem;
-          background: white;
-          border: 1px solid var(--border);
-          border-radius: var(--radius-xl);
-          padding: 0.75rem;
+          margin-bottom: 2.5rem;
+          background: rgba(240, 253, 244, 0.4);
+          border: 1px solid rgba(22, 163, 74, 0.12);
+          border-radius: 14px;
+          padding: 0.5rem;
           box-shadow: var(--shadow-sm);
         }
 
         .section-tab {
           border: none;
           background: transparent;
-          color: var(--muted);
-          font-family: var(--font-heading);
-          font-weight: 700;
-          padding: 0.85rem 1.1rem;
-          border-radius: var(--radius-lg);
+          color: #4b5563;
+          font-family: var(--font-sans);
+          font-weight: 600;
+          font-size: 0.9rem;
+          padding: 0.75rem 1.25rem;
+          border-radius: 10px;
           cursor: pointer;
-          transition: all var(--transition-fast);
+          transition: all 0.2s ease;
         }
 
         .section-tab:hover {
           color: var(--primary-dark);
-          background: var(--primary-light);
+          background: rgba(22, 163, 74, 0.08);
         }
 
         .section-tab.active {
-          background: var(--primary);
-          color: white;
-          box-shadow: var(--shadow-primary);
+          background: #ffffff;
+          color: var(--primary-hover);
+          box-shadow: 0 4px 10px rgba(22, 163, 74, 0.08), 0 1px 3px rgba(22, 163, 74, 0.04);
+          border: 1px solid rgba(22, 163, 74, 0.15);
         }
 
         /* Metrics Grid */
@@ -1550,59 +1552,78 @@ export default function AdminDashboard() {
         }
 
         .metric-card {
-          background: white;
-          border: 1px solid var(--border);
-          border-radius: var(--radius-xl);
-          padding: 1.25rem 1.5rem;
+          background: #ffffff;
+          border: 1px solid rgba(22, 163, 74, 0.15);
+          border-radius: 16px;
+          padding: 1.5rem;
           display: flex;
           align-items: center;
-          gap: 1rem;
-          box-shadow: var(--shadow-sm);
-          transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+          gap: 1.25rem;
+          box-shadow: 0 4px 12px rgba(22, 163, 74, 0.03);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+          overflow: hidden;
         }
+
+        .metric-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 4px;
+          height: 100%;
+          border-radius: 4px 0 0 4px;
+        }
+        .metric-card.rev-card::before { background: var(--primary); }
+        .metric-card.pend-card::before { background: #f59e0b; }
+        .metric-card.app-card::before { background: #10b981; }
+        .metric-card.den-card::before { background: #ef4444; }
         
         .hover-lift:hover {
           transform: translateY(-4px);
-          box-shadow: var(--shadow-md);
+          box-shadow: 0 12px 24px rgba(22, 163, 74, 0.08);
+          border-color: rgba(22, 163, 74, 0.25);
         }
 
         .metric-icon-box {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 46px;
-          height: 46px;
-          border-radius: var(--radius-lg);
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          flex-shrink: 0;
         }
 
         .metric-icon-box.rev { background: var(--primary-light); color: var(--primary-dark); }
-        .metric-icon-box.pend { background: #fef3c7; color: #d97706; }
-        .metric-icon-box.app { background: #d1fae5; color: var(--primary-dark); }
-        .metric-icon-box.den { background: #fee2e2; color: #b91c1c; }
+        .metric-icon-box.pend { background: #fffbeb; color: #d97706; }
+        .metric-icon-box.app { background: #ecfdf5; color: #047857; }
+        .metric-icon-box.den { background: #fef2f2; color: #b91c1c; }
 
         .metric-info {
           display: flex;
           flex-direction: column;
+          gap: 0.2rem;
         }
 
         .metric-label {
-          font-size: 0.75rem;
-          color: var(--muted);
-          font-weight: 600;
+          font-size: 0.72rem;
+          color: #6b7280;
+          font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
+          letter-spacing: 0.75px;
         }
 
         .metric-value {
           font-family: var(--font-heading);
-          font-size: 1.6rem;
+          font-size: 1.75rem;
           font-weight: 800;
-          color: var(--foreground);
+          color: #111827;
           line-height: 1.1;
         }
 
         .text-amber { color: #d97706; }
-        .text-emerald { color: var(--primary-hover); }
+        .text-emerald { color: #047857; }
         .text-red { color: #ef4444; }
 
         /* Dashboard controls */
@@ -1611,8 +1632,8 @@ export default function AdminDashboard() {
           flex-direction: column;
           gap: 1rem;
           align-items: stretch;
-          border-bottom: 2px solid var(--border);
-          margin-bottom: 2rem;
+          border-bottom: 2px solid rgba(22, 163, 74, 0.1);
+          margin-bottom: 2.25rem;
           padding-bottom: 0.5rem;
         }
 
@@ -1633,7 +1654,7 @@ export default function AdminDashboard() {
 
         @media (min-width: 640px) {
           .tab-buttons {
-            gap: 1.5rem;
+            gap: 1.75rem;
           }
         }
 
@@ -1642,20 +1663,20 @@ export default function AdminDashboard() {
           border: none;
           padding: 1rem 0;
           font-family: var(--font-heading);
-          font-size: 1.05rem;
+          font-size: 1.025rem;
           font-weight: 600;
-          color: var(--muted);
+          color: #6b7280;
           cursor: pointer;
           position: relative;
-          transition: color var(--transition-fast);
+          transition: color 0.2s ease;
         }
 
         .tab-btn:hover {
-          color: var(--foreground);
+          color: #111827;
         }
 
         .tab-btn.active {
-          color: var(--primary-dark);
+          color: var(--primary-hover);
           font-weight: 700;
         }
 
@@ -1676,7 +1697,8 @@ export default function AdminDashboard() {
           height: 38px;
           display: flex;
           align-items: center;
-          gap: 0.35rem;
+          gap: 0.4rem;
+          border-radius: 8px;
         }
 
         .hover-spin-icon:hover .refresh-icon-spin {
@@ -1705,22 +1727,23 @@ export default function AdminDashboard() {
 
         .empty-stream-card {
           background: white;
-          border: 1px solid var(--border);
-          border-radius: var(--radius-xl);
+          border: 1px solid rgba(22, 163, 74, 0.15);
+          border-radius: 16px;
           padding: 5rem 2rem;
           text-align: center;
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 1rem;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.01);
         }
 
         .empty-icon {
-          color: var(--muted-light);
+          color: #cbd5e1;
         }
 
         .empty-stream-card p {
-          color: var(--muted);
+          color: #6b7280;
           max-width: 350px;
           line-height: 1.5;
         }
@@ -1728,15 +1751,15 @@ export default function AdminDashboard() {
         .event-manager-area {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 1.5rem;
+          gap: 2rem;
         }
 
         .event-form-card,
         .events-list-card {
           background: white;
-          border: 1px solid var(--border);
-          border-radius: var(--radius-2xl);
-          box-shadow: var(--shadow-md);
+          border: 1px solid rgba(22, 163, 74, 0.15);
+          border-radius: 16px;
+          box-shadow: 0 4px 20px rgba(22, 163, 74, 0.02);
           padding: 2rem;
         }
 
@@ -1746,8 +1769,8 @@ export default function AdminDashboard() {
           gap: 1rem;
           align-items: flex-start;
           padding-bottom: 1.25rem;
-          border-bottom: 1px solid var(--border);
-          margin-bottom: 1.5rem;
+          border-bottom: 1px solid rgba(22, 163, 74, 0.1);
+          margin-bottom: 1.75rem;
         }
 
         .manager-kicker {
@@ -1763,7 +1786,7 @@ export default function AdminDashboard() {
         .event-form-grid {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 1.25rem;
+          gap: 1.5rem;
         }
 
         @media (min-width: 768px) {
@@ -1779,7 +1802,7 @@ export default function AdminDashboard() {
         .event-form-group {
           display: flex;
           flex-direction: column;
-          gap: 0.45rem;
+          gap: 0.5rem;
         }
 
         .event-form-actions {
@@ -1802,11 +1825,11 @@ export default function AdminDashboard() {
         }
 
         .events-list-card h3 {
-          margin-bottom: 1rem;
+          margin-bottom: 1.25rem;
         }
 
         .events-empty {
-          color: var(--muted);
+          color: #6b7280;
           padding: 1rem 0;
         }
 
@@ -1820,10 +1843,14 @@ export default function AdminDashboard() {
           display: flex;
           flex-direction: column;
           gap: 0.75rem;
-          padding: 1rem;
-          border: 1px solid var(--border);
-          border-radius: var(--radius-lg);
-          background: var(--background);
+          padding: 1.25rem;
+          border: 1px solid rgba(22, 163, 74, 0.15);
+          border-radius: 12px;
+          background: #ffffff;
+          transition: border-color 0.2s;
+        }
+        .event-row:hover {
+          border-color: rgba(22, 163, 74, 0.3);
         }
 
         @media (min-width: 640px) {
@@ -1841,7 +1868,7 @@ export default function AdminDashboard() {
         }
 
         .event-row span {
-          color: var(--muted);
+          color: #6b7280;
           font-size: 0.9rem;
           margin-top: 0.2rem;
         }
@@ -1849,7 +1876,7 @@ export default function AdminDashboard() {
         .event-row-meta {
           text-align: left;
           min-width: auto;
-          border-top: 1px dashed var(--border);
+          border-top: 1px dashed rgba(22, 163, 74, 0.15);
           padding-top: 0.75rem;
           margin-top: 0.25rem;
         }
@@ -1857,7 +1884,7 @@ export default function AdminDashboard() {
         @media (min-width: 640px) {
           .event-row-meta {
             text-align: right;
-            min-width: 170px;
+            min-width: 180px;
             border-top: none;
             padding-top: 0;
             margin-top: 0;
@@ -1868,39 +1895,40 @@ export default function AdminDashboard() {
         .bookings-stream-list {
           display: flex;
           flex-direction: column;
-          gap: 2rem;
+          gap: 2.25rem;
         }
 
         .stream-item-card {
           background: white;
-          border: 1px solid var(--border);
-          border-radius: var(--radius-2xl);
-          box-shadow: var(--shadow-md);
+          border: 1px solid rgba(22, 163, 74, 0.12);
+          border-radius: 16px;
+          box-shadow: 0 4px 18px rgba(22, 163, 74, 0.02);
           overflow: hidden;
-          transition: all var(--transition-normal);
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .hover-glow-card:hover {
-          border-color: rgba(16, 185, 129, 0.25);
-          box-shadow: 0 10px 20px -5px rgba(0,0,0,0.08);
+          border-color: rgba(16, 185, 129, 0.28);
+          box-shadow: 0 10px 25px rgba(22, 163, 74, 0.07);
+          transform: translateY(-2px);
         }
 
         .stream-item-card.pending {
-          border-left: 5px solid var(--warning);
+          border-left: 5px solid #f59e0b;
         }
 
         .stream-item-card.approved {
-          border-left: 5px solid var(--success);
+          border-left: 5px solid #10b981;
         }
 
         .stream-item-card.denied {
-          border-left: 5px solid var(--danger);
+          border-left: 5px solid #ef4444;
         }
 
         .item-card-header {
-          background: var(--background);
-          padding: 1rem 1.5rem;
-          border-bottom: 1px solid var(--border);
+          background: #fafdfb;
+          padding: 1.1rem 1.5rem;
+          border-bottom: 1px solid rgba(22, 163, 74, 0.1);
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -1909,23 +1937,23 @@ export default function AdminDashboard() {
         .header-left {
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: 1.25rem;
         }
 
         .item-booking-id {
           font-family: var(--font-heading);
           font-weight: 700;
           font-size: 0.9rem;
-          color: var(--foreground);
+          color: #111827;
         }
 
         .item-created-at {
           font-size: 0.75rem;
-          color: var(--muted);
+          color: #6b7280;
         }
 
         .item-card-body {
-          padding: 1.75rem 1.5rem;
+          padding: 2rem 1.5rem;
           display: grid;
           grid-template-columns: 1fr;
           gap: 2rem;
@@ -1940,65 +1968,75 @@ export default function AdminDashboard() {
         .details-col {
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 1.75rem;
         }
 
         .details-group {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+          gap: 0.6rem;
         }
 
         .group-title {
-          font-size: 0.8rem;
+          font-size: 0.78rem;
           font-weight: 700;
-          color: var(--primary-dark);
+          color: var(--primary-hover);
           text-transform: uppercase;
-          letter-spacing: 0.5px;
-          border-bottom: 1px dashed var(--border);
-          padding-bottom: 0.25rem;
+          letter-spacing: 0.8px;
+          border-bottom: 1px solid rgba(22, 163, 74, 0.12);
+          padding-bottom: 0.4rem;
+          margin-bottom: 0.25rem;
         }
 
         .info-grid {
           display: flex;
           flex-direction: column;
-          gap: 0.375rem;
+          gap: 0.15rem;
           font-size: 0.9rem;
         }
 
         .info-row {
           display: flex;
           justify-content: space-between;
+          align-items: center;
+          padding: 0.45rem 0;
+          border-bottom: 1px solid rgba(22, 163, 74, 0.04);
+        }
+        .info-row:last-child {
+          border-bottom: none;
         }
 
         .info-row span {
-          color: var(--muted);
+          color: #6b7280;
+          font-weight: 500;
         }
 
         .info-row strong {
-          color: var(--foreground);
+          color: #111827;
         }
 
         .seats-span {
           font-weight: 700;
           background: var(--primary-light);
           color: var(--primary-dark);
-          padding: 0 0.5rem;
-          border-radius: var(--radius-sm);
+          padding: 0.15rem 0.6rem;
+          border-radius: 6px;
+          font-size: 0.82rem;
+          border: 1px solid rgba(22, 163, 74, 0.15);
         }
 
         .inline-arrow {
           vertical-align: middle;
-          margin: 0 0.25rem;
-          color: var(--muted-light);
+          margin: 0 0.3rem;
+          color: #cbd5e1;
         }
 
         .price-group {
           margin-top: auto;
-          background: var(--input);
-          padding: 1rem;
-          border-radius: var(--radius-lg);
-          border: 1px solid var(--border);
+          background: #f8fafc;
+          padding: 1.25rem;
+          border-radius: 12px;
+          border: 1px solid rgba(22, 163, 74, 0.1);
         }
 
         .price-display {
@@ -2009,7 +2047,7 @@ export default function AdminDashboard() {
 
         .price-display span:first-child {
           font-weight: 600;
-          color: var(--muted);
+          color: #4b5563;
           font-size: 0.9rem;
         }
 
@@ -2024,66 +2062,76 @@ export default function AdminDashboard() {
         .screenshot-col {
           display: flex;
           flex-direction: column;
-          gap: 0.75rem;
+          gap: 0.85rem;
         }
 
         .receipt-image-container {
           position: relative;
-          border: 1px solid var(--border);
-          border-radius: var(--radius-xl);
+          border: 1px solid rgba(22, 163, 74, 0.15);
+          border-radius: 12px;
           overflow: hidden;
           background: #f8fafc;
           aspect-ratio: 4 / 3;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: var(--shadow-sm);
+          box-shadow: 0 4px 10px rgba(0,0,0,0.01);
+          transition: border-color 0.2s;
+        }
+        .receipt-image-container:hover {
+          border-color: rgba(22, 163, 74, 0.3);
         }
 
         .receipt-image-container img {
           max-width: 100%;
           max-height: 100%;
           object-fit: contain;
-          transition: transform 0.3s;
+          transition: transform 0.3s ease;
         }
 
         .receipt-image-container:hover img {
-          transform: scale(1.02);
+          transform: scale(1.025);
         }
 
         .btn-zoom-receipt {
           position: absolute;
           bottom: 12px;
           right: 12px;
-          background: rgba(15, 23, 42, 0.75);
+          background: rgba(15, 23, 42, 0.8);
           backdrop-filter: blur(4px);
           -webkit-backdrop-filter: blur(4px);
           border: none;
           color: white;
-          padding: 0.5rem 0.75rem;
-          border-radius: var(--radius-md);
+          padding: 0.5rem 0.85rem;
+          border-radius: 8px;
           font-size: 0.75rem;
           font-weight: 600;
           cursor: pointer;
           transition: background 0.2s;
           display: flex;
           align-items: center;
-          gap: 0.375rem;
-          box-shadow: var(--shadow-sm);
+          gap: 0.4rem;
         }
 
         .btn-zoom-receipt:hover {
-          background: rgba(15, 23, 42, 0.9);
+          background: rgba(15, 23, 42, 0.95);
+        }
+
+        .utr-display-box {
+          background: #f0fdf4;
+          border: 1px solid rgba(22, 163, 74, 0.2);
+          border-radius: 12px;
+          padding: 1.25rem;
         }
 
         /* Action footer */
         .item-card-footer {
-          border-top: 1px solid var(--border);
-          padding: 1rem 1.5rem;
+          border-top: 1px solid rgba(22, 163, 74, 0.1);
+          padding: 1.1rem 1.5rem;
           display: flex;
           justify-content: flex-end;
-          gap: 1rem;
-          background: var(--background);
+          gap: 0.85rem;
+          background: #fafdfb;
         }
 
         .btn-approve-action {
@@ -2091,39 +2139,40 @@ export default function AdminDashboard() {
           color: white;
           border: none;
           font-weight: 600;
-          padding: 0.625rem 1.25rem;
-          border-radius: var(--radius-lg);
+          padding: 0.625rem 1.35rem;
+          border-radius: 10px;
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.9rem;
-          transition: all var(--transition-fast);
-          box-shadow: var(--shadow-primary);
+          gap: 0.4rem;
+          font-size: 0.88rem;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);
         }
 
         .btn-approve-action:hover {
           background: var(--primary-hover);
+          box-shadow: 0 6px 16px rgba(22, 163, 74, 0.25);
           transform: translateY(-1px);
         }
 
         .btn-deny-action {
           background: white;
-          color: #b91c1c;
-          border: 1px solid #fca5a5;
+          color: #dc2626;
+          border: 1px solid rgba(220, 38, 38, 0.2);
           font-weight: 600;
-          padding: 0.625rem 1.25rem;
-          border-radius: var(--radius-lg);
+          padding: 0.625rem 1.35rem;
+          border-radius: 10px;
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.9rem;
-          transition: all var(--transition-fast);
+          gap: 0.4rem;
+          font-size: 0.88rem;
+          transition: all 0.2s ease;
         }
 
         .btn-deny-action:hover {
-          background: #fee2e2;
+          background: #fef2f2;
           border-color: #ef4444;
           transform: translateY(-1px);
         }
@@ -2135,10 +2184,10 @@ export default function AdminDashboard() {
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(15, 23, 42, 0.85);
-          backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
-          z-index: 1000;
+          background: rgba(15, 23, 42, 0.7);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          z-index: 10000;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2148,18 +2197,18 @@ export default function AdminDashboard() {
         .lightbox-content {
           background: white;
           padding: 0.5rem;
-          border-radius: var(--radius-xl);
+          border-radius: 20px;
           max-width: 90%;
           max-height: 90%;
           position: relative;
-          box-shadow: var(--shadow-xl);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
 
         .lightbox-close {
           position: absolute;
           top: -15px;
           right: -15px;
-          background: var(--danger);
+          background: #ef4444;
           color: white;
           border: none;
           width: 32px;
@@ -2170,14 +2219,15 @@ export default function AdminDashboard() {
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: var(--shadow-md);
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          z-index: 10;
         }
 
         .lightbox-image {
           max-width: 100%;
           max-height: 80vh;
           object-fit: contain;
-          border-radius: var(--radius-lg);
+          border-radius: 14px;
         }
 
         .admin-toast {
@@ -2189,8 +2239,8 @@ export default function AdminDashboard() {
           gap: 0.75rem;
           padding: 1rem 1.25rem;
           background: white;
-          border-radius: var(--radius-lg);
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+          border-radius: 12px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
           z-index: 9999;
           font-weight: 600;
           font-size: 0.9rem;
