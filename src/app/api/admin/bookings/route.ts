@@ -22,10 +22,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });
     }
 
-    // Fetch all bookings, joining the user info using foreign key relationship
+    // Fetch all bookings directly without joining users (due to lack of foreign key constraint)
     const { data: rawBookings, error: bookingsError } = await supabaseAdmin
       .from('bookings')
-      .select('*, users (name, email, phone)');
+      .select('*');
 
     if (bookingsError) {
       console.error('Database query error fetching admin bookings:', bookingsError);
@@ -35,15 +35,38 @@ export async function GET(request: Request) {
       );
     }
 
+    // Fetch matching user details for the bookings in a separate query to perform in-memory join
+    const userIds = Array.from(new Set((rawBookings || []).map((b: any) => b.user_id).filter(Boolean)));
+    const usersMap: Record<string, { name: string; email: string; phone: string }> = {};
+
+    if (userIds.length > 0) {
+      const { data: usersData, error: usersError } = await supabaseAdmin
+        .from('users')
+        .select('id, name, email, phone')
+        .in('id', userIds);
+
+      if (usersError) {
+        console.error('Database query error fetching users for bookings:', usersError);
+      } else if (usersData) {
+        usersData.forEach((u: any) => {
+          usersMap[u.id] = {
+            name: u.name || '',
+            email: u.email || '',
+            phone: u.phone || '',
+          };
+        });
+      }
+    }
+
     // Map bookings snake_case -> camelCase and format the user object
     const mappedBookings = (rawBookings || []).map((b: any) => {
-      // Handle the joined users record
-      const joinedUser = Array.isArray(b.users) ? b.users[0] : b.users;
-      const userObj = joinedUser
+      // Handle the joined users record from the in-memory map
+      const matchedUser = b.user_id ? usersMap[b.user_id] : null;
+      const userObj = matchedUser
         ? {
-            name: joinedUser.name,
-            email: joinedUser.email,
-            phone: joinedUser.phone,
+            name: matchedUser.name,
+            email: matchedUser.email,
+            phone: matchedUser.phone,
           }
         : {
             name: 'Unknown User',
