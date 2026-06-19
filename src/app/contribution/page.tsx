@@ -138,13 +138,15 @@ export default function ContributionPage() {
   };
 
   // Price calculations
-  const totalPrice = designation === 'Chief Executive Director' ? 1000 : 500;
-  const gstAmount = Math.round(totalPrice * 0.15254); // 18% inclusive GST
-  const basePrice = totalPrice - gstAmount;
+  // Chief Executive Director: Base ₹1000 + GST ₹180 = ₹1180 Total
+  // Executive Director: Base ₹500 + GST ₹90 = ₹590 Total
+  const basePrice = designation === 'Chief Executive Director' ? 1000 : 500;
+  const gstAmount = designation === 'Chief Executive Director' ? 180 : 90;
+  const totalPrice = basePrice + gstAmount;
 
   // QR Code Payload
   const upiPayload = `upi://pay?pa=${upiConfig.upiId}&pn=${encodeURIComponent(upiConfig.upiName)}&am=${totalPrice}&cu=INR`;
-  const qrImageUrl = totalPrice === 1000 
+  const qrImageUrl = basePrice === 1000 
     ? '/UPIs/1000.png' 
     : `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiPayload)}&qzone=1&format=png&color=10b981`;
 
