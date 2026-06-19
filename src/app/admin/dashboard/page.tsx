@@ -928,8 +928,8 @@ export default function AdminDashboard() {
                   const designation = supporter.designation || 'System Supporter';
 
                   const baseAmount = designation === 'Chief Executive Director' ? 1000 : 500;
-                  const gstAmount = designation === 'Chief Executive Director' ? 180 : 90;
                   const totalAmount = b.totalPrice;
+                  const gstAmount = totalAmount > baseAmount ? (designation === 'Chief Executive Director' ? 180 : 90) : 0;
 
                   const utrNumber = b.screenshot && b.screenshot.startsWith('UTR:') 
                     ? b.screenshot.split('|')[0].replace('UTR:', '') 
@@ -985,13 +985,15 @@ export default function AdminDashboard() {
                           </h4>
                           <div className="pane-details">
                             <div className="info-table-row">
-                              <span className="info-label">Base Contribution</span>
+                              <span className="info-label">{gstAmount > 0 ? "Base Contribution" : "Contribution Amount"}</span>
                               <span className="info-value">₹{baseAmount}</span>
                             </div>
-                            <div className="info-table-row">
-                              <span className="info-label">GST (18%)</span>
-                              <span className="info-value">₹{gstAmount}</span>
-                            </div>
+                            {gstAmount > 0 && (
+                              <div className="info-table-row">
+                                <span className="info-label">GST (18%)</span>
+                                <span className="info-value">₹{gstAmount}</span>
+                              </div>
+                            )}
                             
                             <div className="invoice-receipt-block" style={{ marginTop: '1.5rem' }}>
                               <div className="invoice-receipt-total">
@@ -1233,13 +1235,19 @@ export default function AdminDashboard() {
                 <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Financial Breakdown</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.88rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6b7280' }}>Base Contribution Amount:</span>
+                    <span style={{ color: '#6b7280' }}>
+                      {selectedContributionDetail.totalPrice > (selectedContributionDetail.attendees?.SUPPORTER?.designation === 'Chief Executive Director' ? 1000 : 500) 
+                        ? 'Base Contribution Amount:' 
+                        : 'Contribution Amount:'}
+                    </span>
                     <strong>₹{selectedContributionDetail.attendees?.SUPPORTER?.designation === 'Chief Executive Director' ? 1000 : 500}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6b7280' }}>GST Amount (18%):</span>
-                    <strong>₹{selectedContributionDetail.attendees?.SUPPORTER?.designation === 'Chief Executive Director' ? 180 : 90}</strong>
-                  </div>
+                  {selectedContributionDetail.totalPrice > (selectedContributionDetail.attendees?.SUPPORTER?.designation === 'Chief Executive Director' ? 1000 : 500) && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6b7280' }}>GST Amount (18%):</span>
+                      <strong>₹{selectedContributionDetail.attendees?.SUPPORTER?.designation === 'Chief Executive Director' ? 180 : 90}</strong>
+                    </div>
+                  )}
                   <hr style={{ border: 0, borderTop: '1px dashed #e5e7eb', margin: '0.4rem 0' }} />
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>Total Payable Amount:</span>

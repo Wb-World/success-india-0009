@@ -138,15 +138,14 @@ export default function ContributionPage() {
   };
 
   // Price calculations
-  // Chief Executive Director: Base ₹1000 + GST ₹180 = ₹1180 Total
-  // Executive Director: Base ₹500 + GST ₹90 = ₹590 Total
+  // Chief Executive Director: Base ₹1000
+  // Executive Director: Base ₹500
   const basePrice = designation === 'Chief Executive Director' ? 1000 : 500;
-  const gstAmount = designation === 'Chief Executive Director' ? 180 : 90;
-  const totalPrice = basePrice + gstAmount;
+  const gstAmount = 0;
+  const totalPrice = basePrice;
 
-  // QR Code Payload
-  const upiPayload = `upi://pay?pa=${upiConfig.upiId}&pn=${encodeURIComponent(upiConfig.upiName)}&am=${totalPrice}&cu=INR`;
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiPayload)}&qzone=1&format=png&color=16a34a`;
+  // QR Code
+  const qrImageUrl = '/UPIs/contribution-qr.jpg';
 
   const validateUTR = (val: string) => {
     return /^[0-9]{12}$/.test(val);
@@ -221,137 +220,6 @@ export default function ContributionPage() {
 
   return (
     <div className="contribution-page">
-      {/* ── STEP 1: Registration Form ── */}
-      {step === 'form' && (
-        <section className="supporter-form-section container">
-          <div className="supporter-card glass-card">
-            <span className="contrib-kicker" style={{ color: '#10b981', border: '1px solid #10b981', background: '#ecfdf5', marginBottom: '0.75rem' }}>
-              <Sparkles size={13} /> Support the Mission
-            </span>
-            <h2 className="supporter-section-title">Success Team System Supporter</h2>
-            <p className="supporter-section-desc">
-              Fill in your details below to register as an official system supporter. Select your designation tier to continue to payment.
-            </p>
-
-            <div className="supporter-form-grid">
-              {/* Supporter Name */}
-              <div className="form-group">
-                <label className="form-label">Supporter Name <span className="req">*</span></label>
-                <input
-                  type="text"
-                  placeholder="Enter supporter name"
-                  value={supporterName}
-                  onChange={(e) => {
-                    setSupporterName(e.target.value);
-                    if (e.target.value.trim()) {
-                      setFormErrors((prev) => {
-                        const copy = { ...prev };
-                        delete copy.supporterName;
-                        return copy;
-                      });
-                    }
-                  }}
-                  className={`form-control ${formErrors.supporterName ? 'is-invalid' : ''}`}
-                />
-                {formErrors.supporterName && <span className="error-text">⚠️ {formErrors.supporterName}</span>}
-              </div>
-
-              {/* VP Name */}
-              <div className="form-group">
-                <label className="form-label">VP Name <span className="req">*</span></label>
-                <input
-                  type="text"
-                  placeholder="Enter VP name"
-                  value={vpName}
-                  onChange={(e) => {
-                    setVpName(e.target.value);
-                    if (e.target.value.trim()) {
-                      setFormErrors((prev) => {
-                        const copy = { ...prev };
-                        delete copy.vpName;
-                        return copy;
-                      });
-                    }
-                  }}
-                  className={`form-control ${formErrors.vpName ? 'is-invalid' : ''}`}
-                />
-                {formErrors.vpName && <span className="error-text">⚠️ {formErrors.vpName}</span>}
-              </div>
-
-              {/* Designation */}
-              <div className="form-group">
-                <label className="form-label">Designation <span className="req">*</span></label>
-                <select
-                  value={designation}
-                  onChange={(e) => setDesignation(e.target.value)}
-                  className="form-control select-control"
-                >
-                  <option value="Chief Executive Director">Chief Executive Director (₹1000)</option>
-                  <option value="Executive Director">Executive Director (₹500)</option>
-                </select>
-              </div>
-
-              {/* VP Image Upload */}
-              <div className="form-group span-2">
-                <label className="form-label">VP Image <span className="req">*</span></label>
-                <div className="file-uploader-box">
-                  {vpImageUrl ? (
-                    <div className="image-preview-container">
-                      <img src={vpImageUrl} alt="VP Preview" className="uploaded-vp-img" />
-                      <div className="image-preview-overlay">
-                        {isUploadingImage ? (
-                          <div className="upload-loader">
-                            <Loader2 className="spinner-icon" />
-                            <span>Uploading to storage...</span>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setVpImageUrl('');
-                              setVpImage(null);
-                            }}
-                            className="change-img-btn"
-                          >
-                            Change Image
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <label className="drag-drop-label">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden-file-input"
-                      />
-                      <div className="uploader-icon-wrap">
-                        <Upload size={24} />
-                      </div>
-                      <span className="uploader-title">Upload VP Image</span>
-                      <span className="uploader-sub">JPG, PNG, JPEG or WEBP (Max 3MB)</span>
-                    </label>
-                  )}
-                </div>
-                {formErrors.vpImage && <span className="error-text">⚠️ {formErrors.vpImage}</span>}
-              </div>
-            </div>
-
-            <div className="form-actions-wrap">
-              <button
-                type="button"
-                onClick={handleContinue}
-                className="form-continue-btn"
-                disabled={isUploadingImage}
-              >
-                {isUploadingImage ? 'Uploading Image...' : 'Continue to Payment →'}
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* ── STEP 2: Payment Page ── */}
       {step === 'payment' && (
         <section className="supporter-payment-section container animate-fade-in">
@@ -401,12 +269,8 @@ export default function ContributionPage() {
                   <div className="summary-divider" style={{ margin: '1rem 0' }} />
 
                   <div className="summary-row">
-                    <span>Base Amount:</span>
+                    <span>Contribution Amount:</span>
                     <span className="summary-val">₹{basePrice}</span>
-                  </div>
-                  <div className="summary-row">
-                    <span>GST (18%):</span>
-                    <span className="summary-val">₹{gstAmount}</span>
                   </div>
                   <div className="summary-divider" style={{ margin: '1rem 0' }} />
                   <div className="summary-total-row">
@@ -572,9 +436,9 @@ export default function ContributionPage() {
                 Your contribution powers our leadership programs, chapter meetups, and community growth initiatives across Tamil Nadu and beyond.
               </p>
               <div className="contrib-hero-actions">
-                <Link href="/events" className="contrib-cta-btn">
-                  <Sparkles size={17} /> View Events &amp; Book Seats
-                </Link>
+                <a href="#register-supporter" className="contrib-cta-btn">
+                  <Sparkles size={17} /> Register as System Supporter
+                </a>
               </div>
             </div>
           </section>
@@ -659,21 +523,131 @@ export default function ContributionPage() {
             </div>
           </section>
 
-          {/* Contact CTA */}
-          <section className="contrib-cta-section container">
-            <div className="contrib-cta-card">
-              <Heart size={36} className="contrib-cta-icon" />
-              <h2>Ready to Contribute?</h2>
-              <p>
-                Contact our team to learn more about contribution tiers, how your funds are used, and the recognition program for top supporters.
+          {/* Supporter Registration Form placed at last */}
+          <section className="supporter-form-section container" id="register-supporter" style={{ marginTop: '2.5rem' }}>
+            <div className="supporter-card glass-card" style={{ border: '2.5px solid #10b981', boxShadow: '0 20px 40px rgba(16, 185, 129, 0.08)' }}>
+              <span className="contrib-kicker" style={{ color: '#10b981', border: '1px solid #10b981', background: '#ecfdf5', marginBottom: '0.75rem' }}>
+                <Heart size={13} style={{ fill: '#10b981' }} /> Ready to Contribute?
+              </span>
+              <h2 className="supporter-section-title">Success Team Supporter Registration</h2>
+              <p className="supporter-section-desc">
+                Fill in your details below to register as an official system supporter. Select your designation tier to continue to payment.
               </p>
-              <div className="contrib-cta-btns">
-                <Link href="/contact" className="contrib-cta-btn">
-                  Contact Us <ArrowRight size={16} />
-                </Link>
-                <Link href="/events" className="contrib-cta-btn-outline">
-                  Browse Events
-                </Link>
+
+              <div className="supporter-form-grid">
+                {/* Supporter Name */}
+                <div className="form-group">
+                  <label className="form-label">Supporter Name <span className="req">*</span></label>
+                  <input
+                    type="text"
+                    placeholder="Enter supporter name"
+                    value={supporterName}
+                    onChange={(e) => {
+                      setSupporterName(e.target.value);
+                      if (e.target.value.trim()) {
+                        setFormErrors((prev) => {
+                          const copy = { ...prev };
+                          delete copy.supporterName;
+                          return copy;
+                        });
+                      }
+                    }}
+                    className={`form-control ${formErrors.supporterName ? 'is-invalid' : ''}`}
+                  />
+                  {formErrors.supporterName && <span className="error-text">⚠️ {formErrors.supporterName}</span>}
+                </div>
+
+                {/* VP Name */}
+                <div className="form-group">
+                  <label className="form-label">VP Name <span className="req">*</span></label>
+                  <input
+                    type="text"
+                    placeholder="Enter VP name"
+                    value={vpName}
+                    onChange={(e) => {
+                      setVpName(e.target.value);
+                      if (e.target.value.trim()) {
+                        setFormErrors((prev) => {
+                          const copy = { ...prev };
+                          delete copy.vpName;
+                          return copy;
+                        });
+                      }
+                    }}
+                    className={`form-control ${formErrors.vpName ? 'is-invalid' : ''}`}
+                  />
+                  {formErrors.vpName && <span className="error-text">⚠️ {formErrors.vpName}</span>}
+                </div>
+
+                {/* Designation */}
+                <div className="form-group">
+                  <label className="form-label">Designation <span className="req">*</span></label>
+                  <select
+                    value={designation}
+                    onChange={(e) => setDesignation(e.target.value)}
+                    className="form-control select-control"
+                  >
+                    <option value="Chief Executive Director">Star / Chief Executive Director (₹1000)</option>
+                    <option value="Executive Director">Star / Executive Director (₹500)</option>
+                  </select>
+                </div>
+
+                {/* VP Image Upload */}
+                <div className="form-group span-2">
+                  <label className="form-label">Your Image <span className="req">*</span></label>
+                  <div className="file-uploader-box">
+                    {vpImageUrl ? (
+                      <div className="image-preview-container">
+                        <img src={vpImageUrl} alt="VP Preview" className="uploaded-vp-img" />
+                        <div className="image-preview-overlay">
+                          {isUploadingImage ? (
+                            <div className="upload-loader">
+                              <Loader2 className="spinner-icon" />
+                              <span>Uploading to storage...</span>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setVpImageUrl('');
+                                setVpImage(null);
+                              }}
+                              className="change-img-btn"
+                            >
+                              Change Image
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <label className="drag-drop-label">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden-file-input"
+                        />
+                        <div className="uploader-icon-wrap">
+                          <Upload size={24} />
+                        </div>
+                        <span className="uploader-title">Upload VP Image</span>
+                        <span className="uploader-sub">JPG, PNG, JPEG or WEBP (Max 3MB)</span>
+                      </label>
+                    )}
+                  </div>
+                  {formErrors.vpImage && <span className="error-text">⚠️ {formErrors.vpImage}</span>}
+                </div>
+              </div>
+
+              <div className="form-actions-wrap">
+                <button
+                  type="button"
+                  onClick={handleContinue}
+                  className="form-continue-btn"
+                  disabled={isUploadingImage}
+                >
+                  {isUploadingImage ? 'Uploading Image...' : 'Continue to Payment →'}
+                </button>
               </div>
             </div>
           </section>
