@@ -14,11 +14,36 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: user, error } = await supabaseAdmin
+    let { data: user, error } = await supabaseAdmin
       .from('users')
       .select('id, username, name, email, phone, role, password')
       .ilike('username', username)
-      .single();
+      .maybeSingle();
+
+    // If default admin is requested but not found in the database, seed it on-the-fly
+    if ((!user || error) && username.toLowerCase() === 'admin' && password === 'admin123') {
+      console.log('[Auth Login] Default admin not found in Supabase. Programmatically seeding default admin...');
+      const { data: newAdmin, error: insertError } = await supabaseAdmin
+        .from('users')
+        .insert({
+          id: 'adm_1',
+          username: 'admin',
+          password: 'admin123',
+          name: 'Super Admin',
+          email: 'admin@team.test',
+          phone: '+91 9999988888',
+          role: 'admin',
+        })
+        .select('id, username, name, email, phone, role, password')
+        .single();
+
+      if (!insertError && newAdmin) {
+        user = newAdmin;
+        error = null;
+      } else {
+        console.error('[Auth Login] Failed to seed default admin:', insertError);
+      }
+    }
 
     if (error || !user) {
       return NextResponse.json(
