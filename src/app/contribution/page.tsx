@@ -1161,7 +1161,7 @@ export default function ContributionPage() {
 
         .qr-image-wrap {
           background: white;
-          padding: 14px;
+          padding: 12px;
           border-radius: 14px;
           box-shadow: 0 10px 30px rgba(16, 185, 129, 0.12);
           border: 2px solid #6ee7b7;
@@ -1169,16 +1169,16 @@ export default function ContributionPage() {
           align-items: center;
           justify-content: center;
           width: 100%;
-          max-width: 260px;
-          aspect-ratio: 1 / 1;
+          max-width: 280px;
           margin: 0 auto;
           box-sizing: border-box;
         }
 
         .payment-qr-img {
           width: 100%;
-          height: 100%;
+          height: auto;
           object-fit: contain;
+          border-radius: 8px;
           transition: transform 0.25s ease;
         }
 
