@@ -25,9 +25,11 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'denied'>('pending');
+  const [contribActiveTab, setContribActiveTab] = useState<'pending' | 'approved' | 'denied'>('pending');
+  const [selectedContributionDetail, setSelectedContributionDetail] = useState<any | null>(null);
   const [mounted, setMounted] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs'>('registrations');
+  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions'>('registrations');
   const [events, setEvents] = useState<any[]>([]);
   const [eventSaving, setEventSaving] = useState(false);
   const [eventMessage, setEventMessage] = useState('');
@@ -386,8 +388,43 @@ export default function AdminDashboard() {
 
   if (!mounted || !adminUser) return null;
 
+  // Separate regular event bookings and supporter contributions
+  const eventBookings = bookings.filter((b) => !b.id.startsWith('SUP-') && !(b.seats && b.seats.includes('SUPPORTER')));
+  const contributionBookings = bookings.filter((b) => b.id.startsWith('SUP-') || (b.seats && b.seats.includes('SUPPORTER')));
+
+  // Helper to compute stats for a given list of bookings
+  const getStatsForList = (list: any[]) => {
+    let rev = 0;
+    let app = 0;
+    let pend = 0;
+    let den = 0;
+
+    list.forEach((b) => {
+      if (b.status === 'approved') {
+        rev += b.totalPrice || 0;
+        app++;
+      } else if (b.status === 'pending') {
+        pend++;
+      } else if (b.status === 'denied') {
+        den++;
+      }
+    });
+
+    return {
+      totalRevenue: rev,
+      approvedCount: app,
+      pendingCount: pend,
+      deniedCount: den,
+    };
+  };
+
+  const regStats = getStatsForList(eventBookings);
+  const contribStats = getStatsForList(contributionBookings);
+  const currentStats = adminSection === 'contributions' ? contribStats : regStats;
+
   // Filter bookings strictly by active status tab
-  const filteredBookings = bookings.filter((b) => b.status === activeTab);
+  const filteredBookings = eventBookings.filter((b) => b.status === activeTab);
+  const filteredContributions = contributionBookings.filter((b) => b.status === contribActiveTab);
 
   return (
     <div className="admin-dashboard-page animate-fade-in">
@@ -418,8 +455,8 @@ export default function AdminDashboard() {
               <DollarSign size={22} />
             </div>
             <div className="metric-info">
-              <span className="metric-label">Approved Revenue</span>
-              <h3 className="metric-value">₹{stats.totalRevenue}</h3>
+              <span className="metric-label">{adminSection === 'contributions' ? 'Total Contribution Revenue' : 'Approved Revenue'}</span>
+              <h3 className="metric-value">₹{currentStats.totalRevenue}</h3>
             </div>
           </div>
 
@@ -428,8 +465,8 @@ export default function AdminDashboard() {
               <Clock size={22} />
             </div>
             <div className="metric-info">
-              <span className="metric-label">Pending Registrations</span>
-              <h3 className="metric-value text-amber">{stats.pendingCount}</h3>
+              <span className="metric-label">{adminSection === 'contributions' ? 'Pending Contributions' : 'Pending Registrations'}</span>
+              <h3 className="metric-value text-amber">{currentStats.pendingCount}</h3>
             </div>
           </div>
 
@@ -438,8 +475,8 @@ export default function AdminDashboard() {
               <Ticket size={22} />
             </div>
             <div className="metric-info">
-              <span className="metric-label">Confirmed Seats</span>
-              <h3 className="metric-value text-emerald">{stats.approvedCount}</h3>
+              <span className="metric-label">{adminSection === 'contributions' ? 'Approved Contributions' : 'Confirmed Seats'}</span>
+              <h3 className="metric-value text-emerald">{currentStats.approvedCount}</h3>
             </div>
           </div>
 
@@ -448,8 +485,8 @@ export default function AdminDashboard() {
               <X size={22} />
             </div>
             <div className="metric-info">
-              <span className="metric-label">Rejected Registrations</span>
-              <h3 className="metric-value text-red">{stats.deniedCount}</h3>
+              <span className="metric-label">{adminSection === 'contributions' ? 'Rejected Contributions' : 'Rejected Registrations'}</span>
+              <h3 className="metric-value text-red">{currentStats.deniedCount}</h3>
             </div>
           </div>
         </div>
@@ -460,6 +497,12 @@ export default function AdminDashboard() {
             className={`section-tab ${adminSection === 'registrations' ? 'active' : ''}`}
           >
             Payment Verification
+          </button>
+          <button
+            onClick={() => setAdminSection('contributions')}
+            className={`section-tab ${adminSection === 'contributions' ? 'active' : ''}`}
+          >
+            Contribution Requests
           </button>
           <button
             onClick={() => setAdminSection('events')}
@@ -484,19 +527,19 @@ export default function AdminDashboard() {
                   onClick={() => setActiveTab('pending')}
                   className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
                 >
-                  Pending Verification ({stats.pendingCount})
+                  Pending Verification ({regStats.pendingCount})
                 </button>
                 <button
                   onClick={() => setActiveTab('approved')}
                   className={`tab-btn ${activeTab === 'approved' ? 'active' : ''}`}
                 >
-                  Confirmed Bookings ({stats.approvedCount})
+                  Confirmed Bookings ({regStats.approvedCount})
                 </button>
                 <button
                   onClick={() => setActiveTab('denied')}
                   className={`tab-btn ${activeTab === 'denied' ? 'active' : ''}`}
                 >
-                  Payment Failed Logs ({stats.deniedCount})
+                  Payment Failed Logs ({regStats.deniedCount})
                 </button>
               </div>
               <button onClick={() => fetchAdminBookings(adminUser.id)} className="btn btn-secondary btn-refresh hover-spin-icon">
@@ -770,6 +813,153 @@ export default function AdminDashboard() {
               )}
             </div>
           </div>
+        ) : adminSection === 'contributions' ? (
+          <div className="dashboard-main-area animate-slide-up">
+            <div className="list-controls-bar">
+              <div className="tab-buttons">
+                <button
+                  onClick={() => setContribActiveTab('pending')}
+                  className={`tab-btn ${contribActiveTab === 'pending' ? 'active' : ''}`}
+                >
+                  Pending Contributions ({contribStats.pendingCount})
+                </button>
+                <button
+                  onClick={() => setContribActiveTab('approved')}
+                  className={`tab-btn ${contribActiveTab === 'approved' ? 'active' : ''}`}
+                >
+                  Confirmed Contributions ({contribStats.approvedCount})
+                </button>
+                <button
+                  onClick={() => setContribActiveTab('denied')}
+                  className={`tab-btn ${contribActiveTab === 'denied' ? 'active' : ''}`}
+                >
+                  Rejected Contributions ({contribStats.deniedCount})
+                </button>
+              </div>
+              <button onClick={() => fetchAdminBookings(adminUser.id)} className="btn btn-secondary btn-refresh hover-spin-icon">
+                <RefreshCw size={14} className="refresh-icon-spin" /> <span>Sync Live Logs</span>
+              </button>
+            </div>
+
+            {filteredContributions.length === 0 ? (
+              <div className="empty-stream-card glass-card">
+                <Ticket size={48} className="empty-icon" />
+                <h3 className="heading-sm">No Records Found</h3>
+                <p>There are no contribution entries matching the &quot;{contribActiveTab}&quot; filter currently registered in the database.</p>
+              </div>
+            ) : (
+              <div className="bookings-stream-list">
+                {filteredContributions.map((b) => {
+                  const supporter = b.attendees?.SUPPORTER || {};
+                  const supporterName = supporter.name || b.bookerName || 'Unknown';
+                  const vpName = supporter.vpName || b.bookerVpName || 'N/A';
+                  const vpImage = supporter.vpImage || '';
+                  const designation = supporter.designation || 'System Supporter';
+
+                  const baseAmount = designation === 'Chief Executive Director' ? 1000 : 500;
+                  const gstAmount = designation === 'Chief Executive Director' ? 180 : 90;
+                  const totalAmount = b.totalPrice;
+
+                  const utrNumber = b.screenshot && b.screenshot.startsWith('UTR:') 
+                    ? b.screenshot.split('|')[0].replace('UTR:', '') 
+                    : b.utrNumber || 'N/A';
+
+                  return (
+                    <div key={b.id} className={`stream-item-card glass-card ${b.status} hover-glow-card`}>
+                      <div className="item-card-header">
+                        <div className="header-left">
+                          <span className="item-booking-id">CONTRIBUTION ID: {b.id.toUpperCase()}</span>
+                          <span className="item-created-at">Received: {new Date(b.createdAt).toLocaleString()}</span>
+                        </div>
+                        <span className={`badge badge-${b.status}`} style={
+                          b.status === 'approved' ? { background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' } :
+                          b.status === 'denied' ? { background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' } :
+                          { background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a' }
+                        }>
+                          {b.status === 'pending' ? 'Pending Verification' : b.status === 'approved' ? 'Confirmed' : 'Rejected'}
+                        </span>
+                      </div>
+
+                      <div className="item-card-body">
+                        <div className="details-col">
+                          <div className="details-group">
+                            <h4 className="group-title">Supporter Profile</h4>
+                            <div className="info-grid">
+                              <div className="info-row"><span>Supporter Name:</span><strong>{supporterName}</strong></div>
+                              <div className="info-row"><span>Designation:</span><strong>{designation}</strong></div>
+                              <div className="info-row"><span>VP Name:</span><strong>{vpName}</strong></div>
+                            </div>
+                          </div>
+
+                          <div className="details-group">
+                            <h4 className="group-title">Financial Details</h4>
+                            <div className="info-grid" style={{ marginBottom: '8px', gap: '6px' }}>
+                              <div className="info-row"><span>Base Contribution:</span><strong>₹{baseAmount}</strong></div>
+                              <div className="info-row"><span>GST (18%):</span><strong>₹{gstAmount}</strong></div>
+                            </div>
+                            <div className="price-display" style={{ borderTop: '1px dashed #e5e7eb', paddingTop: '8px', marginTop: '4px' }}>
+                              <span>Total Amount (incl. GST):</span>
+                              <span className="price-amount" style={{ color: '#10b981', fontSize: '1.25rem', fontWeight: '800' }}>₹{totalAmount}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="screenshot-col" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          <div>
+                            <h4 className="group-title">UTR Number</h4>
+                            <div className="utr-display-box">
+                              <div className="utr-number-display">
+                                <span className="utr-label-admin">UPI Transaction ID (UTR)</span>
+                                <span className="utr-value-admin">{utrNumber}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {vpImage && (
+                            <div>
+                              <h4 className="group-title">VP Image Preview</h4>
+                              <div 
+                                style={{ width: '80px', height: '80px', borderRadius: '8px', border: '1px solid #d1d5db', overflow: 'hidden', cursor: 'pointer' }}
+                                onClick={() => setZoomedImage(vpImage)}
+                              >
+                                <img src={vpImage} alt="VP Upload" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="item-card-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem', borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}>
+                        <button
+                          onClick={() => setSelectedContributionDetail(b)}
+                          className="btn btn-secondary"
+                          style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                        >
+                          View Full Details
+                        </button>
+                        {b.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleStatusUpdate(b.id, 'denied')}
+                              className="btn btn-deny-action"
+                            >
+                              <X size={14} /> Reject Contribution
+                            </button>
+                            <button
+                              onClick={() => handleStatusUpdate(b.id, 'approved')}
+                              className="btn btn-approve-action"
+                            >
+                              <Check size={14} /> Approve Contribution
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         ) : (
           <div className="payment-settings-area animate-slide-up">
             <div className="event-form-card glass-card">
@@ -895,6 +1085,140 @@ export default function AdminDashboard() {
               >
                 Confirm Delete
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Contribution Details Modal */}
+      {selectedContributionDetail && (
+        <div className="confirm-modal-overlay" onClick={() => setSelectedContributionDetail(null)}>
+          <div className="confirm-modal-card" style={{ maxWidth: '600px', width: '100%', padding: '2rem' }} onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #f3f4f6', paddingBottom: '0.75rem' }}>
+              <h2 className="confirm-modal-title" style={{ margin: 0, fontSize: '1.25rem' }}>Contribution Request Details</h2>
+              <button 
+                onClick={() => setSelectedContributionDetail(null)} 
+                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {/* Profile Details */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1.5rem', background: '#f9fafb', padding: '1rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                <div>
+                  <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Supporter Profile</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.88rem' }}>
+                    <div><span style={{ color: '#6b7280' }}>Supporter Name: </span><strong>{selectedContributionDetail.attendees?.SUPPORTER?.name || selectedContributionDetail.bookerName || 'Unknown'}</strong></div>
+                    <div><span style={{ color: '#6b7280' }}>Designation: </span><strong>{selectedContributionDetail.attendees?.SUPPORTER?.designation || 'System Supporter'}</strong></div>
+                    <div><span style={{ color: '#6b7280' }}>VP Name: </span><strong>{selectedContributionDetail.attendees?.SUPPORTER?.vpName || 'N/A'}</strong></div>
+                    <div><span style={{ color: '#6b7280' }}>Submitted Date & Time: </span><strong>{new Date(selectedContributionDetail.createdAt).toLocaleString()}</strong></div>
+                    <div><span style={{ color: '#6b7280' }}>Status: </span>
+                      <strong style={{ 
+                        color: selectedContributionDetail.status === 'approved' ? '#047857' : selectedContributionDetail.status === 'denied' ? '#b91c1c' : '#d97706' 
+                      }}>
+                        {selectedContributionDetail.status === 'approved' ? 'Confirmed' : selectedContributionDetail.status === 'denied' ? 'Rejected' : 'Pending'}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+                {selectedContributionDetail.attendees?.SUPPORTER?.vpImage && (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+                    <div 
+                      style={{ width: '90px', height: '90px', borderRadius: '8px', border: '1px solid #d1d5db', overflow: 'hidden', cursor: 'pointer' }}
+                      onClick={() => setZoomedImage(selectedContributionDetail.attendees.SUPPORTER.vpImage)}
+                    >
+                      <img src={selectedContributionDetail.attendees.SUPPORTER.vpImage} alt="VP Upload" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>VP Image</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Financial Breakdown */}
+              <div style={{ background: '#f9fafb', padding: '1rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Financial Breakdown</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.88rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#6b7280' }}>Base Contribution Amount:</span>
+                    <strong>₹{selectedContributionDetail.attendees?.SUPPORTER?.designation === 'Chief Executive Director' ? 1000 : 500}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#6b7280' }}>GST Amount (18%):</span>
+                    <strong>₹{selectedContributionDetail.attendees?.SUPPORTER?.designation === 'Chief Executive Director' ? 180 : 90}</strong>
+                  </div>
+                  <hr style={{ border: 0, borderTop: '1px dashed #e5e7eb', margin: '0.4rem 0' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem' }}>
+                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>Total Payable Amount:</span>
+                    <strong style={{ color: '#10b981', fontSize: '1.05rem' }}>₹{selectedContributionDetail.totalPrice}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Verification */}
+              <div style={{ background: '#f9fafb', padding: '1rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Payment Verification</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.88rem' }}>
+                  <div>
+                    <span style={{ color: '#6b7280' }}>UTR Number: </span>
+                    <strong style={{ 
+                      fontSize: '0.95rem', 
+                      color: '#047857', 
+                      background: '#ecfdf5', 
+                      padding: '2px 8px', 
+                      borderRadius: '4px', 
+                      border: '1px solid #a7f3d0' 
+                    }}>
+                      {selectedContributionDetail.screenshot?.replace('UTR:', '') || selectedContributionDetail.utrNumber || 'N/A'}
+                    </strong>
+                  </div>
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <span style={{ color: '#6b7280', display: 'block', marginBottom: '0.25rem' }}>Payment Screenshot:</span>
+                    {selectedContributionDetail.screenshot && !selectedContributionDetail.screenshot.startsWith('UTR:') ? (
+                      <div 
+                        style={{ width: '120px', height: '160px', borderRadius: '8px', border: '1px solid #d1d5db', overflow: 'hidden', cursor: 'pointer' }}
+                        onClick={() => setZoomedImage(selectedContributionDetail.screenshot)}
+                      >
+                        <img src={selectedContributionDetail.screenshot} alt="Payment Screenshot" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    ) : (
+                      <span style={{ color: '#6b7280', fontStyle: 'italic' }}>Verified via UTR reference ID (No screenshot uploaded)</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="confirm-modal-actions" style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', borderTop: '1px solid #f3f4f6', paddingTop: '0.75rem' }}>
+              <button 
+                type="button"
+                onClick={() => setSelectedContributionDetail(null)} 
+                className="btn-modal-cancel"
+                style={{ margin: 0 }}
+              >
+                Close
+              </button>
+              {selectedContributionDetail.status === 'pending' && (
+                <>
+                  <button 
+                    type="button"
+                    onClick={() => { handleStatusUpdate(selectedContributionDetail.id, 'denied'); setSelectedContributionDetail(null); }} 
+                    className="btn-modal-delete"
+                    style={{ background: '#dc2626', color: 'white', border: '1px solid #dc2626', margin: 0 }}
+                  >
+                    Reject
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => { handleStatusUpdate(selectedContributionDetail.id, 'approved'); setSelectedContributionDetail(null); }} 
+                    className="btn btn-primary"
+                    style={{ height: '40px', padding: '0 1.25rem', margin: 0, fontSize: '0.88rem' }}
+                  >
+                    Approve
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
