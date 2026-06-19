@@ -41,6 +41,7 @@ type SeminarEvent = {
 
 export default function Home() {
   const [events, setEvents] = useState<SeminarEvent[]>([]);
+  const [supporters, setSupporters] = useState<any[]>([]);
   const [venue, setVenue] = useState(fallbackLocations[0]);
   const [seminar, setSeminar] = useState(fallbackEventCategories[0]);
   const [selectedEventId, setSelectedEventId] = useState('');
@@ -80,6 +81,21 @@ export default function Home() {
     };
 
     fetchEvents();
+  }, []);
+
+  useEffect(() => {
+    const fetchSupporters = async () => {
+      try {
+        const res = await fetch('/api/contributions');
+        if (res.ok) {
+          const data = await res.json();
+          setSupporters(data.supporters || []);
+        }
+      } catch (err) {
+        console.error('Error fetching supporters:', err);
+      }
+    };
+    fetchSupporters();
   }, []);
 
   const eventLocations = events.length
@@ -145,7 +161,7 @@ export default function Home() {
         <section className="hero-section">
           <div className="container hero-container">
             <div className="hero-logo-col animate-scale-in">
-              <div className="">
+              <div className="hero-logo-wrapper">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/success-india-logo.jpeg"
@@ -231,6 +247,32 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {supporters.length > 0 && (
+          <section className="supporters-section">
+            <div className="container">
+              <div className="section-header" style={{ marginBottom: '2.5rem' }}>
+                <span className="section-eyebrow">Our Honored Supporters</span>
+                <h2 className="heading-lg">Success Team System Supporters</h2>
+                <p className="section-subtitle">Approved system supporters who are driving growth and leadership development.</p>
+              </div>
+              <div className="supporters-grid">
+                {supporters.map((s) => (
+                  <div key={s.id} className="supporter-card-item">
+                    <div className="supporter-img-wrap">
+                      <img src={s.vpImage} alt={s.name} className="supporter-img" />
+                    </div>
+                    <div className="supporter-badge-wrap">
+                      <span className="supporter-designation-badge">{s.designation}</span>
+                    </div>
+                    <h3 className="supporter-name-text">{s.name}</h3>
+                    <div className="supporter-vp-text">VP: {s.vpName}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="stats-section">
           <div className="container trust-container">
@@ -397,11 +439,12 @@ export default function Home() {
         }
 
         .hero-logo-main {
-          width: clamp(320px, 60vw, 550px);
-height: clamp(320px, 60vw, 550px);
+          width: clamp(260px, 45vw, 420px);
+          height: clamp(260px, 45vw, 420px);
           border: 6px solid #ffffff;
-          // object-fit: cover;
-          // display: block;
+          object-fit: cover;
+          border-radius: 50%;
+          display: block;
         }
 
         .hero-quote-col {
@@ -873,13 +916,99 @@ height: clamp(320px, 60vw, 550px);
           text-shadow: 0 2px 8px rgba(0,0,0,0.6);
         }
 
+        /* Supporters Section styling */
+        .supporters-section {
+          padding: 5rem 2rem;
+          background: #f8fafc;
+          border-top: 1px solid #e2e8f0;
+          border-bottom: 1px solid #e2e8f0;
+        }
+
+        .supporters-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 2rem;
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+
+        .supporter-card-item {
+          background: white;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 20px;
+          padding: 1.75rem 1.5rem;
+          text-align: center;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .supporter-card-item:hover {
+          transform: translateY(-6px);
+          box-shadow: 0 15px 35px rgba(22, 163, 74, 0.08);
+          border-color: #10b981;
+        }
+
+        .supporter-img-wrap {
+          width: 110px;
+          height: 110px;
+          border-radius: 50%;
+          overflow: hidden;
+          margin: 0 auto 1.25rem;
+          border: 3px solid #10b981;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+          background: #f1f5f9;
+        }
+
+        .supporter-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          transition: transform 0.3s ease;
+        }
+
+        .supporter-card-item:hover .supporter-img {
+          transform: scale(1.08);
+        }
+
+        .supporter-name-text {
+          font-family: var(--font-heading), sans-serif;
+          font-size: 1.1rem;
+          font-weight: 800;
+          color: #111827;
+          margin: 0 0 0.35rem;
+        }
+
+        .supporter-badge-wrap {
+          margin-bottom: 0.65rem;
+        }
+
+        .supporter-designation-badge {
+          display: inline-block;
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: #047857;
+          background: #ecfdf5;
+          border: 1px solid #a7f3d0;
+          padding: 3px 10px;
+          border-radius: 99px;
+          text-transform: uppercase;
+        }
+
+        .supporter-vp-text {
+          font-size: 0.85rem;
+          color: #6b7280;
+          font-weight: 600;
+        }
+
         @media (max-width: 640px) {
           .hero-section {
             padding: 4.25rem 0 5.5rem;
           }
 
           .owner-profile-section,
-          .routes-section {
+          .routes-section,
+          .supporters-section {
             padding: 4.5rem 1.25rem;
           }
 
