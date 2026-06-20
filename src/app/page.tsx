@@ -343,6 +343,9 @@ export default function Home() {
             <div className="container">
               <div className="section-header" style={{ marginBottom: '2.5rem' }}>
                 <span className="section-eyebrow">JUNE MONTH CONTRIBUTORS</span>
+                <h2 className="heading-lg">
+                  JUNE MONTH CONTRIBUTORS
+                </h2>
                 <p className="section-subtitle">
                   Approved Success Team System Supporters driving growth and leadership development this month.
                 </p>
