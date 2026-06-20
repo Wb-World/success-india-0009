@@ -145,14 +145,6 @@ export default function Home() {
     setModalEvent(event);
   };
 
-  const marqueeSupporters: any[] = [];
-  if (supporters.length > 0) {
-    marqueeSupporters.push(...supporters);
-    while (marqueeSupporters.length < 10) {
-      marqueeSupporters.push(...supporters);
-    }
-  }
-
   return (
     <div className="landing-page">
       {/* Seat Booking Modal */}
@@ -347,10 +339,10 @@ export default function Home() {
             </div>
 
             <div className="marquee-container">
-              <div className="marquee-track">
-                <div className="marquee-content animate-marquee">
-                  {marqueeSupporters.map((s, idx) => (
-                    <div key={`contrib-orig-${s.id}-${idx}`} className="contributor-card">
+              <div className={`marquee-track ${supporters.length === 1 ? 'single-contributor' : ''}`}>
+                <div className={`marquee-content ${supporters.length > 1 ? 'animate-marquee' : 'animate-marquee-single'}`}>
+                  {supporters.map((s) => (
+                    <div key={`contrib-orig-${s.id}`} className="contributor-card">
                       <div className="contributor-img-wrap">
                         <img src={s.vpImage} alt={s.name} className="contributor-img" />
                       </div>
@@ -361,19 +353,21 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                <div className="marquee-content animate-marquee" aria-hidden="true">
-                  {marqueeSupporters.map((s, idx) => (
-                    <div key={`contrib-dup-${s.id}-${idx}`} className="contributor-card">
-                      <div className="contributor-img-wrap">
-                        <img src={s.vpImage} alt={s.name} className="contributor-img" />
+                {supporters.length > 1 && (
+                  <div className="marquee-content animate-marquee" aria-hidden="true">
+                    {supporters.map((s) => (
+                      <div key={`contrib-dup-${s.id}`} className="contributor-card">
+                        <div className="contributor-img-wrap">
+                          <img src={s.vpImage} alt={s.name} className="contributor-img" />
+                        </div>
+                        <div className="contributor-info">
+                          <h3 className="contributor-name">{s.name}</h3>
+                          <span className="contributor-designation">{s.designation}</span>
+                        </div>
                       </div>
-                      <div className="contributor-info">
-                        <h3 className="contributor-name">{s.name}</h3>
-                        <span className="contributor-designation">{s.designation}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </section>
@@ -1125,6 +1119,11 @@ export default function Home() {
           width: max-content;
         }
 
+        .marquee-track.single-contributor {
+          justify-content: center;
+          width: 100%;
+        }
+
         .marquee-content {
           display: flex;
           gap: 2rem;
@@ -1133,25 +1132,40 @@ export default function Home() {
         }
 
         .animate-marquee {
-          animation: marquee-scroll 30s linear infinite;
+          animation: marquee-scroll 55s linear infinite;
+        }
+
+        .animate-marquee-single {
+          animation: marquee-single-scroll 25s linear infinite;
         }
 
         @keyframes marquee-scroll {
           0% {
-            transform: translateX(0);
+            transform: translate3d(0, 0, 0);
           }
           100% {
-            transform: translateX(-100%);
+            transform: translate3d(-100%, 0, 0);
+          }
+        }
+
+        @keyframes marquee-single-scroll {
+          0% {
+            transform: translate3d(100vw, 0, 0);
+          }
+          100% {
+            transform: translate3d(-300px, 0, 0);
           }
         }
 
         @media (hover: hover) {
-          .marquee-track:hover .animate-marquee {
+          .marquee-track:hover .animate-marquee,
+          .marquee-track:hover .animate-marquee-single {
             animation-play-state: paused;
           }
         }
 
-        .marquee-track:active .animate-marquee {
+        .marquee-track:active .animate-marquee,
+        .marquee-track:active .animate-marquee-single {
           animation-play-state: paused;
         }
 
