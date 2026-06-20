@@ -1282,222 +1282,196 @@ function ProfileDashboard() {
           margin-bottom: 0.5rem;
         }
 
-        /* Booking Cards Grid */
-        .bookings-cards-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-          gap: 1.25rem;
+        /* Bookings List & Cards Layout */
+        .bookings-list {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
           width: 100%;
         }
 
-        @media (max-width: 640px) {
-          .bookings-cards-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-          }
-        }
-
-        .booking-card {
+        .booking-item-card {
           background: #ffffff;
           border: 1px solid var(--border);
           border-radius: var(--radius-xl);
           padding: 1.5rem;
           display: flex;
           flex-direction: column;
-          gap: 1rem;
           box-shadow: var(--shadow-sm);
           transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .booking-card:hover {
+        .booking-item-card:hover {
           transform: translateY(-2px);
           box-shadow: var(--shadow-md);
         }
 
-        .booking-card-header {
+        .booking-field-row {
           display: flex;
           justify-content: space-between;
-          align-items: center;
-          border-bottom: 1px solid var(--border);
-          padding-bottom: 0.75rem;
-          gap: 0.5rem;
-        }
-
-        .booking-ref-block {
-          display: flex;
-          flex-direction: column;
-          gap: 0.15rem;
-        }
-
-        .booking-card-ref-label {
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--muted);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-
-        .booking-card-ref-val {
-          font-family: monospace;
-          font-size: 0.95rem;
-          font-weight: 700;
-          color: var(--foreground);
-        }
-
-        .booking-card-body {
-          display: flex;
-          flex-direction: column;
-          gap: 0.85rem;
-          flex-grow: 1;
-        }
-
-        .booking-card-row {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-        }
-
-        .booking-card-row-group {
-          display: flex;
+          align-items: flex-start;
           gap: 1.5rem;
+          padding: 0.75rem 0;
+          border-bottom: 1px solid #f1f5f9;
         }
 
-        .booking-card-rowhalf {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
+        .booking-field-row:last-of-type {
+          border-bottom: none;
         }
 
-        .booking-card-label {
-          font-size: 0.78rem;
+        .booking-field-label {
+          font-size: 0.85rem;
           font-weight: 600;
           color: var(--muted);
           text-transform: uppercase;
           letter-spacing: 0.05em;
+          flex-shrink: 0;
+          padding-top: 0.15rem;
         }
 
-        .booking-card-label-small {
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--muted);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          margin-bottom: 0.35rem;
-          display: block;
-        }
-
-        .booking-card-val {
+        .booking-field-value {
           font-size: 0.95rem;
+          font-weight: 600;
           color: var(--foreground);
-          font-weight: 500;
+          text-align: right;
           line-height: 1.4;
+          word-break: break-word;
         }
 
-        .event-name-val {
-          font-weight: 700;
-          color: var(--primary-dark);
-        }
-
-        .venue-val {
-          color: #334155;
-        }
-
-        .seats-val {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.25rem;
-        }
-
-        .seat-item-tag {
-          font-size: 0.75rem;
-          font-weight: 700;
-          background: var(--input);
+        .booking-ref-value {
+          font-family: monospace;
+          font-size: 1rem;
           color: var(--foreground);
-          padding: 0.125rem 0.375rem;
-          border-radius: var(--radius-sm);
-          border: 1px solid var(--border);
         }
 
-        .price-val {
+        .booking-event-value {
+          color: var(--primary-dark);
           font-weight: 700;
+        }
+
+        .booking-price-value {
           color: var(--foreground);
           font-size: 1rem;
+          font-weight: 700;
         }
 
-        .date-val {
+        .booking-date-value {
           display: flex;
           align-items: center;
-          gap: 0.8rem;
+          justify-content: flex-end;
+          gap: 0.5rem;
           color: #334155;
           font-size: 0.9rem;
         }
 
-        .inline-icon {
-          vertical-align: middle;
-          margin-top: -2px;
-          margin-right: 2px;
+        .field-icon {
           color: var(--primary);
           flex-shrink: 0;
         }
 
-        /* Attendee details box inside card */
-        .booking-card-attendees-box {
+        .seats-list {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: 0.25rem;
+        }
+
+        .seat-badge {
+          font-size: 0.75rem;
+          font-weight: 700;
+          background: var(--input);
+          color: var(--foreground);
+          padding: 0.125rem 0.5rem;
+          border-radius: var(--radius-sm);
+          border: 1px solid var(--border);
+        }
+
+        /* Attendees Section */
+        .booking-attendees-section {
           background: #f8fafc;
           border: 1px dashed #cbd5e1;
           border-radius: var(--radius-md);
-          padding: 0.75rem;
-          margin-top: 0.25rem;
+          padding: 1rem;
+          margin-top: 1rem;
         }
 
-        .booking-card-attendees-list {
+        .booking-attendees-header {
+          display: block;
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.6rem;
+        }
+
+        .booking-attendees-container {
           display: flex;
           flex-direction: column;
-          gap: 0.35rem;
+          gap: 0.4rem;
         }
 
-        .attendee-item {
+        .attendee-row {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          gap: 0.5rem;
-          font-size: 0.82rem;
-          line-height: 1.3;
+          gap: 1rem;
+          font-size: 0.85rem;
         }
 
-        .attendee-seat {
+        .attendee-seat-label {
           font-weight: 700;
           color: var(--primary);
           font-family: monospace;
           background: #f0fdf4;
-          padding: 1px 4px;
+          padding: 1px 6px;
           border-radius: 4px;
           border: 1px solid #d1fae5;
+          flex-shrink: 0;
         }
 
-        .attendee-info {
+        .attendee-name-val {
           font-weight: 500;
           color: #334155;
           text-align: right;
           word-break: break-all;
         }
 
-        .booking-card-footer {
-          border-top: 1px solid var(--border);
+        .booking-item-footer {
+          margin-top: 1rem;
           padding-top: 0.75rem;
+          border-top: 1px solid var(--border);
           display: flex;
-          justify-content: space-between;
-          align-items: center;
+          justify-content: flex-end;
           font-size: 0.78rem;
-        }
-
-        .booking-card-date-label {
           color: var(--muted);
         }
 
-        .booking-card-date-val {
-          color: var(--foreground);
-          font-weight: 500;
+        @media (max-width: 640px) {
+          .booking-field-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+            padding: 0.75rem 0;
+          }
+
+          .booking-field-value {
+            text-align: left;
+            width: 100%;
+          }
+
+          .booking-date-value {
+            justify-content: flex-start;
+          }
+
+          .seats-list {
+            justify-content: flex-start;
+          }
+
+          .attendee-row {
+            flex-direction: row;
+            justify-content: space-between;
+          }
         }
 
         .badge-icon {
@@ -1509,88 +1483,86 @@ function ProfileDashboard() {
 }
 
 const renderBookingsTable = (list: any[]) => (
-  <div className="bookings-cards-grid" style={{ marginTop: '1rem' }}>
+  <div className="bookings-list" style={{ marginTop: '1.25rem' }}>
     {list.map((booking) => (
-      <div key={booking.id} className="booking-card glass-card">
-        {/* Card Header: Booking Ref and Status */}
-        <div className="booking-card-header">
-          <div className="booking-ref-block">
-            <span className="booking-card-ref-label">Booking Ref</span>
-            <span className="booking-card-ref-val">{booking.id.toUpperCase()}</span>
+      <div key={booking.id} className="booking-item-card glass-card">
+        {/* Booking Reference */}
+        <div className="booking-field-row">
+          <span className="booking-field-label">Booking Reference</span>
+          <span className="booking-field-value booking-ref-value">{booking.id.toUpperCase()}</span>
+        </div>
+
+        {/* Event Name */}
+        <div className="booking-field-row">
+          <span className="booking-field-label">Event Name</span>
+          <span className="booking-field-value booking-event-value">{booking.seminarName || booking.eventName}</span>
+        </div>
+
+        {/* Venue */}
+        <div className="booking-field-row">
+          <span className="booking-field-label">Venue</span>
+          <span className="booking-field-value">{booking.venue} {booking.seminar && `(${booking.seminar})`}</span>
+        </div>
+
+        {/* Seat Number */}
+        <div className="booking-field-row">
+          <span className="booking-field-label">Seat Number</span>
+          <div className="booking-field-value seats-list">
+            {booking.seats.map((seat: string) => (
+              <span key={seat} className="seat-badge">{seat}</span>
+            ))}
           </div>
-          <span className={`badge badge-${booking.status}`}>
-            {(booking.status === 'pending' || !booking.status) && <Clock size={12} className="badge-icon" />}
-            {booking.status === 'approved' && <CheckCircle size={12} className="badge-icon" />}
-            {booking.status === 'denied' && <ShieldAlert size={12} className="badge-icon" />}
-            {booking.status === 'approved' ? 'Confirmed' : booking.status === 'denied' ? 'Rejected' : 'Pending Verification'}
+        </div>
+
+        {/* Amount Paid */}
+        <div className="booking-field-row">
+          <span className="booking-field-label">Amount Paid</span>
+          <span className="booking-field-value booking-price-value">₹{booking.totalPrice}</span>
+        </div>
+
+        {/* Session Date & Time */}
+        <div className="booking-field-row">
+          <span className="booking-field-label">Session Date & Time</span>
+          <span className="booking-field-value booking-date-value">
+            <Calendar size={14} className="field-icon" /> {booking.date} &nbsp;&bull;&nbsp; <Clock size={14} className="field-icon" /> {booking.time}
           </span>
         </div>
 
-        {/* Card Body */}
-        <div className="booking-card-body">
-          {/* Event details */}
-          <div className="booking-card-row">
-            <span className="booking-card-label">Event</span>
-            <div className="booking-card-val event-name-val">
-              {booking.seminarName || booking.eventName}
-            </div>
+        {/* Status */}
+        <div className="booking-field-row">
+          <span className="booking-field-label">Status</span>
+          <div className="booking-field-value">
+            <span className={`badge badge-${booking.status}`}>
+              {(booking.status === 'pending' || !booking.status) && <Clock size={12} className="badge-icon" />}
+              {booking.status === 'approved' && <CheckCircle size={12} className="badge-icon" />}
+              {booking.status === 'denied' && <ShieldAlert size={12} className="badge-icon" />}
+              {booking.status === 'approved' ? 'Confirmed' : booking.status === 'denied' ? 'Rejected' : 'Pending Verification'}
+            </span>
           </div>
-
-          <div className="booking-card-row">
-            <span className="booking-card-label">Venue</span>
-            <div className="booking-card-val venue-val">
-              {booking.venue} {booking.seminar && `(${booking.seminar})`}
-            </div>
-          </div>
-
-          <div className="booking-card-row-group">
-            <div className="booking-card-rowhalf">
-              <span className="booking-card-label">Seat</span>
-              <div className="booking-card-val seats-val">
-                {booking.seats.map((seat: string) => (
-                  <span key={seat} className="seat-item-tag">{seat}</span>
-                ))}
-              </div>
-            </div>
-
-            <div className="booking-card-rowhalf">
-              <span className="booking-card-label">Amount Paid</span>
-              <div className="booking-card-val price-val">₹{booking.totalPrice}</div>
-            </div>
-          </div>
-
-          <div className="booking-card-row">
-            <span className="booking-card-label">Session Date</span>
-            <div className="booking-card-val date-val">
-              <span><Calendar size={13} className="inline-icon" /> {booking.date}</span>
-              <span><Clock size={13} className="inline-icon" /> {booking.time}</span>
-            </div>
-          </div>
-
-          {/* Attendee details (if any) */}
-          {booking.attendees && Object.keys(booking.attendees).length > 0 && (
-            <div className="booking-card-attendees-box">
-              <span className="booking-card-label-small">Attendee Details</span>
-              <div className="booking-card-attendees-list">
-                {Object.entries(booking.attendees).map(([seat, val]: any) => {
-                  const nameText = typeof val === 'object' && val !== null ? val.name : val;
-                  const phoneText = typeof val === 'object' && val !== null ? val.phone : '';
-                  return (
-                    <div key={seat} className="attendee-item">
-                      <span className="attendee-seat">{seat}</span>
-                      <span className="attendee-info">{nameText} {phoneText ? `(${phoneText})` : ''}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Card Footer: Created At Date */}
-        <div className="booking-card-footer">
-          <span className="booking-card-date-label">Booked on</span>
-          <span className="booking-card-date-val">{new Date(booking.createdAt).toLocaleDateString()}</span>
+        {/* Attendee details (if any) */}
+        {booking.attendees && Object.keys(booking.attendees).length > 0 && (
+          <div className="booking-attendees-section">
+            <span className="booking-attendees-header">Attendee Details</span>
+            <div className="booking-attendees-container">
+              {Object.entries(booking.attendees).map(([seat, val]: any) => {
+                const nameText = typeof val === 'object' && val !== null ? val.name : val;
+                const phoneText = typeof val === 'object' && val !== null ? val.phone : '';
+                return (
+                  <div key={seat} className="attendee-row">
+                    <span className="attendee-seat-label">{seat}</span>
+                    <span className="attendee-name-val">{nameText} {phoneText ? `(${phoneText})` : ''}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Booked on */}
+        <div className="booking-item-footer">
+          <span>Booked on: {new Date(booking.createdAt).toLocaleString()}</span>
         </div>
       </div>
     ))}
