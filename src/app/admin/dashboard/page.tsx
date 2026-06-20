@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, Eye, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText } from 'lucide-react';
+import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText } from 'lucide-react';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -377,6 +377,36 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       alert('Network error updating status');
+    }
+  };
+
+  const handleHomepageVisibilityToggle = async (bookingId: string, currentVisible: boolean) => {
+    const nextVisible = !currentVisible;
+    try {
+      const res = await fetch(`/api/admin/bookings/${bookingId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-id': adminUser.id,
+        },
+        body: JSON.stringify({ homepage_visible: nextVisible }),
+      });
+
+      if (res.ok) {
+        // Optimistically update visibility in state
+        const updatedList = bookings.map((b) => {
+          if (b.id === bookingId) {
+            return { ...b, homepageVisible: nextVisible };
+          }
+          return b;
+        });
+        setBookings(updatedList);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to update visibility');
+      }
+    } catch (err) {
+      alert('Network error updating visibility');
     }
   };
 
@@ -1047,6 +1077,23 @@ export default function AdminDashboard() {
                             </button>
                           </>
                         )}
+                        {b.status === 'approved' && (
+                          <button
+                            onClick={() => handleHomepageVisibilityToggle(b.id, b.homepageVisible)}
+                            className={`btn ${b.homepageVisible ? 'btn-hide-homepage' : 'btn-show-homepage'}`}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                          >
+                            {b.homepageVisible ? (
+                              <>
+                                <EyeOff size={14} /> Hide from Homepage
+                              </>
+                            ) : (
+                              <>
+                                <Eye size={14} /> Show on Homepage
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -1318,6 +1365,30 @@ export default function AdminDashboard() {
                     Approve
                   </button>
                 </>
+              )}
+              {selectedContributionDetail.status === 'approved' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleHomepageVisibilityToggle(selectedContributionDetail.id, selectedContributionDetail.homepageVisible);
+                    setSelectedContributionDetail({
+                      ...selectedContributionDetail,
+                      homepageVisible: !selectedContributionDetail.homepageVisible
+                    });
+                  }}
+                  className={`btn ${selectedContributionDetail.homepageVisible ? 'btn-hide-homepage' : 'btn-show-homepage'}`}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', margin: 0 }}
+                >
+                  {selectedContributionDetail.homepageVisible ? (
+                    <>
+                      <EyeOff size={14} /> Hide from Homepage
+                    </>
+                  ) : (
+                    <>
+                      <Eye size={14} /> Show on Homepage
+                    </>
+                  )}
+                </button>
               )}
             </div>
           </div>
@@ -2221,6 +2292,48 @@ export default function AdminDashboard() {
         .btn-deny-action:hover {
           background: #fef2f2;
           border-color: #ef4444;
+          transform: translateY(-1px);
+        }
+
+        .btn-show-homepage {
+          background: #f0fdf4;
+          color: #16a34a;
+          border: 1px solid #bbf7d0;
+          font-weight: 600;
+          padding: 0.5rem 1rem;
+          border-radius: 12px;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          font-size: 0.85rem;
+          transition: all 0.2s ease;
+        }
+
+        .btn-show-homepage:hover {
+          background: #dcfce7;
+          border-color: #86efac;
+          transform: translateY(-1px);
+        }
+
+        .btn-hide-homepage {
+          background: #fff7ed;
+          color: #ea580c;
+          border: 1px solid #fed7aa;
+          font-weight: 600;
+          padding: 0.5rem 1rem;
+          border-radius: 12px;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          font-size: 0.85rem;
+          transition: all 0.2s ease;
+        }
+
+        .btn-hide-homepage:hover {
+          background: #ffedd5;
+          border-color: #fdba74;
           transform: translateY(-1px);
         }
 

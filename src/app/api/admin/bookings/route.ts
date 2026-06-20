@@ -114,6 +114,7 @@ export async function GET(request: Request) {
         status: b.status,
         createdAt: b.created_at,
         user: userObj,
+        homepageVisible: b.homepage_visible !== false,
         bookerName: b.booker_name || '',
         bookerMemberId: b.booker_member_id || '',
         bookerPhone: bookerPhone,
