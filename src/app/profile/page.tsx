@@ -46,240 +46,66 @@ function getStatusClass(status: string) {
   return 'badge-pending';
 }
 
-// ─── Single Booking Card ──────────────────────────────────────────────────────
-function BookingCard({ booking, onViewMore }: { booking: any; onViewMore: (b: any) => void }) {
-  const status = booking.status || 'pending';
-  return (
-    <div className={`bk-card bk-card-${status}`}>
-      <div className="bk-card-top">
-        <div className="bk-card-left">
-          <span className="bk-ref-label">Booking Ref</span>
-          <span className="bk-ref-id">#{booking.id?.slice(0, 8).toUpperCase()}</span>
-          <span className="bk-date-created">{new Date(booking.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-        </div>
-        <div className="bk-card-right">
-          <span className={`bk-status-badge ${getStatusClass(status)}`}>
-            {status === 'approved' && <CheckCircle size={12} />}
-            {(status === 'pending' || !status) && <Clock size={12} />}
-            {status === 'denied' && <ShieldAlert size={12} />}
-            {getStatusLabel(status)}
-          </span>
-        </div>
-      </div>
-      <div className="bk-card-body">
-        <p className="bk-event-name">{booking.seminarName || booking.eventName || '—'}</p>
-        <div className="bk-meta-row">
-          <span className="bk-meta-item"><Calendar size={12} /> {booking.date}</span>
-          <span className="bk-meta-item">₹{booking.totalPrice}</span>
-          <span className="bk-meta-item">{booking.seats?.length} Seat{booking.seats?.length > 1 ? 's' : ''}</span>
-        </div>
-      </div>
-      <div className="bk-card-footer">
-        <button className="bk-view-more-btn" onClick={() => onViewMore(booking)}>
-          <QrCode size={14} /> View Details &amp; Ticket
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Booking Detail Modal ─────────────────────────────────────────────────────
-function BookingModal({ booking, onClose }: { booking: any; onClose: () => void }) {
-  const [qrUrl, setQrUrl] = useState('');
-  const [downloading, setDownloading] = useState(false);
+// ─── Single Booking Card (Redesigned Horizontal Card) ────────────────────────
+function BookingCard({ booking }: { booking: any }) {
+  const router = useRouter();
   const status = booking.status || 'pending';
 
-  useEffect(() => {
-    // QR code encodes the secure verification URL — not raw booking data
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const verifyUrl = `${origin}/verify?id=${encodeURIComponent(booking.id)}`;
-    generateQRDataURL(verifyUrl).then(setQrUrl);
-  }, [booking]);
-
-  const handleDownload = async () => {
-    setDownloading(true);
-    await downloadTicket(booking, qrUrl);
-    setDownloading(false);
-  };
-
-  // Attendee extraction helpers
-  const attendeeEntries = booking.attendees ? Object.entries(booking.attendees) : [];
-
   return (
-    <>
-      {/* Overlay */}
-      <div className="modal-overlay" onClick={onClose} />
-
-      {/* Modal */}
-      <div className="modal-sheet animate-slide-up" role="dialog" aria-modal="true">
-        <button className="modal-close-btn" onClick={onClose} aria-label="Close"><X size={20} /></button>
-
-        <div className="modal-inner">
-          {/* Header */}
-          <div className="modal-header">
-            <h2 className="modal-title">🎫 Booking Details</h2>
-            <span className={`bk-status-badge ${getStatusClass(status)}`}>
-              {status === 'approved' && <CheckCircle size={13} />}
-              {(status === 'pending' || !status) && <Clock size={13} />}
-              {status === 'denied' && <ShieldAlert size={13} />}
-              {getStatusLabel(status)}
-            </span>
+    <div className={`bk-horizontal-card status-${status}`}>
+      {/* Event image/banner on the left */}
+      <div className="bk-card-image-wrap">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/hero-leader.jpg" alt="Event Banner" className="bk-card-image" />
+      </div>
+      
+      {/* Details in the center */}
+      <div className="bk-card-info-wrap">
+        <div className="bk-card-title-row">
+          <h3 className="bk-card-event-name">{booking.seminarName || booking.eventName || '—'}</h3>
+        </div>
+        
+        <div className="bk-card-details-grid">
+          <div className="bk-card-detail-item">
+            <span className="bk-detail-lbl">Booking Ref:</span>
+            <span className="bk-detail-val font-mono">#{booking.id?.toUpperCase()}</span>
           </div>
-
-          <div className="modal-body">
-            {/* Left: Details */}
-            <div className="modal-details-col">
-              <div className="detail-grid">
-                <DetailRow label="Booking Reference" value={`#${booking.id?.toUpperCase()}`} mono />
-                <DetailRow label="Event Name" value={booking.seminarName || booking.eventName || '—'} />
-                <DetailRow label="Venue" value={booking.venue || '—'} />
-                <DetailRow label="Session" value={booking.seminar || '—'} />
-                <DetailRow label="Date" value={booking.date || '—'} />
-                <DetailRow label="Time" value={booking.time || '—'} />
-                <DetailRow label="Seats" value={booking.seats?.join(', ') || '—'} />
-                <DetailRow label="Amount Paid" value={`₹${booking.totalPrice}`} highlight />
-                <DetailRow label="Booked On" value={new Date(booking.createdAt).toLocaleString('en-IN')} />
-              </div>
-
-              {attendeeEntries.length > 0 && (
-                <div className="attendee-section">
-                  <h4 className="attendee-title">Attendee Details</h4>
-                  {attendeeEntries.map(([seat, val]: any) => {
-                    const name = typeof val === 'object' && val !== null ? val.name : val;
-                    const phone = typeof val === 'object' && val !== null ? val.phone : '';
-                    return (
-                      <div key={seat} className="attendee-item">
-                        <span className="attendee-seat">{seat}</span>
-                        <span className="attendee-name">{name}</span>
-                        {phone && <span className="attendee-phone">📞 {phone}</span>}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              <button
-                className="btn-download-ticket"
-                onClick={handleDownload}
-                disabled={downloading || !qrUrl}
-              >
-                <Download size={16} />
-                {downloading ? 'Preparing...' : 'Download Ticket'}
-              </button>
-            </div>
-
-            {/* Right: QR Code */}
-            <div className="modal-qr-col">
-              <div className="qr-card">
-                <p className="qr-label">Scan for Verification</p>
-                {qrUrl ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={qrUrl} alt="QR Code" className="qr-img" />
-                ) : (
-                  <div className="qr-placeholder"><QrCode size={64} /></div>
-                )}
-                <p className="qr-booking-id">#{booking.id?.slice(0, 8).toUpperCase()}</p>
-              </div>
-            </div>
+          <div className="bk-card-detail-item">
+            <span className="bk-detail-lbl">Date &amp; Time:</span>
+            <span className="bk-detail-val">{booking.date || '—'} · {booking.time || '—'}</span>
+          </div>
+          <div className="bk-card-detail-item">
+            <span className="bk-detail-lbl">Seats:</span>
+            <span className="bk-detail-val">{booking.seats?.join(', ') || '—'}</span>
+          </div>
+          <div className="bk-card-detail-item">
+            <span className="bk-detail-lbl">Amount:</span>
+            <span className="bk-detail-val highlight">₹{booking.totalPrice}</span>
+          </div>
+          <div className="bk-card-detail-item bk-status-row-mobile">
+            <span className="bk-detail-lbl">Status:</span>
+            <span className={`bk-badge-${status} small`}>{getStatusLabel(status)}</span>
           </div>
         </div>
+
+        <div className="bk-card-actions-row">
+          <button 
+            className="btn btn-primary bk-card-btn" 
+            onClick={() => router.push(`/profile/bookings/${booking.id}`)}
+          >
+            View Details
+          </button>
+        </div>
       </div>
 
-      {/* Hidden Ticket Render (for html2canvas) */}
-      <TicketRender booking={booking} qrUrl={qrUrl} />
-    </>
-  );
-}
-
-function DetailRow({ label, value, mono, highlight }: { label: string; value: string; mono?: boolean; highlight?: boolean }) {
-  return (
-    <div className="detail-row-item">
-      <span className="detail-row-label">{label}</span>
-      <span className={`detail-row-value${mono ? ' mono' : ''}${highlight ? ' highlight' : ''}`}>{value}</span>
-    </div>
-  );
-}
-
-// ─── Hidden ticket for download ───────────────────────────────────────────────
-function TicketRender({ booking, qrUrl }: { booking: any; qrUrl: string }) {
-  const status = booking.status || 'pending';
-  const statusColor = status === 'approved' ? '#059669' : status === 'denied' ? '#dc2626' : '#d97706';
-  return (
-    <div
-      id={`ticket-render-${booking.id}`}
-      style={{
-        display: 'none',
-        position: 'fixed',
-        top: '-9999px',
-        left: '-9999px',
-        width: '620px',
-        background: 'white',
-        borderRadius: '16px',
-        overflow: 'hidden',
-        fontFamily: 'system-ui, sans-serif',
-        boxShadow: '0 0 0 2px #e2e8f0',
-      }}
-    >
-      {/* Ticket Header */}
-      <div style={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ color: 'white', fontWeight: 800, fontSize: '20px', letterSpacing: '-0.5px' }}>SUCCESS TEAM</div>
-          <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: '12px', marginTop: '2px' }}>Event Booking Ticket</div>
-        </div>
-        <div style={{ background: 'rgba(255,255,255,0.2)', padding: '6px 14px', borderRadius: '999px', fontSize: '12px', fontWeight: 700, border: '1px solid rgba(255,255,255,0.3)', color: statusColor === '#059669' ? '#ecfdf5' : statusColor === '#dc2626' ? '#fee2e2' : '#fef3c7' }}>
+      {/* Status badge on the top-right (desktop) */}
+      <div className="bk-card-status-wrap">
+        <span className={`bk-badge-${status}`}>
+          {status === 'approved' && <CheckCircle size={13} />}
+          {(status === 'pending' || !status) && <Clock size={13} />}
+          {status === 'denied' && <ShieldAlert size={13} />}
           {getStatusLabel(status)}
-        </div>
-      </div>
-
-      {/* Ticket Body */}
-      <div style={{ padding: '28px 32px', display: 'flex', gap: '24px' }}>
-        {/* Details */}
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: '#1e293b', marginBottom: '16px', lineHeight: 1.3 }}>
-            {booking.seminarName || booking.eventName}
-          </div>
-          {[
-            ['Booking ID', `#${booking.id?.slice(0, 8).toUpperCase()}`],
-            ['Venue', booking.venue],
-            ['Session', booking.seminar],
-            ['Date', booking.date],
-            ['Time', booking.time],
-            ['Seats', booking.seats?.join(', ')],
-            ['Amount Paid', `₹${booking.totalPrice}`],
-          ].map(([k, v]) => (
-            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{k}</span>
-              <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>{v || '—'}</span>
-            </div>
-          ))}
-          {/* Attendees */}
-          {booking.attendees && Object.keys(booking.attendees).length > 0 && (
-            <div style={{ marginTop: '8px' }}>
-              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Attendees</div>
-              {Object.entries(booking.attendees).map(([seat, val]: any) => {
-                const name = typeof val === 'object' && val !== null ? val.name : val;
-                const phone = typeof val === 'object' && val !== null ? val.phone : '';
-                return (
-                  <div key={seat} style={{ fontSize: '12px', color: '#047857', marginBottom: '3px' }}>
-                    <strong>{seat}:</strong> {name} {phone ? `(${phone})` : ''}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* QR */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', paddingLeft: '24px', borderLeft: '2px dashed #e2e8f0' }}>
-          {qrUrl && <img src={qrUrl} alt="QR" style={{ width: '140px', height: '140px' }} />}
-          <div style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'center' }}>Scan to verify</div>
-        </div>
-      </div>
-
-      {/* Ticket Footer */}
-      <div style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', padding: '12px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '11px', color: '#94a3b8' }}>Booked on {new Date(booking.createdAt).toLocaleDateString('en-IN')}</span>
-        <span style={{ fontSize: '11px', fontWeight: 700, color: statusColor }}>{getStatusLabel(status).toUpperCase()}</span>
+        </span>
       </div>
     </div>
   );
@@ -311,8 +137,7 @@ function ProfileDashboard() {
   const [activeTab, setActiveTab] = useState<'bookings' | 'notifications' | 'settings'>('bookings');
   const [notifications, setNotifications] = useState<any[]>([]);
 
-  // Modal state
-  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  // Modal state (deprecated, redirecting to details page instead)
 
   useEffect(() => {
     if (tabParam === 'notifications' || tabParam === 'settings' || tabParam === 'bookings') {
@@ -582,7 +407,7 @@ function ProfileDashboard() {
                       <p className="no-bookings-text">No active upcoming bookings.</p>
                     ) : (
                       <div className="booking-cards-grid">
-                        {currentBookings.map(b => <BookingCard key={b.id} booking={b} onViewMore={setSelectedBooking} />)}
+                        {currentBookings.map(b => <BookingCard key={b.id} booking={b} />)}
                       </div>
                     )}
                   </div>
@@ -594,7 +419,7 @@ function ProfileDashboard() {
                       <p className="no-bookings-text">No previous bookings history.</p>
                     ) : (
                       <div className="booking-cards-grid">
-                        {previousBookings.map(b => <BookingCard key={b.id} booking={b} onViewMore={setSelectedBooking} />)}
+                        {previousBookings.map(b => <BookingCard key={b.id} booking={b} />)}
                       </div>
                     )}
                   </div>
@@ -650,8 +475,7 @@ function ProfileDashboard() {
         </div>
       </div>
 
-      {/* Booking Modal */}
-      {selectedBooking && <BookingModal booking={selectedBooking} onClose={() => setSelectedBooking(null)} />}
+      {/* Booking Modal (removed since details render in a separate route) */}
 
       <style jsx>{`
         /* ── Layout ─────────────────────────────────────────────────── */
@@ -715,83 +539,180 @@ function ProfileDashboard() {
         .stat-box.pending { background: #fffbeb; border-color: #fde68a; }
         .stat-box.pending .stat-num { color: #b45309; }
 
-        /* ── Booking Cards ──────────────────────────────────────────── */
-        .booking-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-top: 1rem; }
-        @media (max-width: 640px) { .booking-cards-grid { grid-template-columns: 1fr; } }
+        /* ── Booking Cards Redesign ─────────────────────────────────── */
+        .booking-cards-grid { display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1.25rem; }
 
-        .bk-card { background: white; border: 1.5px solid #e2e8f0; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .bk-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-        .bk-card-approved { border-left: 4px solid #10b981; }
-        .bk-card-pending { border-left: 4px solid #f59e0b; }
-        .bk-card-denied { border-left: 4px solid #ef4444; }
+        .bk-horizontal-card {
+          display: flex;
+          background: white;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-2xl);
+          overflow: hidden;
+          box-shadow: var(--shadow-sm);
+          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
+          position: relative;
+        }
+        .bk-horizontal-card:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-lg);
+        }
+        .bk-horizontal-card.status-approved { border-left: 5px solid #10b981; }
+        .bk-horizontal-card.status-pending { border-left: 5px solid #f59e0b; }
+        .bk-horizontal-card.status-denied { border-left: 5px solid #ef4444; }
+        .bk-horizontal-card.status-approved:hover { border-color: rgba(16,185,129,0.5); }
+        .bk-horizontal-card.status-pending:hover { border-color: rgba(245,158,11,0.5); }
+        .bk-horizontal-card.status-denied:hover { border-color: rgba(239,68,68,0.5); }
 
-        .bk-card-top { display: flex; align-items: flex-start; justify-content: space-between; padding: 1rem 1.125rem 0.75rem; gap: 0.5rem; }
-        .bk-card-left { display: flex; flex-direction: column; gap: 2px; }
-        .bk-ref-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; }
-        .bk-ref-id { font-family: var(--font-heading), monospace; font-size: 0.95rem; font-weight: 800; color: #1e293b; }
-        .bk-date-created { font-size: 0.72rem; color: #94a3b8; }
+        .bk-card-image-wrap {
+          width: 180px;
+          min-width: 180px;
+          height: auto;
+          position: relative;
+          background: #f1f5f9;
+          border-right: 1px solid var(--border);
+        }
+        .bk-card-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
 
-        .bk-card-body { padding: 0 1.125rem 0.875rem; flex: 1; }
-        .bk-event-name { font-size: 0.95rem; font-weight: 700; color: #1e293b; margin: 0 0 0.5rem; line-height: 1.35; }
-        .bk-meta-row { display: flex; gap: 1rem; flex-wrap: wrap; }
-        .bk-meta-item { font-size: 0.76rem; color: #64748b; display: flex; align-items: center; gap: 3px; font-weight: 500; }
+        .bk-card-info-wrap {
+          flex: 1;
+          padding: 1.5rem 1.75rem;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          gap: 1rem;
+        }
 
-        .bk-card-footer { padding: 0.75rem 1.125rem; border-top: 1px solid #f1f5f9; background: #fafafa; }
-        .bk-view-more-btn { display: flex; align-items: center; gap: 6px; width: 100%; justify-content: center; padding: 0.55rem 1rem; background: linear-gradient(135deg, #059669, #10b981); color: white; border: none; border-radius: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s ease, transform 0.15s ease; letter-spacing: 0.01em; }
-        .bk-view-more-btn:hover { opacity: 0.9; transform: scale(0.98); }
+        .bk-card-title-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 1rem;
+        }
+        .bk-card-event-name {
+          font-family: var(--font-heading);
+          font-size: 1.15rem;
+          font-weight: 800;
+          color: var(--foreground);
+          margin: 0;
+          line-height: 1.35;
+        }
 
-        /* Status badges */
-        .bk-status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
-        .badge-approved { background: #d1fae5; color: #065f46; }
-        .badge-pending { background: #fef3c7; color: #92400e; }
-        .badge-denied { background: #fee2e2; color: #991b1b; }
+        .bk-card-details-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 0.75rem 1.5rem;
+        }
+        .bk-card-detail-item {
+          display: flex;
+          align-items: baseline;
+          gap: 0.5rem;
+          font-size: 0.88rem;
+        }
+        .bk-detail-lbl {
+          color: var(--muted);
+          font-weight: 500;
+          font-size: 0.8rem;
+          text-transform: uppercase;
+          letter-spacing: 0.02em;
+        }
+        .bk-detail-val {
+          color: var(--foreground);
+          font-weight: 600;
+        }
+        .bk-detail-val.highlight {
+          color: #059669;
+          font-weight: 800;
+          font-size: 0.95rem;
+        }
+        .bk-status-row-mobile {
+          display: none;
+        }
 
-        /* ── Modal ──────────────────────────────────────────────────── */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(4px); z-index: 1000; }
-        .modal-sheet { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(96vw, 860px); max-height: 90vh; overflow-y: auto; background: white; border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.25); z-index: 1001; }
-        @media (max-width: 640px) { .modal-sheet { top: auto; left: 0; right: 0; bottom: 0; transform: none; width: 100%; max-height: 92vh; border-radius: 20px 20px 0 0; } }
+        .bk-card-actions-row {
+          display: flex;
+          justify-content: flex-start;
+          margin-top: 0.25rem;
+        }
+        .bk-card-btn {
+          font-size: 0.85rem;
+          padding: 0.5rem 1.25rem;
+          border-radius: var(--radius-lg);
+          font-weight: 700;
+          background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+          border: none;
+          box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+          transition: transform 0.1s ease, box-shadow 0.15s ease;
+          color: white;
+          cursor: pointer;
+        }
+        .bk-card-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        }
 
-        .modal-close-btn { position: absolute; top: 14px; right: 14px; background: #f1f5f9; border: none; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; transition: background 0.15s; z-index: 2; }
-        .modal-close-btn:hover { background: #e2e8f0; color: #1e293b; }
+        /* Badge (Desktop) */
+        .bk-card-status-wrap {
+          padding: 1.5rem 1.75rem;
+          display: flex;
+          align-items: flex-start;
+          justify-content: flex-end;
+        }
+        .bk-badge-approved, .bk-badge-pending, .bk-badge-denied {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 14px;
+          border-radius: 9999px;
+          font-size: 0.75rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          box-shadow: var(--shadow-sm);
+        }
+        .bk-badge-approved { background: #d1fae5; border: 1.5px solid #6ee7b7; color: #065f46; }
+        .bk-badge-pending { background: #fef3c7; border: 1.5px solid #fcd34d; color: #92400e; }
+        .bk-badge-denied { background: #fee2e2; border: 1.5px solid #fca5a5; color: #991b1b; }
 
-        .modal-inner { padding: 2rem; }
-        @media (max-width: 640px) { .modal-inner { padding: 1.5rem 1.125rem; } }
+        .bk-badge-approved.small, .bk-badge-pending.small, .bk-badge-denied.small {
+          padding: 2px 8px;
+          font-size: 0.65rem;
+        }
 
-        .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.75rem; flex-wrap: wrap; }
-        .modal-title { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: #1e293b; margin: 0; }
-
-        .modal-body { display: grid; grid-template-columns: 1fr 200px; gap: 2rem; }
-        @media (max-width: 640px) { .modal-body { grid-template-columns: 1fr; } }
-
-        /* Detail rows */
-        .detail-grid { display: flex; flex-direction: column; gap: 0.75rem; }
-        .detail-row-item { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; padding-bottom: 0.6rem; border-bottom: 1px solid #f1f5f9; }
-        .detail-row-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; flex-shrink: 0; }
-        .detail-row-value { font-size: 0.9rem; font-weight: 600; color: #1e293b; text-align: right; }
-        .detail-row-value.mono { font-family: monospace; font-size: 0.82rem; }
-        .detail-row-value.highlight { color: #059669; font-size: 1.05rem; font-weight: 800; }
-
-        /* Attendees */
-        .attendee-section { margin-top: 1.25rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; }
-        .attendee-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin: 0 0 0.75rem; }
-        .attendee-item { display: flex; gap: 0.75rem; align-items: baseline; padding: 0.4rem 0; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; }
-        .attendee-item:last-child { border-bottom: none; }
-        .attendee-seat { background: #d1fae5; color: #065f46; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; flex-shrink: 0; }
-        .attendee-name { font-size: 0.875rem; font-weight: 600; color: #1e293b; }
-        .attendee-phone { font-size: 0.8rem; color: #64748b; }
-
-        /* Download button */
-        .btn-download-ticket { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 1.5rem; padding: 0.75rem 1rem; background: linear-gradient(135deg, #1e293b, #334155); color: white; border: none; border-radius: 12px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s, transform 0.15s; }
-        .btn-download-ticket:hover { opacity: 0.88; transform: scale(0.98); }
-        .btn-download-ticket:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-        /* QR code column */
-        .modal-qr-col { display: flex; align-items: flex-start; justify-content: center; }
-        .qr-card { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 1.25rem; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; width: 100%; }
-        .qr-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; text-align: center; }
-        .qr-img { width: 150px; height: 150px; border-radius: 10px; }
-        .qr-placeholder { width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; background: #e2e8f0; border-radius: 10px; color: #94a3b8; }
-        .qr-booking-id { font-family: monospace; font-size: 0.75rem; font-weight: 700; color: #475569; }
+        @media (max-width: 640px) {
+          .bk-horizontal-card {
+            flex-direction: column;
+          }
+          .bk-card-image-wrap {
+            width: 100%;
+            height: 140px;
+            min-width: unset;
+            border-right: none;
+            border-bottom: 1px solid var(--border);
+          }
+          .bk-card-status-wrap {
+            display: none;
+          }
+          .bk-status-row-mobile {
+            display: flex;
+            align-items: center;
+          }
+          .bk-card-details-grid {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+          }
+          .bk-card-info-wrap {
+            padding: 1.25rem 1.125rem;
+          }
+          .bk-card-btn {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+          }
+        }
 
         /* ── History Card ───────────────────────────────────────────── */
         .history-card { padding: 2.5rem 2rem; background: white; border: 1px solid var(--border); border-radius: var(--radius-2xl); }
