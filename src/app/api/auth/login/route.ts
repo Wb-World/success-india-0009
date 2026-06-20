@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { verifyPassword, hashPassword } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,16 +10,37 @@ export async function POST(request: Request) {
 
     if (!username || !password) {
       return NextResponse.json(
-        { error: 'Username and password are required' },
+        { error: 'Username/email and password are required' },
         { status: 400 }
       );
     }
 
-    let { data: user, error } = await supabaseAdmin
+    let user = null;
+    let error = null;
+
+    const usernameQuery = await supabaseAdmin
       .from('users')
       .select('id, username, name, email, phone, role, password')
       .ilike('username', username)
       .maybeSingle();
+
+    if (usernameQuery.error) {
+      error = usernameQuery.error;
+    } else if (usernameQuery.data) {
+      user = usernameQuery.data;
+    } else {
+      const emailQuery = await supabaseAdmin
+        .from('users')
+        .select('id, username, name, email, phone, role, password')
+        .ilike('email', username)
+        .maybeSingle();
+      
+      if (emailQuery.error) {
+        error = emailQuery.error;
+      } else {
+        user = emailQuery.data;
+      }
+    }
 
     // If default admin is requested but not found in the database, seed it on-the-fly
     if ((!user || error) && username.toLowerCase() === 'admin' && password === 'admin123') {
@@ -28,7 +50,7 @@ export async function POST(request: Request) {
         .insert({
           id: 'adm_1',
           username: 'admin',
-          password: 'admin123',
+          password: hashPassword('admin123'),
           name: 'Super Admin',
           email: 'admin@team.test',
           phone: '+91 9999988888',
@@ -47,14 +69,14 @@ export async function POST(request: Request) {
 
     if (error || !user) {
       return NextResponse.json(
-        { error: 'Invalid username or password' },
+        { error: 'Invalid username/email or password' },
         { status: 401 }
       );
     }
 
-    if (user.password !== password) {
+    if (!verifyPassword(password, user.password)) {
       return NextResponse.json(
-        { error: 'Invalid username or password' },
+        { error: 'Invalid username/email or password' },
         { status: 401 }
       );
     }

@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   password    TEXT        NOT NULL,
   name        TEXT        NOT NULL,
   email       TEXT        NOT NULL UNIQUE,
-  phone       TEXT        NOT NULL,
+  phone       TEXT        NOT NULL UNIQUE,
   role        TEXT        NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
