@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown, User } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function Navbar() {
@@ -165,13 +165,17 @@ export default function Navbar() {
           <Link href="/contribution" className={`nav-link ${pathname === '/contribution' ? 'active' : ''}`}>Contribution</Link>
           <Link href="/about" className={`nav-link ${pathname === '/about' ? 'active' : ''}`}>About</Link>
           <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`}>Contact</Link>
+        </nav>
+
+        <div className="nav-actions-desktop">
           {user ? (
             <div className="profile-dropdown-container">
               <button
                 type="button"
-                className={`profile-dropdown-trigger ${pathname.startsWith('/profile') ? 'active' : ''}`}
+                className={`btn-profile-trigger ${pathname.startsWith('/profile') ? 'active' : ''}`}
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
               >
+                <User size={15} />
                 <span>Profile</span>
                 <ChevronDown size={14} />
                 {unreadCount > 0 && <span className="navbar-unread-dot" />}
@@ -183,7 +187,6 @@ export default function Navbar() {
                   <div className="profile-dropdown-menu glass-card animate-slide-down">
                     <div className="dropdown-user-info">
                       <p className="dropdown-username">{user.name}</p>
-                      <p className="dropdown-userrole">Official Delegate</p>
                     </div>
                     <hr className="dropdown-divider" />
                     <Link
@@ -203,13 +206,6 @@ export default function Navbar() {
                         {unreadCount > 0 && <span className="dropdown-unread-count">{unreadCount}</span>}
                       </span>
                     </Link>
-                    <Link
-                      href="/profile?tab=settings"
-                      className={`dropdown-item ${pathname === '/profile' && currentTab === 'settings' ? 'active' : ''}`}
-                      onClick={() => setProfileDropdownOpen(false)}
-                    >
-                      <span>⚙️ Account Settings</span>
-                    </Link>
                     <hr className="dropdown-divider" />
                     <button
                       type="button"
@@ -227,13 +223,11 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="nav-auth-buttons">
-              <Link href="/login" className="btn-auth btn-auth-outline">Sign In</Link>
-              <Link href="/signup" className="btn-auth btn-auth-filled">Sign Up</Link>
+              <Link href="/login" className="btn-auth btn-auth-outline">Login</Link>
+              <Link href="/signup" className="btn-auth btn-auth-filled">Sign In</Link>
             </div>
           )}
-        </nav>
-
-
+        </div>
 
         <button
           className="mobile-menu-toggle"
@@ -258,25 +252,6 @@ export default function Navbar() {
           />
           <div className="mobile-drawer animate-slide-down" id="mobile-nav-drawer" role="dialog" aria-modal="true" aria-label="Site navigation">
             <div className="mobile-drawer-panel">
-              {/* <div className="mobile-drawer-top">
-                <Link href="/" className="mobile-drawer-brand" onClick={closeMenu}>
-                  <img src="/success-india-logo.jpeg?v=2" alt="Success Team logo" className="mobile-brand-logo" />
-                  <div className="mobile-brand-copy">
-                    <span className="mobile-brand-title">Success<span className="text-primary"> Team</span></span>
-                    <span className="mobile-brand-subtitle">Official event portal</span>
-                  </div>
-                </Link>
-
-                <button
-                  type="button"
-                  className="mobile-drawer-close"
-                  onClick={closeMenu}
-                  aria-label="Close navigation menu"
-                >
-                  <X size={20} />
-                </button>
-              </div> */}
-
               <nav className="mobile-drawer-links" aria-label="Mobile navigation">
                 <Link href="/" className={`mobile-link ${pathname === '/' ? 'active' : ''}`} onClick={closeMenu}>Home</Link>
                 <Link href="/events" className={`mobile-link ${pathname === '/events' ? 'active' : ''}`} onClick={closeMenu}>Event</Link>
@@ -295,17 +270,14 @@ export default function Navbar() {
                         {unreadCount > 0 && <span className="dropdown-unread-count">{unreadCount}</span>}
                       </span>
                     </Link>
-                    <Link href="/profile?tab=settings" className={`mobile-link ${pathname === '/profile' && currentTab === 'settings' ? 'active' : ''}`} onClick={closeMenu}>
-                      <span>⚙️ Account Settings</span>
-                    </Link>
                     <button type="button" onClick={() => { handleLogout(); closeMenu(); }} className="mobile-link mobile-logout-btn" style={{ textAlign: 'left', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none' }}>
                       <span>🚪 Logout</span>
                     </button>
                   </>
                 ) : (
                   <div className="mobile-auth-buttons">
-                    <Link href="/login" className="mobile-btn-auth mobile-btn-auth-outline" onClick={closeMenu}>Sign In</Link>
-                    <Link href="/signup" className="mobile-btn-auth mobile-btn-auth-filled" onClick={closeMenu}>Sign Up</Link>
+                    <Link href="/login" className="mobile-btn-auth mobile-btn-auth-outline" onClick={closeMenu}>Login</Link>
+                    <Link href="/signup" className="mobile-btn-auth mobile-btn-auth-filled" onClick={closeMenu}>Sign In</Link>
                   </div>
                 )}
               </nav>
@@ -316,7 +288,7 @@ export default function Navbar() {
         </>
       )}
 
-      <style jsx>{`
+      <style>{`
         .nav-header {
           position: sticky;
           top: 0;
@@ -687,24 +659,28 @@ export default function Navbar() {
 
         @media (min-width: 1024px) {
           .nav-container {
-            position: relative;
-            justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
           }
           .nav-logo {
-            position: absolute;
-            left: 2rem;
-            top: 50%;
-            transform: translateY(-50%);
+            transform: none;
           }
           .nav-logo:hover {
-            transform: translateY(-50%) scale(1.03);
+            transform: scale(1.03);
           }
           .nav-links-desktop {
             display: flex;
             justify-content: center;
-            flex: 0 1 auto;
-            margin: 0 auto;
-            transform: translateX(-90px);
+            align-items: center;
+            gap: 2rem;
+            flex: 1;
+            margin: 0;
+          }
+          .nav-actions-desktop {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
           }
           .mobile-menu-toggle { display: none; }
         }
@@ -714,27 +690,32 @@ export default function Navbar() {
           display: inline-block;
         }
 
-        .profile-dropdown-trigger {
-          background: none;
-          border: none;
+        .btn-profile-trigger {
+          background: white;
+          border: 1.5px solid var(--primary);
+          color: var(--primary);
           cursor: pointer;
           font-family: inherit;
-          font-size: 0.95rem;
-          font-weight: 500;
-          color: var(--muted);
-          padding: 0.35rem 0.75rem;
+          font-size: 0.92rem;
+          font-weight: 600;
+          padding: 0.45rem 1.15rem;
           border-radius: var(--radius-lg);
           display: inline-flex;
           align-items: center;
-          gap: 0.35rem;
+          gap: 0.45rem;
           position: relative;
           transition: all var(--transition-fast);
+          height: 38px;
+          box-sizing: border-box;
+          line-height: 1;
         }
 
-        .profile-dropdown-trigger:hover,
-        .profile-dropdown-trigger.active {
-          color: var(--primary);
-          background-color: var(--primary-light);
+        .btn-profile-trigger:hover,
+        .btn-profile-trigger.active {
+          color: white;
+          background: var(--primary);
+          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+          transform: translateY(-1px);
         }
 
         .navbar-unread-dot {

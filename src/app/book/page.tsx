@@ -376,7 +376,7 @@ function BookingEngine() {
       </div>
 
       {/* Styles */}
-      <style jsx>{`
+      <style>{`
         .booking-page {
           padding: 3rem 1.5rem 6rem 1.5rem;
           max-width: 1100px;

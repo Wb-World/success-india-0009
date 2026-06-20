@@ -114,7 +114,7 @@ export default function About() {
         </div>
       </section>
 
-      <style jsx>{`
+      <style>{`
         .about-page {
           background-color: var(--background);
           padding-bottom: 5rem;

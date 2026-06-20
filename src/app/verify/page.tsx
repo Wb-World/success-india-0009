@@ -142,7 +142,9 @@ function VerifyContent() {
                 <div>
                   <p className="vp-event-label">EVENT</p>
                   <h1 className="vp-event-name">{result.ticket.eventName}</h1>
-                  <p className="vp-session-name">{result.ticket.session}</p>
+                  {result.ticket.session && result.ticket.session !== result.ticket.eventName && (
+                    <p className="vp-session-name">{result.ticket.session}</p>
+                  )}
                 </div>
                 <StatusBadge status={result.ticket.status} />
               </div>
@@ -209,7 +211,7 @@ function VerifyContent() {
         )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         /* ── Root ───────────────────────────────────────────────── */
         .vp-root {
           min-height: 100vh;

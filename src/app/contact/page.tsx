@@ -186,7 +186,7 @@ export default function Contact() {
         </div>
       </section>
 
-      <style jsx>{`
+      <style>{`
         .contact-page {
           background-color: var(--background);
         }

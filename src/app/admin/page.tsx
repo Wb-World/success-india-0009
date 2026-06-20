@@ -36,7 +36,7 @@ export default function AdminPage() {
       <div className="spinner"></div>
       <p style={{ marginTop: '1rem', fontWeight: 600 }}>Loading administration portal...</p>
       
-      <style jsx>{`
+      <style>{`
         .spinner {
           border: 4px solid rgba(16, 185, 129, 0.1);
           border-left-color: var(--primary);

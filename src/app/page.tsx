@@ -289,55 +289,6 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="routes-section container">
-          <div className="section-header">
-            <span className="section-eyebrow">Popular Event Tracks</span>
-            <h2 className="heading-lg">Reserve seats for the next Success Team session</h2>
-            <p className="section-subtitle">Click any event card to instantly open seat booking.</p>
-          </div>
-
-          <div className="routes-grid">
-            {(events.length ? events.slice(0, 3) : fallbackEventCategories.slice(0, 3)).map((item, index) => {
-              const event = typeof item === 'string' ? null : item;
-              const category = event ? event.title || event.name || fallbackEventCategories[index] : String(item);
-              const location = event ? event.venue || event.legacySource || fallbackLocations[index] : fallbackLocations[index];
-              return (
-                <div
-                  key={category}
-                  className="seminar-track-card"
-                  onClick={() => {
-                    if (event) {
-                      handleEventCardClick(event);
-                    } else {
-                      window.location.href = `/book?seminar=${encodeURIComponent(category)}`;
-                    }
-                  }}
-                >
-                  <div className="seminar-track-info">
-                    <div className="seminar-track-title">{category}</div>
-                    <div className="seminar-track-details">{location} <ArrowRight size={13} /> Seat registration</div>
-                  </div>
-                  <div className="seminar-fee-tag">
-                    <span>{event ? 'Fee' : 'Track'}</span>
-                    <span className="price-num">{event ? `₹${event.price}` : `0${index + 1}`}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="office-section">
-          <div className="container office-container">
-            <div className="office-card">
-              <Target size={26} />
-              <div>
-                <span className="office-label">Head Office Reference</span>
-                <p>No 303, 2nd floor, Grand Southern Trunk Rd, Chromepet, Chennai, Tamil Nadu 600044.</p>
-              </div>
-            </div>
-          </div>
-        </section>
         {supporters.length > 0 && (
           <section className="contributors-carousel-section">
             <div className="container">
@@ -355,14 +306,13 @@ export default function Home() {
                   <h3 className="designation-title">Chief Executive Director</h3>
                   <div className="contributors-grid">
                     {chiefDirectors.map((s) => (
-                      <div key={`contrib-chief-${s.id}`} className="contributor-card">
+                      <div key={`contrib-chief-${s.id}`} className="contributor-card" title={s.name}>
                         <div className="contributor-img-wrap">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={s.vpImage} alt={s.name} className="contributor-img" />
                         </div>
                         <div className="contributor-info">
                           <h3 className="contributor-name">{s.name}</h3>
-                          <span className="contributor-designation">{s.designation}</span>
                         </div>
                       </div>
                     ))}
@@ -375,14 +325,13 @@ export default function Home() {
                   <h3 className="designation-title">Executive Director</h3>
                   <div className="contributors-grid">
                     {executiveDirectors.map((s) => (
-                      <div key={`contrib-exec-${s.id}`} className="contributor-card">
+                      <div key={`contrib-exec-${s.id}`} className="contributor-card" title={s.name}>
                         <div className="contributor-img-wrap">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={s.vpImage} alt={s.name} className="contributor-img" />
                         </div>
                         <div className="contributor-info">
                           <h3 className="contributor-name">{s.name}</h3>
-                          <span className="contributor-designation">{s.designation}</span>
                         </div>
                       </div>
                     ))}
@@ -394,7 +343,7 @@ export default function Home() {
         )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         .landing-page {
           background: var(--background);
         }
@@ -1119,37 +1068,16 @@ export default function Home() {
 
         .contributors-grid {
           display: grid;
-          grid-template-columns: repeat(3, 200px);
-          gap: 2rem;
+          grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+          gap: 1.5rem;
           justify-content: center;
+          max-width: 1200px;
           margin: 0 auto;
-        }
-
-        @media (max-width: 991px) {
-          .contributors-grid {
-            grid-template-columns: repeat(2, 200px);
-          }
-        }
-
-        @media (max-width: 640px) {
-          .contributors-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.25rem;
-            max-width: 420px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .contributors-grid {
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-            max-width: 200px;
-          }
         }
 
         .contributor-card {
           width: 100%;
-          max-width: 200px;
+          max-width: 110px;
           background: transparent;
           border: none;
           padding: 0;
@@ -1167,94 +1095,54 @@ export default function Home() {
         }
 
         .contributor-img-wrap {
-          width: 100px;
-          height: 115px;
-          border-radius: 12px;
+          width: 80px;
+          height: 80px;
+          border-radius: 0;
           overflow: hidden;
-          margin-bottom: 0.625rem;
-          border: 1.5px solid #e2e8f0;
-          transition: border-color 0.3s ease;
+          margin-bottom: 0.5rem;
+          border: 2px solid #10b981;
+          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15);
           background: #f8fafc;
           display: flex;
           align-items: center;
           justify-content: center;
-          position: relative;
-        }
-
-        @media (max-width: 640px) {
-          .contributor-img-wrap {
-            width: 100px;
-            height: 115px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .contributor-img-wrap {
-            width: 100px;
-            height: 115px;
-          }
+          transition: all 0.3s ease;
         }
 
         .contributor-card:hover .contributor-img-wrap {
           border-color: #10b981;
+          transform: scale(1.05);
+          box-shadow: 0 6px 15px rgba(16, 185, 129, 0.25);
         }
 
         .contributor-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          object-position: center top;
           display: block;
-          transition: transform 0.3s ease;
         }
 
         .contributor-info {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 0.25rem;
           width: 100%;
-          max-width: 200px;
           box-sizing: border-box;
           padding: 0 4px;
         }
 
-        @media (max-width: 640px) {
-          .contributor-info {
-            max-width: 100%;
-          }
-        }
-
         .contributor-name {
-          font-family: var(--font-heading), sans-serif;
-          font-size: 0.95rem;
-          font-weight: 700;
-          color: #1e293b;
-          margin: 0;
-          line-height: 1.35;
-          width: 100%;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          text-align: center;
-        }
-
-        .contributor-designation {
-          display: inline-block;
-          font-size: 0.7rem;
+          font-family: var(--font-sans), sans-serif;
+          font-size: 0.825rem;
           font-weight: 600;
-          color: #047857;
-          background: #ecfdf5;
-          border: 1px solid #a7f3d0;
-          padding: 2px 8px;
-          border-radius: 99px;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          max-width: 100%;
-          white-space: nowrap;
+          color: #374151;
+          margin: 0;
+          line-height: 1.3;
+          width: 100%;
           overflow: hidden;
           text-overflow: ellipsis;
           text-align: center;
+          word-break: break-word;
         }
 
         @media (max-width: 640px) {

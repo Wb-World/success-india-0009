@@ -65,7 +65,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="spinner"></div>
-        <style jsx>{`
+        <style>{`
           .spinner {
             border: 4px solid rgba(16, 185, 129, 0.1);
             border-left-color: #10b981;
@@ -101,7 +101,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
             </div>
           </div>
           
-          <style jsx>{`
+          <style>{`
             .auth-overlay {
               position: fixed;
               inset: 0;

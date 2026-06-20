@@ -149,7 +149,7 @@ export default function AdminLogin() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .admin-login-page {
           background-color: #f0fdf4;
           background: radial-gradient(circle at center, #ffffff 0%, #dcfce7 100%);

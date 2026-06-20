@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import StyledJsxRegistry from './registry';
 
 export const metadata: Metadata = {
   title: 'Success Team - Official Event & Leadership Portal',
@@ -42,11 +43,13 @@ export default function RootLayout({
         <link rel="shortcut icon" href="/favicon.png?v=2" />
       </head>
       <body>
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
-          <Navbar />
-          <main style={{ flex: 1, width: '100%' }}>{children}</main>
-          <Footer />
-        </div>
+        <StyledJsxRegistry>
+          <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
+            <Navbar />
+            <main style={{ flex: 1, width: '100%' }}>{children}</main>
+            <Footer />
+          </div>
+        </StyledJsxRegistry>
       </body>
     </html>
   );

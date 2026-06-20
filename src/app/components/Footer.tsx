@@ -132,7 +132,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .site-footer {
           background: #16a34a;
           color: #ffffff;
@@ -216,7 +216,7 @@ export default function Footer() {
           overflow-wrap: anywhere;
         }
 
-        .contact-item :global(svg) {
+        .contact-item svg {
           flex-shrink: 0;
           margin-top: 3px;
         }

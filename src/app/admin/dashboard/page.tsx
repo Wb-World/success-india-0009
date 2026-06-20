@@ -1403,7 +1403,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         .admin-dashboard-page {
           background-color: #f8fafc;
           background-image: radial-gradient(rgba(22, 163, 74, 0.02) 1.5px, transparent 0), radial-gradient(rgba(22, 163, 74, 0.02) 1.5px, transparent 0);

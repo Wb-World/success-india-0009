@@ -1459,7 +1459,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       </div>
 
       {/* ─── Styles ─────────────────────────────────────────────────────────── */}
-      <style jsx>{`
+      <style>{`
         /* Overlay */
         .sbm-overlay {
           position: fixed;
@@ -1785,7 +1785,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           transition: transform 0.25s ease-out;
         }
 
-        .illustration-graphic :global(.vehicle-svg) {
+        .illustration-graphic .vehicle-svg {
           width: 100%;
           height: 100%;
         }

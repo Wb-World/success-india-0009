@@ -88,7 +88,7 @@ export async function GET(request: Request) {
     for (const [seat, val] of Object.entries(rawAttendees)) {
       if (seat.startsWith('__')) continue;
       if (typeof val === 'object' && val !== null) {
-        cleanAttendees[seat] = { name: val.name || '', phone: val.phone || '' };
+        cleanAttendees[seat] = { name: val.name || '', phone: val.phone || val.whatsapp || '' };
       } else if (typeof val === 'string') {
         cleanAttendees[seat] = { name: val, phone: '' };
       }

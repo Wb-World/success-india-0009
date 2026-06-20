@@ -127,13 +127,13 @@ function ProfileDashboard() {
 
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState<'bookings' | 'notifications' | 'settings'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'notifications'>('bookings');
   const [notifications, setNotifications] = useState<any[]>([]);
 
   // Modal state (deprecated, redirecting to details page instead)
 
   useEffect(() => {
-    if (tabParam === 'notifications' || tabParam === 'settings' || tabParam === 'bookings') {
+    if (tabParam === 'notifications' || tabParam === 'bookings') {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
@@ -189,11 +189,17 @@ function ProfileDashboard() {
       const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loginForm) });
       const data = await res.json();
       if (res.ok) {
+        if (data.user.role === 'admin') {
+          setAuthError('Admins must log in through the admin portal');
+          setAuthLoading(false);
+          return;
+        }
         localStorage.setItem('user', JSON.stringify(data.user));
         setCurrentUser(data.user);
         window.dispatchEvent(new Event('auth-change'));
-        if (data.user.role === 'admin') { router.push('/admin/dashboard'); }
-        else { fetchProfileData(); const cb = getSafeCallbackUrl(); if (cb) router.push(cb); }
+        fetchProfileData();
+        const cb = getSafeCallbackUrl();
+        if (cb) router.push(cb);
       } else { setAuthError(data.error || 'Login failed'); }
     } catch { setAuthError('A network error occurred'); }
     finally { setAuthLoading(false); }
@@ -235,7 +241,7 @@ function ProfileDashboard() {
     finally { setUpdateLoading(false); }
   };
 
-  const handleTabChange = (tabName: 'bookings' | 'notifications' | 'settings') => {
+  const handleTabChange = (tabName: 'bookings' | 'notifications') => {
     setActiveTab(tabName);
     router.push(`/profile?tab=${tabName}`);
   };
@@ -255,7 +261,7 @@ function ProfileDashboard() {
       <div className="loading-container container">
         <div className="spinner"></div>
         <p>Retrieving your account profile...</p>
-        <style jsx>{`
+        <style>{`
           .loading-container { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:8rem 0; gap:1rem; }
           .spinner { border:4px solid rgba(16,185,129,0.1); border-left-color:var(--primary); width:40px; height:40px; border-radius:50%; animation:spin 1s linear infinite; }
           @keyframes spin { to { transform:rotate(360deg); } }
@@ -291,7 +297,7 @@ function ProfileDashboard() {
             )}
           </div>
         </div>
-        <style jsx>{`
+        <style>{`
           .auth-page { max-width:480px; padding:3rem 1rem; width:100%; }
           @media (min-width:640px) { .auth-page { padding:5rem 1.5rem; } }
           .auth-card { background:white; border:1px solid var(--border); border-radius:var(--radius-2xl); overflow:hidden; box-shadow:var(--shadow-xl); }
@@ -351,7 +357,6 @@ function ProfileDashboard() {
                 <span>🔔 Notifications</span>
                 {notifications.filter(n => !n.isRead).length > 0 && <span className="tab-unread-count">{notifications.filter(n => !n.isRead).length}</span>}
               </button>
-              <button type="button" className={`sidebar-tab-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => handleTabChange('settings')}><span>⚙️ Account Settings</span></button>
             </div>
           </div>
         </div>
@@ -364,7 +369,6 @@ function ProfileDashboard() {
             <button type="button" className={`mobile-tab-item ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => handleTabChange('notifications')}>
               🔔 Alerts {notifications.filter(n => !n.isRead).length > 0 && <span className="mobile-unread-badge">{notifications.filter(n => !n.isRead).length}</span>}
             </button>
-            <button type="button" className={`mobile-tab-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => handleTabChange('settings')}>⚙️ Settings</button>
           </div>
 
           {/* TAB 1: BOOKINGS */}
@@ -443,28 +447,12 @@ function ProfileDashboard() {
               )}
             </div>
           )}
-
-          {/* TAB 3: SETTINGS */}
-          {activeTab === 'settings' && (
-            <div className="history-card glass-card">
-              <h2 className="heading-md history-card-title">⚙️ Account Settings</h2>
-              {updateSuccess && (<div className="update-success-alert animate-slide-up" style={{ marginBottom: '1.5rem', marginTop: '1.5rem' }}><CheckCircle size={16} /> <span>{updateSuccess}</span></div>)}
-              {updateError && (<div className="update-error-alert animate-slide-up" style={{ marginBottom: '1.5rem', marginTop: '1.5rem' }}><ShieldAlert size={16} /> <span>{updateError}</span></div>)}
-              <form onSubmit={handleProfileUpdate} className="profile-edit-form settings-edit-form" style={{ marginTop: '1.5rem' }}>
-                <div className="form-group" style={{ marginBottom: '1.25rem' }}><label className="form-label"><User size={14} style={{ marginRight: '4px' }} /> Full Name</label><input type="text" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="form-control" required /></div>
-                <div className="form-group" style={{ marginBottom: '1.5rem' }}><label className="form-label"><Phone size={14} style={{ marginRight: '4px' }} /> Phone Number</label><input type="text" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="form-control" required /></div>
-                <div className="form-actions" style={{ maxWidth: '200px' }}>
-                  <button type="submit" className="btn btn-primary" disabled={updateLoading}><Save size={14} style={{ marginRight: '4px' }} /> {updateLoading ? 'Saving...' : 'Save Changes'}</button>
-                </div>
-              </form>
-            </div>
-          )}
         </div>
       </div>
 
       {/* Booking Modal (removed since details render in a separate route) */}
 
-      <style jsx>{`
+      <style>{`
         /* ── Layout ─────────────────────────────────────────────────── */
         .profile-dashboard { padding: 4rem 1.5rem; }
         @media (max-width: 640px) {
@@ -503,17 +491,91 @@ function ProfileDashboard() {
         .detail-val { font-weight: 600; color: var(--foreground); font-size: 1rem; }
 
         /* ── Sidebar Tabs ──────────────────────────────────────────── */
-        .profile-sidebar-tabs { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
-        .sidebar-tab-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0.8rem 1rem; border-radius: var(--radius-lg); font-weight: 600; font-size: 0.95rem; color: var(--muted); background: transparent; border: 1px solid transparent; text-align: left; cursor: pointer; transition: all 0.15s; }
-        .sidebar-tab-btn:hover { background-color: var(--input); color: var(--foreground); }
-        .sidebar-tab-btn.active { background-color: var(--primary-light); color: var(--primary-dark); border-color: rgba(16,185,129,0.2); }
-        .tab-unread-count { background-color: #10b981; color: white; font-size: 0.75rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 9999px; line-height: 1; }
+        .profile-sidebar-tabs { display: flex; flex-direction: column; gap: 0.65rem; margin-top: 0.5rem; }
+        .sidebar-tab-btn {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          padding: 0.9rem 1.25rem;
+          border-radius: var(--radius-lg);
+          font-weight: 700;
+          font-size: 0.95rem;
+          color: var(--muted);
+          background: white;
+          border: 1px solid rgba(22, 163, 74, 0.1);
+          text-align: left;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: var(--shadow-sm);
+        }
+        .sidebar-tab-btn:hover {
+          background-color: #f0fdf4;
+          color: var(--primary);
+          border-color: rgba(22, 163, 74, 0.25);
+          transform: translateX(4px);
+        }
+        .sidebar-tab-btn.active {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          border-color: #059669;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        }
+        .tab-unread-count {
+          background-color: #ef4444;
+          color: white;
+          font-size: 0.75rem;
+          font-weight: 800;
+          padding: 0.15rem 0.5rem;
+          border-radius: 9999px;
+          line-height: 1;
+        }
+        .sidebar-tab-btn.active .tab-unread-count {
+          background-color: white;
+          color: #ef4444;
+        }
 
         /* ── Mobile Tabs ───────────────────────────────────────────── */
-        .mobile-tabs-bar { display: none; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 1.5rem; }
-        .mobile-tab-item { display: flex; align-items: center; justify-content: center; gap: 0.25rem; padding: 0.75rem 0.5rem; font-size: 0.85rem; font-weight: 600; border-radius: var(--radius-lg); color: var(--muted); background: white; border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; }
-        .mobile-tab-item.active { background-color: var(--primary-light); color: var(--primary-dark); border-color: rgba(16,185,129,0.2); }
-        .mobile-tab-item .mobile-unread-badge { background-color: #10b981; color: white; font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.35rem; border-radius: 9999px; margin-left: 0.25rem; }
+        .mobile-tabs-bar { display: none; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1.5rem; }
+        .mobile-tab-item {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.25rem;
+          padding: 0.85rem 0.75rem;
+          font-size: 0.9rem;
+          font-weight: 700;
+          border-radius: var(--radius-lg);
+          color: var(--muted);
+          background: white;
+          border: 1px solid var(--border);
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: var(--shadow-sm);
+        }
+        .mobile-tab-item:hover {
+          color: var(--primary);
+          border-color: rgba(22, 163, 74, 0.25);
+        }
+        .mobile-tab-item.active {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          border-color: #059669;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+        .mobile-tab-item .mobile-unread-badge {
+          background-color: #ef4444;
+          color: white;
+          font-size: 0.7rem;
+          font-weight: 800;
+          padding: 0.1rem 0.35rem;
+          border-radius: 9999px;
+          margin-left: 0.25rem;
+        }
+        .mobile-tab-item.active .mobile-unread-badge {
+          background-color: white;
+          color: #ef4444;
+        }
         @media (max-width: 991px) { .mobile-tabs-bar { display: grid; } .profile-sidebar-tabs { display: none; } }
 
         /* ── Stats ─────────────────────────────────────────────────── */
@@ -701,7 +763,7 @@ export default function Profile() {
       <div className="loading-container container">
         <div className="spinner"></div>
         <p>Loading profile...</p>
-        <style jsx>{`
+        <style>{`
           .loading-container { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:8rem 0; gap:1rem; }
           .spinner { border:4px solid rgba(16,185,129,0.1); border-left-color:#10b981; width:40px; height:40px; border-radius:50%; animation:spin 1s linear infinite; }
           @keyframes spin { to { transform:rotate(360deg); } }

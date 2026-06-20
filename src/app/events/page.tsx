@@ -169,7 +169,7 @@ export default function EventsPage() {
         )}
       </section>
 
-      <style jsx>{`
+      <style>{`
         .events-page {
           min-height: 100vh;
           background: var(--background, #f9fafb);

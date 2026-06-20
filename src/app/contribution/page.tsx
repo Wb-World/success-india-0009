@@ -674,7 +674,7 @@ export default function ContributionPage() {
       )}
 
       {/* Styled JSX Stylesheet */}
-      <style jsx>{`
+      <style>{`
         .contribution-page {
           min-height: 100vh;
           background: var(--background, #f9fafb);

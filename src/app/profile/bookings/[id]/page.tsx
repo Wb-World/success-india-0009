@@ -2,314 +2,301 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, MapPin, Ticket, User, Phone, CreditCard, Hash, Clock, Download, CheckCircle, XCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import {
+  ArrowLeft, Calendar, MapPin, Ticket, User, Hash, Clock,
+  Download, CheckCircle, XCircle, AlertTriangle, Loader2, Users, Phone
+} from 'lucide-react';
 
-// Status Label Helper
-function getStatusLabel(status: string) {
-  if (status === 'approved') return 'Confirmed';
-  if (status === 'denied') return 'Rejected';
-  return 'Pending Approval';
-}
-
-// Status Badge Component
+/* ─────────────────────────────────────────────────────────
+   Helpers
+───────────────────────────────────────────────────────── */
 function StatusBadge({ status }: { status: string }) {
-  const cfg = {
-    approved: { label: 'Verified Ticket', color: '#059669', bg: '#d1fae5', border: '#6ee7b7', Icon: CheckCircle },
+  const cfg: Record<string, { label: string; color: string; bg: string; border: string; Icon: any }> = {
+    approved: { label: 'Confirmed',        color: '#059669', bg: '#d1fae5', border: '#6ee7b7', Icon: CheckCircle },
     pending:  { label: 'Pending Approval', color: '#d97706', bg: '#fef3c7', border: '#fcd34d', Icon: Clock },
-    denied:   { label: 'Rejected', color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', Icon: XCircle },
-  }[status] ?? { label: 'Unknown', color: '#64748b', bg: '#f1f5f9', border: '#cbd5e1', Icon: AlertTriangle };
-
-  const { label, color, bg, border, Icon } = cfg;
+    denied:   { label: 'Rejected',         color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', Icon: XCircle },
+  };
+  const { label, color, bg, border, Icon } = cfg[status] ?? { label: 'Unknown', color: '#64748b', bg: '#f1f5f9', border: '#cbd5e1', Icon: AlertTriangle };
 
   return (
-    <span className="status-badge" style={{ background: bg, border: `1.5px solid ${border}`, color }}>
-      <Icon size={14} />
+    <span className="t-status-badge" style={{ background: bg, border: `1.5px solid ${border}`, color }}>
+      <Icon size={13} />
       {label}
     </span>
   );
 }
 
-// Info Row Component
-function TicketInfoRow({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
-    <div className="ticket-info-row">
-      <div className="ticket-info-icon"><Icon size={16} /></div>
-      <div className="ticket-info-text">
-        <span className="ticket-info-label">{label}</span>
-        <span className="ticket-info-value">{value}</span>
+    <div className="t-info-row">
+      <div className="t-info-icon"><Icon size={15} /></div>
+      <div className="t-info-text">
+        <span className="t-info-label">{label}</span>
+        <span className="t-info-value">{value}</span>
       </div>
     </div>
   );
 }
 
-// QR Code Generator
-async function generateQRDataURL(text: string): Promise<string> {
+/* ─────────────────────────────────────────────────────────
+   QR Generator
+───────────────────────────────────────────────────────── */
+async function generateQR(text: string): Promise<string> {
   try {
     const QRCode = (await import('qrcode')).default;
-    return await QRCode.toDataURL(text, {
-      width: 200,
-      margin: 1,
-      color: { dark: '#0f172a', light: '#ffffff' },
-    });
-  } catch (err) {
-    console.error('Failed to generate QR:', err);
-    return '';
-  }
+    return await QRCode.toDataURL(text, { width: 200, margin: 1, color: { dark: '#0f172a', light: '#ffffff' } });
+  } catch { return ''; }
 }
 
+/* ─────────────────────────────────────────────────────────
+   Main Content
+───────────────────────────────────────────────────────── */
 function BookingDetailsContent() {
   const params = useParams();
   const router = useRouter();
   const bookingId = params.id as string;
 
-  const [loading, setLoading] = useState(true);
-  const [ticketData, setTicketData] = useState<any>(null);
-  const [error, setError] = useState('');
-  const [qrUrl, setQrUrl] = useState('');
+  const [loading,     setLoading]     = useState(true);
+  const [ticket,      setTicket]      = useState<any>(null);
+  const [error,       setError]       = useState('');
+  const [qrUrl,       setQrUrl]       = useState('');
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
-    // Auth Guard
     const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
-      router.push('/profile');
-      return;
-    }
+    if (!storedUser) { router.push('/profile'); return; }
+    if (!bookingId)  { setError('Invalid booking reference.'); setLoading(false); return; }
 
-    if (!bookingId) {
-      setError('Invalid booking reference.');
-      setLoading(false);
-      return;
-    }
-
-    // Fetch booking details using our secure verify endpoint
     fetch(`/api/verify?id=${encodeURIComponent(bookingId)}`)
-      .then((r) => {
-        if (!r.ok) {
-          throw new Error('Ticket not found.');
-        }
-        return r.json();
-      })
-      .then((data) => {
-        if (data && data.ticket) {
-          setTicketData(data.ticket);
-          
-          // Generate QR code encoding the verification link
-          const origin = typeof window !== 'undefined' ? window.location.origin : '';
-          const verifyUrl = `${origin}/verify?id=${encodeURIComponent(bookingId)}`;
-          generateQRDataURL(verifyUrl).then(setQrUrl);
+      .then(r => { if (!r.ok) throw new Error('Ticket not found.'); return r.json(); })
+      .then(data => {
+        if (data?.ticket) {
+          setTicket(data.ticket);
+          const isSupporter =
+            data.ticket.seats?.includes('SUPPORTER') ||
+            data.ticket.seminarName?.toLowerCase().includes('supporter') ||
+            data.ticket.eventName?.toLowerCase().includes('supporter');
+          if (!isSupporter) {
+            const origin = typeof window !== 'undefined' ? window.location.origin : '';
+            generateQR(`${origin}/verify?id=${encodeURIComponent(bookingId)}`).then(setQrUrl);
+          }
         } else {
           setError('Failed to load booking details.');
         }
       })
-      .catch((err) => {
-        console.error('Fetch error:', err);
-        setError(err.message || 'Verification service temporarily unavailable.');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      .catch(err => setError(err.message || 'Service temporarily unavailable.'))
+      .finally(() => setLoading(false));
   }, [bookingId, router]);
 
+  /* ─── Download ─── */
   const handleDownload = async () => {
-    if (!ticketData) return;
+    if (!ticket) return;
     setDownloading(true);
     try {
       const html2canvas = (await import('html2canvas')).default;
-      const el = document.getElementById('booking-ticket-card');
-      if (el) {
-        // Adjust style parameters briefly for canvas export
-        const canvas = await html2canvas(el, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          logging: false
-        });
-        const link = document.createElement('a');
-        link.download = `Ticket-${bookingId.toUpperCase()}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      }
+      const el = document.getElementById('printable-ticket');
+      if (!el) return;
+
+      const clone = el.cloneNode(true) as HTMLElement;
+      clone.classList.add('tp-desktop');
+      clone.style.cssText = `
+        position:fixed;left:-9999px;top:0;z-index:-1;
+        width:780px;border-radius:20px;
+        font-family:system-ui,sans-serif;background:#ffffff;
+      `;
+      document.body.appendChild(clone);
+      await new Promise(r => setTimeout(r, 180));
+
+      const canvas = await html2canvas(clone, {
+        scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false
+      });
+      document.body.removeChild(clone);
+
+      const link = document.createElement('a');
+      link.download = `Ticket-${bookingId.toUpperCase()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
     } catch (err) {
-      console.error('Download ticket failed:', err);
+      console.error('Download failed:', err);
     } finally {
       setDownloading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="ticket-page-state">
-        <Loader2 size={44} className="spin-animate" />
-        <p>Retrieving your ticket details...</p>
-      </div>
-    );
-  }
+  /* ─── States ─── */
+  if (loading) return (
+    <div className="tp-state">
+      <Loader2 size={42} className="tp-spin" />
+      <p>Retrieving your ticket...</p>
+    </div>
+  );
 
-  if (error || !ticketData) {
-    return (
-      <div className="ticket-page-state error">
-        <AlertTriangle size={48} />
-        <h2>Ticket Retrieval Failed</h2>
-        <p>{error || 'This ticket could not be found or has expired.'}</p>
-        <button className="btn btn-primary back-btn" onClick={() => router.push('/profile')}>
-          <ArrowLeft size={16} /> Return to Profile
-        </button>
-      </div>
-    );
-  }
+  if (error || !ticket) return (
+    <div className="tp-state tp-error">
+      <AlertTriangle size={48} />
+      <h2>Ticket Not Found</h2>
+      <p>{error || 'This ticket could not be found or has expired.'}</p>
+      <button className="tp-back-btn" onClick={() => router.push('/profile')}>
+        <ArrowLeft size={16} /> Return to Profile
+      </button>
+    </div>
+  );
 
-  const attendeeEntries = ticketData.attendees ? Object.entries(ticketData.attendees) : [];
+  /* ─── Computed ─── */
+  const isSupporter =
+    ticket.seats?.includes('SUPPORTER') ||
+    ticket.eventName?.toLowerCase().includes('supporter');
+
+  const attendeeEntries: [string, { name: string; phone: string }][] =
+    ticket.attendees ? Object.entries(ticket.attendees) : [];
 
   return (
-    <div className="ticket-page-container">
-      {/* Back button */}
-      <div className="back-nav-row">
-        <button className="back-link-btn" onClick={() => router.push('/profile')}>
-          <ArrowLeft size={16} /> Back to Dashboard
+    <div className="tp-page">
+      {/* Back */}
+      <button className="tp-back-link" onClick={() => router.push('/profile')}>
+        <ArrowLeft size={15} /> Back to Dashboard
+      </button>
+
+      {/* Printable Ticket */}
+      <div id="printable-ticket" className={`tp-ticket status-${ticket.status}`}>
+
+        {/* Top accent */}
+        <div className="tp-accent" />
+
+        {/* Header */}
+        <div className="tp-header">
+          <div className="tp-brand">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/success-india-logo.jpeg" alt="Success Team" className="tp-logo" />
+            <div>
+              <p className="tp-brand-name">SUCCESS TEAM</p>
+              <p className="tp-brand-sub">Official Event Delegate Pass</p>
+            </div>
+          </div>
+          <StatusBadge status={ticket.status} />
+        </div>
+
+        {/* Perforation */}
+        <div className="tp-perf">
+          <div className="tp-hole tp-hole-l" />
+          <div className="tp-dash" />
+          <div className="tp-hole tp-hole-r" />
+        </div>
+
+        {/* Body */}
+        <div className={`tp-body ${isSupporter ? 'tp-body-solo' : ''}`}>
+
+          {/* Left — event details */}
+          <div className="tp-details">
+            <h1 className="tp-event-name">{ticket.eventName}</h1>
+            {ticket.session && ticket.session !== ticket.eventName && (
+              <p className="tp-session">{ticket.session}</p>
+            )}
+
+            <div className="tp-grid">
+              <InfoRow icon={Hash}     label="Booking ID"  value={`#${ticket.bookingId?.toUpperCase()}`} />
+              <InfoRow icon={Calendar} label="Date"        value={ticket.date} />
+              <InfoRow icon={Clock}    label="Time"        value={ticket.time} />
+              <InfoRow icon={MapPin}   label="Venue"       value={ticket.venue} />
+              <InfoRow icon={Ticket}   label="Seats"       value={ticket.seats?.join(', ') || '—'} />
+              <InfoRow icon={User}     label="Booked By"   value={ticket.attendeeName} />
+            </div>
+
+            {/* Attendees Table */}
+            {attendeeEntries.length > 0 && (
+              <div className="tp-attendees">
+                <div className="tp-attendees-head">
+                  <Users size={14} />
+                  <span>Attendees ({attendeeEntries.length})</span>
+                </div>
+                <div className="tp-attendees-table">
+                  <div className="tp-att-header">
+                    <span>Seat</span>
+                    <span>Name</span>
+                    <span>Phone</span>
+                  </div>
+                  {attendeeEntries.map(([seat, info], i) => (
+                    <div key={seat} className={`tp-att-row ${i % 2 === 0 ? 'tp-att-even' : ''}`}>
+                      <span className="tp-att-seat">{seat}</span>
+                      <span className="tp-att-name">{info.name || '—'}</span>
+                      <span className="tp-att-phone">
+                        <Phone size={11} />
+                        {info.phone || '—'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right — QR Code (non-supporter only) */}
+          {!isSupporter && (
+            <div className="tp-qr-col">
+              <div className="tp-qr-wrap">
+                <p className="tp-qr-label">Verification Pass</p>
+                {qrUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={qrUrl} alt="QR Code" className="tp-qr-img" />
+                ) : (
+                  <div className="tp-qr-placeholder">
+                    <Loader2 size={28} className="tp-spin" />
+                  </div>
+                )}
+                <p className="tp-qr-ref">#{ticket.bookingId?.toUpperCase()}</p>
+                <span className="tp-qr-hint">Scan at entry</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer bar */}
+        <div className="tp-footer-bar">
+          <span>This ticket is non-transferable · Valid for one-time entry</span>
+        </div>
+      </div>
+
+      {/* Download */}
+      <div className="tp-dl-wrap">
+        <button
+          className="tp-dl-btn"
+          onClick={handleDownload}
+          disabled={downloading || (!isSupporter && !qrUrl)}
+        >
+          <Download size={17} />
+          {downloading ? 'Generating...' : 'Download Ticket'}
         </button>
       </div>
 
-      {/* Main Ticket Layout */}
-      <div className="ticket-card-wrapper">
-        <div id="booking-ticket-card" className={`booking-ticket-card status-${ticketData.status}`}>
-          {/* Header Accent Bar */}
-          <div className="ticket-accent-bar" />
-
-          {/* Ticket Header Banner */}
-          <div className="ticket-header-banner">
-            <div className="ticket-brand-row">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/success-india-logo.jpeg" alt="Success Team Logo" className="ticket-brand-logo" />
-              <div>
-                <p className="ticket-brand-name">SUCCESS TEAM</p>
-                <p className="ticket-brand-tag">Official Event Delegate Pass</p>
-              </div>
-            </div>
-            <StatusBadge status={ticketData.status} />
-          </div>
-
-          {/* Perforation design */}
-          <div className="ticket-perforation">
-            <div className="ticket-hole left" />
-            <div className="ticket-dash-line" />
-            <div className="ticket-hole right" />
-          </div>
-
-          {/* Ticket Body Layout */}
-          <div className="ticket-body-content">
-            <div className="ticket-details-col">
-              <h1 className="ticket-event-name">{ticketData.eventName}</h1>
-              <p className="ticket-event-session">{ticketData.session}</p>
-
-              <div className="ticket-info-grid">
-                <TicketInfoRow icon={Hash} label="Booking Reference ID" value={`#${ticketData.bookingId?.toUpperCase()}`} />
-                <TicketInfoRow icon={User} label="Primary Attendee Name" value={ticketData.attendeeName} />
-                <TicketInfoRow icon={Phone} label="Phone Number" value={ticketData.bookerPhone} />
-                <TicketInfoRow icon={MapPin} label="Venue Location" value={ticketData.venue} />
-                <TicketInfoRow icon={Calendar} label="Session Date" value={ticketData.date} />
-                <TicketInfoRow icon={Clock} label="Session Time" value={ticketData.time} />
-                <TicketInfoRow icon={Ticket} label="Reserved Seats" value={ticketData.seats?.join(', ') || '—'} />
-                <TicketInfoRow icon={CreditCard} label="Amount Paid" value={ticketData.amountPaid} />
-              </div>
-
-              {/* Payment row */}
-              <div className="ticket-payment-status">
-                <CreditCard size={14} />
-                <span>Payment Status:</span>
-                <strong className={`payment-${ticketData.status}`}>{ticketData.paymentStatus}</strong>
-              </div>
-
-              {/* Attendees section */}
-              {attendeeEntries.length > 0 && (
-                <div className="ticket-attendees-box">
-                  <p className="ticket-attendees-title">Attendee Roster</p>
-                  <div className="ticket-attendees-list">
-                    {attendeeEntries.map(([seat, val]: any) => {
-                      const name = typeof val === 'object' && val !== null ? val.name : val;
-                      const phone = typeof val === 'object' && val !== null ? val.phone : '';
-                      return (
-                        <div key={seat} className="ticket-attendee-row">
-                          <span className="ticket-seat-lbl">{seat}</span>
-                          <span className="ticket-name-val">{name}</span>
-                          {phone && <span className="ticket-phone-val">{phone}</span>}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* QR Code Col */}
-            <div className="ticket-qr-col">
-              <div className="ticket-qr-container">
-                <p className="qr-title-lbl">Verification Pass</p>
-                {qrUrl ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={qrUrl} alt="Verification QR Code" className="ticket-qr-img" />
-                ) : (
-                  <div className="qr-placeholder-spin"><Loader2 size={32} className="spin-animate" /></div>
-                )}
-                <p className="qr-ref-code">#{ticketData.bookingId?.slice(0, 8).toUpperCase()}</p>
-                <span className="qr-instructions">Scan at entry to check-in</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Banner Image Footer */}
-          <div className="ticket-banner-footer">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/hero-leader.jpg" alt="Event Banner Footer" className="ticket-footer-img" />
-            <div className="ticket-footer-overlay">
-              <span>Thank you for partnering with the Success Team program</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Download Ticket Trigger */}
-        <div className="ticket-download-wrap">
-          <button 
-            className="btn btn-primary ticket-download-btn" 
-            onClick={handleDownload}
-            disabled={downloading || !qrUrl}
-          >
-            <Download size={18} />
-            {downloading ? 'Generating ticket file...' : 'Download Ticket (Image)'}
-          </button>
-        </div>
-      </div>
-
-      <style jsx>{`
-        .ticket-page-container {
+      {/* ── Styles ── */}
+      <style>{`
+        /* Page shell */
+        .tp-page {
           max-width: 900px;
           margin: 0 auto;
-          padding: 2.5rem 1.5rem 5rem;
+          padding: 2.5rem 1.25rem 5rem;
           font-family: var(--font-body, system-ui, sans-serif);
         }
 
-        .back-nav-row {
-          margin-bottom: 1.5rem;
-        }
-        .back-link-btn {
+        /* Back link */
+        .tp-back-link {
           display: inline-flex;
           align-items: center;
           gap: 6px;
           background: transparent;
           border: none;
-          color: var(--muted);
+          color: var(--muted, #64748b);
           font-weight: 700;
-          font-size: 0.9rem;
+          font-size: 0.88rem;
           cursor: pointer;
-          transition: color 0.15s ease;
+          margin-bottom: 1.5rem;
+          transition: color 0.15s;
         }
-        .back-link-btn:hover {
-          color: var(--primary-dark);
-        }
+        .tp-back-link:hover { color: #059669; }
 
-        /* ── Page state displays ── */
-        .ticket-page-state {
-          min-height: 50vh;
+        /* Loading / error states */
+        .tp-state {
+          min-height: 52vh;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -317,388 +304,380 @@ function BookingDetailsContent() {
           gap: 1rem;
           text-align: center;
           padding: 3rem 1.5rem;
-        }
-        .ticket-page-state.error {
-          color: #dc2626;
-        }
-        .ticket-page-state.error h2 {
-          color: #1e293b;
-          font-size: 1.6rem;
-          font-weight: 800;
-          margin: 0;
-        }
-        .ticket-page-state.error p {
           color: #64748b;
-          margin: 0 0 1rem;
         }
-        .back-btn {
+        .tp-error { color: #dc2626; }
+        .tp-error h2 { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin: 0; }
+        .tp-error p  { color: #64748b; margin: 0 0 1rem; }
+        .tp-spin { animation: spin 1s linear infinite; color: #10b981; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .tp-back-btn {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 0.75rem 1.5rem;
+          padding: 0.7rem 1.4rem;
+          background: #0f172a;
+          color: white;
+          border: none;
+          border-radius: 10px;
           font-weight: 700;
+          cursor: pointer;
+          font-size: 0.9rem;
         }
 
-        .spin-animate {
-          animation: spin 1s linear infinite;
-          color: #10b981;
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
-        /* ── Ticket Container ── */
-        .ticket-card-wrapper {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-        }
-
-        .booking-ticket-card {
-          background: white;
-          border-radius: 24px;
+        /* ── TICKET CARD ── */
+        .tp-ticket {
+          background: #ffffff;
+          border-radius: 20px;
           overflow: hidden;
-          box-shadow: 0 15px 40px rgba(15, 23, 42, 0.08), 0 5px 15px rgba(15, 23, 42, 0.04);
+          box-shadow: 0 16px 48px rgba(15,23,42,0.09), 0 4px 16px rgba(15,23,42,0.05);
           border: 1px solid #e2e8f0;
-          position: relative;
         }
 
-        .ticket-accent-bar {
-          height: 6px;
-          background: linear-gradient(90deg, #059669 0%, #10b981 50%, #34d399 100%);
+        /* Accent bar */
+        .tp-accent {
+          height: 5px;
+          background: linear-gradient(90deg, #047857 0%, #10b981 55%, #34d399 100%);
         }
 
-        .ticket-header-banner {
-          padding: 1.75rem 2rem;
+        /* Header */
+        .tp-header {
+          padding: 1.5rem 2rem;
           display: flex;
           justify-content: space-between;
           align-items: center;
           gap: 1rem;
-          background: #fafafa;
+          background: #f8fafc;
+          border-bottom: 1px solid #f1f5f9;
         }
-        .ticket-brand-row {
+        .tp-brand {
           display: flex;
           align-items: center;
-          gap: 0.85rem;
+          gap: 0.8rem;
         }
-        .ticket-brand-logo {
-          width: 48px;
-          height: 48px;
+        .tp-logo {
+          width: 44px;
+          height: 44px;
           border-radius: 8px;
           object-fit: cover;
           border: 1.5px solid #e2e8f0;
         }
-        .ticket-brand-name {
+        .tp-brand-name {
           font-weight: 900;
-          font-size: 1.1rem;
+          font-size: 1rem;
           color: #0f172a;
           margin: 0;
-          letter-spacing: 0.04em;
+          letter-spacing: 0.05em;
         }
-        .ticket-brand-tag {
-          font-size: 0.76rem;
+        .tp-brand-sub {
+          font-size: 0.73rem;
           color: #64748b;
           margin: 0;
         }
 
-        .status-badge {
+        /* Status badge */
+        .t-status-badge {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          padding: 6px 14px;
+          gap: 5px;
+          padding: 5px 13px;
           border-radius: 9999px;
-          font-size: 0.75rem;
+          font-size: 0.72rem;
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.04em;
+          white-space: nowrap;
         }
 
-        /* ── Perforation divider ── */
-        .ticket-perforation {
+        /* Perforation */
+        .tp-perf {
           display: flex;
           align-items: center;
-          position: relative;
-          padding: 0;
         }
-        .ticket-hole {
-          width: 24px;
-          height: 24px;
+        .tp-hole {
+          width: 22px;
+          height: 22px;
           border-radius: 50%;
           background: #f8fafc;
           border: 1px solid #e2e8f0;
           flex-shrink: 0;
         }
-        .ticket-hole.left { margin-left: -12px; }
-        .ticket-hole.right { margin-right: -12px; }
-        .ticket-dash-line {
+        .tp-hole-l { margin-left: -11px; }
+        .tp-hole-r { margin-right: -11px; }
+        .tp-dash {
           flex: 1;
-          height: 0;
           border-top: 2px dashed #cbd5e1;
-          margin: 0 6px;
+          margin: 0 4px;
         }
 
-        /* ── Ticket Body ── */
-        .ticket-body-content {
-          padding: 2.25rem 2rem;
+        /* Body */
+        .tp-body {
           display: grid;
-          grid-template-columns: 1fr 220px;
-          gap: 2.5rem;
+          grid-template-columns: 1fr 200px;
+          gap: 2rem;
+          padding: 2rem;
+        }
+        .tp-body-solo {
+          grid-template-columns: 1fr;
         }
 
-        .ticket-event-name {
-          font-family: var(--font-heading);
-          font-size: 1.6rem;
+        /* Event name */
+        .tp-event-name {
+          font-size: 1.55rem;
           font-weight: 900;
           color: #0f172a;
-          margin: 0 0 0.25rem;
-          line-height: 1.25;
+          margin: 0 0 0.2rem;
+          line-height: 1.2;
+          font-family: var(--font-heading, system-ui);
         }
-        .ticket-event-session {
-          font-size: 0.95rem;
+        .tp-session {
+          font-size: 0.88rem;
           color: #64748b;
-          margin: 0 0 1.75rem;
+          margin: 0 0 1.5rem;
           font-weight: 500;
         }
 
-        .ticket-info-grid {
+        /* Info grid */
+        .tp-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 1rem 1.75rem;
+          gap: 0.85rem 1.5rem;
           margin-bottom: 1.5rem;
         }
-
-        .ticket-info-row {
+        .t-info-row {
           display: flex;
-          align-items: flex-start;
+          align-items: center;
           gap: 0.75rem;
-          padding-bottom: 0.6rem;
+          padding-bottom: 0.55rem;
           border-bottom: 1px solid #f1f5f9;
         }
-        .ticket-info-icon {
+        .t-info-icon {
           color: #10b981;
           flex-shrink: 0;
-          margin-top: 2px;
-        }
-        .ticket-info-text {
           display: flex;
-          flex-direction: column;
-          gap: 1px;
-          min-width: 0;
+          align-items: center;
+          justify-content: center;
         }
-        .ticket-info-label {
-          font-size: 0.7rem;
+        .t-info-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+        .t-info-label {
+          font-size: 0.67rem;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.05em;
           color: #94a3b8;
         }
-        .ticket-info-value {
-          font-size: 0.9rem;
+        .t-info-value {
+          font-size: 0.88rem;
           font-weight: 600;
           color: #1e293b;
           word-break: break-word;
         }
 
-        /* ── Payment status bar ── */
-        .ticket-payment-status {
-          display: inline-flex;
+        /* Attendees section */
+        .tp-attendees {
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+          border-radius: 12px;
+          overflow: hidden;
+        }
+        .tp-attendees-head {
+          display: flex;
           align-items: center;
           gap: 6px;
-          background: #f8fafc;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          padding: 0.5rem 0.85rem;
-          font-size: 0.8rem;
-          color: #475569;
-          margin-bottom: 1.5rem;
-        }
-        .ticket-payment-status strong {
-          font-weight: 800;
-          text-transform: uppercase;
-          font-size: 0.75rem;
-          letter-spacing: 0.02em;
-        }
-        .ticket-payment-status strong.payment-approved { color: #059669; }
-        .ticket-payment-status strong.payment-pending { color: #d97706; }
-        .ticket-payment-status strong.payment-denied { color: #dc2626; }
-
-        /* ── Attendees section ── */
-        .ticket-attendees-box {
-          background: #f0fdf4;
-          border: 1px solid #a7f3d0;
-          border-radius: 12px;
-          padding: 1rem 1.25rem;
-        }
-        .ticket-attendees-title {
-          font-size: 0.72rem;
+          padding: 0.65rem 1rem;
+          background: #dcfce7;
+          border-bottom: 1px solid #bbf7d0;
+          font-size: 0.73rem;
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.06em;
           color: #047857;
-          margin: 0 0 0.75rem;
         }
-        .ticket-attendees-list {
+        .tp-attendees-table {
           display: flex;
           flex-direction: column;
+        }
+        .tp-att-header {
+          display: grid;
+          grid-template-columns: 80px 1fr 1fr;
           gap: 0.5rem;
+          padding: 0.45rem 1rem;
+          font-size: 0.65rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: #6b7280;
+          border-bottom: 1px solid #d1fae5;
         }
-        .ticket-attendee-row {
-          display: flex;
-          align-items: baseline;
-          gap: 0.65rem;
-          flex-wrap: wrap;
+        .tp-att-row {
+          display: grid;
+          grid-template-columns: 80px 1fr 1fr;
+          gap: 0.5rem;
+          padding: 0.55rem 1rem;
+          align-items: center;
+          border-bottom: 1px solid #ecfdf5;
+          transition: background 0.1s;
         }
-        .ticket-seat-lbl {
+        .tp-att-row:last-child { border-bottom: none; }
+        .tp-att-even { background: rgba(240,253,244,0.6); }
+        .tp-att-seat {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           background: #10b981;
           color: white;
           font-size: 0.68rem;
           font-weight: 700;
           padding: 2px 8px;
           border-radius: 999px;
-          flex-shrink: 0;
+          width: fit-content;
+          min-width: 36px;
+          text-align: center;
         }
-        .ticket-name-val {
-          font-size: 0.85rem;
+        .tp-att-name {
+          font-size: 0.82rem;
           font-weight: 600;
           color: #111827;
         }
-        .ticket-phone-val {
+        .tp-att-phone {
           font-size: 0.78rem;
           color: #4b5563;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+        }
+        .tp-att-phone svg {
+          display: inline-block;
+          vertical-align: middle;
+          flex-shrink: 0;
         }
 
-        /* ── QR Code Col ── */
-        .ticket-qr-col {
+        /* QR column */
+        .tp-qr-col {
           display: flex;
-          align-items: flex-start;
+          align-items: center;
           justify-content: center;
-          border-left: 2px dashed #f1f5f9;
-          padding-left: 2.5rem;
+          border-left: 2px dashed #e2e8f0;
+          padding-left: 2rem;
         }
-        .ticket-qr-container {
+        .tp-qr-wrap {
           display: flex;
           flex-direction: column;
           align-items: center;
+          gap: 0.55rem;
           text-align: center;
-          gap: 0.65rem;
-          width: 100%;
+          padding-top: 0.5rem;
         }
-        .qr-title-lbl {
-          font-size: 0.7rem;
+        .tp-qr-label {
+          font-size: 0.65rem;
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.06em;
           color: #94a3b8;
+          margin: 0;
         }
-        .ticket-qr-img {
-          width: 160px;
-          height: 160px;
-          border-radius: 12px;
+        .tp-qr-img {
+          width: 150px;
+          height: 150px;
+          border-radius: 10px;
           border: 1px solid #e2e8f0;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
-        .qr-placeholder-spin {
-          width: 160px;
-          height: 160px;
+        .tp-qr-placeholder {
+          width: 150px;
+          height: 150px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #fafafa;
+          background: #f8fafc;
           border: 1px solid #e2e8f0;
-          border-radius: 12px;
+          border-radius: 10px;
         }
-        .qr-ref-code {
+        .tp-qr-ref {
           font-family: monospace;
-          font-size: 0.8rem;
+          font-size: 0.78rem;
           font-weight: 700;
           color: #334155;
           margin: 0;
         }
-        .qr-instructions {
-          font-size: 0.7rem;
+        .tp-qr-hint {
+          font-size: 0.67rem;
           font-weight: 600;
           color: #94a3b8;
           text-transform: uppercase;
           letter-spacing: 0.02em;
         }
 
-        /* ── Event Banner Footer ── */
-        .ticket-banner-footer {
-          height: 100px;
-          position: relative;
-          overflow: hidden;
+        /* Footer bar */
+        .tp-footer-bar {
+          padding: 0.75rem 2rem;
           background: #0f172a;
-        }
-        .ticket-footer-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          opacity: 0.35;
-        }
-        .ticket-footer-overlay {
-          position: absolute;
-          inset: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: rgba(255, 255, 255, 0.85);
-          font-size: 0.82rem;
-          font-weight: 600;
-          letter-spacing: 0.03em;
-          text-transform: uppercase;
+          color: rgba(255,255,255,0.6);
+          font-size: 0.72rem;
+          font-weight: 500;
+          letter-spacing: 0.02em;
+          text-align: center;
         }
 
-        /* ── Download trigger section ── */
-        .ticket-download-wrap {
+        /* Download */
+        .tp-dl-wrap {
           display: flex;
           justify-content: center;
-          margin-top: 1rem;
+          margin-top: 1.5rem;
         }
-        .ticket-download-btn {
+        .tp-dl-btn {
           display: inline-flex;
           align-items: center;
-          justify-content: center;
           gap: 8px;
-          padding: 0.85rem 2rem;
-          font-size: 0.95rem;
-          font-weight: 700;
-          border-radius: 12px;
+          padding: 0.8rem 2rem;
           background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-          border: none;
-          box-shadow: 0 4px 6px rgba(15, 23, 42, 0.1);
           color: white;
+          border: none;
+          border-radius: 12px;
+          font-size: 0.92rem;
+          font-weight: 700;
           cursor: pointer;
-          transition: transform 0.1s ease, opacity 0.15s ease;
+          box-shadow: 0 4px 12px rgba(15,23,42,0.15);
+          transition: transform 0.12s ease, opacity 0.15s ease;
+          font-family: inherit;
         }
-        .ticket-download-btn:hover {
-          opacity: 0.93;
-          transform: translateY(-1px);
-        }
-        .ticket-download-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          transform: none;
+        .tp-dl-btn:hover   { transform: translateY(-2px); opacity: 0.94; }
+        .tp-dl-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+        /* Responsive */
+        @media (max-width: 720px) {
+          .tp-ticket:not(.tp-desktop) .tp-body {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            padding: 1.5rem;
+          }
+          .tp-ticket:not(.tp-desktop) .tp-qr-col {
+            border-left: none;
+            border-top: 2px dashed #e2e8f0;
+            padding-left: 0;
+            padding-top: 1.5rem;
+            justify-content: flex-start;
+          }
+          .tp-ticket:not(.tp-desktop) .tp-grid { grid-template-columns: 1fr; }
+          .tp-ticket:not(.tp-desktop) .tp-header { padding: 1.25rem 1.5rem; }
+          .tp-ticket:not(.tp-desktop) .tp-footer-bar { padding: 0.65rem 1.5rem; }
+          .tp-ticket:not(.tp-desktop) .tp-att-header,
+          .tp-ticket:not(.tp-desktop) .tp-att-row { grid-template-columns: 70px 1fr 1fr; }
         }
 
-        /* Responsive Layouts */
-        @media (max-width: 768px) {
-          .ticket-body-content {
-            grid-template-columns: 1fr;
-            gap: 2rem;
-            padding: 1.75rem 1.5rem;
+        @media (max-width: 480px) {
+          .tp-ticket:not(.tp-desktop) .tp-event-name { font-size: 1.25rem; }
+          .tp-ticket:not(.tp-desktop) .tp-att-header,
+          .tp-ticket:not(.tp-desktop) .tp-att-row {
+            grid-template-columns: 55px 1fr 1.1fr;
+            gap: 0.35rem;
+            padding: 0.5rem 0.75rem;
           }
-          .ticket-qr-col {
-            border-left: none;
-            border-top: 2px dashed #f1f5f9;
-            padding-left: 0;
-            padding-top: 2rem;
+          .tp-ticket:not(.tp-desktop) .tp-att-name {
+            font-size: 0.75rem;
           }
-          .ticket-info-grid {
-            grid-template-columns: 1fr;
-            gap: 0.75rem;
-          }
-          .ticket-header-banner {
-            padding: 1.25rem 1.5rem;
+          .tp-ticket:not(.tp-desktop) .tp-att-phone {
+            font-size: 0.72rem;
           }
         }
       `}</style>
@@ -706,12 +685,15 @@ function BookingDetailsContent() {
   );
 }
 
+/* ─────────────────────────────────────────────────────────
+   Export
+───────────────────────────────────────────────────────── */
 export default function BookingDetailsPage() {
   return (
     <Suspense fallback={
-      <div className="ticket-page-state">
-        <Loader2 size={44} className="spin-animate" />
-        <p>Loading ticket info...</p>
+      <div style={{ minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem', color: '#64748b' }}>
+        <Loader2 size={40} style={{ animation: 'spin 1s linear infinite', color: '#10b981' }} />
+        <p>Loading ticket...</p>
       </div>
     }>
       <BookingDetailsContent />
