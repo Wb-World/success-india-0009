@@ -220,6 +220,19 @@ export default function Home() {
               <h2 className="owner-title">J.SURENDAR</h2>
               <p className="owner-subtitle-role">BOARD OF VICE PRESIDENT</p>
               <p className="owner-subtitle-role">FOUNDER OF SUCCESS TEAM</p>
+              
+              <div className="owner-image-wrapper mobile-only-image">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/image.png"
+                  alt="Super Star J.Surendar - Board of Vice President"
+                  className="owner-profile-img"
+                />
+                <div className="owner-image-overlay">
+                  <span>J.Surendar</span>
+                </div>
+              </div>
+
               <div className="owner-history-card">
                 <h3 className="history-heading">History</h3>
                 <p className="history-text">
@@ -230,7 +243,7 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="owner-profile-right">
+            <div className="owner-profile-right desktop-only-image">
               <div className="owner-image-wrapper">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -829,19 +842,30 @@ export default function Home() {
             grid-template-columns: 1.2fr 0.8fr;
             gap: 5rem;
           }
-          .owner-profile-left {
-            order: 1;
-          }
-          .owner-profile-right {
-            order: 2;
-          }
         }
 
         .owner-profile-left {
           display: flex;
           flex-direction: column;
           gap: 0.85rem;
-          order: 2;
+        }
+
+        .mobile-only-image {
+          display: none;
+        }
+
+        .desktop-only-image {
+          display: flex;
+        }
+
+        @media (max-width: 991px) {
+          .mobile-only-image {
+            display: block;
+            margin: 1.5rem auto;
+          }
+          .desktop-only-image {
+            display: none !important;
+          }
         }
 
         .profile-badge {
@@ -904,13 +928,12 @@ export default function Home() {
         .owner-profile-right {
           display: flex;
           justify-content: center;
-          order: 1;
         }
 
         .owner-image-wrapper {
           position: relative;
           width: 100%;
-          max-width: 370px;
+          max-width: 440px;
           border-radius: 22px;
           overflow: hidden;
           box-shadow: 0 20px 50px rgba(0,0,0,0.14);
@@ -1167,7 +1190,7 @@ export default function Home() {
 
         .contributor-card {
           flex-shrink: 0;
-          width: 240px;
+          width: 270px;
           background: #ffffff;
           border: 1px solid #e2e8f0;
           border-radius: 16px;
@@ -1187,8 +1210,8 @@ export default function Home() {
         }
 
         .contributor-img-wrap {
-          width: 120px;
-          height: 120px;
+          width: 170px;
+          height: 170px;
           border-radius: 12px;
           overflow: hidden;
           margin-bottom: 1.25rem;
