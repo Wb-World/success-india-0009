@@ -5,20 +5,38 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const { data: bookings, error } = await supabaseAdmin
+    let bookings: any[] | null = null;
+    let error: any = null;
+
+    const { data: queryData, error: queryError } = await supabaseAdmin
       .from('bookings')
-      .select('id, attendee_details, created_at, screenshot')
+      .select('id, attendee_details, created_at, screenshot, homepage_visible')
       .eq('status', 'approved')
       .order('created_at', { ascending: false });
+
+    bookings = queryData;
+    error = queryError;
+
+    // Graceful fallback if column homepage_visible does not exist in db yet
+    if (error && error.message.includes('homepage_visible')) {
+      const fallbackQuery = supabaseAdmin
+        .from('bookings')
+        .select('id, attendee_details, created_at, screenshot')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false });
+      const res = await fallbackQuery;
+      bookings = res.data;
+      error = res.error;
+    }
 
     if (error) {
       console.error('Error fetching approved contributions:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Filter and map only supporter registrations (starting with SUP-)
+    // Filter and map only supporter registrations (starting with SUP-) and homepage_visible = true
     const supporters = (bookings || [])
-      .filter((b: any) => b.id.startsWith('SUP-'))
+      .filter((b: any) => b.id.startsWith('SUP-') && b.homepage_visible !== false)
       .map((b: any) => {
         let attendees = b.attendee_details || {};
         const screenshot = b.screenshot || '';

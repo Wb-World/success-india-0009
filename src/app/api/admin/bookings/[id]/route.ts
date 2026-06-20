@@ -27,9 +27,16 @@ export async function PATCH(
     }
 
     const { id } = await params;
-    const { status } = await request.json();
+    const { status, homepage_visible } = await request.json();
 
-    if (!status || !['approved', 'denied'].includes(status)) {
+    if (status === undefined && homepage_visible === undefined) {
+      return NextResponse.json(
+        { error: 'Missing parameters. Must provide status or homepage_visible' },
+        { status: 400 }
+      );
+    }
+
+    if (status !== undefined && !['approved', 'denied'].includes(status)) {
       return NextResponse.json(
         { error: 'Invalid status. Must be approved or denied' },
         { status: 400 }
@@ -55,13 +62,36 @@ export async function PATCH(
     const isWhatsappAlreadySent = currentBooking.whatsapp_sent === true ||
       (currentBooking.attendee_details && (currentBooking.attendee_details as any).__whatsapp_sent === true);
 
+    const updatePayload: any = {};
+    if (status !== undefined) updatePayload.status = status;
+    if (homepage_visible !== undefined) updatePayload.homepage_visible = homepage_visible;
+
+    // Automatically default homepage_visible to true when approving a contributor registration if not explicitly specified
+    if (id.startsWith('SUP-') && status === 'approved' && homepage_visible === undefined) {
+      updatePayload.homepage_visible = true;
+    }
+
     // Update booking in Supabase
-    const { data: updatedBooking, error: updateError } = await supabaseAdmin
+    let { data: updatedBooking, error: updateError } = await supabaseAdmin
       .from('bookings')
-      .update({ status })
+      .update(updatePayload)
       .eq('id', id)
       .select('*')
       .single();
+
+    // Fallback in case column homepage_visible does not exist in db yet
+    if (updateError && updateError.message.includes('homepage_visible')) {
+      const fallbackPayload = { ...updatePayload };
+      delete fallbackPayload.homepage_visible;
+      const fallbackRes = await supabaseAdmin
+        .from('bookings')
+        .update(fallbackPayload)
+        .eq('id', id)
+        .select('*')
+        .single();
+      updatedBooking = fallbackRes.data;
+      updateError = fallbackRes.error;
+    }
 
     if (updateError || !updatedBooking) {
       console.error('Database update error for booking:', updateError);
