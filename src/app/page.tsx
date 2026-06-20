@@ -342,10 +342,7 @@ export default function Home() {
           <section className="contributors-carousel-section">
             <div className="container">
               <div className="section-header" style={{ marginBottom: '2.5rem' }}>
-                <span className="section-eyebrow">THIS MONTH CONTRIBUTORS</span>
-                <h2 className="heading-lg">
-                  THIS MONTH CONTRIBUTORS
-                </h2>
+                <span className="section-eyebrow">JUNE MONTH CONTRIBUTORS</span>
                 <p className="section-subtitle">
                   Approved Success Team System Supporters driving growth and leadership development this month.
                 </p>
@@ -1120,7 +1117,7 @@ export default function Home() {
 
         .contributors-grid {
           display: grid;
-          grid-template-columns: repeat(3, 270px);
+          grid-template-columns: repeat(3, 200px);
           gap: 2rem;
           justify-content: center;
           margin: 0 auto;
@@ -1128,14 +1125,15 @@ export default function Home() {
 
         @media (max-width: 991px) {
           .contributors-grid {
-            grid-template-columns: repeat(2, 270px);
+            grid-template-columns: repeat(2, 200px);
           }
         }
 
         @media (max-width: 640px) {
           .contributors-grid {
             grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
+            gap: 1.25rem;
+            max-width: 420px;
           }
         }
 
@@ -1143,40 +1141,56 @@ export default function Home() {
           .contributors-grid {
             grid-template-columns: 1fr;
             gap: 1.5rem;
-            max-width: 320px;
+            max-width: 200px;
           }
         }
 
         .contributor-card {
           width: 100%;
-          max-width: 270px;
-          background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 16px;
-          padding: 1.5rem;
+          max-width: 200px;
+          background: transparent;
+          border: none;
+          padding: 0;
           display: flex;
           flex-direction: column;
           align-items: center;
           text-align: center;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: none;
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          margin: 0 auto;
         }
 
         .contributor-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 12px 24px rgba(22, 163, 74, 0.08);
-          border-color: #10b981;
+          transform: translateY(-4px);
         }
 
         .contributor-img-wrap {
-          width: 85px;
-          height: 85px;
+          width: 200px;
+          height: 230px;
           border-radius: 12px;
           overflow: hidden;
-          margin-bottom: 1.25rem;
-          border: 2px solid #e2e8f0;
+          margin-bottom: 0.625rem;
+          border: 1.5px solid #e2e8f0;
           transition: border-color 0.3s ease;
-          background: #f1f5f9;
+          background: #f8fafc;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+        }
+
+        @media (max-width: 640px) {
+          .contributor-img-wrap {
+            width: 100%;
+            height: 210px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .contributor-img-wrap {
+            width: 200px;
+            height: 230px;
+          }
         }
 
         .contributor-card:hover .contributor-img-wrap {
@@ -1196,31 +1210,49 @@ export default function Home() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.25rem;
           width: 100%;
+          max-width: 200px;
+          box-sizing: border-box;
+          padding: 0 4px;
+        }
+
+        @media (max-width: 640px) {
+          .contributor-info {
+            max-width: 100%;
+          }
         }
 
         .contributor-name {
           font-family: var(--font-heading), sans-serif;
-          font-size: 1.1rem;
+          font-size: 0.95rem;
           font-weight: 700;
           color: #1e293b;
           margin: 0;
-          line-height: 1.3;
+          line-height: 1.35;
+          width: 100%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          text-align: center;
         }
 
         .contributor-designation {
           display: inline-block;
-          font-size: 0.75rem;
+          font-size: 0.7rem;
           font-weight: 600;
           color: #047857;
           background: #ecfdf5;
           border: 1px solid #a7f3d0;
-          padding: 4px 12px;
+          padding: 2px 8px;
           border-radius: 99px;
           text-transform: uppercase;
           letter-spacing: 0.05em;
+          max-width: 100%;
           white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          text-align: center;
         }
 
         @media (max-width: 640px) {
