@@ -8,6 +8,38 @@ import { Menu, X } from 'lucide-react';
 export default function Navbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const checkUser = () => {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        try {
+          setUser(JSON.parse(stored));
+        } catch {
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    };
+
+    checkUser();
+    window.addEventListener('auth-change', checkUser);
+    window.addEventListener('storage', checkUser);
+
+    return () => {
+      window.removeEventListener('auth-change', checkUser);
+      window.removeEventListener('storage', checkUser);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
+    window.dispatchEvent(new Event('auth-change'));
+    window.location.href = '/login';
+  };
 
   useEffect(() => {
     setMenuOpen(false);
@@ -56,6 +88,17 @@ export default function Navbar() {
           <Link href="/contribution" className={`nav-link ${pathname === '/contribution' ? 'active' : ''}`}>Contribution</Link>
           <Link href="/about" className={`nav-link ${pathname === '/about' ? 'active' : ''}`}>About</Link>
           <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`}>Contact</Link>
+          {user ? (
+            <>
+              <Link href="/profile" className={`nav-link ${pathname === '/profile' ? 'active' : ''}`}>Profile</Link>
+              <button type="button" onClick={handleLogout} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', color: '#ef4444' }}>Logout</button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className={`nav-link ${pathname === '/login' ? 'active' : ''}`}>Sign In</Link>
+              <Link href="/signup" className={`nav-link ${pathname === '/signup' ? 'active' : ''}`}>Sign Up</Link>
+            </>
+          )}
         </nav>
 
 
@@ -108,6 +151,17 @@ export default function Navbar() {
                 <Link href="/contribution" className={`mobile-link ${pathname === '/contribution' ? 'active' : ''}`} onClick={closeMenu}>Contribution</Link>
                 <Link href="/about" className={`mobile-link ${pathname === '/about' ? 'active' : ''}`} onClick={closeMenu}>About</Link>
                 <Link href="/contact" className={`mobile-link ${pathname === '/contact' ? 'active' : ''}`} onClick={closeMenu}>Contact</Link>
+                {user ? (
+                  <>
+                    <Link href="/profile" className={`mobile-link ${pathname === '/profile' ? 'active' : ''}`} onClick={closeMenu}>Profile</Link>
+                    <button type="button" onClick={() => { handleLogout(); closeMenu(); }} className="mobile-link mobile-logout-btn" style={{ textAlign: 'left', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>Logout</button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login" className={`mobile-link ${pathname === '/login' ? 'active' : ''}`} onClick={closeMenu}>Sign In</Link>
+                    <Link href="/signup" className={`mobile-link ${pathname === '/signup' ? 'active' : ''}`} onClick={closeMenu}>Sign Up</Link>
+                  </>
+                )}
               </nav>
 
 
