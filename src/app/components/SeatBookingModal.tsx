@@ -377,6 +377,23 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       return acc;
     }, {} as Record<string, { name: string; whatsapp: string }>);
 
+    let userId = null;
+    let userEmail = null;
+    let username = null;
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          userId = parsed.id || null;
+          userEmail = parsed.email || null;
+          username = parsed.username || null;
+        } catch (e) {
+          console.error('Failed to parse user in SeatBookingModal:', e);
+        }
+      }
+    }
+
     const payload = {
       bookingId: newBookingId,
       eventId: event.id,
@@ -396,6 +413,9 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       bookerPhone,
       bookerVpName,
       utrNumber,
+      userId,
+      userEmail,
+      username,
     };
 
     const headers: any = { 'Content-Type': 'application/json' };

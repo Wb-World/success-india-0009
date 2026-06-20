@@ -196,11 +196,33 @@ export default function ContributionPage() {
       utrNumber,
     };
 
+    let userId = null;
+    let userEmail = null;
+    let username = null;
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          userId = parsed.id || null;
+          userEmail = parsed.email || null;
+          username = parsed.username || null;
+        } catch (e) {
+          console.error('Failed to parse user in contribution page:', e);
+        }
+      }
+    }
+
     try {
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...payload,
+          userId,
+          userEmail,
+          username,
+        }),
       });
 
       if (!res.ok) {

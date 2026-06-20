@@ -70,6 +70,9 @@ export async function POST(request: Request) {
       bookerMemberId,
       bookerPhone,
       bookerVpName,
+      userId,
+      userEmail,
+      username,
     } = body;
 
     // Resolve field aliases (backward compatible with legacy shape)
@@ -77,6 +80,10 @@ export async function POST(request: Request) {
     const resolvedSeminarName = seminarName || eventName || busName;
     const resolvedVenue = venue || source;
     const resolvedSeminarTopic = seminar || destination;
+
+    const resolvedUserId = userId || body.user_id || request.headers.get('x-user-id') || null;
+    const resolvedUserEmail = userEmail || body.user_email || null;
+    const resolvedUsername = username || null;
 
     // Generate or use provided booking reference ID
     const bookingRefId = clientBookingId || generateBookingId();
@@ -149,7 +156,7 @@ export async function POST(request: Request) {
         .from('bookings')
         .insert({
           id: bookingRefId,
-          user_id: null,
+          user_id: resolvedUserId,
           seminar_id: resolvedSeminarId,
           seminar_name: resolvedSeminarName,
           bus_id: null,
@@ -169,18 +176,26 @@ export async function POST(request: Request) {
           booker_member_id: resolvedBookerMemberId,
           booker_phone: resolvedBookerPhone,
           booker_vp_name: resolvedBookerVpName,
+          user_email: resolvedUserEmail,
+          username: resolvedUsername,
         })
         .select('*')
         .single();
 
-      // If insert failed due to column missing or general schema issue, retry without booker_phone
-      if (insertError && (insertError.message.includes('booker_phone') || insertError.code === 'PGRST204' || insertError.message.includes('column'))) {
-        console.warn('Primary insert failed with column error, retrying without booker_phone column');
+      // If insert failed due to column missing or general schema issue, retry without custom columns
+      if (insertError && (
+        insertError.message.includes('user_email') ||
+        insertError.message.includes('username') ||
+        insertError.message.includes('booker_phone') ||
+        insertError.code === 'PGRST204' ||
+        insertError.message.includes('column')
+      )) {
+        console.warn('Primary insert failed with column error, retrying with fallback fields');
         const retryResult = await supabaseAdmin
           .from('bookings')
           .insert({
             id: bookingRefId,
-            user_id: null,
+            user_id: resolvedUserId,
             seminar_id: resolvedSeminarId,
             seminar_name: resolvedSeminarName,
             bus_id: null,
@@ -197,6 +212,8 @@ export async function POST(request: Request) {
             attendee_details: {
               ...(attendeeDetails || {}),
               __booker_phone: resolvedBookerPhone,
+              __user_email: resolvedUserEmail,
+              __username: resolvedUsername,
             },
             qr_code_payload: qrCodePayload,
             booker_name: resolvedBookerName,
@@ -219,6 +236,8 @@ export async function POST(request: Request) {
         const serializedScreenshot = `${cleanScreenshot}|${JSON.stringify({
           ...(attendeeDetails || {}),
           __booker_phone: resolvedBookerPhone,
+          __user_email: resolvedUserEmail,
+          __username: resolvedUsername,
         })}|${qrCodePayload}`;
 
         await supabaseAdmin.from('buses').upsert(
@@ -239,7 +258,7 @@ export async function POST(request: Request) {
           .from('bookings')
           .insert({
             id: bookingRefId,
-            user_id: null,
+            user_id: resolvedUserId,
             bus_id: resolvedSeminarId,
             bus_name: resolvedSeminarName,
             source: resolvedVenue,
