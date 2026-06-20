@@ -1186,13 +1186,9 @@ export default function Home() {
         .contributor-img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
           display: block;
           transition: transform 0.3s ease;
-        }
-
-        .contributor-card:hover .contributor-img {
-          transform: scale(1.05);
         }
 
         .contributor-info {
