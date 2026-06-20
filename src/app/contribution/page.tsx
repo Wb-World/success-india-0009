@@ -411,11 +411,6 @@ export default function ContributionPage() {
               </div>
             </div>
 
-            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-              <Link href="/events" className="contrib-cta-btn">
-                Browse Seminars &amp; Events
-              </Link>
-            </div>
           </div>
         </section>
       )}
