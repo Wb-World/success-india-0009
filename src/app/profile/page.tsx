@@ -46,33 +46,30 @@ function getStatusClass(status: string) {
   return 'badge-pending';
 }
 
-// ─── Single Booking Card (Redesigned Horizontal Card) ────────────────────────
+// ─── Single Booking Card (Redesigned Text-Only Card) ────────────────────────
 function BookingCard({ booking }: { booking: any }) {
   const router = useRouter();
   const status = booking.status || 'pending';
 
   return (
     <div className={`bk-horizontal-card status-${status}`}>
-      {/* Event image/banner on the left */}
-      <div className="bk-card-image-wrap">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/hero-leader.jpg" alt="Event Banner" className="bk-card-image" />
-      </div>
-      
-      {/* Details in the center */}
       <div className="bk-card-info-wrap">
         <div className="bk-card-title-row">
           <h3 className="bk-card-event-name">{booking.seminarName || booking.eventName || '—'}</h3>
         </div>
         
-        <div className="bk-card-details-grid">
+        <div className="bk-card-details-list">
           <div className="bk-card-detail-item">
             <span className="bk-detail-lbl">Booking Ref:</span>
-            <span className="bk-detail-val font-mono">#{booking.id?.toUpperCase()}</span>
+            <span className="bk-detail-val font-mono">{booking.id?.toUpperCase()}</span>
           </div>
           <div className="bk-card-detail-item">
-            <span className="bk-detail-lbl">Date &amp; Time:</span>
-            <span className="bk-detail-val">{booking.date || '—'} · {booking.time || '—'}</span>
+            <span className="bk-detail-lbl">Date:</span>
+            <span className="bk-detail-val">{booking.date || '—'}</span>
+          </div>
+          <div className="bk-card-detail-item">
+            <span className="bk-detail-lbl">Time:</span>
+            <span className="bk-detail-val">{booking.time || '—'}</span>
           </div>
           <div className="bk-card-detail-item">
             <span className="bk-detail-lbl">Seats:</span>
@@ -82,30 +79,26 @@ function BookingCard({ booking }: { booking: any }) {
             <span className="bk-detail-lbl">Amount:</span>
             <span className="bk-detail-val highlight">₹{booking.totalPrice}</span>
           </div>
-          <div className="bk-card-detail-item bk-status-row-mobile">
-            <span className="bk-detail-lbl">Status:</span>
-            <span className={`bk-badge-${status} small`}>{getStatusLabel(status)}</span>
+        </div>
+
+        <div className="bk-card-footer">
+          <div className="bk-card-status-side">
+            <span className={`bk-badge-${status}`}>
+              {status === 'approved' && <CheckCircle size={13} className="badge-icon" />}
+              {(status === 'pending' || !status) && <Clock size={13} className="badge-icon" />}
+              {status === 'denied' && <ShieldAlert size={13} className="badge-icon" />}
+              {getStatusLabel(status)}
+            </span>
+          </div>
+          <div className="bk-card-btn-side">
+            <button 
+              className="bk-card-details-btn" 
+              onClick={() => router.push(`/profile/bookings/${booking.id}`)}
+            >
+              View Details →
+            </button>
           </div>
         </div>
-
-        <div className="bk-card-actions-row">
-          <button 
-            className="btn btn-primary bk-card-btn" 
-            onClick={() => router.push(`/profile/bookings/${booking.id}`)}
-          >
-            View Details
-          </button>
-        </div>
-      </div>
-
-      {/* Status badge on the top-right (desktop) */}
-      <div className="bk-card-status-wrap">
-        <span className={`bk-badge-${status}`}>
-          {status === 'approved' && <CheckCircle size={13} />}
-          {(status === 'pending' || !status) && <Clock size={13} />}
-          {status === 'denied' && <ShieldAlert size={13} />}
-          {getStatusLabel(status)}
-        </span>
       </div>
     </div>
   );
@@ -540,7 +533,8 @@ function ProfileDashboard() {
         .stat-box.pending .stat-num { color: #b45309; }
 
         /* ── Booking Cards Redesign ─────────────────────────────────── */
-        .booking-cards-grid { display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1.25rem; }
+        /* ── Booking Cards Redesign ─────────────────────────────────── */
+        .booking-cards-grid { display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1.25rem; }
 
         .bk-horizontal-card {
           display: flex;
@@ -563,61 +557,41 @@ function ProfileDashboard() {
         .bk-horizontal-card.status-pending:hover { border-color: rgba(245,158,11,0.5); }
         .bk-horizontal-card.status-denied:hover { border-color: rgba(239,68,68,0.5); }
 
-        .bk-card-image-wrap {
-          width: 180px;
-          min-width: 180px;
-          height: auto;
-          position: relative;
-          background: #f1f5f9;
-          border-right: 1px solid var(--border);
-        }
-        .bk-card-image {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
         .bk-card-info-wrap {
           flex: 1;
-          padding: 1.5rem 1.75rem;
+          padding: 2rem;
           display: flex;
           flex-direction: column;
-          justify-content: space-between;
-          gap: 1rem;
+          gap: 1.25rem;
         }
 
         .bk-card-title-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 1rem;
+          margin-bottom: 0.25rem;
         }
         .bk-card-event-name {
           font-family: var(--font-heading);
-          font-size: 1.15rem;
+          font-size: 1.3rem;
           font-weight: 800;
           color: var(--foreground);
           margin: 0;
-          line-height: 1.35;
+          line-height: 1.3;
         }
 
-        .bk-card-details-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 0.75rem 1.5rem;
+        .bk-card-details-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
         }
         .bk-card-detail-item {
           display: flex;
-          align-items: baseline;
+          align-items: center;
           gap: 0.5rem;
-          font-size: 0.88rem;
+          font-size: 0.95rem;
         }
         .bk-detail-lbl {
           color: var(--muted);
           font-weight: 500;
-          font-size: 0.8rem;
-          text-transform: uppercase;
-          letter-spacing: 0.02em;
+          min-width: 120px;
         }
         .bk-detail-val {
           color: var(--foreground);
@@ -626,20 +600,20 @@ function ProfileDashboard() {
         .bk-detail-val.highlight {
           color: #059669;
           font-weight: 800;
-          font-size: 0.95rem;
-        }
-        .bk-status-row-mobile {
-          display: none;
         }
 
-        .bk-card-actions-row {
+        .bk-card-footer {
           display: flex;
-          justify-content: flex-start;
-          margin-top: 0.25rem;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 0.75rem;
+          padding-top: 1.25rem;
+          border-top: 1px solid var(--border);
         }
-        .bk-card-btn {
-          font-size: 0.85rem;
-          padding: 0.5rem 1.25rem;
+
+        .bk-card-details-btn {
+          font-size: 0.9rem;
+          padding: 0.6rem 1.5rem;
           border-radius: var(--radius-lg);
           font-weight: 700;
           background: linear-gradient(135deg, #059669 0%, #10b981 100%);
@@ -648,19 +622,15 @@ function ProfileDashboard() {
           transition: transform 0.1s ease, box-shadow 0.15s ease;
           color: white;
           cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
         }
-        .bk-card-btn:hover {
+        .bk-card-details-btn:hover {
           transform: translateY(-1px);
           box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
         }
 
-        /* Badge (Desktop) */
-        .bk-card-status-wrap {
-          padding: 1.5rem 1.75rem;
-          display: flex;
-          align-items: flex-start;
-          justify-content: flex-end;
-        }
         .bk-badge-approved, .bk-badge-pending, .bk-badge-denied {
           display: inline-flex;
           align-items: center;
@@ -677,39 +647,16 @@ function ProfileDashboard() {
         .bk-badge-pending { background: #fef3c7; border: 1.5px solid #fcd34d; color: #92400e; }
         .bk-badge-denied { background: #fee2e2; border: 1.5px solid #fca5a5; color: #991b1b; }
 
-        .bk-badge-approved.small, .bk-badge-pending.small, .bk-badge-denied.small {
-          padding: 2px 8px;
-          font-size: 0.65rem;
-        }
-
         @media (max-width: 640px) {
-          .bk-horizontal-card {
+          .bk-card-footer {
             flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
           }
-          .bk-card-image-wrap {
+          .bk-card-btn-side, .bk-card-details-btn {
             width: 100%;
-            height: 140px;
-            min-width: unset;
-            border-right: none;
-            border-bottom: 1px solid var(--border);
           }
-          .bk-card-status-wrap {
-            display: none;
-          }
-          .bk-status-row-mobile {
-            display: flex;
-            align-items: center;
-          }
-          .bk-card-details-grid {
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
-          }
-          .bk-card-info-wrap {
-            padding: 1.25rem 1.125rem;
-          }
-          .bk-card-btn {
-            width: 100%;
-            text-align: center;
+          .bk-card-details-btn {
             justify-content: center;
           }
         }
