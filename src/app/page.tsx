@@ -98,6 +98,9 @@ export default function Home() {
     fetchSupporters();
   }, []);
 
+  const chiefDirectors = supporters.filter((s) => s.designation === 'Chief Executive Director');
+  const executiveDirectors = supporters.filter((s) => s.designation === 'Executive Director');
+
   const eventLocations = events.length
     ? (Array.from(new Set(events.map((event) => event.venue || event.legacySource).filter(Boolean))) as string[])
     : fallbackLocations;
@@ -335,7 +338,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
         {supporters.length > 0 && (
           <section className="contributors-carousel-section">
             <div className="container">
@@ -343,34 +345,20 @@ export default function Home() {
                 <span className="section-eyebrow">THIS MONTH CONTRIBUTORS</span>
                 <h2 className="heading-lg">
                   THIS MONTH CONTRIBUTORS
-                  <span className="contributor-count-badge">{supporters.length}</span>
                 </h2>
                 <p className="section-subtitle">
                   Approved Success Team System Supporters driving growth and leadership development this month.
                 </p>
               </div>
-            </div>
 
-            <div className={`marquee-container ${supporters.length <= 3 ? 'static-layout' : ''}`}>
-              <div className={`marquee-track ${supporters.length <= 3 ? 'static-grid' : ''}`}>
-                <div className={`marquee-content ${supporters.length > 3 ? 'animate-marquee' : ''}`}>
-                  {supporters.map((s) => (
-                    <div key={`contrib-orig-${s.id}`} className="contributor-card">
-                      <div className="contributor-img-wrap">
-                        <img src={s.vpImage} alt={s.name} className="contributor-img" />
-                      </div>
-                      <div className="contributor-info">
-                        <h3 className="contributor-name">{s.name}</h3>
-                        <span className="contributor-designation">{s.designation}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {supporters.length > 3 && (
-                  <div className="marquee-content animate-marquee" aria-hidden="true">
-                    {supporters.map((s) => (
-                      <div key={`contrib-dup-${s.id}`} className="contributor-card">
+              {chiefDirectors.length > 0 && (
+                <div className="designation-group">
+                  <h3 className="designation-title">Chief Executive Director</h3>
+                  <div className="contributors-grid">
+                    {chiefDirectors.map((s) => (
+                      <div key={`contrib-chief-${s.id}`} className="contributor-card">
                         <div className="contributor-img-wrap">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={s.vpImage} alt={s.name} className="contributor-img" />
                         </div>
                         <div className="contributor-info">
@@ -380,8 +368,28 @@ export default function Home() {
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+
+              {executiveDirectors.length > 0 && (
+                <div className="designation-group" style={{ marginTop: '3.5rem' }}>
+                  <h3 className="designation-title">Executive Director</h3>
+                  <div className="contributors-grid">
+                    {executiveDirectors.map((s) => (
+                      <div key={`contrib-exec-${s.id}`} className="contributor-card">
+                        <div className="contributor-img-wrap">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={s.vpImage} alt={s.name} className="contributor-img" />
+                        </div>
+                        <div className="contributor-info">
+                          <h3 className="contributor-name">{s.name}</h3>
+                          <span className="contributor-designation">{s.designation}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
         )}
@@ -1086,111 +1094,62 @@ export default function Home() {
           position: relative;
         }
 
-        .contributor-count-badge {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          background: #10b981;
-          color: white;
-          font-size: 0.9rem;
+        .designation-group {
+          margin-bottom: 3.5rem;
+        }
+
+        .designation-title {
+          font-family: var(--font-heading), sans-serif;
+          font-size: 1.5rem;
           font-weight: 700;
-          padding: 4px 10px;
-          border-radius: 99px;
-          margin-left: 0.75rem;
-          vertical-align: middle;
-          box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
-        }
-
-        .marquee-container {
+          color: #1e293b;
+          margin-bottom: 2rem;
+          text-align: center;
           position: relative;
-          width: 100%;
-          overflow: hidden;
-          padding: 1.5rem 0;
-          display: flex;
         }
 
-        .marquee-container::before,
-        .marquee-container::after {
+        .designation-title::after {
           content: '';
-          position: absolute;
-          top: 0;
-          bottom: 0;
-          width: 150px;
-          z-index: 2;
-          pointer-events: none;
+          display: block;
+          width: 50px;
+          height: 3px;
+          background: #10b981;
+          margin: 0.75rem auto 0;
+          border-radius: 99px;
         }
 
-        .marquee-container::before {
-          left: 0;
-          background: linear-gradient(to right, #ffffff 0%, transparent 100%);
-        }
-
-        .marquee-container::after {
-          right: 0;
-          background: linear-gradient(to left, #ffffff 0%, transparent 100%);
-        }
-
-        @media (max-width: 768px) {
-          .marquee-container::before,
-          .marquee-container::after {
-            width: 60px;
-          }
-        }
-
-        .marquee-track {
-          display: flex;
-          width: max-content;
-        }
-
-        .marquee-container.static-layout::before,
-        .marquee-container.static-layout::after {
-          display: none;
-        }
-
-        .marquee-track.static-grid {
-          justify-content: center;
-          width: 100%;
-        }
-
-        .marquee-track.static-grid .marquee-content {
-          padding-right: 0;
-          flex-wrap: wrap;
-          justify-content: center;
-        }
-
-        .marquee-content {
-          display: flex;
+        .contributors-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 270px);
           gap: 2rem;
-          padding-right: 2rem;
-          will-change: transform;
+          justify-content: center;
+          margin: 0 auto;
         }
 
-        .animate-marquee {
-          animation: marquee-scroll 55s linear infinite;
-        }
-
-        @keyframes marquee-scroll {
-          0% {
-            transform: translate3d(0, 0, 0);
-          }
-          100% {
-            transform: translate3d(-100%, 0, 0);
+        @media (max-width: 991px) {
+          .contributors-grid {
+            grid-template-columns: repeat(2, 270px);
           }
         }
 
-        @media (hover: hover) {
-          .marquee-track:hover .animate-marquee {
-            animation-play-state: paused;
+        @media (max-width: 640px) {
+          .contributors-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
           }
         }
 
-        .marquee-track:active .animate-marquee {
-          animation-play-state: paused;
+        @media (max-width: 480px) {
+          .contributors-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            max-width: 320px;
+          }
         }
 
         .contributor-card {
-          flex-shrink: 0;
-          width: 270px;
+          width: 100%;
+          max-width: 270px;
           background: #ffffff;
           border: 1px solid #e2e8f0;
           border-radius: 16px;
@@ -1210,8 +1169,8 @@ export default function Home() {
         }
 
         .contributor-img-wrap {
-          width: 170px;
-          height: 170px;
+          width: 85px;
+          height: 85px;
           border-radius: 12px;
           overflow: hidden;
           margin-bottom: 1.25rem;
