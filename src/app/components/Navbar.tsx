@@ -226,10 +226,10 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <>
-              <Link href="/login" className={`nav-link ${pathname === '/login' ? 'active' : ''}`}>Sign In</Link>
-              <Link href="/signup" className={`nav-link ${pathname === '/signup' ? 'active' : ''}`}>Sign Up</Link>
-            </>
+            <div className="nav-auth-buttons">
+              <Link href="/login" className="btn-auth btn-auth-outline">Sign In</Link>
+              <Link href="/signup" className="btn-auth btn-auth-filled">Sign Up</Link>
+            </div>
           )}
         </nav>
 
@@ -303,10 +303,10 @@ export default function Navbar() {
                     </button>
                   </>
                 ) : (
-                  <>
-                    <Link href="/login" className={`mobile-link ${pathname === '/login' ? 'active' : ''}`} onClick={closeMenu}>Sign In</Link>
-                    <Link href="/signup" className={`mobile-link ${pathname === '/signup' ? 'active' : ''}`} onClick={closeMenu}>Sign Up</Link>
-                  </>
+                  <div className="mobile-auth-buttons">
+                    <Link href="/login" className="mobile-btn-auth mobile-btn-auth-outline" onClick={closeMenu}>Sign In</Link>
+                    <Link href="/signup" className="mobile-btn-auth mobile-btn-auth-filled" onClick={closeMenu}>Sign Up</Link>
+                  </div>
                 )}
               </nav>
 
@@ -844,6 +844,105 @@ export default function Navbar() {
         .dropdown-item.logout-item:hover {
           background-color: #fee2e2;
           color: #b91c1c;
+        }
+
+        .nav-auth-buttons {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin-left: 0.5rem;
+        }
+
+        .btn-auth {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0.5rem 1.25rem;
+          font-size: 0.9rem;
+          font-weight: 600;
+          border-radius: var(--radius-lg);
+          transition: all var(--transition-fast);
+          cursor: pointer;
+          height: 38px;
+          line-height: 1;
+          text-align: center;
+          white-space: nowrap;
+          box-sizing: border-box;
+        }
+
+        .btn-auth-outline {
+          background: transparent;
+          color: var(--primary);
+          border: 1.5px solid var(--primary);
+        }
+
+        .btn-auth-outline:hover {
+          background-color: var(--primary-light);
+          transform: translateY(-1px);
+        }
+
+        .btn-auth-filled {
+          background: var(--primary);
+          color: white;
+          border: 1.5px solid var(--primary);
+        }
+
+        .btn-auth-filled:hover {
+          background: var(--primary-dark);
+          border-color: var(--primary-dark);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Mobile auth buttons */
+        .mobile-auth-buttons {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          width: 100%;
+          margin-top: 0.75rem;
+          padding: 0 0.5rem;
+        }
+
+        .mobile-btn-auth {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0.75rem 1rem;
+          font-size: 0.95rem;
+          font-weight: 600;
+          border-radius: var(--radius-lg);
+          transition: all var(--transition-fast);
+          width: 100%;
+          text-align: center;
+          height: 46px;
+          box-sizing: border-box;
+          cursor: pointer;
+        }
+
+        .mobile-btn-auth::after {
+          display: none !important;
+        }
+
+        .mobile-btn-auth-outline {
+          background: transparent;
+          color: var(--primary);
+          border: 1.5px solid var(--primary);
+        }
+
+        .mobile-btn-auth-outline:hover {
+          background-color: var(--primary-light);
+        }
+
+        .mobile-btn-auth-filled {
+          background: var(--primary);
+          color: white;
+          border: 1.5px solid var(--primary);
+        }
+
+        .mobile-btn-auth-filled:hover {
+          background: var(--primary-dark);
+          border-color: var(--primary-dark);
         }
       `}</style>
     </header>
