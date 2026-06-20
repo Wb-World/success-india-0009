@@ -338,9 +338,9 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="marquee-container">
-              <div className={`marquee-track ${supporters.length === 1 ? 'single-contributor' : ''}`}>
-                <div className={`marquee-content ${supporters.length > 1 ? 'animate-marquee' : 'animate-marquee-single'}`}>
+            <div className={`marquee-container ${supporters.length <= 3 ? 'static-layout' : ''}`}>
+              <div className={`marquee-track ${supporters.length <= 3 ? 'static-grid' : ''}`}>
+                <div className={`marquee-content ${supporters.length > 3 ? 'animate-marquee' : ''}`}>
                   {supporters.map((s) => (
                     <div key={`contrib-orig-${s.id}`} className="contributor-card">
                       <div className="contributor-img-wrap">
@@ -353,7 +353,7 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                {supporters.length > 1 && (
+                {supporters.length > 3 && (
                   <div className="marquee-content animate-marquee" aria-hidden="true">
                     {supporters.map((s) => (
                       <div key={`contrib-dup-${s.id}`} className="contributor-card">
@@ -1119,9 +1119,20 @@ export default function Home() {
           width: max-content;
         }
 
-        .marquee-track.single-contributor {
+        .marquee-container.static-layout::before,
+        .marquee-container.static-layout::after {
+          display: none;
+        }
+
+        .marquee-track.static-grid {
           justify-content: center;
           width: 100%;
+        }
+
+        .marquee-track.static-grid .marquee-content {
+          padding-right: 0;
+          flex-wrap: wrap;
+          justify-content: center;
         }
 
         .marquee-content {
@@ -1135,10 +1146,6 @@ export default function Home() {
           animation: marquee-scroll 55s linear infinite;
         }
 
-        .animate-marquee-single {
-          animation: marquee-single-scroll 25s linear infinite;
-        }
-
         @keyframes marquee-scroll {
           0% {
             transform: translate3d(0, 0, 0);
@@ -1148,24 +1155,13 @@ export default function Home() {
           }
         }
 
-        @keyframes marquee-single-scroll {
-          0% {
-            transform: translate3d(100vw, 0, 0);
-          }
-          100% {
-            transform: translate3d(-300px, 0, 0);
-          }
-        }
-
         @media (hover: hover) {
-          .marquee-track:hover .animate-marquee,
-          .marquee-track:hover .animate-marquee-single {
+          .marquee-track:hover .animate-marquee {
             animation-play-state: paused;
           }
         }
 
-        .marquee-track:active .animate-marquee,
-        .marquee-track:active .animate-marquee-single {
+        .marquee-track:active .animate-marquee {
           animation-play-state: paused;
         }
 
