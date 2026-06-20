@@ -95,8 +95,12 @@ export async function PATCH(
 
     if (updateError || !updatedBooking) {
       console.error('Database update error for booking:', updateError);
+      const isHomepageVisibleToggleError = homepage_visible !== undefined && status === undefined;
+      const errorMsg = isHomepageVisibleToggleError
+        ? 'Failed to update homepage visibility. The homepage_visible column does not exist in the database. Please execute the SQL migration in your Supabase SQL Editor.'
+        : 'Failed to update booking status';
       return NextResponse.json(
-        { error: 'Failed to update booking status' },
+        { error: errorMsg },
         { status: 500 }
       );
     }
