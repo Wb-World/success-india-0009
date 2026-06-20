@@ -1282,72 +1282,131 @@ function ProfileDashboard() {
           margin-bottom: 0.5rem;
         }
 
-        /* Bookings Table */
-        .bookings-table-wrapper {
+        /* Booking Cards Grid */
+        .bookings-cards-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+          gap: 1.25rem;
           width: 100%;
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
         }
 
-        .bookings-table {
-          width: 100%;
-          min-width: 700px;
-          border-collapse: collapse;
-          text-align: left;
-          font-size: 0.95rem;
+        @media (max-width: 640px) {
+          .bookings-cards-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+          }
         }
 
-        .bookings-table th {
-          padding: 1rem;
-          border-bottom: 2px solid var(--border);
-          color: var(--muted);
-          font-weight: 600;
-          font-size: 0.8rem;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .bookings-table td {
-          padding: 1.25rem 1rem;
-          border-bottom: 1px solid var(--border);
-          vertical-align: middle;
-        }
-
-        .booking-id-tag {
-          font-family: var(--font-heading);
-          font-weight: 700;
-          font-size: 0.85rem;
-          color: var(--foreground);
-          display: block;
-        }
-
-        .booking-created-date {
-          font-size: 0.75rem;
-          color: var(--muted);
-          display: block;
-          margin-top: 0.125rem;
-        }
-
-        .seminar-cell {
+        .booking-card {
+          background: #ffffff;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-xl);
+          padding: 1.5rem;
           display: flex;
           flex-direction: column;
+          gap: 1rem;
+          box-shadow: var(--shadow-sm);
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .seminar-venue-topic {
+        .booking-card:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-md);
+        }
+
+        .booking-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid var(--border);
+          padding-bottom: 0.75rem;
+          gap: 0.5rem;
+        }
+
+        .booking-ref-block {
+          display: flex;
+          flex-direction: column;
+          gap: 0.15rem;
+        }
+
+        .booking-card-ref-label {
+          font-size: 0.75rem;
           font-weight: 600;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .booking-card-ref-val {
+          font-family: monospace;
+          font-size: 0.95rem;
+          font-weight: 700;
           color: var(--foreground);
         }
 
-        .seminar-program-name {
-          font-size: 0.75rem;
-          color: var(--muted);
-          margin-top: 0.125rem;
+        .booking-card-body {
+          display: flex;
+          flex-direction: column;
+          gap: 0.85rem;
+          flex-grow: 1;
         }
 
-        .seats-cell {
+        .booking-card-row {
           display: flex;
+          flex-direction: column;
           gap: 0.25rem;
+        }
+
+        .booking-card-row-group {
+          display: flex;
+          gap: 1.5rem;
+        }
+
+        .booking-card-rowhalf {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .booking-card-label {
+          font-size: 0.78rem;
+          font-weight: 600;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .booking-card-label-small {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.35rem;
+          display: block;
+        }
+
+        .booking-card-val {
+          font-size: 0.95rem;
+          color: var(--foreground);
+          font-weight: 500;
+          line-height: 1.4;
+        }
+
+        .event-name-val {
+          font-weight: 700;
+          color: var(--primary-dark);
+        }
+
+        .venue-val {
+          color: #334155;
+        }
+
+        .seats-val {
+          display: flex;
           flex-wrap: wrap;
+          gap: 0.25rem;
         }
 
         .seat-item-tag {
@@ -1360,33 +1419,85 @@ function ProfileDashboard() {
           border: 1px solid var(--border);
         }
 
-        .date-cell {
+        .price-val {
+          font-weight: 700;
+          color: var(--foreground);
+          font-size: 1rem;
+        }
+
+        .date-val {
           display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-          font-size: 0.85rem;
+          align-items: center;
+          gap: 0.8rem;
+          color: #334155;
+          font-size: 0.9rem;
         }
 
         .inline-icon {
           vertical-align: middle;
           margin-top: -2px;
           margin-right: 2px;
+          color: var(--primary);
+          flex-shrink: 0;
         }
 
-        .date-text {
+        /* Attendee details box inside card */
+        .booking-card-attendees-box {
+          background: #f8fafc;
+          border: 1px dashed #cbd5e1;
+          border-radius: var(--radius-md);
+          padding: 0.75rem;
+          margin-top: 0.25rem;
+        }
+
+        .booking-card-attendees-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+        }
+
+        .attendee-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.82rem;
+          line-height: 1.3;
+        }
+
+        .attendee-seat {
+          font-weight: 700;
+          color: var(--primary);
+          font-family: monospace;
+          background: #f0fdf4;
+          padding: 1px 4px;
+          border-radius: 4px;
+          border: 1px solid #d1fae5;
+        }
+
+        .attendee-info {
           font-weight: 500;
-          color: var(--foreground);
+          color: #334155;
+          text-align: right;
+          word-break: break-all;
         }
 
-        .time-text {
+        .booking-card-footer {
+          border-top: 1px solid var(--border);
+          padding-top: 0.75rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 0.78rem;
+        }
+
+        .booking-card-date-label {
           color: var(--muted);
         }
 
-        .price-cell {
-          font-family: var(--font-heading);
-          font-weight: 800;
-          color: var(--primary-dark);
-          font-size: 1.05rem;
+        .booking-card-date-val {
+          color: var(--foreground);
+          font-weight: 500;
         }
 
         .badge-icon {
@@ -1398,74 +1509,91 @@ function ProfileDashboard() {
 }
 
 const renderBookingsTable = (list: any[]) => (
-  <div className="bookings-table-wrapper" style={{ marginTop: '0.5rem' }}>
-    <table className="bookings-table">
-      <thead>
-        <tr>
-          <th>Booking Ref</th>
-          <th>Event Info</th>
-          <th>Seats</th>
-          <th>Session Date</th>
-          <th>Total Fee</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {list.map((booking) => (
-          <tr key={booking.id}>
-            <td className="booking-ref-cell">
-              <span className="booking-id-tag">{booking.id.toUpperCase()}</span>
-              <span className="booking-created-date">
-                {new Date(booking.createdAt).toLocaleDateString()}
-              </span>
-            </td>
-            <td>
-              <div className="seminar-cell">
-                <span className="seminar-venue-topic">{booking.venue} &rarr; {booking.seminar}</span>
-                <span className="seminar-program-name">{booking.seminarName || booking.eventName}</span>
-              </div>
-            </td>
-            <td>
-              <div className="seats-cell">
+  <div className="bookings-cards-grid" style={{ marginTop: '1rem' }}>
+    {list.map((booking) => (
+      <div key={booking.id} className="booking-card glass-card">
+        {/* Card Header: Booking Ref and Status */}
+        <div className="booking-card-header">
+          <div className="booking-ref-block">
+            <span className="booking-card-ref-label">Booking Ref</span>
+            <span className="booking-card-ref-val">{booking.id.toUpperCase()}</span>
+          </div>
+          <span className={`badge badge-${booking.status}`}>
+            {(booking.status === 'pending' || !booking.status) && <Clock size={12} className="badge-icon" />}
+            {booking.status === 'approved' && <CheckCircle size={12} className="badge-icon" />}
+            {booking.status === 'denied' && <ShieldAlert size={12} className="badge-icon" />}
+            {booking.status === 'approved' ? 'Confirmed' : booking.status === 'denied' ? 'Rejected' : 'Pending Verification'}
+          </span>
+        </div>
+
+        {/* Card Body */}
+        <div className="booking-card-body">
+          {/* Event details */}
+          <div className="booking-card-row">
+            <span className="booking-card-label">Event</span>
+            <div className="booking-card-val event-name-val">
+              {booking.seminarName || booking.eventName}
+            </div>
+          </div>
+
+          <div className="booking-card-row">
+            <span className="booking-card-label">Venue</span>
+            <div className="booking-card-val venue-val">
+              {booking.venue} {booking.seminar && `(${booking.seminar})`}
+            </div>
+          </div>
+
+          <div className="booking-card-row-group">
+            <div className="booking-card-rowhalf">
+              <span className="booking-card-label">Seat</span>
+              <div className="booking-card-val seats-val">
                 {booking.seats.map((seat: string) => (
                   <span key={seat} className="seat-item-tag">{seat}</span>
                 ))}
               </div>
-              {booking.attendees && Object.keys(booking.attendees).length > 0 && (
-                <div className="booking-attendees-list" style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                  {Object.entries(booking.attendees).map(([seat, val]: any) => {
-                    const nameText = typeof val === 'object' && val !== null ? val.name : val;
-                    const phoneText = typeof val === 'object' && val !== null ? val.phone : '';
-                    return (
-                      <span key={seat} style={{ fontSize: '11px', color: '#047857', whiteSpace: 'nowrap', display: 'block' }}>
-                        <strong>{seat}:</strong> {nameText} {phoneText ? `(${phoneText})` : ''}
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
-            </td>
-            <td>
-              <div className="date-cell">
-                <span className="date-text"><Calendar size={12} className="inline-icon" /> {booking.date}</span>
-                <span className="time-text"><Clock size={12} className="inline-icon" /> {booking.time}</span>
+            </div>
+
+            <div className="booking-card-rowhalf">
+              <span className="booking-card-label">Amount Paid</span>
+              <div className="booking-card-val price-val">₹{booking.totalPrice}</div>
+            </div>
+          </div>
+
+          <div className="booking-card-row">
+            <span className="booking-card-label">Session Date</span>
+            <div className="booking-card-val date-val">
+              <span><Calendar size={13} className="inline-icon" /> {booking.date}</span>
+              <span><Clock size={13} className="inline-icon" /> {booking.time}</span>
+            </div>
+          </div>
+
+          {/* Attendee details (if any) */}
+          {booking.attendees && Object.keys(booking.attendees).length > 0 && (
+            <div className="booking-card-attendees-box">
+              <span className="booking-card-label-small">Attendee Details</span>
+              <div className="booking-card-attendees-list">
+                {Object.entries(booking.attendees).map(([seat, val]: any) => {
+                  const nameText = typeof val === 'object' && val !== null ? val.name : val;
+                  const phoneText = typeof val === 'object' && val !== null ? val.phone : '';
+                  return (
+                    <div key={seat} className="attendee-item">
+                      <span className="attendee-seat">{seat}</span>
+                      <span className="attendee-info">{nameText} {phoneText ? `(${phoneText})` : ''}</span>
+                    </div>
+                  );
+                })}
               </div>
-            </td>
-            <td className="price-cell">
-              ₹{booking.totalPrice}
-            </td>
-            <td>
-              <span className={`badge badge-${booking.status}`}>
-                {(booking.status === 'pending' || !booking.status) && <Clock size={12} className="badge-icon" />}
-                {booking.status === 'approved' && <CheckCircle size={12} className="badge-icon" />}
-                {booking.status === 'denied' && <ShieldAlert size={12} className="badge-icon" />}
-                {booking.status === 'approved' ? 'Confirmed' : booking.status === 'denied' ? 'Rejected' : 'Pending Verification'}
-              </span>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+            </div>
+          )}
+        </div>
+
+        {/* Card Footer: Created At Date */}
+        <div className="booking-card-footer">
+          <span className="booking-card-date-label">Booked on</span>
+          <span className="booking-card-date-val">{new Date(booking.createdAt).toLocaleDateString()}</span>
+        </div>
+      </div>
+    ))}
   </div>
 );
 
