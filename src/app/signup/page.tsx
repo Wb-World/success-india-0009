@@ -62,9 +62,21 @@ export default function Signup() {
 
       if (res.ok) {
         setSuccess('Account created successfully');
+        
+        // Save user session in localStorage to auto-login
+        localStorage.setItem('user', JSON.stringify(data.user));
+        // Dispatch custom auth-change event to update navbar/UI
+        window.dispatchEvent(new Event('auth-change'));
+
         setTimeout(() => {
-          router.push('/login');
-        }, 2000);
+          const searchParams = new URLSearchParams(window.location.search);
+          const cb = searchParams.get('callbackUrl') || '';
+          if (cb && cb.startsWith('/') && !cb.startsWith('//')) {
+            router.push(cb);
+          } else {
+            router.push('/');
+          }
+        }, 1500);
       } else {
         setError(data.error || 'Failed to create account');
       }

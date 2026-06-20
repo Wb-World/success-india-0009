@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Calendar, MapPin, Clock, Users, ArrowRight, Ticket } from 'lucide-react';
 import SeatBookingModal from '../components/SeatBookingModal';
+import AuthGuard from '../components/AuthGuard';
 
 type SeminarEvent = {
   id: string;
@@ -72,7 +73,8 @@ export default function EventsPage() {
   }, []);
 
   return (
-    <div className="events-page">
+    <AuthGuard>
+      <div className="events-page">
       {modalEvent && (
         <SeatBookingModal event={modalEvent} onClose={() => setModalEvent(null)} />
       )}
@@ -447,5 +449,6 @@ export default function EventsPage() {
         }
       `}</style>
     </div>
+    </AuthGuard>
   );
 }
