@@ -72,7 +72,29 @@ export async function GET(request: Request) {
       };
     });
 
-    return NextResponse.json({ user, bookings });
+    // Fetch notifications sorted newest first (handles missing table gracefully)
+    let notifications: any[] = [];
+    try {
+      const { data: rawNotifs, error: notifError } = await supabaseAdmin
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (!notifError && rawNotifs) {
+        notifications = rawNotifs.map(n => ({
+          id: n.id,
+          title: n.title,
+          message: n.message,
+          isRead: n.is_read,
+          createdAt: n.created_at
+        }));
+      }
+    } catch (err) {
+      console.warn('Notifications query failed (table might not exist yet):', err);
+    }
+
+    return NextResponse.json({ user, bookings, notifications });
   } catch (error) {
     console.error('Profile GET error:', error);
     return NextResponse.json(
