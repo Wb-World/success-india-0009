@@ -421,7 +421,7 @@ export default function Home() {
         .hero-logo-wrapper {
           position: relative;
           display: inline-block;
-          border-radius: 50%;
+          border-radius: 24px;
           padding: 8px;
           background: rgba(255, 255, 255, 0.08);
           border: 1px solid rgba(255, 255, 255, 0.18);
@@ -440,10 +440,11 @@ export default function Home() {
 
         .hero-logo-main {
           width: clamp(260px, 45vw, 420px);
-          height: clamp(260px, 45vw, 420px);
+          height: auto;
+          max-height: clamp(260px, 45vw, 420px);
           border: 6px solid #ffffff;
-          object-fit: cover;
-          border-radius: 50%;
+          object-fit: contain;
+          border-radius: 16px;
           display: block;
         }
 
