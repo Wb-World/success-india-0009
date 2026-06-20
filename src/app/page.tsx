@@ -1167,8 +1167,8 @@ export default function Home() {
         }
 
         .contributor-img-wrap {
-          width: 200px;
-          height: 230px;
+          width: 100px;
+          height: 115px;
           border-radius: 12px;
           overflow: hidden;
           margin-bottom: 0.625rem;
@@ -1183,15 +1183,15 @@ export default function Home() {
 
         @media (max-width: 640px) {
           .contributor-img-wrap {
-            width: 100%;
-            height: 210px;
+            width: 100px;
+            height: 115px;
           }
         }
 
         @media (max-width: 480px) {
           .contributor-img-wrap {
-            width: 200px;
-            height: 230px;
+            width: 100px;
+            height: 115px;
           }
         }
 
