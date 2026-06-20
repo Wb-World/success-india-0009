@@ -46,7 +46,13 @@ export default function Login() {
         if (data.user.role === 'admin') {
           router.push('/admin/dashboard');
         } else {
-          router.push('/');
+          const searchParams = new URLSearchParams(window.location.search);
+          const cb = searchParams.get('callbackUrl') || '';
+          if (cb && cb.startsWith('/') && !cb.startsWith('//')) {
+            router.push(cb);
+          } else {
+            router.push('/');
+          }
         }
       } else {
         setError(data.error || 'Invalid username/email or password');

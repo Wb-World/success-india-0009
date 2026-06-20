@@ -6,6 +6,7 @@ import {
   CheckCircle2, ChevronRight, Upload, Loader2, ShieldCheck, Check 
 } from 'lucide-react';
 import Link from 'next/link';
+import AuthGuard from '../components/AuthGuard';
 
 export default function ContributionPage() {
   const [step, setStep] = useState<'form' | 'payment' | 'success'>('form');
@@ -219,7 +220,8 @@ export default function ContributionPage() {
   };
 
   return (
-    <div className="contribution-page">
+    <AuthGuard>
+      <div className="contribution-page">
       {/* ── STEP 2: Payment Page ── */}
       {step === 'payment' && (
         <section className="supporter-payment-section container animate-fade-in">
@@ -1639,5 +1641,6 @@ export default function ContributionPage() {
         }
       `}</style>
     </div>
+    </AuthGuard>
   );
 }
