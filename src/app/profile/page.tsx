@@ -508,7 +508,7 @@ function ProfileDashboard() {
         <div className="profile-info-column">
           <div className="info-card glass-card hover-lift">
             <div className="avatar-section">
-              <div className="avatar-circle">
+              <div className="avatar-square">
                 <img src="/success-india-logo.jpeg?v=2" alt="Success Team logo" className="member-logo" />
               </div>
               <h2 className="heading-md user-fullname">{currentUser.name}</h2>
@@ -863,10 +863,9 @@ function ProfileDashboard() {
           text-align: center;
         }
 
-        .avatar-circle {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
+        .avatar-square {
+          width: 120px;
+          height: 120px;
           background: var(--primary-light);
           color: var(--primary);
           display: flex;
