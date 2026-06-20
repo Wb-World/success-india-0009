@@ -254,31 +254,6 @@ export default function Home() {
           </div>
         </section>
 
-        {supporters.length > 0 && (
-          <section className="supporters-section">
-            <div className="container">
-              <div className="section-header" style={{ marginBottom: '2.5rem' }}>
-                <span className="section-eyebrow">Our Honored Supporters</span>
-                <h2 className="heading-lg">Success Team System Supporters</h2>
-                <p className="section-subtitle">Approved system supporters who are driving growth and leadership development.</p>
-              </div>
-              <div className="supporters-grid">
-                {supporters.map((s) => (
-                  <div key={s.id} className="supporter-card-item">
-                    <div className="supporter-img-wrap">
-                      <img src={s.vpImage} alt={s.name} className="supporter-img" />
-                    </div>
-                    <div className="supporter-badge-wrap">
-                      <span className="supporter-designation-badge">{s.designation}</span>
-                    </div>
-                    <h3 className="supporter-name-text">{s.name}</h3>
-                    <div className="supporter-vp-text">VP: {s.vpName}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
 
         <section className="stats-section">
           <div className="container trust-container">
