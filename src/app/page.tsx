@@ -145,7 +145,13 @@ export default function Home() {
     setModalEvent(event);
   };
 
-
+  const marqueeSupporters: any[] = [];
+  if (supporters.length > 0) {
+    marqueeSupporters.push(...supporters);
+    while (marqueeSupporters.length < 10) {
+      marqueeSupporters.push(...supporters);
+    }
+  }
 
   return (
     <div className="landing-page">
@@ -349,6 +355,54 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {supporters.length > 0 && (
+          <section className="contributors-carousel-section">
+            <div className="container">
+              <div className="section-header" style={{ marginBottom: '2.5rem' }}>
+                <span className="section-eyebrow">THIS MONTH CONTRIBUTORS</span>
+                <h2 className="heading-lg">
+                  THIS MONTH CONTRIBUTORS
+                  <span className="contributor-count-badge">{supporters.length}</span>
+                </h2>
+                <p className="section-subtitle">
+                  Approved Success Team System Supporters driving growth and leadership development this month.
+                </p>
+              </div>
+            </div>
+
+            <div className="marquee-container">
+              <div className="marquee-track">
+                <div className="marquee-content animate-marquee">
+                  {marqueeSupporters.map((s, idx) => (
+                    <div key={`contrib-orig-${s.id}-${idx}`} className="contributor-card">
+                      <div className="contributor-img-wrap">
+                        <img src={s.vpImage} alt={s.name} className="contributor-img" />
+                      </div>
+                      <div className="contributor-info">
+                        <h3 className="contributor-name">{s.name}</h3>
+                        <span className="contributor-designation">{s.designation}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="marquee-content animate-marquee" aria-hidden="true">
+                  {marqueeSupporters.map((s, idx) => (
+                    <div key={`contrib-dup-${s.id}-${idx}`} className="contributor-card">
+                      <div className="contributor-img-wrap">
+                        <img src={s.vpImage} alt={s.name} className="contributor-img" />
+                      </div>
+                      <div className="contributor-info">
+                        <h3 className="contributor-name">{s.name}</h3>
+                        <span className="contributor-designation">{s.designation}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
 
       <style jsx>{`
@@ -1028,6 +1082,187 @@ export default function Home() {
 
         .landing-page-content {
           width: 100%;
+        }
+
+        /* Contributors Carousel Section */
+        .contributors-carousel-section {
+          padding: 5rem 0 6rem;
+          background: #ffffff;
+          border-top: 1px solid #e2e8f0;
+          border-bottom: 1px solid #e2e8f0;
+          overflow: hidden;
+          position: relative;
+        }
+
+        .contributor-count-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: #10b981;
+          color: white;
+          font-size: 0.9rem;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 99px;
+          margin-left: 0.75rem;
+          vertical-align: middle;
+          box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+        }
+
+        .marquee-container {
+          position: relative;
+          width: 100%;
+          overflow: hidden;
+          padding: 1.5rem 0;
+          display: flex;
+        }
+
+        .marquee-container::before,
+        .marquee-container::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 150px;
+          z-index: 2;
+          pointer-events: none;
+        }
+
+        .marquee-container::before {
+          left: 0;
+          background: linear-gradient(to right, #ffffff 0%, transparent 100%);
+        }
+
+        .marquee-container::after {
+          right: 0;
+          background: linear-gradient(to left, #ffffff 0%, transparent 100%);
+        }
+
+        @media (max-width: 768px) {
+          .marquee-container::before,
+          .marquee-container::after {
+            width: 60px;
+          }
+        }
+
+        .marquee-track {
+          display: flex;
+          width: max-content;
+        }
+
+        .marquee-content {
+          display: flex;
+          gap: 2rem;
+          padding-right: 2rem;
+          will-change: transform;
+        }
+
+        .animate-marquee {
+          animation: marquee-scroll 30s linear infinite;
+        }
+
+        @keyframes marquee-scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-100%);
+          }
+        }
+
+        @media (hover: hover) {
+          .marquee-track:hover .animate-marquee {
+            animation-play-state: paused;
+          }
+        }
+
+        .marquee-track:active .animate-marquee {
+          animation-play-state: paused;
+        }
+
+        .contributor-card {
+          flex-shrink: 0;
+          width: 240px;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          padding: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .contributor-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 12px 24px rgba(22, 163, 74, 0.08);
+          border-color: #10b981;
+        }
+
+        .contributor-img-wrap {
+          width: 120px;
+          height: 120px;
+          border-radius: 12px;
+          overflow: hidden;
+          margin-bottom: 1.25rem;
+          border: 2px solid #e2e8f0;
+          transition: border-color 0.3s ease;
+          background: #f1f5f9;
+        }
+
+        .contributor-card:hover .contributor-img-wrap {
+          border-color: #10b981;
+        }
+
+        .contributor-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          transition: transform 0.3s ease;
+        }
+
+        .contributor-card:hover .contributor-img {
+          transform: scale(1.05);
+        }
+
+        .contributor-info {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.5rem;
+          width: 100%;
+        }
+
+        .contributor-name {
+          font-family: var(--font-heading), sans-serif;
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: #1e293b;
+          margin: 0;
+          line-height: 1.3;
+        }
+
+        .contributor-designation {
+          display: inline-block;
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #047857;
+          background: #ecfdf5;
+          border: 1px solid #a7f3d0;
+          padding: 4px 12px;
+          border-radius: 99px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          white-space: nowrap;
+        }
+
+        @media (max-width: 640px) {
+          .contributors-carousel-section {
+            padding: 4.5rem 1.25rem;
+          }
         }
       `}</style>
     </div>
