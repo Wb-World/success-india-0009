@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     // Fetch user
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, username, name, email, phone, role')
+      .select('id, username, name, phone, role')
       .eq('id', userId)
       .single();
 
@@ -111,34 +111,19 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, email, phone } = await request.json();
-    if (!name || !email || !phone) {
+    const { name, phone } = await request.json();
+    if (!name || !phone) {
       return NextResponse.json(
-        { error: 'Name, email, and phone are required' },
-        { status: 400 }
-      );
-    }
-
-    // Check if email is taken by another user
-    const { data: existing } = await supabaseAdmin
-      .from('users')
-      .select('id')
-      .ilike('email', email)
-      .neq('id', userId)
-      .maybeSingle();
-
-    if (existing) {
-      return NextResponse.json(
-        { error: 'Email is already in use by another account' },
+        { error: 'Name and phone are required' },
         { status: 400 }
       );
     }
 
     const { data: updatedUser, error: updateError } = await supabaseAdmin
       .from('users')
-      .update({ name, email, phone })
+      .update({ name, phone })
       .eq('id', userId)
-      .select('id, username, name, email, phone, role')
+      .select('id, username, name, phone, role')
       .single();
 
     if (updateError || !updatedUser) {

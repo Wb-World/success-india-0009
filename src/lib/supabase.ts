@@ -56,7 +56,6 @@ export interface DbUser {
   username: string;
   password?: string;
   name: string;
-  email: string;
   phone: string;
   role: 'user' | 'admin';
   created_at?: string;

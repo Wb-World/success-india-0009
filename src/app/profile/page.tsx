@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { User, Mail, Phone, Calendar, ShieldAlert, CheckCircle, Clock, Save, Bell, X, Download, QrCode } from 'lucide-react';
+import { User, Phone, Calendar, ShieldAlert, CheckCircle, Clock, Save, Bell, X, Download, QrCode } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 // ─── QR Code generator (browser-only via qrcode lib) ─────────────────────────
@@ -115,12 +115,12 @@ function ProfileDashboard() {
   // Login/Register states
   const [isLoginTab, setIsLoginTab] = useState(true);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
-  const [registerForm, setRegisterForm] = useState({ username: '', password: '', name: '', email: '', phone: '' });
+  const [registerForm, setRegisterForm] = useState({ username: '', password: '', name: '', phone: '' });
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
   // Profile edit states
-  const [editForm, setEditForm] = useState({ name: '', email: '', phone: '' });
+  const [editForm, setEditForm] = useState({ name: '', phone: '' });
   const [updateError, setUpdateError] = useState('');
   const [updateSuccess, setUpdateSuccess] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -168,7 +168,7 @@ function ProfileDashboard() {
         setCurrentUser(data.user);
         setBookings(data.bookings || []);
         setNotifications(data.notifications || []);
-        setEditForm({ name: data.user.name, email: data.user.email, phone: data.user.phone });
+        setEditForm({ name: data.user.name, phone: data.user.phone });
         localStorage.setItem('user', JSON.stringify(data.user));
       } else {
         localStorage.removeItem('user');
@@ -285,7 +285,6 @@ function ProfileDashboard() {
                 <div className="form-group"><label className="form-label">Username</label><input type="text" value={registerForm.username} onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })} placeholder="Select a username" className="form-control" required /></div>
                 <div className="form-group"><label className="form-label">Password</label><input type="password" value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} placeholder="Choose a strong password" className="form-control" required /></div>
                 <div className="form-group"><label className="form-label">Full Name</label><input type="text" value={registerForm.name} onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })} placeholder="John Doe" className="form-control" required /></div>
-                <div className="form-group"><label className="form-label">Email Address</label><input type="email" value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} placeholder="john@example.com" className="form-control" required /></div>
                 <div className="form-group"><label className="form-label">Phone Number</label><input type="text" value={registerForm.phone} onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })} placeholder="+91 98765 43210" className="form-control" required /></div>
                 <button type="submit" className="btn btn-primary auth-submit-btn" disabled={authLoading}>{authLoading ? 'Creating Account...' : 'Register Profile'}</button>
               </form>
@@ -338,10 +337,6 @@ function ProfileDashboard() {
             <hr className="card-divider" />
 
             <div className="profile-details">
-              <div className="detail-row">
-                <Mail size={18} className="detail-icon" />
-                <div><span className="detail-label">Email ID</span><p className="detail-val">{currentUser.email}</p></div>
-              </div>
               <div className="detail-row">
                 <Phone size={18} className="detail-icon" />
                 <div><span className="detail-label">Phone Number</span><p className="detail-val">{currentUser.phone}</p></div>
@@ -457,7 +452,6 @@ function ProfileDashboard() {
               {updateError && (<div className="update-error-alert animate-slide-up" style={{ marginBottom: '1.5rem', marginTop: '1.5rem' }}><ShieldAlert size={16} /> <span>{updateError}</span></div>)}
               <form onSubmit={handleProfileUpdate} className="profile-edit-form settings-edit-form" style={{ marginTop: '1.5rem' }}>
                 <div className="form-group" style={{ marginBottom: '1.25rem' }}><label className="form-label"><User size={14} style={{ marginRight: '4px' }} /> Full Name</label><input type="text" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="form-control" required /></div>
-                <div className="form-group" style={{ marginBottom: '1.25rem' }}><label className="form-label"><Mail size={14} style={{ marginRight: '4px' }} /> Email Address</label><input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className="form-control" required /></div>
                 <div className="form-group" style={{ marginBottom: '1.5rem' }}><label className="form-label"><Phone size={14} style={{ marginRight: '4px' }} /> Phone Number</label><input type="text" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="form-control" required /></div>
                 <div className="form-actions" style={{ maxWidth: '200px' }}>
                   <button type="submit" className="btn btn-primary" disabled={updateLoading}><Save size={14} style={{ marginRight: '4px' }} /> {updateLoading ? 'Saving...' : 'Save Changes'}</button>

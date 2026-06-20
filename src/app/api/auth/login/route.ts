@@ -10,7 +10,7 @@ export async function POST(request: Request) {
 
     if (!username || !password) {
       return NextResponse.json(
-        { error: 'Username/email and password are required' },
+        { error: 'Username/phone and password are required' },
         { status: 400 }
       );
     }
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 
     const usernameQuery = await supabaseAdmin
       .from('users')
-      .select('id, username, name, email, phone, role, password')
+      .select('id, username, name, phone, role, password')
       .ilike('username', username)
       .maybeSingle();
 
@@ -29,16 +29,16 @@ export async function POST(request: Request) {
     } else if (usernameQuery.data) {
       user = usernameQuery.data;
     } else {
-      const emailQuery = await supabaseAdmin
+      const phoneQuery = await supabaseAdmin
         .from('users')
-        .select('id, username, name, email, phone, role, password')
-        .ilike('email', username)
+        .select('id, username, name, phone, role, password')
+        .eq('phone', username)
         .maybeSingle();
       
-      if (emailQuery.error) {
-        error = emailQuery.error;
+      if (phoneQuery.error) {
+        error = phoneQuery.error;
       } else {
-        user = emailQuery.data;
+        user = phoneQuery.data;
       }
     }
 
@@ -52,11 +52,10 @@ export async function POST(request: Request) {
           username: 'admin',
           password: hashPassword('admin123'),
           name: 'Super Admin',
-          email: 'admin@team.test',
           phone: '+91 9999988888',
           role: 'admin',
         })
-        .select('id, username, name, email, phone, role, password')
+        .select('id, username, name, phone, role, password')
         .single();
 
       if (!insertError && newAdmin) {
@@ -69,14 +68,14 @@ export async function POST(request: Request) {
 
     if (error || !user) {
       return NextResponse.json(
-        { error: 'Invalid username/email or password' },
+        { error: 'Invalid username/phone or password' },
         { status: 401 }
       );
     }
 
     if (!verifyPassword(password, user.password)) {
       return NextResponse.json(
-        { error: 'Invalid username/email or password' },
+        { error: 'Invalid username/phone or password' },
         { status: 401 }
       );
     }

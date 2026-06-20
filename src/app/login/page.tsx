@@ -55,7 +55,7 @@ export default function Login() {
           }
         }
       } else {
-        setError(data.error || 'Invalid username/email or password');
+        setError(data.error || 'Invalid username/phone or password');
       }
     } catch (err) {
       setError('A connection error occurred. Please try again.');
@@ -84,16 +84,16 @@ export default function Login() {
               </div>
             )}
 
-            {/* Username or Email */}
+            {/* Username or Phone Number */}
             <div className="form-group">
-              <label className="form-label">Username or Email</label>
+              <label className="form-label">Username or Phone Number</label>
               <div className="input-with-icon">
                 <User className="input-icon" size={18} />
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter Username or Email"
+                  placeholder="Enter Username or Phone Number"
                   className="form-control"
                   required
                 />

@@ -3,14 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Mail, Phone, Lock, CheckCircle2, ShieldAlert, ArrowRight } from 'lucide-react';
+import { User, Phone, Lock, CheckCircle2, ShieldAlert, ArrowRight } from 'lucide-react';
 
 export default function Signup() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     username: '',
-    email: '',
     phone: '',
     password: '',
     confirmPassword: '',
@@ -25,10 +24,10 @@ export default function Signup() {
     setError('');
     setSuccess('');
 
-    const { name, username, email, phone, password, confirmPassword } = formData;
+    const { name, username, phone, password, confirmPassword } = formData;
 
     // Front-end validations
-    if (!name || !username || !email || !phone || !password || !confirmPassword) {
+    if (!name || !username || !phone || !password || !confirmPassword) {
       setError('All fields are required');
       return;
     }
@@ -52,7 +51,6 @@ export default function Signup() {
         body: JSON.stringify({
           name,
           username: username.trim(),
-          email: email.trim(),
           phone: phone.trim(),
           password,
         }),
@@ -147,21 +145,7 @@ export default function Signup() {
                 </div>
               </div>
 
-              {/* Email Address */}
-              <div className="form-group">
-                <label className="form-label">Email Address</label>
-                <div className="input-with-icon">
-                  <Mail className="input-icon" size={18} />
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="yourname@gmail.com"
-                    className="form-control"
-                    required
-                  />
-                </div>
-              </div>
+
 
               {/* Phone Number */}
               <div className="form-group">

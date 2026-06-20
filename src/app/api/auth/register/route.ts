@@ -6,9 +6,9 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const { username, password, name, email, phone } = await request.json();
+    const { username, password, name, phone } = await request.json();
 
-    if (!username || !password || !name || !email || !phone) {
+    if (!username || !password || !name || !phone) {
       return NextResponse.json(
         { error: 'All fields are required' },
         { status: 400 }
@@ -32,20 +32,6 @@ export async function POST(request: Request) {
     if (existingUsername) {
       return NextResponse.json(
         { error: 'Username already exists' },
-        { status: 400 }
-      );
-    }
-
-    // Check if email already exists
-    const { data: existingEmail } = await supabaseAdmin
-      .from('users')
-      .select('id')
-      .ilike('email', email)
-      .maybeSingle();
-
-    if (existingEmail) {
-      return NextResponse.json(
-        { error: 'Email already registered' },
         { status: 400 }
       );
     }
@@ -75,11 +61,10 @@ export async function POST(request: Request) {
         username,
         password: hashedPassword,
         name,
-        email,
         phone,
         role: 'user',
       })
-      .select('id, username, name, email, phone, role')
+      .select('id, username, name, phone, role')
       .single();
 
     if (error || !newUser) {

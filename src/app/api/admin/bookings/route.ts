@@ -37,12 +37,12 @@ export async function GET(request: Request) {
 
     // Fetch matching user details for the bookings in a separate query to perform in-memory join
     const userIds = Array.from(new Set((rawBookings || []).map((b: any) => b.user_id).filter(Boolean)));
-    const usersMap: Record<string, { name: string; email: string; phone: string }> = {};
+    const usersMap: Record<string, { name: string; phone: string }> = {};
 
     if (userIds.length > 0) {
       const { data: usersData, error: usersError } = await supabaseAdmin
         .from('users')
-        .select('id, name, email, phone')
+        .select('id, name, phone')
         .in('id', userIds);
 
       if (usersError) {
@@ -51,7 +51,6 @@ export async function GET(request: Request) {
         usersData.forEach((u: any) => {
           usersMap[u.id] = {
             name: u.name || '',
-            email: u.email || '',
             phone: u.phone || '',
           };
         });
@@ -65,12 +64,10 @@ export async function GET(request: Request) {
       const userObj = matchedUser
         ? {
             name: matchedUser.name,
-            email: matchedUser.email,
             phone: matchedUser.phone,
           }
         : {
             name: 'Unknown User',
-            email: 'N/A',
             phone: 'N/A',
           };
 
