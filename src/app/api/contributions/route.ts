@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const { data: bookings, error } = await supabaseAdmin
       .from('bookings')
-      .select('id, attendee_details, created_at')
+      .select('id, attendee_details, created_at, screenshot')
       .eq('status', 'approved')
       .order('created_at', { ascending: false });
 
@@ -20,7 +20,17 @@ export async function GET() {
     const supporters = (bookings || [])
       .filter((b: any) => b.id.startsWith('SUP-'))
       .map((b: any) => {
-        const supporter = b.attendee_details?.SUPPORTER || {};
+        let attendees = b.attendee_details || {};
+        const screenshot = b.screenshot || '';
+        if ((!attendees || Object.keys(attendees).length === 0 || !attendees.SUPPORTER) && screenshot.includes('|')) {
+          const parts = screenshot.split('|');
+          try {
+            attendees = JSON.parse(parts[1] || '{}');
+          } catch (e) {
+            console.error('Failed to parse fallback attendees JSON:', e);
+          }
+        }
+        const supporter = attendees.SUPPORTER || {};
         return {
           id: b.id,
           name: supporter.name || 'System Supporter',
