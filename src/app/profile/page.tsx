@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Mail, Phone, Calendar, ShieldAlert, CheckCircle, Clock, Save, Bell, X, Download, QrCode } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -90,8 +90,10 @@ function BookingModal({ booking, onClose }: { booking: any; onClose: () => void 
   const status = booking.status || 'pending';
 
   useEffect(() => {
-    const qrText = `BOOKING:${booking.id}|EVENT:${booking.seminarName || booking.eventName}|SEATS:${booking.seats?.join(',')}|DATE:${booking.date}`;
-    generateQRDataURL(qrText).then(setQrUrl);
+    // QR code encodes the secure verification URL — not raw booking data
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const verifyUrl = `${origin}/verify?id=${encodeURIComponent(booking.id)}`;
+    generateQRDataURL(verifyUrl).then(setQrUrl);
   }, [booking]);
 
   const handleDownload = async () => {
