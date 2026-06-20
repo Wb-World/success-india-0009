@@ -7,8 +7,8 @@ import { CheckCircle, XCircle, Clock, Calendar, MapPin, Ticket, User, Phone, Cre
 // ─── Status helpers ────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
   const cfg = {
-    approved: { label: 'Confirmed', color: '#059669', bg: '#d1fae5', border: '#6ee7b7', Icon: CheckCircle },
-    pending:  { label: 'Pending Verification', color: '#d97706', bg: '#fef3c7', border: '#fcd34d', Icon: Clock },
+    approved: { label: 'Verified Ticket', color: '#059669', bg: '#d1fae5', border: '#6ee7b7', Icon: CheckCircle },
+    pending:  { label: 'Pending Approval', color: '#d97706', bg: '#fef3c7', border: '#fcd34d', Icon: Clock },
     denied:   { label: 'Rejected', color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', Icon: XCircle },
   }[status] ?? { label: 'Unknown', color: '#64748b', bg: '#f1f5f9', border: '#cbd5e1', Icon: AlertTriangle };
 
@@ -41,11 +41,11 @@ function VerifyContent() {
   const bookingId = searchParams.get('id');
 
   const [loading, setLoading] = useState(true);
-  const [result, setResult] = useState<{ valid: boolean; ticket?: any; error?: string } | null>(null);
+  const [result, setResult] = useState<{ valid: boolean; ticket?: any; error?: string; reason?: string } | null>(null);
 
   useEffect(() => {
     if (!bookingId) {
-      setResult({ valid: false, error: 'No booking ID supplied in the URL.' });
+      setResult({ valid: false, reason: 'not_found', error: 'No booking ID supplied in the URL.' });
       setLoading(false);
       return;
     }
@@ -53,7 +53,7 @@ function VerifyContent() {
     fetch(`/api/verify?id=${encodeURIComponent(bookingId)}`)
       .then(r => r.json())
       .then(data => { setResult(data); setLoading(false); })
-      .catch(() => { setResult({ valid: false, error: 'Network error. Please try again.' }); setLoading(false); });
+      .catch(() => { setResult({ valid: false, reason: 'server_error', error: 'Verification service temporarily unavailable. Network error.' }); setLoading(false); });
   }, [bookingId]);
 
   return (
@@ -82,8 +82,22 @@ function VerifyContent() {
           </div>
         )}
 
+        {/* ── Server/Database Error ── */}
+        {!loading && result && !result.valid && result.reason === 'server_error' && (
+          <div className="vp-state-card vp-server-error">
+            <div className="vp-icon-wrap server-error">
+              <AlertTriangle size={56} />
+            </div>
+            <h2 className="vp-state-title">⚠️ Service Unavailable</h2>
+            <p className="vp-state-sub">{result.error || 'Verification service temporarily unavailable. Please try again later.'}</p>
+            {bookingId && (
+              <p className="vp-state-ref">Booking ID: <code>{bookingId.toUpperCase()}</code></p>
+            )}
+          </div>
+        )}
+
         {/* ── Invalid / Not found ── */}
-        {!loading && result && !result.valid && (
+        {!loading && result && !result.valid && result.reason !== 'server_error' && (
           <div className="vp-state-card vp-invalid">
             <div className="vp-icon-wrap invalid">
               <XCircle size={56} />
@@ -104,11 +118,17 @@ function VerifyContent() {
         {!loading && result?.valid && result.ticket && (
           <div className="vp-ticket-wrap">
             {/* Verified banner */}
-            <div className="vp-verified-banner">
-              <CheckCircle size={28} />
+            <div className={`vp-verified-banner ${result.ticket.status === 'pending' ? 'pending' : 'approved'}`}>
+              {result.ticket.status === 'pending' ? <Clock size={28} /> : <CheckCircle size={28} />}
               <div>
-                <p className="vp-verified-title">✅ Valid Ticket — Verified</p>
-                <p className="vp-verified-sub">This ticket has been successfully verified by the Success Team system.</p>
+                <p className="vp-verified-title">
+                  {result.ticket.status === 'pending' ? '✓ Valid Ticket — Pending Approval' : '✓ Valid Ticket — Verified'}
+                </p>
+                <p className="vp-verified-sub">
+                  {result.ticket.status === 'pending'
+                    ? 'This ticket is valid but is currently pending organizer approval.'
+                    : 'This ticket has been successfully verified by the Success Team system.'}
+                </p>
               </div>
             </div>
 
@@ -143,7 +163,7 @@ function VerifyContent() {
                   <InfoRow icon={Clock}     label="Time"           value={result.ticket.time} />
                   <InfoRow icon={Ticket}    label="Seat(s)"        value={result.ticket.seats.join(', ')} />
                   <InfoRow icon={CreditCard} label="Amount Paid"   value={result.ticket.amountPaid} />
-                  <InfoRow icon={User}      label="Booker Name"    value={result.ticket.bookerName} />
+                  <InfoRow icon={User}      label="Attendee Name"  value={result.ticket.attendeeName} />
                   <InfoRow icon={Phone}     label="Phone"          value={result.ticket.bookerPhone} />
                   <InfoRow icon={Calendar}  label="Booked On"      value={result.ticket.bookedOn} />
                 </div>
@@ -252,6 +272,8 @@ function VerifyContent() {
           gap: 1rem;
         }
         .vp-state-card.vp-invalid { border-color: #fca5a5; }
+        .vp-state-card.vp-server-error { border-color: #fcd34d; }
+        .vp-icon-wrap.server-error { background: #fef3c7; color: #d97706; }
 
         .vp-spinner-wrap { color: #059669; animation: spin 1s linear infinite; display: flex; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -275,12 +297,19 @@ function VerifyContent() {
         /* ── Verified banner ────────────────────────────────────── */
         .vp-verified-banner {
           display: flex; align-items: flex-start; gap: 1rem;
-          background: #d1fae5; border: 1.5px solid #6ee7b7;
           border-radius: 14px; padding: 1.125rem 1.25rem;
-          margin-bottom: 1.5rem; color: #064e3b;
+          margin-bottom: 1.5rem;
+        }
+        .vp-verified-banner.approved {
+          background: #d1fae5; border: 1.5px solid #6ee7b7; color: #064e3b;
+        }
+        .vp-verified-banner.pending {
+          background: #fef3c7; border: 1.5px solid #fcd34d; color: #92400e;
         }
         .vp-verified-title { font-weight: 800; font-size: 1.05rem; margin: 0 0 2px; }
-        .vp-verified-sub { font-size: 0.85rem; color: #065f46; margin: 0; line-height: 1.4; }
+        .vp-verified-sub { font-size: 0.85rem; margin: 0; line-height: 1.4; }
+        .vp-verified-banner.approved .vp-verified-sub { color: #065f46; }
+        .vp-verified-banner.pending .vp-verified-sub { color: #b45309; }
 
         /* ── Ticket card ─────────────────────────────────────────── */
         .vp-ticket-wrap { display: flex; flex-direction: column; }
