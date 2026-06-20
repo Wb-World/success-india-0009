@@ -3,12 +3,89 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ChevronDown } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function Navbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [currentTab, setCurrentTab] = useState<string>('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      setCurrentTab(params.get('tab') || 'bookings');
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!user || !user.id) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await fetch('/api/profile', {
+          headers: {
+            'x-user-id': user.id,
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const count = (data.notifications || []).filter((n: any) => !n.isRead).length;
+          setUnreadCount(count);
+        }
+      } catch (err) {
+        console.error('Error fetching notifications in Navbar:', err);
+      }
+    };
+
+    fetchUnreadCount();
+
+    // Set up polling every 15 seconds as a fallback
+    const interval = setInterval(fetchUnreadCount, 15000);
+
+    // Set up realtime channel for notifications table updates
+    let channel: any;
+    try {
+      channel = supabase
+        .channel(`navbar-notifications-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            console.log('[Realtime] Navbar notifications changed');
+            fetchUnreadCount();
+          }
+        )
+        .subscribe();
+    } catch (e) {
+      console.warn('Realtime subscription not available or failed:', e);
+    }
+
+    // Refresh when auth-change event fires (e.g. marking read in profile)
+    const handleRefresh = () => {
+      fetchUnreadCount();
+    };
+    window.addEventListener('auth-change', handleRefresh);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('auth-change', handleRefresh);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const checkUser = () => {
@@ -89,10 +166,65 @@ export default function Navbar() {
           <Link href="/about" className={`nav-link ${pathname === '/about' ? 'active' : ''}`}>About</Link>
           <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`}>Contact</Link>
           {user ? (
-            <>
-              <Link href="/profile" className={`nav-link ${pathname === '/profile' ? 'active' : ''}`}>Profile</Link>
-              <button type="button" onClick={handleLogout} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', color: '#ef4444' }}>Logout</button>
-            </>
+            <div className="profile-dropdown-container">
+              <button
+                type="button"
+                className={`profile-dropdown-trigger ${pathname.startsWith('/profile') ? 'active' : ''}`}
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+              >
+                <span>Profile</span>
+                <ChevronDown size={14} />
+                {unreadCount > 0 && <span className="navbar-unread-dot" />}
+              </button>
+
+              {profileDropdownOpen && (
+                <>
+                  <div className="profile-dropdown-overlay" onClick={() => setProfileDropdownOpen(false)} />
+                  <div className="profile-dropdown-menu glass-card animate-slide-down">
+                    <div className="dropdown-user-info">
+                      <p className="dropdown-username">{user.name}</p>
+                      <p className="dropdown-userrole">Official Delegate</p>
+                    </div>
+                    <hr className="dropdown-divider" />
+                    <Link
+                      href="/profile?tab=bookings"
+                      className={`dropdown-item ${pathname === '/profile' && currentTab === 'bookings' ? 'active' : ''}`}
+                      onClick={() => setProfileDropdownOpen(false)}
+                    >
+                      <span>🎫 My Bookings</span>
+                    </Link>
+                    <Link
+                      href="/profile?tab=notifications"
+                      className={`dropdown-item ${pathname === '/profile' && currentTab === 'notifications' ? 'active' : ''}`}
+                      onClick={() => setProfileDropdownOpen(false)}
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                        <span>🔔 Notifications</span>
+                        {unreadCount > 0 && <span className="dropdown-unread-count">{unreadCount}</span>}
+                      </span>
+                    </Link>
+                    <Link
+                      href="/profile?tab=settings"
+                      className={`dropdown-item ${pathname === '/profile' && currentTab === 'settings' ? 'active' : ''}`}
+                      onClick={() => setProfileDropdownOpen(false)}
+                    >
+                      <span>⚙️ Account Settings</span>
+                    </Link>
+                    <hr className="dropdown-divider" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileDropdownOpen(false);
+                        handleLogout();
+                      }}
+                      className="dropdown-item logout-item"
+                    >
+                      <span>🚪 Logout</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           ) : (
             <>
               <Link href="/login" className={`nav-link ${pathname === '/login' ? 'active' : ''}`}>Sign In</Link>
@@ -153,8 +285,22 @@ export default function Navbar() {
                 <Link href="/contact" className={`mobile-link ${pathname === '/contact' ? 'active' : ''}`} onClick={closeMenu}>Contact</Link>
                 {user ? (
                   <>
-                    <Link href="/profile" className={`mobile-link ${pathname === '/profile' ? 'active' : ''}`} onClick={closeMenu}>Profile</Link>
-                    <button type="button" onClick={() => { handleLogout(); closeMenu(); }} className="mobile-link mobile-logout-btn" style={{ textAlign: 'left', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>Logout</button>
+                    <div style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '0.5rem' }}>Member Portal</div>
+                    <Link href="/profile?tab=bookings" className={`mobile-link ${pathname === '/profile' && currentTab === 'bookings' ? 'active' : ''}`} onClick={closeMenu}>
+                      <span>🎫 My Bookings</span>
+                    </Link>
+                    <Link href="/profile?tab=notifications" className={`mobile-link ${pathname === '/profile' && currentTab === 'notifications' ? 'active' : ''}`} onClick={closeMenu}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', justifyContent: 'space-between' }}>
+                        <span>🔔 Notifications</span>
+                        {unreadCount > 0 && <span className="dropdown-unread-count">{unreadCount}</span>}
+                      </span>
+                    </Link>
+                    <Link href="/profile?tab=settings" className={`mobile-link ${pathname === '/profile' && currentTab === 'settings' ? 'active' : ''}`} onClick={closeMenu}>
+                      <span>⚙️ Account Settings</span>
+                    </Link>
+                    <button type="button" onClick={() => { handleLogout(); closeMenu(); }} className="mobile-link mobile-logout-btn" style={{ textAlign: 'left', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none' }}>
+                      <span>🚪 Logout</span>
+                    </button>
                   </>
                 ) : (
                   <>
@@ -561,6 +707,143 @@ export default function Navbar() {
             transform: translateX(-90px);
           }
           .mobile-menu-toggle { display: none; }
+        }
+
+        .profile-dropdown-container {
+          position: relative;
+          display: inline-block;
+        }
+
+        .profile-dropdown-trigger {
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-family: inherit;
+          font-size: 0.95rem;
+          font-weight: 500;
+          color: var(--muted);
+          padding: 0.35rem 0.75rem;
+          border-radius: var(--radius-lg);
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          position: relative;
+          transition: all var(--transition-fast);
+        }
+
+        .profile-dropdown-trigger:hover,
+        .profile-dropdown-trigger.active {
+          color: var(--primary);
+          background-color: var(--primary-light);
+        }
+
+        .navbar-unread-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: #ef4444;
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          border: 1px solid white;
+        }
+
+        .profile-dropdown-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 990;
+          background: transparent;
+          cursor: default;
+        }
+
+        .profile-dropdown-menu {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          width: 240px;
+          background: white;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-xl);
+          box-shadow: var(--shadow-lg);
+          z-index: 1000;
+          padding: 0.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .dropdown-user-info {
+          padding: 0.5rem 0.75rem;
+        }
+
+        .dropdown-username {
+          font-weight: 700;
+          color: var(--foreground);
+          font-size: 0.9rem;
+          margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .dropdown-userrole {
+          font-size: 0.75rem;
+          color: var(--muted);
+          margin: 0;
+          font-weight: 500;
+        }
+
+        .dropdown-divider {
+          border: 0;
+          border-top: 1px solid var(--border);
+          margin: 0.25rem 0;
+        }
+
+        .dropdown-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.5rem 0.75rem;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: var(--muted);
+          border-radius: var(--radius-lg);
+          transition: all var(--transition-fast);
+          text-align: left;
+          background: none;
+          border: none;
+          width: 100%;
+          cursor: pointer;
+          font-family: inherit;
+        }
+
+        .dropdown-item:hover {
+          color: var(--foreground);
+          background-color: var(--input);
+        }
+
+        .dropdown-item.active {
+          color: var(--primary-dark);
+          background-color: var(--primary-light);
+        }
+
+        .dropdown-unread-count {
+          background-color: #ef4444;
+          color: white;
+          font-size: 0.7rem;
+          font-weight: 700;
+          padding: 0.15rem 0.45rem;
+          border-radius: 9999px;
+          line-height: 1;
+        }
+
+        .dropdown-item.logout-item {
+          color: #ef4444;
+        }
+
+        .dropdown-item.logout-item:hover {
+          background-color: #fee2e2;
+          color: #b91c1c;
         }
       `}</style>
     </header>

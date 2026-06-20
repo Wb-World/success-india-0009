@@ -85,6 +85,33 @@ export async function PATCH(
       );
     }
 
+    // Trigger user notification when status is approved or denied
+    if (status !== undefined && updatedBooking) {
+      try {
+        const { createNotification } = await import('@/lib/notifications');
+        const eventName = updatedBooking.seminar_name || updatedBooking.bus_name || 'Success Team Seminar';
+        const userId = updatedBooking.user_id;
+        
+        if (userId) {
+          if (status === 'approved') {
+            await createNotification(
+              userId,
+              'Seat Confirmed 🎉',
+              `Your seat for "${eventName}" has been confirmed successfully.`
+            );
+          } else if (status === 'denied') {
+            await createNotification(
+              userId,
+              'Booking Rejected',
+              'Your booking request could not be approved. Please contact support.'
+            );
+          }
+        }
+      } catch (notifErr) {
+        console.error('Failed to trigger user notification:', notifErr);
+      }
+    }
+
 
     let cleanScreenshot = updatedBooking.screenshot || '';
     let attendees = {};
