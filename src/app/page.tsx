@@ -806,12 +806,19 @@ export default function Home() {
             grid-template-columns: 1.2fr 0.8fr;
             gap: 5rem;
           }
+          .owner-profile-left {
+            order: 1;
+          }
+          .owner-profile-right {
+            order: 2;
+          }
         }
 
         .owner-profile-left {
           display: flex;
           flex-direction: column;
           gap: 0.85rem;
+          order: 2;
         }
 
         .profile-badge {
@@ -874,6 +881,7 @@ export default function Home() {
         .owner-profile-right {
           display: flex;
           justify-content: center;
+          order: 1;
         }
 
         .owner-image-wrapper {
