@@ -498,7 +498,7 @@ export default function Home() {
 
               {chiefDirectors.length > 0 && (
                 <div className="designation-group">
-                  <h3 className="designation-title">Chief Executive Director</h3>
+                  <h3 className="designation-title">CHIEF EXECUTIVE DIRECTOR</h3>
                   <div className="contributors-grid">
                     {chiefDirectors.map((s) => (
                       <div key={`contrib-chief-${s.id}`} className="contributor-card" title={s.name}>
@@ -517,7 +517,7 @@ export default function Home() {
 
               {executiveDirectors.length > 0 && (
                 <div className="designation-group" style={{ marginTop: '3.5rem' }}>
-                  <h3 className="designation-title">Executive Director</h3>
+                  <h3 className="designation-title">EXECUTIVE DIRECTOR</h3>
                   <div className="contributors-grid">
                     {executiveDirectors.map((s) => (
                       <div key={`contrib-exec-${s.id}`} className="contributor-card" title={s.name}>
