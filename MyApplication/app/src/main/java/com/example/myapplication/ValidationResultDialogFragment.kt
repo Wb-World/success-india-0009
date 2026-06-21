@@ -168,8 +168,8 @@ class ValidationResultDialogFragment : DialogFragment() {
                 binding.tvErrorReasonHeader.setTextColor(ContextCompat.getColor(context, R.color.warning))
                 binding.tvErrorReasonText.text = reason.ifBlank { "This booking is awaiting admin confirmation. Entry is not permitted until approved." }
             }
-            else -> {
-                // ❌ INVALID TICKET (denied / error / unknown)
+            "denied" -> {
+                // ❌ INVALID TICKET (denied)
                 binding.ivStatusLogo.visibility = View.GONE
                 binding.tvStatusIndicatorEmoji.visibility = View.VISIBLE
                 binding.tvStatusIndicatorEmoji.text = "❌"
@@ -190,6 +190,42 @@ class ValidationResultDialogFragment : DialogFragment() {
                 binding.tvErrorReasonHeader.text = "REJECTION DETAILS"
                 binding.tvErrorReasonHeader.setTextColor(ContextCompat.getColor(context, R.color.danger))
                 binding.tvErrorReasonText.text = reason.ifBlank { "This booking was rejected or does not exist." }
+            }
+            "error" -> {
+                // ⚠️ SERVICE ERROR (not necessarily invalid)
+                binding.ivStatusLogo.visibility = View.GONE
+                binding.tvStatusIndicatorEmoji.visibility = View.VISIBLE
+                binding.tvStatusIndicatorEmoji.text = "⚠️"
+                binding.tvStatusIndicatorEmoji.setTextColor(ContextCompat.getColor(context, R.color.warning))
+
+                binding.tvValidationTitle.text = "VERIFICATION ERROR"
+                binding.tvValidationTitle.setTextColor(ContextCompat.getColor(context, R.color.warning))
+                binding.tvValidationSubtitle.text = "Could not verify ticket status"
+
+                binding.layoutAttendeeDetails.visibility = View.VISIBLE
+                binding.layoutErrorReason.visibility = View.VISIBLE
+                binding.layoutErrorReason.setBackgroundColor(ContextCompat.getColor(context, R.color.warning_bg))
+                binding.tvErrorReasonHeader.text = "SERVICE UNAVAILABLE"
+                binding.tvErrorReasonHeader.setTextColor(ContextCompat.getColor(context, R.color.warning))
+                binding.tvErrorReasonText.text = reason.ifBlank { "Verification Service Unavailable. Please try again or check your connection." }
+            }
+            else -> {
+                // ❌ UNKNOWN STATUS
+                binding.ivStatusLogo.visibility = View.GONE
+                binding.tvStatusIndicatorEmoji.visibility = View.VISIBLE
+                binding.tvStatusIndicatorEmoji.text = "❓"
+                binding.tvStatusIndicatorEmoji.setTextColor(ContextCompat.getColor(context, R.color.danger))
+
+                binding.tvValidationTitle.text = "UNKNOWN STATUS"
+                binding.tvValidationTitle.setTextColor(ContextCompat.getColor(context, R.color.danger))
+                binding.tvValidationSubtitle.text = "Entry Denied — Status Unrecognized"
+                
+                binding.layoutAttendeeDetails.visibility = View.VISIBLE
+                binding.layoutErrorReason.visibility = View.VISIBLE
+                binding.layoutErrorReason.setBackgroundColor(ContextCompat.getColor(context, R.color.danger_bg))
+                binding.tvErrorReasonHeader.text = "REASON"
+                binding.tvErrorReasonHeader.setTextColor(ContextCompat.getColor(context, R.color.danger))
+                binding.tvErrorReasonText.text = reason.ifBlank { "The booking status \"$status\" is not recognized." }
             }
         }
     }
