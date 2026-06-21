@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText } from 'lucide-react';
+import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText, Upload, Trophy, Award, Star, Crown } from 'lucide-react';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -29,7 +29,7 @@ export default function AdminDashboard() {
   const [selectedContributionDetail, setSelectedContributionDetail] = useState<any | null>(null);
   const [mounted, setMounted] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions'>('registrations');
+  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions' | 'achievers'>('registrations');
   const [events, setEvents] = useState<any[]>([]);
   const [eventSaving, setEventSaving] = useState(false);
   const [eventMessage, setEventMessage] = useState('');
@@ -49,6 +49,12 @@ export default function AdminDashboard() {
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState('');
   const [isUploadingQr, setIsUploadingQr] = useState(false);
+
+  // Achievers state
+  const [achieversData, setAchieversData] = useState<any>(null);
+  const [achieversLoading, setAchieversLoading] = useState(false);
+  const [achieversMessage, setAchieversMessage] = useState('');
+  const [uploadingAchieverKey, setUploadingAchieverKey] = useState<string | null>(null);
 
   // Statistic counters
   const [stats, setStats] = useState({
@@ -82,6 +88,7 @@ export default function AdminDashboard() {
       fetchAdminBookings(u.id);
       fetchAdminEvents();
       fetchAdminConfigs();
+      fetchAdminAchievers();
     } catch (e) {
       router.push('/admin/login');
     }
@@ -166,6 +173,82 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error('Error fetching configurations:', err);
+    }
+  };
+
+  const fetchAdminAchievers = async () => {
+    try {
+      const res = await fetch('/api/admin/achievers', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setAchieversData(data.achievers || null);
+      }
+    } catch (err) {
+      console.error('Error fetching achievers:', err);
+    }
+  };
+
+  const handleAchieverImageUpload = async (key: string, file: File) => {
+    setUploadingAchieverKey(key);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('/api/bookings/upload-proof', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        // key format: 'pv.ced.0', 'income.ed.2' etc.
+        const [category, level, indexStr] = key.split('.');
+        const index = parseInt(indexStr);
+        setAchieversData((prev: any) => {
+          const updated = JSON.parse(JSON.stringify(prev));
+          if (updated[category] && updated[category][level] && updated[category][level][index]) {
+            updated[category][level][index].image = data.url;
+          }
+          return updated;
+        });
+        setAchieversMessage('Image uploaded. Click Save Achievers to persist.');
+      } else {
+        setAchieversMessage(data.error || 'Failed to upload image');
+      }
+    } catch (err) {
+      setAchieversMessage('Upload error');
+    } finally {
+      setUploadingAchieverKey(null);
+    }
+  };
+
+  const handleAchieverNameChange = (key: string, name: string) => {
+    const [category, level, indexStr] = key.split('.');
+    const index = parseInt(indexStr);
+    setAchieversData((prev: any) => {
+      const updated = JSON.parse(JSON.stringify(prev));
+      if (updated[category] && updated[category][level] && updated[category][level][index]) {
+        updated[category][level][index].name = name;
+      }
+      return updated;
+    });
+  };
+
+  const handleSaveAchievers = async () => {
+    if (!adminUser?.id || !achieversData) return;
+    setAchieversLoading(true);
+    setAchieversMessage('');
+    try {
+      const res = await fetch('/api/admin/achievers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-id': adminUser.id },
+        body: JSON.stringify({ achievers: achieversData }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAchieversMessage('✓ Achievers saved successfully!');
+      } else {
+        setAchieversMessage(data.error || 'Failed to save');
+      }
+    } catch (err) {
+      setAchieversMessage('Network error saving achievers');
+    } finally {
+      setAchieversLoading(false);
     }
   };
 
@@ -581,6 +664,13 @@ export default function AdminDashboard() {
             >
               <Settings size={16} />
               <span>Payment Settings</span>
+            </button>
+            <button
+              onClick={() => setAdminSection('achievers')}
+              className={`section-tab ${adminSection === 'achievers' ? 'active' : ''}`}
+            >
+              <Trophy size={16} />
+              <span>Top Achievers</span>
             </button>
           </div>
         </div>
@@ -1100,6 +1190,229 @@ export default function AdminDashboard() {
                 })}
               </div>
             )}
+          </div>
+        ) : adminSection === 'achievers' ? (
+          <div className="payment-settings-area animate-slide-up">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSaveAchievers();
+              }}
+              className="event-form-card glass-card"
+            >
+              <div className="event-manager-header">
+                <div>
+                  <span className="manager-kicker">Achievers Management</span>
+                  <h2 className="heading-md">June Month Top Achievers</h2>
+                  <p style={{ color: 'var(--muted)', fontSize: '0.88rem', margin: '0.25rem 0 0' }}>Upload face photos and update names for each ranked position.</p>
+                </div>
+                <button type="submit" className="btn btn-primary" disabled={achieversLoading} style={{ height: '44px', minWidth: '160px' }}>
+                  {achieversLoading ? 'Saving...' : '💾 Save Achievers'}
+                </button>
+              </div>
+              {achieversMessage && (
+                <div style={{ padding: '0.75rem 1rem', borderRadius: '8px', background: achieversMessage.startsWith('✓') ? '#d1fae5' : '#fee2e2', color: achieversMessage.startsWith('✓') ? '#065f46' : '#991b1b', fontSize: '0.88rem', marginBottom: '1.5rem', fontWeight: 600 }}>
+                  {achieversMessage}
+                </div>
+              )}
+              {!achieversData ? (
+                <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '2rem' }}>Loading achievers...</p>
+              ) : (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+                    {([
+                      { key: 'pv.ced', label: 'CED — TOP 3 PV ACHIEVERS', icon: '📊', color: '#3b82f6' },
+                      { key: 'income.ced', label: 'CED — TOP 3 INCOME ACHIEVERS', icon: '💰', color: '#10b981' },
+                      { key: 'pv.ed', label: 'ED — TOP 3 PV ACHIEVERS', icon: '📈', color: '#8b5cf6' },
+                      { key: 'income.ed', label: 'ED — TOP 3 INCOME ACHIEVERS', icon: '🏆', color: '#f59e0b' },
+                    ] as const).map(({ key, label, icon, color }) => {
+                      const [cat, lvl] = key.split('.');
+                      const items: any[] = achieversData?.[cat]?.[lvl] || [];
+                      return (
+                        <div key={key} style={{ background: 'var(--surface)', borderRadius: '16px', border: '1px solid var(--border)', overflow: 'hidden' }}>
+                          <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)', background: `${color}10`, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ fontSize: '1.2rem' }}>{icon}</span>
+                            <span style={{ fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', color }}>{label}</span>
+                          </div>
+                          <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {items.map((item: any, i: number) => {
+                              const tierEmoji = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
+                              const uploadKey = `${cat}.${lvl}.${i}`;
+                              const isUploading = uploadingAchieverKey === uploadKey;
+                              return (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#fff', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', border: `3px solid ${i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : '#b45309'}`, overflow: 'hidden', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      {item.image ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      ) : (
+                                        <span style={{ fontSize: '1.5rem' }}>{tierEmoji}</span>
+                                      )}
+                                    </div>
+                                    
+                                    {/* Clear Image Button */}
+                                    {item.image && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setAchieversData((prev: any) => {
+                                            const updated = JSON.parse(JSON.stringify(prev));
+                                            if (updated[cat] && updated[cat][lvl] && updated[cat][lvl][i]) {
+                                              updated[cat][lvl][i].image = '';
+                                            }
+                                            return updated;
+                                          });
+                                          setAchieversMessage('Image cleared. Click Save Achievers to persist.');
+                                        }}
+                                        style={{
+                                          position: 'absolute',
+                                          top: '-4px',
+                                          left: '-4px',
+                                          width: '20px',
+                                          height: '20px',
+                                          borderRadius: '50%',
+                                          background: '#ef4444',
+                                          border: '1.5px solid white',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          cursor: 'pointer',
+                                          color: 'white',
+                                          fontSize: '9px',
+                                          fontWeight: 'bold',
+                                          padding: 0,
+                                          boxShadow: '0 2px 4px rgba(0,0,0,0.12)',
+                                          zIndex: 10
+                                        }}
+                                        title="Remove Image"
+                                      >
+                                        ✕
+                                      </button>
+                                    )}
+
+                                    <label htmlFor={`upload-${uploadKey}`} style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '22px', height: '22px', borderRadius: '50%', background: color, border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                                      {isUploading ? <span style={{ fontSize: '10px', color: 'white' }}>⏳</span> : <Upload size={10} color="white" />}
+                                    </label>
+                                    <input
+                                      type="file"
+                                      id={`upload-${uploadKey}`}
+                                      accept=".jpg,.jpeg,.png,.webp"
+                                      style={{ display: 'none' }}
+                                      disabled={isUploading}
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleAchieverImageUpload(uploadKey, file);
+                                      }}
+                                    />
+                                  </div>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: '0.68rem', color: color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px' }}>Rank #{i + 1} {tierEmoji}</div>
+                                    
+                                    {/* User Friendly Name Input with Clear Button */}
+                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                      <input
+                                        type="text"
+                                        value={item.name}
+                                        onChange={(e) => handleAchieverNameChange(uploadKey, e.target.value)}
+                                        style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '6px', padding: '5px 24px 5px 8px', fontSize: '0.85rem', fontWeight: 700, color: 'var(--foreground)', background: 'transparent', outline: 'none', boxSizing: 'border-box' }}
+                                        placeholder="Achiever Name"
+                                      />
+                                      {item.name && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleAchieverNameChange(uploadKey, '')}
+                                          style={{
+                                            position: 'absolute',
+                                            right: '8px',
+                                            border: 'none',
+                                            background: 'transparent',
+                                            cursor: 'pointer',
+                                            color: '#94a3b8',
+                                            fontSize: '12px',
+                                            padding: 0,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            width: '16px',
+                                            height: '16px'
+                                          }}
+                                          title="Clear Name"
+                                        >
+                                          ✕
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Reset Card Button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setAchieversData((prev: any) => {
+                                        const updated = JSON.parse(JSON.stringify(prev));
+                                        if (updated[cat] && updated[cat][lvl] && updated[cat][lvl][i]) {
+                                          updated[cat][lvl][i].name = '';
+                                          updated[cat][lvl][i].image = '';
+                                        }
+                                        return updated;
+                                      });
+                                      setAchieversMessage('Entry cleared. Click Save Achievers to persist.');
+                                    }}
+                                    style={{
+                                      border: '1px solid #fee2e2',
+                                      background: '#fff5f5',
+                                      color: '#ef4444',
+                                      borderRadius: '6px',
+                                      padding: '6px 8px',
+                                      cursor: 'pointer',
+                                      fontSize: '0.72rem',
+                                      fontWeight: 700,
+                                      height: '32px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      transition: 'all 0.2s',
+                                      alignSelf: 'flex-end',
+                                      marginBottom: '2px'
+                                    }}
+                                    title="Reset name and photo"
+                                  >
+                                    Reset
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Bottom Actions Submit Footer */}
+                  <div style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={achieversLoading}
+                      style={{
+                        height: '46px',
+                        minWidth: '220px',
+                        fontSize: '0.95rem',
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
+                      }}
+                    >
+                      {achieversLoading ? 'Saving Achievers...' : '💾 Save Achievers'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </form>
           </div>
         ) : (
           <div className="payment-settings-area animate-slide-up">

@@ -482,23 +482,32 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
     // Build a temporary off-screen ticket element
     const wrapper = document.createElement('div');
-    wrapper.style.position = 'fixed';
-    wrapper.style.left = '-9999px';
-    wrapper.style.top = '0';
-    wrapper.style.zIndex = '-1';
+    wrapper.style.position = 'absolute';
+    wrapper.style.left = '0';
+    wrapper.style.top = '-9999px';
+    wrapper.style.zIndex = '-9999';
     wrapper.style.background = '#f0fdf4';
     wrapper.style.padding = '32px';
     wrapper.style.fontFamily = "'Segoe UI', Arial, sans-serif";
     wrapper.style.color = '#111827';
     wrapper.style.width = '640px';
+    wrapper.style.boxSizing = 'border-box';
 
-    const seatsHtml = seatsToRender.map((s: string) => `<span style="background:#dcfce7;color:#047857;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:700;margin:2px">${s}</span>`).join('');
+    const seatsHtml = seatsToRender.map((s: string) => `<span style="background:#dcfce7;color:#047857;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:700;margin:2px;display:inline-block;">${s}</span>`).join('');
     const currentAttendees = confirmedData?.attendees || attendeeDetails;
     const attendeesHtml = seatsToRender.map((s: string) => {
       const info = currentAttendees[s];
       const nameText = typeof info === 'object' && info !== null ? info.name : (info || 'N/A');
-      const phoneText = typeof info === 'object' && info !== null ? (info.whatsapp || info.phone || '') : '';
-      return `<div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;padding:2px 0;"><strong>Seat ${s}:</strong><span>${nameText}${phoneText ? ` (${phoneText})` : ''}</span></div>`;
+      const phoneText = typeof info === 'object' && info !== null ? (info.whatsapp || info.phone || bookerPhone || '') : '';
+      return `
+        <tr style="border-bottom:1px solid #e5e7eb;">
+          <td style="padding:8px 6px;font-size:12px;color:#374151;text-align:left;font-weight:bold;width:80px;vertical-align:middle;">
+            <span style="background:#10b981;color:#ffffff;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;display:inline-block;">Seat ${s}</span>
+          </td>
+          <td style="padding:8px 6px;font-size:12px;color:#111827;font-weight:600;text-align:left;vertical-align:middle;word-break:break-word;">${nameText}</td>
+          <td style="padding:8px 6px;font-size:12px;color:#4b5563;text-align:right;vertical-align:middle;">${phoneText || '—'}</td>
+        </tr>
+      `;
     }).join('');
 
     const statusLabel = bookingStatus === 'approved' ? '✓ CONFIRMED & VERIFIED' : bookingStatus === 'denied' ? '✗ PAYMENT REJECTED' : '✓ PENDING VERIFICATION';
@@ -511,37 +520,109 @@ export default function SeatBookingModal({ event, onClose }: Props) {
         : 'This is a ticket receipt showing status as Pending Verification. Once approved by administration, it compiles as Confirmed.';
 
     wrapper.innerHTML = `
-      <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
+      <div style="width:576px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.15);box-sizing:border-box;">
         <div style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:white;padding:32px;text-align:center;">
           <h1 style="font-size:28px;font-weight:800;letter-spacing:2px;margin:0 0 4px;">SUCCESS TEAM</h1>
           <p style="font-size:13px;opacity:0.85;margin:0;">Official Event Booking Confirmation</p>
           <div style="font-size:26px;font-weight:900;letter-spacing:4px;background:rgba(255,255,255,0.15);padding:12px 24px;border-radius:8px;margin:16px auto;display:inline-block;">${bookingId}</div>
         </div>
-        <div style="padding:32px;">
-          <div style="text-align:center;margin-bottom:20px;"><span style="display:inline-flex;align-items:center;gap:6px;background:${statusBg};color:${statusColor};padding:6px 16px;border-radius:999px;font-weight:700;font-size:14px;">${statusLabel}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Event</span><span style="font-weight:600;">${eventName}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Venue</span><span style="font-weight:600;">${event.venue}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Date</span><span style="font-weight:600;">${event.eventDate || 'To Be Confirmed'}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Time</span><span style="font-weight:600;">${event.eventTime || '10:00 AM'}</span></div>
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f3f4f6;gap:16px;"><span style="color:#6b7280;font-size:13px;flex-shrink:0;">Seats (${seatsLength})</span><div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;">${seatsHtml}</div></div>
-          <div style="padding:12px 0;border-bottom:1px solid #f3f4f6;">
-            <span style="color:#6b7280;font-size:13px;display:block;margin-bottom:6px;">Attendee Details:</span>
-            <div style="background:#f9fafb;border-radius:8px;padding:8px 12px;">
-              ${attendeesHtml}
+        <div style="padding:32px;box-sizing:border-box;">
+          <div style="text-align:center;margin-bottom:20px;"><span style="display:inline-block;background:${statusBg};color:${statusColor};padding:6px 16px;border-radius:999px;font-weight:700;font-size:14px;">${statusLabel}</span></div>
+          
+          <table style="width:100%;border-collapse:collapse;margin-bottom:20px;table-layout:fixed;">
+            <tbody>
+              <tr style="border-bottom:1px solid #f3f4f6;">
+                <td style="width:30%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Event</td>
+                <td style="width:70%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;word-break:break-word;">${eventName}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #f3f4f6;">
+                <td style="width:30%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Venue</td>
+                <td style="width:70%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;word-break:break-word;">${event.venue}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #f3f4f6;">
+                <td style="width:30%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Date</td>
+                <td style="width:70%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;">${event.eventDate || 'To Be Confirmed'}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #f3f4f6;">
+                <td style="width:30%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Time</td>
+                <td style="width:70%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;">${event.eventTime || '10:00 AM'}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #f3f4f6;">
+                <td style="width:30%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Seats (${seatsLength})</td>
+                <td style="width:70%;padding:12px 0;text-align:right;vertical-align:middle;">
+                  <div style="display:inline-block;text-align:right;">
+                    ${seatsHtml}
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="padding:12px 0;border-bottom:1px solid #f3f4f6;margin-bottom:20px;">
+            <span style="color:#6b7280;font-size:13px;display:block;margin-bottom:8px;text-align:left;font-weight:bold;">Attendee Details:</span>
+            <div style="background:#f9fafb;border-radius:8px;padding:8px 12px;border:1px solid #e5e7eb;">
+              <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                <thead>
+                  <tr style="border-bottom:1px solid #d1fae5;background:#ecfdf5;">
+                    <th style="padding:6px;font-size:11px;font-weight:700;text-transform:uppercase;color:#047857;text-align:left;width:80px;">Seat</th>
+                    <th style="padding:6px;font-size:11px;font-weight:700;text-transform:uppercase;color:#047857;text-align:left;">Name</th>
+                    <th style="padding:6px;font-size:11px;font-weight:700;text-transform:uppercase;color:#047857;text-align:right;width:120px;">Phone</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${attendeesHtml}
+                </tbody>
+              </table>
             </div>
           </div>
-          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Price per Seat</span><span style="font-weight:600;">₹${pricePerSeat}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Base Amount</span><span style="font-weight:600;">₹${seatsLength * pricePerSeat}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">GST (18%)</span><span style="font-weight:600;">₹${Math.round(seatsLength * pricePerSeat * 0.18)}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Booked At</span><span style="font-weight:600;">${timestampToRender}</span></div>
-          <div style="background:#ecfdf5;border-radius:8px;padding:16px;margin-top:16px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:15px;font-weight:600;color:#374151;">Grand Total (with GST)</span><span style="font-size:24px;font-weight:800;color:#10b981;">₹${priceToRender}</span></div>
+
+          <table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:12px;">
+            <tbody>
+              <tr style="border-bottom:1px solid #f3f4f6;">
+                <td style="width:40%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Price per Seat</td>
+                <td style="width:60%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;">₹${pricePerSeat}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #f3f4f6;">
+                <td style="width:40%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Base Amount</td>
+                <td style="width:60%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;">₹${seatsLength * pricePerSeat}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #f3f4f6;">
+                <td style="width:40%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">GST (18%)</td>
+                <td style="width:60%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;">₹${Math.round(seatsLength * pricePerSeat * 0.18)}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #f3f4f6;">
+                <td style="width:40%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Booked At</td>
+                <td style="width:60%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;">${timestampToRender}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="background:#ecfdf5;border-radius:8px;padding:16px;margin-top:16px;display:table;width:100%;box-sizing:border-box;">
+            <div style="display:table-row;">
+              <div style="display:table-cell;font-size:15px;font-weight:600;color:#374151;text-align:left;vertical-align:middle;">Grand Total (with GST)</div>
+              <div style="display:table-cell;font-size:24px;font-weight:800;color:#10b981;text-align:right;vertical-align:middle;">₹${priceToRender}</div>
+            </div>
+          </div>
         </div>
-        ${qrImageUrl ? `<div style="text-align:center;padding:24px;border-top:2px dashed #a7f3d0;"><img src="${qrImageUrl}" alt="QR Code" width="160" height="160" crossorigin="anonymous" /><p style="font-size:12px;color:#9ca3af;margin-top:8px;">Scan QR code for verification</p></div>` : ''}
+        ${qrImageUrl ? `<div style="text-align:center;padding:24px;border-top:2px dashed #a7f3d0;"><img src="${qrImageUrl}" alt="QR Code" width="160" height="160" crossorigin="anonymous" style="display:block;margin:0 auto;" /><p style="font-size:12px;color:#9ca3af;margin-top:8px;">Scan QR code for verification</p></div>` : ''}
         <div style="text-align:center;font-size:12px;color:#9ca3af;padding:16px 32px;background:#f9fafb;">${explanationText}</div>
       </div>
     `;
 
     document.body.appendChild(wrapper);
+
+    // Pre-load all image assets inside the wrapper
+    const images = Array.from(wrapper.getElementsByTagName('img'));
+    await Promise.all(
+      images.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      })
+    );
+    await new Promise(r => setTimeout(r, 200));
 
     try {
       const canvas = await html2canvas(wrapper, {
@@ -549,6 +630,8 @@ export default function SeatBookingModal({ event, onClose }: Props) {
         backgroundColor: '#f0fdf4',
         scale: 2,
         logging: false,
+        width: 640,
+        windowWidth: 640,
       });
       const link = document.createElement('a');
       link.download = `SuccessTeam-Ticket-${bookingId}.png`;

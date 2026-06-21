@@ -83,12 +83,18 @@ export async function GET(request: Request) {
       }
     }
 
-    // Strip internal __ meta keys; resolve name/phone per seat
-    const cleanAttendees: Record<string, { name: string; phone: string }> = {};
+    // Strip internal __ meta keys; resolve name/phone/supporter details per seat
+    const cleanAttendees: Record<string, any> = {};
     for (const [seat, val] of Object.entries(rawAttendees)) {
       if (seat.startsWith('__')) continue;
       if (typeof val === 'object' && val !== null) {
-        cleanAttendees[seat] = { name: val.name || '', phone: val.phone || val.whatsapp || '' };
+        cleanAttendees[seat] = {
+          name: val.name || '',
+          phone: val.phone || val.whatsapp || '',
+          vpName: val.vpName || '',
+          vpImage: val.vpImage || '',
+          designation: val.designation || '',
+        };
       } else if (typeof val === 'string') {
         cleanAttendees[seat] = { name: val, phone: '' };
       }
@@ -137,6 +143,7 @@ export async function GET(request: Request) {
       amountPaid:      bk.total_price != null ? `₹${bk.total_price}` : '—',
       attendeeName:    primaryAttendeeName,
       bookerPhone:     bookerPhone || '—',
+      bookerVpName:    bk.booker_vp_name || '',
       status,
       statusLabel,
       attendees:       cleanAttendees,

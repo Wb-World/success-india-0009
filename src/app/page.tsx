@@ -39,12 +39,46 @@ type SeminarEvent = {
   bookedSeatsByTime?: Record<string, string[]>;
 };
 
+type AchieverItem = { rank: number; name: string; image?: string; tier: string };
+type AchieversData = {
+  pv: { ced: AchieverItem[]; ed: AchieverItem[] };
+  income: { ced: AchieverItem[]; ed: AchieverItem[] };
+};
+
+const DEFAULT_ACHIEVERS: AchieversData = {
+  pv: {
+    ced: [
+      { rank: 1, name: '', image: '', tier: 'gold' },
+      { rank: 2, name: '', image: '', tier: 'silver' },
+      { rank: 3, name: '', image: '', tier: 'bronze' }
+    ],
+    ed: [
+      { rank: 1, name: '', image: '', tier: 'gold' },
+      { rank: 2, name: '', image: '', tier: 'silver' },
+      { rank: 3, name: '', image: '', tier: 'bronze' }
+    ]
+  },
+  income: {
+    ced: [
+      { rank: 1, name: '', image: '', tier: 'gold' },
+      { rank: 2, name: '', image: '', tier: 'silver' },
+      { rank: 3, name: '', image: '', tier: 'bronze' }
+    ],
+    ed: [
+      { rank: 1, name: '', image: '', tier: 'gold' },
+      { rank: 2, name: '', image: '', tier: 'silver' },
+      { rank: 3, name: '', image: '', tier: 'bronze' }
+    ]
+  }
+};
+
 export default function Home() {
   const [events, setEvents] = useState<SeminarEvent[]>([]);
   const [supporters, setSupporters] = useState<any[]>([]);
   const [venue, setVenue] = useState(fallbackLocations[0]);
   const [seminar, setSeminar] = useState(fallbackEventCategories[0]);
   const [selectedEventId, setSelectedEventId] = useState('');
+  const [achieversData, setAchieversData] = useState<AchieversData>(DEFAULT_ACHIEVERS);
   const [date, setDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() + 7);
@@ -98,8 +132,30 @@ export default function Home() {
     fetchSupporters();
   }, []);
 
+  useEffect(() => {
+    const fetchAchievers = async () => {
+      try {
+        const res = await fetch('/api/admin/achievers', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.achievers) setAchieversData(data.achievers);
+        }
+      } catch (err) {
+        console.error('Error fetching achievers:', err);
+      }
+    };
+    fetchAchievers();
+  }, []);
+
   const chiefDirectors = supporters.filter((s) => s.designation === 'Chief Executive Director');
   const executiveDirectors = supporters.filter((s) => s.designation === 'Executive Director');
+
+  const hasAchievers = !!(
+    achieversData?.pv?.ced?.some((a) => a.name?.trim() || a.image) ||
+    achieversData?.pv?.ed?.some((a) => a.name?.trim() || a.image) ||
+    achieversData?.income?.ced?.some((a) => a.name?.trim() || a.image) ||
+    achieversData?.income?.ed?.some((a) => a.name?.trim() || a.image)
+  );
 
   const eventLocations = events.length
     ? (Array.from(new Set(events.map((event) => event.venue || event.legacySource).filter(Boolean))) as string[])
@@ -286,6 +342,174 @@ export default function Home() {
                 <span>Transparent session categories before seat selection</span>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Achievers Section */}
+        <section className="achievers-section">
+          <div className="container">
+            <div className="section-header" style={{ marginBottom: '3.5rem' }}>
+              <span className="section-eyebrow">Honoring Excellence</span>
+              <h2 className="heading-lg">JUNE MONTH TOP ACHIEVERS</h2>
+              <p className="section-subtitle">
+                Recognizing the outstanding leadership, PV milestones, and income milestones of our Star Directors.
+              </p>
+            </div>
+
+            {!hasAchievers ? (
+              <div className="no-records-card animate-fade-in">
+                <div className="no-records-icon">🏆</div>
+                <h3 className="no-records-title">No Record Found</h3>
+                <p className="no-records-desc">
+                  Top achiever standings for June are currently empty. Check back later for updates!
+                </p>
+              </div>
+            ) : (
+              <div className="achievers-grid">
+                {/* Part 1: CED PV Achievers */}
+                <div className="achiever-panel">
+                  <div className="panel-header">
+                    <h3 className="panel-designation">CHIEF EXECUTIVE DIRECTOR</h3>
+                    <h4 className="panel-category pv-color">TOP 3 PV ACHIEVERS</h4>
+                  </div>
+                  <div className="medals-row">
+                    {achieversData.pv.ced.map((item, i) => (
+                      <div key={`pv-ced-${item.rank}`} className="medal-col">
+                        <div className={`medal-circle medal-${item.tier}`}>
+                          {item.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.image} alt={item.name} className="medal-face-img" />
+                          ) : (
+                            <span className="medal-no-img-fallback">No Record Found</span>
+                          )}
+                          <div className="medal-ribbon" />
+                        </div>
+                        <span className="medal-achiever-name">
+                          {item.name?.trim() ? item.name : 'No Record Found'}
+                        </span>
+                        <div className="medal-tier-badge" style={{ marginTop: '4px' }}>
+                          {i === 0 ? (
+                            <span className="badge-pill gold"><span className="badge-emoji">👑</span> Gold Achiever</span>
+                          ) : i === 1 ? (
+                            <span className="badge-pill silver"><span className="badge-emoji">🥈</span> Silver Achiever</span>
+                          ) : (
+                            <span className="badge-pill bronze"><span className="badge-emoji">⭐</span> Bronze Achiever</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Part 2: CED Income Achievers */}
+                <div className="achiever-panel">
+                  <div className="panel-header">
+                    <h3 className="panel-designation">CHIEF EXECUTIVE DIRECTOR</h3>
+                    <h4 className="panel-category income-color">TOP 3 INCOME ACHIEVERS</h4>
+                  </div>
+                  <div className="medals-row">
+                    {achieversData.income.ced.map((item, i) => (
+                      <div key={`income-ced-${item.rank}`} className="medal-col">
+                        <div className={`medal-circle medal-${item.tier}`}>
+                          {item.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.image} alt={item.name} className="medal-face-img" />
+                          ) : (
+                            <span className="medal-no-img-fallback">No Record Found</span>
+                          )}
+                          <div className="medal-ribbon" />
+                        </div>
+                        <span className="medal-achiever-name">
+                          {item.name?.trim() ? item.name : 'No Record Found'}
+                        </span>
+                        <div className="medal-tier-badge" style={{ marginTop: '4px' }}>
+                          {i === 0 ? (
+                            <span className="badge-pill gold"><span className="badge-emoji">👑</span> Gold Achiever</span>
+                          ) : i === 1 ? (
+                            <span className="badge-pill silver"><span className="badge-emoji">🥈</span> Silver Achiever</span>
+                          ) : (
+                            <span className="badge-pill bronze"><span className="badge-emoji">⭐</span> Bronze Achiever</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Part 3: ED PV Achievers */}
+                <div className="achiever-panel">
+                  <div className="panel-header">
+                    <h3 className="panel-designation">EXECUTIVE DIRECTOR</h3>
+                    <h4 className="panel-category pv-color">TOP 3 PV ACHIEVERS</h4>
+                  </div>
+                  <div className="medals-row">
+                    {achieversData.pv.ed.map((item, i) => (
+                      <div key={`pv-ed-${item.rank}`} className="medal-col">
+                        <div className={`medal-circle medal-${item.tier}`}>
+                          {item.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.image} alt={item.name} className="medal-face-img" />
+                          ) : (
+                            <span className="medal-no-img-fallback">No Record Found</span>
+                          )}
+                          <div className="medal-ribbon" />
+                        </div>
+                        <span className="medal-achiever-name">
+                          {item.name?.trim() ? item.name : 'No Record Found'}
+                        </span>
+                        <div className="medal-tier-badge" style={{ marginTop: '4px' }}>
+                          {i === 0 ? (
+                            <span className="badge-pill gold"><span className="badge-emoji">👑</span> Gold Achiever</span>
+                          ) : i === 1 ? (
+                            <span className="badge-pill silver"><span className="badge-emoji">🥈</span> Silver Achiever</span>
+                          ) : (
+                            <span className="badge-pill bronze"><span className="badge-emoji">⭐</span> Bronze Achiever</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Part 4: ED Income Achievers */}
+                <div className="achiever-panel">
+                  <div className="panel-header">
+                    <h3 className="panel-designation">EXECUTIVE DIRECTOR</h3>
+                    <h4 className="panel-category income-color">TOP 3 INCOME ACHIEVERS</h4>
+                  </div>
+                  <div className="medals-row">
+                    {achieversData.income.ed.map((item, i) => (
+                      <div key={`income-ed-${item.rank}`} className="medal-col">
+                        <div className={`medal-circle medal-${item.tier}`}>
+                          {item.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.image} alt={item.name} className="medal-face-img" />
+                          ) : (
+                            <span className="medal-no-img-fallback">No Record Found</span>
+                          )}
+                          <div className="medal-ribbon" />
+                        </div>
+                        <span className="medal-achiever-name">
+                          {item.name?.trim() ? item.name : 'No Record Found'}
+                        </span>
+                        <div className="medal-tier-badge" style={{ marginTop: '4px' }}>
+                          {i === 0 ? (
+                            <span className="badge-pill gold"><span className="badge-emoji">👑</span> Gold Achiever</span>
+                          ) : i === 1 ? (
+                            <span className="badge-pill silver"><span className="badge-emoji">🥈</span> Silver Achiever</span>
+                          ) : (
+                            <span className="badge-pill bronze"><span className="badge-emoji">⭐</span> Bronze Achiever</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Center Decorative Intersection Emblem on Desktop */}
+                <div className="achievers-center-badge">🏆</div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -1068,8 +1292,8 @@ export default function Home() {
 
         .contributors-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-          gap: 1.5rem;
+          grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+          gap: 3px 1.5px;
           justify-content: center;
           max-width: 1200px;
           margin: 0 auto;
@@ -1077,7 +1301,7 @@ export default function Home() {
 
         .contributor-card {
           width: 100%;
-          max-width: 110px;
+          max-width: 64px;
           background: transparent;
           border: none;
           padding: 0;
@@ -1095,13 +1319,13 @@ export default function Home() {
         }
 
         .contributor-img-wrap {
-          width: 80px;
-          height: 80px;
-          border-radius: 0;
+          width: 60px;
+          height: 60px;
+          border-radius: 8px;
           overflow: hidden;
-          margin-bottom: 0.5rem;
-          border: 2px solid #10b981;
-          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15);
+          margin-bottom: 0.3rem;
+          border: 1.5px solid #10b981;
+          box-shadow: 0 2px 6px rgba(16, 185, 129, 0.1);
           background: #f8fafc;
           display: flex;
           align-items: center;
@@ -1112,7 +1336,7 @@ export default function Home() {
         .contributor-card:hover .contributor-img-wrap {
           border-color: #10b981;
           transform: scale(1.05);
-          box-shadow: 0 6px 15px rgba(16, 185, 129, 0.25);
+          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
         }
 
         .contributor-img {
@@ -1128,16 +1352,16 @@ export default function Home() {
           align-items: center;
           width: 100%;
           box-sizing: border-box;
-          padding: 0 4px;
+          padding: 0 2px;
         }
 
         .contributor-name {
           font-family: var(--font-sans), sans-serif;
-          font-size: 0.825rem;
+          font-size: 0.7rem;
           font-weight: 600;
           color: #374151;
           margin: 0;
-          line-height: 1.3;
+          line-height: 1.2;
           width: 100%;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1149,6 +1373,562 @@ export default function Home() {
           .contributors-carousel-section {
             padding: 4.5rem 1.25rem;
           }
+        }
+
+        /* ── Achievers Grid ── */
+        .achievers-section {
+          padding: 6.5rem 2rem;
+          background: #ffffff;
+          border-top: 1px solid #e2e8f0;
+          position: relative;
+        }
+        .achievers-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          max-width: 1200px;
+          margin: 0 auto;
+          position: relative;
+          background: #ffffff;
+        }
+        @media (min-width: 900px) {
+          .achievers-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+        .achiever-panel {
+          padding: 3rem 2rem;
+          text-align: center;
+          position: relative;
+          box-sizing: border-box;
+        }
+
+        /* Desktop Dividers */
+        @media (min-width: 900px) {
+          .achievers-grid::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent 5%, #cbd5e1 15%, #cbd5e1 85%, transparent 95%);
+            transform: translateX(-50%);
+            z-index: 2;
+          }
+          .achievers-grid::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 2px;
+            background: linear-gradient(to right, transparent 5%, #cbd5e1 15%, #cbd5e1 85%, transparent 95%);
+            transform: translateY(-50%);
+            z-index: 2;
+          }
+          .achievers-center-badge {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 46px;
+            height: 46px;
+            background: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 50%;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            font-size: 1.3rem;
+          }
+        }
+        @media (max-width: 899px) {
+          .achiever-panel {
+            border-bottom: 2.5px dashed #cbd5e1;
+          }
+          .achiever-panel:last-child {
+            border-bottom: none;
+          }
+          .achievers-center-badge {
+            display: none;
+          }
+        }
+
+        .panel-header {
+          margin-bottom: 2.5rem;
+        }
+        .panel-designation {
+          font-family: var(--font-heading), sans-serif;
+          font-size: 1.25rem;
+          font-weight: 900;
+          color: #0f172a;
+          letter-spacing: 0.05em;
+          margin: 0;
+        }
+        .panel-category {
+          font-size: 0.8rem;
+          font-weight: 850;
+          margin: 0.4rem 0 0;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+        .pv-color {
+          color: #10b981;
+        }
+        .income-color {
+          color: #d97706;
+        }
+
+        .medals-row {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1.5rem 0.5rem;
+          justify-content: center;
+          align-items: flex-start;
+        }
+        .medal-col {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+
+        /* Gold, Silver, Bronze medals styling */
+        .medal-circle {
+          width: 86px;
+          height: 86px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 1.15rem;
+          position: relative;
+          box-shadow: 
+            0 8px 18px rgba(0, 0, 0, 0.15),
+            inset 0 -4px 8px rgba(0, 0, 0, 0.2),
+            inset 0 4px 8px rgba(255, 255, 255, 0.45);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .medal-circle:hover {
+          transform: translateY(-5px) scale(1.06);
+          box-shadow: 
+            0 12px 24px rgba(0, 0, 0, 0.18),
+            inset 0 -4px 8px rgba(0, 0, 0, 0.2),
+            inset 0 4px 8px rgba(255, 255, 255, 0.45);
+        }
+
+        .medal-gold {
+          background: radial-gradient(circle at 35% 35%, #fff6cc 0%, #f1c40f 50%, #d4ac0d 80%, #9a7d0a 100%);
+          border: 4px solid #ffd700;
+        }
+        .medal-silver {
+          background: radial-gradient(circle at 35% 35%, #ffffff 0%, #d5dbdb 50%, #bdc3c7 80%, #7f8c8d 100%);
+          border: 4px solid #d2d4d4;
+        }
+        .medal-bronze {
+          background: radial-gradient(circle at 35% 35%, #f9ebd2 0%, #e59866 50%, #ca6f1e 80%, #873600 100%);
+          border: 4px solid #d35400;
+        }
+
+        .medal-rank {
+          font-family: var(--font-heading), sans-serif;
+          font-size: 1.85rem;
+          font-weight: 900;
+          color: #ffffff;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+          z-index: 2;
+        }
+        .medal-circle::before {
+          content: '';
+          position: absolute;
+          top: 4px;
+          left: 4px;
+          right: 4px;
+          bottom: 4px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 50%);
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        /* Ribbon hanging effect */
+        .medal-ribbon {
+          position: absolute;
+          bottom: -10px;
+          width: 32px;
+          height: 18px;
+          z-index: -1;
+          clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 70%, 0 100%);
+        }
+        .medal-gold .medal-ribbon {
+          background: linear-gradient(to right, #e74c3c 50%, #c0392b 50%);
+@media (max-width: 640px) {
+          .contributors-carousel-section {
+            padding: 4.5rem 1.25rem;
+          }
+        }
+
+        /* ── Achievers Grid ── */
+        .achievers-section {
+          padding: 6.5rem 2rem;
+          background: #ffffff;
+          border-top: 1px solid #e2e8f0;
+          position: relative;
+        }
+        .achievers-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          max-width: 1200px;
+          margin: 0 auto;
+          position: relative;
+          background: #ffffff;
+        }
+        @media (min-width: 900px) {
+          .achievers-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+        .achiever-panel {
+          padding: 3rem 2rem;
+          text-align: center;
+          position: relative;
+          box-sizing: border-box;
+        }
+
+        /* Desktop Dividers */
+        @media (min-width: 900px) {
+          .achievers-grid::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent 5%, #cbd5e1 15%, #cbd5e1 85%, transparent 95%);
+            transform: translateX(-50%);
+            z-index: 2;
+          }
+          .achievers-grid::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 2px;
+            background: linear-gradient(to right, transparent 5%, #cbd5e1 15%, #cbd5e1 85%, transparent 95%);
+            transform: translateY(-50%);
+            z-index: 2;
+          }
+          .achievers-center-badge {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 46px;
+            height: 46px;
+            background: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 50%;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            font-size: 1.3rem;
+          }
+        }
+        @media (max-width: 899px) {
+          .achiever-panel {
+            border-bottom: 2.5px dashed #cbd5e1;
+          }
+          .achiever-panel:last-child {
+            border-bottom: none;
+          }
+          .achievers-center-badge {
+            display: none;
+          }
+        }
+
+        .panel-header {
+          margin-bottom: 2.5rem;
+        }
+        .panel-designation {
+          font-family: var(--font-heading), sans-serif;
+          font-size: 1.25rem;
+          font-weight: 900;
+          color: #0f172a;
+          letter-spacing: 0.05em;
+          margin: 0;
+        }
+        .panel-category {
+          font-size: 0.8rem;
+          font-weight: 850;
+          margin: 0.4rem 0 0;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+        .pv-color {
+          color: #10b981;
+        }
+        .income-color {
+          color: #d97706;
+        }
+
+        .medals-row {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1.5rem 0.5rem;
+          justify-content: center;
+          align-items: flex-start;
+        }
+        .medal-col {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+
+        /* Gold, Silver, Bronze medals styling */
+        .medal-circle {
+          width: 86px;
+          height: 86px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 1.15rem;
+          position: relative;
+          box-shadow: 
+            0 8px 18px rgba(0, 0, 0, 0.15),
+            inset 0 -4px 8px rgba(0, 0, 0, 0.2),
+            inset 0 4px 8px rgba(255, 255, 255, 0.45);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .medal-circle:hover {
+          transform: translateY(-5px) scale(1.06);
+          box-shadow: 
+            0 12px 24px rgba(0, 0, 0, 0.18),
+            inset 0 -4px 8px rgba(0, 0, 0, 0.2),
+            inset 0 4px 8px rgba(255, 255, 255, 0.45);
+        }
+
+        .medal-gold {
+          background: radial-gradient(circle at 35% 35%, #fff6cc 0%, #f1c40f 50%, #d4ac0d 80%, #9a7d0a 100%);
+          border: 4px solid #ffd700;
+        }
+        .medal-silver {
+          background: radial-gradient(circle at 35% 35%, #ffffff 0%, #d5dbdb 50%, #bdc3c7 80%, #7f8c8d 100%);
+          border: 4px solid #d2d4d4;
+        }
+        .medal-bronze {
+          background: radial-gradient(circle at 35% 35%, #f9ebd2 0%, #e59866 50%, #ca6f1e 80%, #873600 100%);
+          border: 4px solid #d35400;
+        }
+
+        .medal-rank {
+          font-family: var(--font-heading), sans-serif;
+          font-size: 1.85rem;
+          font-weight: 900;
+          color: #ffffff;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+          z-index: 2;
+        }
+        .medal-circle::before {
+          content: '';
+          position: absolute;
+          top: 4px;
+          left: 4px;
+          right: 4px;
+          bottom: 4px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 50%);
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        /* Ribbon hanging effect */
+        .medal-ribbon {
+          position: absolute;
+          bottom: -10px;
+          width: 32px;
+          height: 18px;
+          z-index: -1;
+          clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 70%, 0 100%);
+        }
+        .medal-gold .medal-ribbon {
+          background: linear-gradient(to right, #e74c3c 50%, #c0392b 50%);
+        }
+        .medal-silver .medal-ribbon {
+          background: linear-gradient(to right, #3498db 50%, #2980b9 50%);
+        }
+        .medal-bronze .medal-ribbon {
+          background: linear-gradient(to right, #2ecc71 50%, #27ae60 50%);
+        }
+
+        .medal-achiever-name {
+          font-family: var(--font-heading), sans-serif;
+          font-size: 0.88rem;
+          font-weight: 800;
+          color: #1e293b;
+          line-height: 1.25;
+          margin-bottom: 0.15rem;
+          display: block;
+          word-break: break-word;
+          max-width: 100px;
+        }
+        .medal-tier-name {
+          font-size: 0.65rem;
+          font-weight: 800;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+        }
+        .medal-gold + .medal-achiever-name + .medal-tier-name { color: #d4ac0d; }
+        .medal-silver + .medal-achiever-name + .medal-tier-name { color: #7f8c8d; }
+        .medal-bronze + .medal-achiever-name + .medal-tier-name { color: #ca6f1e; }
+
+        /* Medal face image */
+        .medal-face-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 50%;
+          position: relative;
+          z-index: 2;
+        }
+        .medal-rank-fallback {
+          font-family: var(--font-heading), sans-serif;
+          font-size: 1.85rem;
+          font-weight: 900;
+          color: #ffffff;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+          z-index: 2;
+        }
+        .medal-no-img-fallback {
+          font-family: var(--font-heading), sans-serif;
+          font-size: 0.62rem;
+          font-weight: 800;
+          color: #ffffff;
+          text-shadow: 0 1px 2.5px rgba(0, 0, 0, 0.6);
+          z-index: 2;
+          text-transform: uppercase;
+          text-align: center;
+          line-height: 1.2;
+          padding: 6px;
+          letter-spacing: 0.02em;
+        }
+
+        /* Medal badge overlay - animated medal icon above circle */
+        .medal-badge-overlay {
+          position: absolute;
+          top: -16px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10;
+          pointer-events: none;
+        }
+        .medal-icon-crown {
+          font-size: 1.35rem;
+          display: block;
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+          animation: medalPulse 1.8s ease-in-out infinite;
+        }
+        .medal-icon-award {
+          font-size: 1.2rem;
+          display: block;
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+          animation: medalPulse 2.2s ease-in-out infinite 0.3s;
+        }
+        .medal-icon-star {
+          font-size: 1.1rem;
+          display: block;
+          filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+          animation: medalPulse 2.5s ease-in-out infinite 0.6s;
+        }
+        @keyframes medalPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.25); }
+        }
+
+        /* ── Badge Pills ── */
+        .badge-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          padding: 0.3rem 0.75rem;
+          border-radius: 9999px;
+          font-size: 0.68rem;
+          font-weight: 850;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+          white-space: nowrap;
+          border: 1.5px solid transparent;
+        }
+        .badge-pill.gold {
+          background: #fffbeb;
+          color: #b45309;
+          border-color: #fde68a;
+        }
+        .badge-pill.silver {
+          background: #f8fafc;
+          color: #475569;
+          border-color: #e2e8f0;
+        }
+        .badge-pill.bronze {
+          background: #fff7ed;
+          color: #c2410c;
+          border-color: #fed7aa;
+        }
+        .badge-emoji {
+          font-size: 0.85rem;
+          line-height: 1;
+        }
+
+        /* ── No Records Empty State ── */
+        .no-records-card {
+          max-width: 480px;
+          margin: 2.5rem auto 1rem;
+          padding: 3rem 2rem;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 24px;
+          text-align: center;
+          box-shadow: 
+            0 12px 30px -10px rgba(0, 0, 0, 0.04),
+            0 8px 20px -12px rgba(0, 0, 0, 0.03);
+          transition: all 0.3s ease;
+        }
+        .no-records-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 
+            0 16px 36px -8px rgba(0, 0, 0, 0.06),
+            0 10px 24px -10px rgba(0, 0, 0, 0.04);
+        }
+        .no-records-icon {
+          font-size: 3.25rem;
+          margin-bottom: 1.25rem;
+          display: inline-block;
+          animation: noRecordsFloat 3s ease-in-out infinite;
+        }
+        .no-records-title {
+          font-family: var(--font-heading), sans-serif;
+          font-size: 1.35rem;
+          font-weight: 900;
+          color: #0f172a;
+          margin: 0 0 0.5rem;
+        }
+        .no-records-desc {
+          font-size: 0.9rem;
+          color: #64748b;
+          line-height: 1.55;
+          margin: 0;
+          font-weight: 500;
+        }
+        @keyframes noRecordsFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
         }
       `}</style>
     </div>

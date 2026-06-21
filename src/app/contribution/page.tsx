@@ -165,10 +165,29 @@ export default function ContributionPage() {
     const formattedDate = new Date().toISOString().split('T')[0];
     const formattedTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+    let userId = null;
+    let userEmail = null;
+    let username = null;
+    let userPhone = '';
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          userId = parsed.id || null;
+          userEmail = parsed.email || null;
+          username = parsed.username || null;
+          userPhone = parsed.phone || '';
+        } catch (e) {
+          console.error('Failed to parse user in contribution page:', e);
+        }
+      }
+    }
+
     const attendeesObj = {
       "SUPPORTER": {
         name: supporterName,
-        whatsapp: "",
+        whatsapp: userPhone,
         vpName: vpName,
         vpImage: vpImageUrl,
         designation: designation
@@ -191,38 +210,19 @@ export default function ContributionPage() {
       attendeeDetails: attendeesObj,
       bookerName: supporterName,
       bookerMemberId: 'SUPPORTER',
-      bookerPhone: '',
+      bookerPhone: userPhone,
       bookerVpName: vpName,
       utrNumber,
+      userId,
+      userEmail,
+      username,
     };
-
-    let userId = null;
-    let userEmail = null;
-    let username = null;
-    if (typeof window !== 'undefined') {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          const parsed = JSON.parse(storedUser);
-          userId = parsed.id || null;
-          userEmail = parsed.email || null;
-          username = parsed.username || null;
-        } catch (e) {
-          console.error('Failed to parse user in contribution page:', e);
-        }
-      }
-    }
 
     try {
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...payload,
-          userId,
-          userEmail,
-          username,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
