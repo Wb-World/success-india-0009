@@ -369,140 +369,160 @@ export default function Home() {
                 {/* Part 1: CED PV Achievers */}
                 <div className="achiever-panel">
                   <div className="panel-header">
-                    <h3 className="panel-designation">CHIEF EXECUTIVE DIRECTOR</h3>
+                    <h3 className="panel-designation">STAR OF CHIEF EXECUTIVE DIRECTOR</h3>
                     <h4 className="panel-category pv-color">TOP 3 PV ACHIEVERS</h4>
                   </div>
                   <div className="medals-row">
-                    {achieversData.pv.ced.map((item, i) => (
-                      <div key={`pv-ced-${item.rank}`} className="medal-col">
-                        <div className={`medal-circle medal-${item.tier}`}>
-                          {item.image ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.image} alt={item.name} className="medal-face-img" />
+                    {achieversData.pv.ced.map((item, i) => {
+                      const hasData = item.image || item.name?.trim();
+                      return (
+                        <div key={`pv-ced-${item.rank}`} className="medal-col">
+                          {!hasData ? (
+                            <div className="achiever-empty-slot">
+                              <span>No Record Found</span>
+                            </div>
                           ) : (
-                            <span className="medal-no-img-fallback">No Record Found</span>
+                            <>
+                              {item.image && (
+                                <div className="achiever-pro-image-wrapper">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={item.image} alt={item.name} className="achiever-pro-img" />
+                                </div>
+                              )}
+                              {item.name?.trim() && (
+                                <span className="medal-achiever-name">{item.name}</span>
+                              )}
+                              <div className="achiever-pro-badge-wrap" style={{ marginTop: '8px' }}>
+                                <span className={`pro-badge animate-pulse-subtle tier-${i}`}>
+                                  <CheckCircle2 size={14} className="pro-badge-icon" />
+                                  <span>Top Achiever</span>
+                                </span>
+                              </div>
+                            </>
                           )}
-                          <div className="medal-ribbon" />
                         </div>
-                        <span className="medal-achiever-name">
-                          {item.name?.trim() ? item.name : 'No Record Found'}
-                        </span>
-                        <div className="medal-tier-badge" style={{ marginTop: '4px' }}>
-                          {i === 0 ? (
-                            <span className="badge-pill gold"><span className="badge-emoji">👑</span> Gold Achiever</span>
-                          ) : i === 1 ? (
-                            <span className="badge-pill silver"><span className="badge-emoji">🥈</span> Silver Achiever</span>
-                          ) : (
-                            <span className="badge-pill bronze"><span className="badge-emoji">⭐</span> Bronze Achiever</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Part 2: CED Income Achievers */}
                 <div className="achiever-panel">
                   <div className="panel-header">
-                    <h3 className="panel-designation">CHIEF EXECUTIVE DIRECTOR</h3>
+                    <h3 className="panel-designation">STAR OF CHIEF EXECUTIVE DIRECTOR</h3>
                     <h4 className="panel-category income-color">TOP 3 INCOME ACHIEVERS</h4>
                   </div>
                   <div className="medals-row">
-                    {achieversData.income.ced.map((item, i) => (
-                      <div key={`income-ced-${item.rank}`} className="medal-col">
-                        <div className={`medal-circle medal-${item.tier}`}>
-                          {item.image ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.image} alt={item.name} className="medal-face-img" />
+                    {achieversData.income.ced.map((item, i) => {
+                      const hasData = item.image || item.name?.trim();
+                      return (
+                        <div key={`income-ced-${item.rank}`} className="medal-col">
+                          {!hasData ? (
+                            <div className="achiever-empty-slot">
+                              <span>No Record Found</span>
+                            </div>
                           ) : (
-                            <span className="medal-no-img-fallback">No Record Found</span>
+                            <>
+                              {item.image && (
+                                <div className="achiever-pro-image-wrapper">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={item.image} alt={item.name} className="achiever-pro-img" />
+                                </div>
+                              )}
+                              {item.name?.trim() && (
+                                <span className="medal-achiever-name">{item.name}</span>
+                              )}
+                              <div className="achiever-pro-badge-wrap" style={{ marginTop: '8px' }}>
+                                <span className={`pro-badge animate-pulse-subtle tier-${i}`}>
+                                  <CheckCircle2 size={14} className="pro-badge-icon" />
+                                  <span>Top Achiever</span>
+                                </span>
+                              </div>
+                            </>
                           )}
-                          <div className="medal-ribbon" />
                         </div>
-                        <span className="medal-achiever-name">
-                          {item.name?.trim() ? item.name : 'No Record Found'}
-                        </span>
-                        <div className="medal-tier-badge" style={{ marginTop: '4px' }}>
-                          {i === 0 ? (
-                            <span className="badge-pill gold"><span className="badge-emoji">👑</span> Gold Achiever</span>
-                          ) : i === 1 ? (
-                            <span className="badge-pill silver"><span className="badge-emoji">🥈</span> Silver Achiever</span>
-                          ) : (
-                            <span className="badge-pill bronze"><span className="badge-emoji">⭐</span> Bronze Achiever</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Part 3: ED PV Achievers */}
                 <div className="achiever-panel">
                   <div className="panel-header">
-                    <h3 className="panel-designation">EXECUTIVE DIRECTOR</h3>
+                    <h3 className="panel-designation">STAR OF EXECUTIVE DIRECTOR</h3>
                     <h4 className="panel-category pv-color">TOP 3 PV ACHIEVERS</h4>
                   </div>
                   <div className="medals-row">
-                    {achieversData.pv.ed.map((item, i) => (
-                      <div key={`pv-ed-${item.rank}`} className="medal-col">
-                        <div className={`medal-circle medal-${item.tier}`}>
-                          {item.image ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.image} alt={item.name} className="medal-face-img" />
+                    {achieversData.pv.ed.map((item, i) => {
+                      const hasData = item.image || item.name?.trim();
+                      return (
+                        <div key={`pv-ed-${item.rank}`} className="medal-col">
+                          {!hasData ? (
+                            <div className="achiever-empty-slot">
+                              <span>No Record Found</span>
+                            </div>
                           ) : (
-                            <span className="medal-no-img-fallback">No Record Found</span>
+                            <>
+                              {item.image && (
+                                <div className="achiever-pro-image-wrapper">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={item.image} alt={item.name} className="achiever-pro-img" />
+                                </div>
+                              )}
+                              {item.name?.trim() && (
+                                <span className="medal-achiever-name">{item.name}</span>
+                              )}
+                              <div className="achiever-pro-badge-wrap" style={{ marginTop: '8px' }}>
+                                <span className={`pro-badge animate-pulse-subtle tier-${i}`}>
+                                  <CheckCircle2 size={14} className="pro-badge-icon" />
+                                  <span>Top Achiever</span>
+                                </span>
+                              </div>
+                            </>
                           )}
-                          <div className="medal-ribbon" />
                         </div>
-                        <span className="medal-achiever-name">
-                          {item.name?.trim() ? item.name : 'No Record Found'}
-                        </span>
-                        <div className="medal-tier-badge" style={{ marginTop: '4px' }}>
-                          {i === 0 ? (
-                            <span className="badge-pill gold"><span className="badge-emoji">👑</span> Gold Achiever</span>
-                          ) : i === 1 ? (
-                            <span className="badge-pill silver"><span className="badge-emoji">🥈</span> Silver Achiever</span>
-                          ) : (
-                            <span className="badge-pill bronze"><span className="badge-emoji">⭐</span> Bronze Achiever</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Part 4: ED Income Achievers */}
                 <div className="achiever-panel">
                   <div className="panel-header">
-                    <h3 className="panel-designation">EXECUTIVE DIRECTOR</h3>
+                    <h3 className="panel-designation">STAR OF EXECUTIVE DIRECTOR</h3>
                     <h4 className="panel-category income-color">TOP 3 INCOME ACHIEVERS</h4>
                   </div>
                   <div className="medals-row">
-                    {achieversData.income.ed.map((item, i) => (
-                      <div key={`income-ed-${item.rank}`} className="medal-col">
-                        <div className={`medal-circle medal-${item.tier}`}>
-                          {item.image ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.image} alt={item.name} className="medal-face-img" />
+                    {achieversData.income.ed.map((item, i) => {
+                      const hasData = item.image || item.name?.trim();
+                      return (
+                        <div key={`income-ed-${item.rank}`} className="medal-col">
+                          {!hasData ? (
+                            <div className="achiever-empty-slot">
+                              <span>No Record Found</span>
+                            </div>
                           ) : (
-                            <span className="medal-no-img-fallback">No Record Found</span>
+                            <>
+                              {item.image && (
+                                <div className="achiever-pro-image-wrapper">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={item.image} alt={item.name} className="achiever-pro-img" />
+                                </div>
+                              )}
+                              {item.name?.trim() && (
+                                <span className="medal-achiever-name">{item.name}</span>
+                              )}
+                              <div className="achiever-pro-badge-wrap" style={{ marginTop: '8px' }}>
+                                <span className={`pro-badge animate-pulse-subtle tier-${i}`}>
+                                  <CheckCircle2 size={14} className="pro-badge-icon" />
+                                  <span>Top Achiever</span>
+                                </span>
+                              </div>
+                            </>
                           )}
-                          <div className="medal-ribbon" />
                         </div>
-                        <span className="medal-achiever-name">
-                          {item.name?.trim() ? item.name : 'No Record Found'}
-                        </span>
-                        <div className="medal-tier-badge" style={{ marginTop: '4px' }}>
-                          {i === 0 ? (
-                            <span className="badge-pill gold"><span className="badge-emoji">👑</span> Gold Achiever</span>
-                          ) : i === 1 ? (
-                            <span className="badge-pill silver"><span className="badge-emoji">🥈</span> Silver Achiever</span>
-                          ) : (
-                            <span className="badge-pill bronze"><span className="badge-emoji">⭐</span> Bronze Achiever</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1495,79 +1515,62 @@ export default function Home() {
           text-align: center;
         }
 
-        /* Gold, Silver, Bronze medals styling */
-        .medal-circle {
-          width: 86px;
-          height: 86px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 1.15rem;
-          position: relative;
-          box-shadow: 
-            0 8px 18px rgba(0, 0, 0, 0.15),
-            inset 0 -4px 8px rgba(0, 0, 0, 0.2),
-            inset 0 4px 8px rgba(255, 255, 255, 0.45);
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .medal-circle:hover {
-          transform: translateY(-5px) scale(1.06);
-          box-shadow: 
-            0 12px 24px rgba(0, 0, 0, 0.18),
-            inset 0 -4px 8px rgba(0, 0, 0, 0.2),
-            inset 0 4px 8px rgba(255, 255, 255, 0.45);
-        }
 
-        .medal-gold {
-          background: radial-gradient(circle at 35% 35%, #fff6cc 0%, #f1c40f 50%, #d4ac0d 80%, #9a7d0a 100%);
-          border: 4px solid #ffd700;
-        }
-        .medal-silver {
-          background: radial-gradient(circle at 35% 35%, #ffffff 0%, #d5dbdb 50%, #bdc3c7 80%, #7f8c8d 100%);
-          border: 4px solid #d2d4d4;
-        }
-        .medal-bronze {
-          background: radial-gradient(circle at 35% 35%, #f9ebd2 0%, #e59866 50%, #ca6f1e 80%, #873600 100%);
-          border: 4px solid #d35400;
-        }
-
-        .medal-rank {
-          font-family: var(--font-heading), sans-serif;
-          font-size: 1.85rem;
-          font-weight: 900;
-          color: #ffffff;
-          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
-          z-index: 2;
-        }
-        .medal-circle::before {
-          content: '';
-          position: absolute;
-          top: 4px;
-          left: 4px;
-          right: 4px;
-          bottom: 4px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 50%);
-          z-index: 1;
-          pointer-events: none;
-        }
-
-        /* Ribbon hanging effect */
-        .medal-ribbon {
-          position: absolute;
-          bottom: -10px;
-          width: 32px;
-          height: 18px;
-          z-index: -1;
-          clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 70%, 0 100%);
-        }
-        .medal-gold .medal-ribbon {
-          background: linear-gradient(to right, #e74c3c 50%, #c0392b 50%);
-@media (max-width: 640px) {
+        @media (max-width: 640px) {
           .contributors-carousel-section {
             padding: 4.5rem 1.25rem;
           }
+        }
+
+        /* Achiever Photo Frame & Image */
+        .achiever-pro-image-wrapper {
+          width: 120px;
+          height: 140px;
+          border-radius: 12px;
+          overflow: hidden;
+          background: #f8fafc;
+          border: 3px solid #ffffff;
+          box-shadow: 0 8px 16px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+          margin-bottom: 0.75rem;
+          position: relative;
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+        }
+
+        .achiever-pro-image-wrapper:hover {
+          transform: translateY(-4px) scale(1.02);
+          box-shadow: 0 12px 24px rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.08);
+          border-color: #10b981;
+        }
+
+        .achiever-pro-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        /* Empty Slot Style */
+        .achiever-empty-slot {
+          width: 100px;
+          height: 120px;
+          border-radius: 12px;
+          background: #f1f5f9;
+          border: 2px dashed #cbd5e1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          margin-bottom: 0.75rem;
+        }
+
+        .achiever-empty-slot span {
+          font-family: var(--font-heading), sans-serif;
+          font-size: 0.65rem;
+          font-weight: 800;
+          color: #94a3b8;
+          text-transform: uppercase;
+          line-height: 1.2;
+          padding: 8px;
         }
 
         /* ── Achievers Grid ── */
@@ -1683,208 +1686,8 @@ export default function Home() {
           justify-content: center;
           align-items: flex-start;
         }
-        .medal-col {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-        }
 
-        /* Gold, Silver, Bronze medals styling */
-        .medal-circle {
-          width: 86px;
-          height: 86px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 1.15rem;
-          position: relative;
-          box-shadow: 
-            0 8px 18px rgba(0, 0, 0, 0.15),
-            inset 0 -4px 8px rgba(0, 0, 0, 0.2),
-            inset 0 4px 8px rgba(255, 255, 255, 0.45);
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .medal-circle:hover {
-          transform: translateY(-5px) scale(1.06);
-          box-shadow: 
-            0 12px 24px rgba(0, 0, 0, 0.18),
-            inset 0 -4px 8px rgba(0, 0, 0, 0.2),
-            inset 0 4px 8px rgba(255, 255, 255, 0.45);
-        }
 
-        .medal-gold {
-          background: radial-gradient(circle at 35% 35%, #fff6cc 0%, #f1c40f 50%, #d4ac0d 80%, #9a7d0a 100%);
-          border: 4px solid #ffd700;
-        }
-        .medal-silver {
-          background: radial-gradient(circle at 35% 35%, #ffffff 0%, #d5dbdb 50%, #bdc3c7 80%, #7f8c8d 100%);
-          border: 4px solid #d2d4d4;
-        }
-        .medal-bronze {
-          background: radial-gradient(circle at 35% 35%, #f9ebd2 0%, #e59866 50%, #ca6f1e 80%, #873600 100%);
-          border: 4px solid #d35400;
-        }
-
-        .medal-rank {
-          font-family: var(--font-heading), sans-serif;
-          font-size: 1.85rem;
-          font-weight: 900;
-          color: #ffffff;
-          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
-          z-index: 2;
-        }
-        .medal-circle::before {
-          content: '';
-          position: absolute;
-          top: 4px;
-          left: 4px;
-          right: 4px;
-          bottom: 4px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 50%);
-          z-index: 1;
-          pointer-events: none;
-        }
-
-        /* Ribbon hanging effect */
-        .medal-ribbon {
-          position: absolute;
-          bottom: -10px;
-          width: 32px;
-          height: 18px;
-          z-index: -1;
-          clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 70%, 0 100%);
-        }
-        .medal-gold .medal-ribbon {
-          background: linear-gradient(to right, #e74c3c 50%, #c0392b 50%);
-        }
-        .medal-silver .medal-ribbon {
-          background: linear-gradient(to right, #3498db 50%, #2980b9 50%);
-        }
-        .medal-bronze .medal-ribbon {
-          background: linear-gradient(to right, #2ecc71 50%, #27ae60 50%);
-        }
-
-        .medal-achiever-name {
-          font-family: var(--font-heading), sans-serif;
-          font-size: 0.88rem;
-          font-weight: 800;
-          color: #1e293b;
-          line-height: 1.25;
-          margin-bottom: 0.15rem;
-          display: block;
-          word-break: break-word;
-          max-width: 100px;
-        }
-        .medal-tier-name {
-          font-size: 0.65rem;
-          font-weight: 800;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-        }
-        .medal-gold + .medal-achiever-name + .medal-tier-name { color: #d4ac0d; }
-        .medal-silver + .medal-achiever-name + .medal-tier-name { color: #7f8c8d; }
-        .medal-bronze + .medal-achiever-name + .medal-tier-name { color: #ca6f1e; }
-
-        /* Medal face image */
-        .medal-face-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          border-radius: 50%;
-          position: relative;
-          z-index: 2;
-        }
-        .medal-rank-fallback {
-          font-family: var(--font-heading), sans-serif;
-          font-size: 1.85rem;
-          font-weight: 900;
-          color: #ffffff;
-          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
-          z-index: 2;
-        }
-        .medal-no-img-fallback {
-          font-family: var(--font-heading), sans-serif;
-          font-size: 0.62rem;
-          font-weight: 800;
-          color: #ffffff;
-          text-shadow: 0 1px 2.5px rgba(0, 0, 0, 0.6);
-          z-index: 2;
-          text-transform: uppercase;
-          text-align: center;
-          line-height: 1.2;
-          padding: 6px;
-          letter-spacing: 0.02em;
-        }
-
-        /* Medal badge overlay - animated medal icon above circle */
-        .medal-badge-overlay {
-          position: absolute;
-          top: -16px;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 10;
-          pointer-events: none;
-        }
-        .medal-icon-crown {
-          font-size: 1.35rem;
-          display: block;
-          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-          animation: medalPulse 1.8s ease-in-out infinite;
-        }
-        .medal-icon-award {
-          font-size: 1.2rem;
-          display: block;
-          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-          animation: medalPulse 2.2s ease-in-out infinite 0.3s;
-        }
-        .medal-icon-star {
-          font-size: 1.1rem;
-          display: block;
-          filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
-          animation: medalPulse 2.5s ease-in-out infinite 0.6s;
-        }
-        @keyframes medalPulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.25); }
-        }
-
-        /* ── Badge Pills ── */
-        .badge-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.35rem;
-          padding: 0.3rem 0.75rem;
-          border-radius: 9999px;
-          font-size: 0.68rem;
-          font-weight: 850;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
-          white-space: nowrap;
-          border: 1.5px solid transparent;
-        }
-        .badge-pill.gold {
-          background: #fffbeb;
-          color: #b45309;
-          border-color: #fde68a;
-        }
-        .badge-pill.silver {
-          background: #f8fafc;
-          color: #475569;
-          border-color: #e2e8f0;
-        }
-        .badge-pill.bronze {
-          background: #fff7ed;
-          color: #c2410c;
-          border-color: #fed7aa;
-        }
-        .badge-emoji {
-          font-size: 0.85rem;
-          line-height: 1;
-        }
 
         /* ── No Records Empty State ── */
         .no-records-card {

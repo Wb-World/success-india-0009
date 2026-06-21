@@ -1202,13 +1202,13 @@ export default function AdminDashboard() {
             >
               <div className="event-manager-header">
                 <div>
-                  <span className="manager-kicker">Achievers Management</span>
+                  {/* <span className="manager-kicker">Achievers Management</span> */}
                   <h2 className="heading-md">June Month Top Achievers</h2>
                   <p style={{ color: 'var(--muted)', fontSize: '0.88rem', margin: '0.25rem 0 0' }}>Upload face photos and update names for each ranked position.</p>
                 </div>
-                <button type="submit" className="btn btn-primary" disabled={achieversLoading} style={{ height: '44px', minWidth: '160px' }}>
+                {/* <button type="submit" className="btn btn-primary" disabled={achieversLoading} style={{ height: '44px', minWidth: '160px' }}>
                   {achieversLoading ? 'Saving...' : '💾 Save Achievers'}
-                </button>
+                </button> */}
               </div>
               {achieversMessage && (
                 <div style={{ padding: '0.75rem 1rem', borderRadius: '8px', background: achieversMessage.startsWith('✓') ? '#d1fae5' : '#fee2e2', color: achieversMessage.startsWith('✓') ? '#065f46' : '#991b1b', fontSize: '0.88rem', marginBottom: '1.5rem', fontWeight: 600 }}>
@@ -1236,61 +1236,21 @@ export default function AdminDashboard() {
                           </div>
                           <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             {items.map((item: any, i: number) => {
-                              const tierEmoji = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
                               const uploadKey = `${cat}.${lvl}.${i}`;
                               const isUploading = uploadingAchieverKey === uploadKey;
                               return (
                                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#fff', borderRadius: '12px', border: '1px solid var(--border)' }}>
                                   <div style={{ position: 'relative', flexShrink: 0 }}>
-                                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', border: `3px solid ${i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : '#b45309'}`, overflow: 'hidden', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div style={{ width: '72px', height: '72px', borderRadius: '14px', border: `2px dashed ${color}`, overflow: 'hidden', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                       {item.image ? (
                                         // eslint-disable-next-line @next/next/no-img-element
                                         <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                       ) : (
-                                        <span style={{ fontSize: '1.5rem' }}>{tierEmoji}</span>
+                                        <User size={28} color="#cbd5e1" />
                                       )}
                                     </div>
                                     
-                                    {/* Clear Image Button */}
-                                    {item.image && (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setAchieversData((prev: any) => {
-                                            const updated = JSON.parse(JSON.stringify(prev));
-                                            if (updated[cat] && updated[cat][lvl] && updated[cat][lvl][i]) {
-                                              updated[cat][lvl][i].image = '';
-                                            }
-                                            return updated;
-                                          });
-                                          setAchieversMessage('Image cleared. Click Save Achievers to persist.');
-                                        }}
-                                        style={{
-                                          position: 'absolute',
-                                          top: '-4px',
-                                          left: '-4px',
-                                          width: '20px',
-                                          height: '20px',
-                                          borderRadius: '50%',
-                                          background: '#ef4444',
-                                          border: '1.5px solid white',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          cursor: 'pointer',
-                                          color: 'white',
-                                          fontSize: '9px',
-                                          fontWeight: 'bold',
-                                          padding: 0,
-                                          boxShadow: '0 2px 4px rgba(0,0,0,0.12)',
-                                          zIndex: 10
-                                        }}
-                                        title="Remove Image"
-                                      >
-                                        ✕
-                                      </button>
-                                    )}
-
+                                    {/* Clear Image Button Removed as per request */}
                                     <label htmlFor={`upload-${uploadKey}`} style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '22px', height: '22px', borderRadius: '50%', background: color, border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                                       {isUploading ? <span style={{ fontSize: '10px', color: 'white' }}>⏳</span> : <Upload size={10} color="white" />}
                                     </label>
@@ -1307,79 +1267,21 @@ export default function AdminDashboard() {
                                     />
                                   </div>
                                   <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontSize: '0.68rem', color: color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px' }}>Rank #{i + 1} {tierEmoji}</div>
+                                    <div style={{ fontSize: '0.68rem', color: color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px' }}>Achiever</div>
                                     
-                                    {/* User Friendly Name Input with Clear Button */}
+                                    {/* User Friendly Name Input */}
                                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                       <input
                                         type="text"
                                         value={item.name}
                                         onChange={(e) => handleAchieverNameChange(uploadKey, e.target.value)}
-                                        style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '6px', padding: '5px 24px 5px 8px', fontSize: '0.85rem', fontWeight: 700, color: 'var(--foreground)', background: 'transparent', outline: 'none', boxSizing: 'border-box' }}
+                                        style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '6px', padding: '5px 8px', fontSize: '0.85rem', fontWeight: 700, color: 'var(--foreground)', background: 'transparent', outline: 'none', boxSizing: 'border-box' }}
                                         placeholder="Achiever Name"
                                       />
-                                      {item.name && (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleAchieverNameChange(uploadKey, '')}
-                                          style={{
-                                            position: 'absolute',
-                                            right: '8px',
-                                            border: 'none',
-                                            background: 'transparent',
-                                            cursor: 'pointer',
-                                            color: '#94a3b8',
-                                            fontSize: '12px',
-                                            padding: 0,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            width: '16px',
-                                            height: '16px'
-                                          }}
-                                          title="Clear Name"
-                                        >
-                                          ✕
-                                        </button>
-                                      )}
                                     </div>
                                   </div>
                                   
-                                  {/* Reset Card Button */}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setAchieversData((prev: any) => {
-                                        const updated = JSON.parse(JSON.stringify(prev));
-                                        if (updated[cat] && updated[cat][lvl] && updated[cat][lvl][i]) {
-                                          updated[cat][lvl][i].name = '';
-                                          updated[cat][lvl][i].image = '';
-                                        }
-                                        return updated;
-                                      });
-                                      setAchieversMessage('Entry cleared. Click Save Achievers to persist.');
-                                    }}
-                                    style={{
-                                      border: '1px solid #fee2e2',
-                                      background: '#fff5f5',
-                                      color: '#ef4444',
-                                      borderRadius: '6px',
-                                      padding: '6px 8px',
-                                      cursor: 'pointer',
-                                      fontSize: '0.72rem',
-                                      fontWeight: 700,
-                                      height: '32px',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      transition: 'all 0.2s',
-                                      alignSelf: 'flex-end',
-                                      marginBottom: '2px'
-                                    }}
-                                    title="Reset name and photo"
-                                  >
-                                    Reset
-                                  </button>
+                                  {/* Reset Card Button Removed */}
                                 </div>
                               );
                             })}

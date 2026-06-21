@@ -141,7 +141,7 @@ export default function ContributionPage() {
   // Price calculations
   // Chief Executive Director: Base ₹1000
   // Executive Director: Base ₹500
-  const basePrice = designation === 'Chief Executive Director' ? 1000 : 500;
+  const basePrice = designation === 'STAR OF Chief Executive Director' ? 1000 : 500;
   const gstAmount = 0;
   const totalPrice = basePrice;
 
