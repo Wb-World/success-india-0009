@@ -72,6 +72,66 @@ const DEFAULT_ACHIEVERS: AchieversData = {
   }
 };
 
+const GoldBadgeIcon = () => (
+  <svg width="60" height="60" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 4px 8px rgba(218, 165, 32, 0.25))' }}>
+    <path d="M22 36L16 54L27 48L32 54L26 36H22Z" fill="#B47B00" />
+    <path d="M42 36L48 54L37 48L32 54L38 36H42Z" fill="#D29200" />
+    <path d="M18 54L27 48L32 54L23 54Z" fill="#966400" />
+    <path d="M46 54L37 48L32 54L41 54Z" fill="#B47B00" />
+    <circle cx="32" cy="28" r="22" fill="url(#goldGrad)" stroke="#D4AF37" strokeWidth="2.5" />
+    <circle cx="32" cy="28" r="18" stroke="#FFF" strokeWidth="1" strokeDasharray="3 2" strokeOpacity="0.8" />
+    <path d="M32 17L35.5 24.5L43.5 25.5L37.5 31L39.5 39L32 35L24.5 39L26.5 31L20.5 25.5L28.5 24.5L32 17Z" fill="#FFF" />
+    <defs>
+      <linearGradient id="goldGrad" x1="12" y1="8" x2="52" y2="48" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#FFE066" />
+        <stop offset="30%" stopColor="#F5B041" />
+        <stop offset="70%" stopColor="#D4AC0D" />
+        <stop offset="100%" stopColor="#9A7D0A" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
+const SilverBadgeIcon = () => (
+  <svg width="60" height="60" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 4px 8px rgba(148, 163, 184, 0.25))' }}>
+    <path d="M22 36L16 54L27 48L32 54L26 36H22Z" fill="#64748B" />
+    <path d="M42 36L48 54L37 48L32 54L38 36H42Z" fill="#94A3B8" />
+    <path d="M18 54L27 48L32 54L23 54Z" fill="#475569" />
+    <path d="M46 54L37 48L32 54L41 54Z" fill="#64748B" />
+    <circle cx="32" cy="28" r="22" fill="url(#silverGrad)" stroke="#CBD5E1" strokeWidth="2.5" />
+    <circle cx="32" cy="28" r="18" stroke="#FFF" strokeWidth="1" strokeDasharray="3 2" strokeOpacity="0.8" />
+    <path d="M32 17L35.5 24.5L43.5 25.5L37.5 31L39.5 39L32 35L24.5 39L26.5 31L20.5 25.5L28.5 24.5L32 17Z" fill="#FFF" />
+    <defs>
+      <linearGradient id="silverGrad" x1="12" y1="8" x2="52" y2="48" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#F8FAFC" />
+        <stop offset="40%" stopColor="#E2E8F0" />
+        <stop offset="70%" stopColor="#94A3B8" />
+        <stop offset="100%" stopColor="#475569" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
+const BronzeBadgeIcon = () => (
+  <svg width="60" height="60" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 4px 8px rgba(180, 83, 9, 0.25))' }}>
+    <path d="M22 36L16 54L27 48L32 54L26 36H22Z" fill="#7C2D12" />
+    <path d="M42 36L48 54L37 48L32 54L38 36H42Z" fill="#9A3412" />
+    <path d="M18 54L27 48L32 54L23 54Z" fill="#431407" />
+    <path d="M46 54L37 48L32 54L41 54Z" fill="#7C2D12" />
+    <circle cx="32" cy="28" r="22" fill="url(#bronzeGrad)" stroke="#F97316" strokeWidth="2.5" />
+    <circle cx="32" cy="28" r="18" stroke="#FFF" strokeWidth="1" strokeDasharray="3 2" strokeOpacity="0.8" />
+    <path d="M32 17L35.5 24.5L43.5 25.5L37.5 31L39.5 39L32 35L24.5 39L26.5 31L20.5 25.5L28.5 24.5L32 17Z" fill="#FFF" />
+    <defs>
+      <linearGradient id="bronzeGrad" x1="12" y1="8" x2="52" y2="48" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#FFEDD5" />
+        <stop offset="30%" stopColor="#F97316" />
+        <stop offset="70%" stopColor="#C2410C" />
+        <stop offset="100%" stopColor="#7C2D12" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
 export default function Home() {
   const [events, setEvents] = useState<SeminarEvent[]>([]);
   const [supporters, setSupporters] = useState<any[]>([]);
@@ -87,6 +147,54 @@ export default function Home() {
 
   // Modal state
   const [modalEvent, setModalEvent] = useState<SeminarEvent | null>(null);
+
+  const renderAchieverPanel = (
+    items: AchieverItem[],
+    designation: string,
+    categoryLabel: string,
+    categoryClass: string
+  ) => {
+    const hasData = items.some(item => item.image || item.name?.trim());
+
+    return (
+      <div className="achiever-panel">
+        <div className="panel-header">
+          <h3 className="panel-designation">{designation}</h3>
+          <h4 className={`panel-category ${categoryClass}`}>{categoryLabel}</h4>
+        </div>
+        
+        {!hasData ? (
+          <div className="achiever-panel-empty-state">
+            <div className="empty-badge-circle">🏆</div>
+            <span className="empty-badge-text">No Record Found</span>
+          </div>
+        ) : (
+          <div className="medals-row" style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+            {items.map((item, i) => {
+              const hasItemData = item.image || item.name?.trim();
+              if (!hasItemData) return null;
+              return (
+                <div key={`${categoryClass}-${item.rank}`} className="medal-col" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '120px' }}>
+                  {item.image && (
+                    <div className={`achiever-pro-image-wrapper rank-${item.rank}`}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={item.image} alt={item.name} className="achiever-pro-img" />
+                    </div>
+                  )}
+                  {item.name?.trim() && (
+                    <span className="medal-achiever-name">{item.name}</span>
+                  )}
+                  <div className="achiever-rank-badge-wrap" style={{ marginTop: '8px' }}>
+                    {i === 0 ? <GoldBadgeIcon /> : i === 1 ? <SilverBadgeIcon /> : <BronzeBadgeIcon />}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -366,167 +474,10 @@ export default function Home() {
               </div>
             ) : (
               <div className="achievers-grid">
-                {/* Part 1: CED PV Achievers */}
-                <div className="achiever-panel">
-                  <div className="panel-header">
-                    <h3 className="panel-designation">STAR OF CHIEF EXECUTIVE DIRECTOR</h3>
-                    <h4 className="panel-category pv-color">TOP 3 PV ACHIEVERS</h4>
-                  </div>
-                  <div className="medals-row">
-                    {achieversData.pv.ced.map((item, i) => {
-                      const hasData = item.image || item.name?.trim();
-                      return (
-                        <div key={`pv-ced-${item.rank}`} className="medal-col">
-                          {!hasData ? (
-                            <div className="achiever-empty-slot">
-                              <span>No Record Found</span>
-                            </div>
-                          ) : (
-                            <>
-                              {item.image && (
-                                <div className="achiever-pro-image-wrapper">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img src={item.image} alt={item.name} className="achiever-pro-img" />
-                                </div>
-                              )}
-                              {item.name?.trim() && (
-                                <span className="medal-achiever-name">{item.name}</span>
-                              )}
-                              <div className="achiever-pro-badge-wrap" style={{ marginTop: '8px' }}>
-                                <span className={`pro-badge animate-pulse-subtle tier-${i}`}>
-                                  <CheckCircle2 size={14} className="pro-badge-icon" />
-                                  <span>Top Achiever</span>
-                                </span>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Part 2: CED Income Achievers */}
-                <div className="achiever-panel">
-                  <div className="panel-header">
-                    <h3 className="panel-designation">STAR OF CHIEF EXECUTIVE DIRECTOR</h3>
-                    <h4 className="panel-category income-color">TOP 3 INCOME ACHIEVERS</h4>
-                  </div>
-                  <div className="medals-row">
-                    {achieversData.income.ced.map((item, i) => {
-                      const hasData = item.image || item.name?.trim();
-                      return (
-                        <div key={`income-ced-${item.rank}`} className="medal-col">
-                          {!hasData ? (
-                            <div className="achiever-empty-slot">
-                              <span>No Record Found</span>
-                            </div>
-                          ) : (
-                            <>
-                              {item.image && (
-                                <div className="achiever-pro-image-wrapper">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img src={item.image} alt={item.name} className="achiever-pro-img" />
-                                </div>
-                              )}
-                              {item.name?.trim() && (
-                                <span className="medal-achiever-name">{item.name}</span>
-                              )}
-                              <div className="achiever-pro-badge-wrap" style={{ marginTop: '8px' }}>
-                                <span className={`pro-badge animate-pulse-subtle tier-${i}`}>
-                                  <CheckCircle2 size={14} className="pro-badge-icon" />
-                                  <span>Top Achiever</span>
-                                </span>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Part 3: ED PV Achievers */}
-                <div className="achiever-panel">
-                  <div className="panel-header">
-                    <h3 className="panel-designation">STAR OF EXECUTIVE DIRECTOR</h3>
-                    <h4 className="panel-category pv-color">TOP 3 PV ACHIEVERS</h4>
-                  </div>
-                  <div className="medals-row">
-                    {achieversData.pv.ed.map((item, i) => {
-                      const hasData = item.image || item.name?.trim();
-                      return (
-                        <div key={`pv-ed-${item.rank}`} className="medal-col">
-                          {!hasData ? (
-                            <div className="achiever-empty-slot">
-                              <span>No Record Found</span>
-                            </div>
-                          ) : (
-                            <>
-                              {item.image && (
-                                <div className="achiever-pro-image-wrapper">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img src={item.image} alt={item.name} className="achiever-pro-img" />
-                                </div>
-                              )}
-                              {item.name?.trim() && (
-                                <span className="medal-achiever-name">{item.name}</span>
-                              )}
-                              <div className="achiever-pro-badge-wrap" style={{ marginTop: '8px' }}>
-                                <span className={`pro-badge animate-pulse-subtle tier-${i}`}>
-                                  <CheckCircle2 size={14} className="pro-badge-icon" />
-                                  <span>Top Achiever</span>
-                                </span>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Part 4: ED Income Achievers */}
-                <div className="achiever-panel">
-                  <div className="panel-header">
-                    <h3 className="panel-designation">STAR OF EXECUTIVE DIRECTOR</h3>
-                    <h4 className="panel-category income-color">TOP 3 INCOME ACHIEVERS</h4>
-                  </div>
-                  <div className="medals-row">
-                    {achieversData.income.ed.map((item, i) => {
-                      const hasData = item.image || item.name?.trim();
-                      return (
-                        <div key={`income-ed-${item.rank}`} className="medal-col">
-                          {!hasData ? (
-                            <div className="achiever-empty-slot">
-                              <span>No Record Found</span>
-                            </div>
-                          ) : (
-                            <>
-                              {item.image && (
-                                <div className="achiever-pro-image-wrapper">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img src={item.image} alt={item.name} className="achiever-pro-img" />
-                                </div>
-                              )}
-                              {item.name?.trim() && (
-                                <span className="medal-achiever-name">{item.name}</span>
-                              )}
-                              <div className="achiever-pro-badge-wrap" style={{ marginTop: '8px' }}>
-                                <span className={`pro-badge animate-pulse-subtle tier-${i}`}>
-                                  <CheckCircle2 size={14} className="pro-badge-icon" />
-                                  <span>Top Achiever</span>
-                                </span>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Center Decorative Intersection Emblem on Desktop */}
+                {renderAchieverPanel(achieversData.pv.ced, "STAR OF CHIEF EXECUTIVE DIRECTOR", "TOP 3 PV ACHIEVERS", "pv-color")}
+                {renderAchieverPanel(achieversData.income.ced, "STAR OF CHIEF EXECUTIVE DIRECTOR", "TOP 3 INCOME ACHIEVERS", "income-color")}
+                {renderAchieverPanel(achieversData.pv.ed, "STAR OF EXECUTIVE DIRECTOR", "TOP 3 PV ACHIEVERS", "pv-color")}
+                {renderAchieverPanel(achieversData.income.ed, "STAR OF EXECUTIVE DIRECTOR", "TOP 3 INCOME ACHIEVERS", "income-color")}
                 <div className="achievers-center-badge">🏆</div>
               </div>
             )}
@@ -1573,7 +1524,54 @@ export default function Home() {
           padding: 8px;
         }
 
+        /* Achiever Name - Professional Bold Style */
+        .medal-achiever-name {
+          display: block;
+          font-family: var(--font-heading), 'Inter', sans-serif;
+          font-size: 0.9rem;
+          font-weight: 800;
+          color: #0f172a;
+          letter-spacing: 0.03em;
+          text-transform: uppercase;
+          margin-top: 0.65rem;
+          margin-bottom: 0.15rem;
+          line-height: 1.25;
+          max-width: 110px;
+          word-break: break-word;
+        }
+
+        /* Rank Badge - Gold / Silver / Bronze emoji medal */
+        .achiever-rank-badge-wrap {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 6px;
+        }
+
+        .rank-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.75rem;
+          line-height: 1;
+          filter: drop-shadow(0 3px 8px rgba(0,0,0,0.2));
+          animation: rankBadgePop 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+          transition: transform 0.25s ease;
+          cursor: default;
+        }
+
+        .rank-badge:hover {
+          transform: scale(1.2) rotate(-6deg);
+        }
+
+        @keyframes rankBadgePop {
+          0%   { opacity: 0; transform: scale(0.4) rotate(-20deg); }
+          65%  { transform: scale(1.15) rotate(4deg); }
+          100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+
         /* ── Achievers Grid ── */
+
         .achievers-section {
           padding: 6.5rem 2rem;
           background: #ffffff;
@@ -1732,6 +1730,57 @@ export default function Home() {
         @keyframes noRecordsFloat {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-8px); }
+        }
+
+        .achiever-panel-empty-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 2.25rem 1.5rem;
+          background: #f8fafc;
+          border: 2px dashed #cbd5e1;
+          border-radius: 16px;
+          margin-top: 1rem;
+          width: 240px;
+          margin-left: auto;
+          margin-right: auto;
+          transition: all 0.3s ease;
+        }
+
+        .empty-badge-circle {
+          font-size: 2.2rem;
+          margin-bottom: 0.75rem;
+          filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+          animation: floatTrophy 3s ease-in-out infinite;
+        }
+
+        @keyframes floatTrophy {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+
+        .empty-badge-text {
+          font-family: var(--font-heading), 'Inter', sans-serif;
+          font-size: 0.8rem;
+          font-weight: 800;
+          color: #94a3b8;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        /* Gold, Silver, Bronze borders for images */
+        .achiever-pro-image-wrapper.rank-1 {
+          border: 3px solid #f59e0b !important;
+          box-shadow: 0 0 15px rgba(245, 158, 11, 0.3), 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .achiever-pro-image-wrapper.rank-2 {
+          border: 3px solid #94a3b8 !important;
+          box-shadow: 0 0 15px rgba(148, 163, 184, 0.25), 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .achiever-pro-image-wrapper.rank-3 {
+          border: 3px solid #b45309 !important;
+          box-shadow: 0 0 15px rgba(180, 83, 9, 0.2), 0 4px 10px rgba(0,0,0,0.1);
         }
       `}</style>
     </div>
