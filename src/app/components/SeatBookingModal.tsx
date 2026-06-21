@@ -475,171 +475,328 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   };
 
   const handleDownloadTicket = async () => {
-    const seatsToRender = confirmedData?.seats || selectedSeats;
-    const seatsLength = confirmedData?.seats?.length || selectedSeats.length;
+    const seatsToRender: string[] = confirmedData?.seats || selectedSeats;
+    const seatsLength = seatsToRender.length;
     const priceToRender = confirmedData?.totalPrice || totalPrice;
     const timestampToRender = confirmedData?.timestamp || bookingTimestamp;
-
-    // Build a temporary off-screen ticket element
-    const wrapper = document.createElement('div');
-    wrapper.style.position = 'absolute';
-    wrapper.style.left = '0';
-    wrapper.style.top = '-9999px';
-    wrapper.style.zIndex = '-9999';
-    wrapper.style.background = '#f0fdf4';
-    wrapper.style.padding = '32px';
-    wrapper.style.fontFamily = "'Segoe UI', Arial, sans-serif";
-    wrapper.style.color = '#111827';
-    wrapper.style.width = '640px';
-    wrapper.style.boxSizing = 'border-box';
-
-    const seatsHtml = seatsToRender.map((s: string) => `<span style="background:#dcfce7;color:#047857;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:700;margin:2px;display:inline-block;">${s}</span>`).join('');
     const currentAttendees = confirmedData?.attendees || attendeeDetails;
-    const attendeesHtml = seatsToRender.map((s: string) => {
-      const info = currentAttendees[s];
-      const nameText = typeof info === 'object' && info !== null ? info.name : (info || 'N/A');
-      const phoneText = typeof info === 'object' && info !== null ? (info.whatsapp || info.phone || bookerPhone || '') : '';
-      return `
-        <tr style="border-bottom:1px solid #e5e7eb;">
-          <td style="padding:8px 6px;font-size:12px;color:#374151;text-align:left;font-weight:bold;width:80px;vertical-align:middle;">
-            <span style="background:#10b981;color:#ffffff;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;display:inline-block;">Seat ${s}</span>
-          </td>
-          <td style="padding:8px 6px;font-size:12px;color:#111827;font-weight:600;text-align:left;vertical-align:middle;word-break:break-word;">${nameText}</td>
-          <td style="padding:8px 6px;font-size:12px;color:#4b5563;text-align:right;vertical-align:middle;">${phoneText || '—'}</td>
-        </tr>
-      `;
-    }).join('');
 
-    const statusLabel = bookingStatus === 'approved' ? '✓ CONFIRMED & VERIFIED' : bookingStatus === 'denied' ? '✗ PAYMENT REJECTED' : '✓ PENDING VERIFICATION';
-    const statusBg = bookingStatus === 'approved' ? '#dcfce7' : bookingStatus === 'denied' ? '#fee2e2' : '#fef3c7';
+    const statusLabel = bookingStatus === 'approved'
+      ? '✓ CONFIRMED & VERIFIED'
+      : bookingStatus === 'denied'
+        ? '✗ PAYMENT REJECTED'
+        : '⏳ PENDING VERIFICATION';
     const statusColor = bookingStatus === 'approved' ? '#047857' : bookingStatus === 'denied' ? '#b91c1c' : '#d97706';
-    const explanationText = bookingStatus === 'approved' 
-      ? 'This is a confirmed and verified ticket. Welcome to the Success Team Event!' 
-      : bookingStatus === 'denied' 
-        ? 'This ticket booking payment verification has been rejected by administration. Please check UTR or contact support.' 
-        : 'This is a ticket receipt showing status as Pending Verification. Once approved by administration, it compiles as Confirmed.';
+    const statusBg   = bookingStatus === 'approved' ? '#dcfce7' : bookingStatus === 'denied' ? '#fee2e2' : '#fef3c7';
 
-    wrapper.innerHTML = `
-      <div style="width:576px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.15);box-sizing:border-box;">
-        <div style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:white;padding:32px;text-align:center;">
-          <h1 style="font-size:28px;font-weight:800;letter-spacing:2px;margin:0 0 4px;">SUCCESS TEAM</h1>
-          <p style="font-size:13px;opacity:0.85;margin:0;">Official Event Booking Confirmation</p>
-          <div style="font-size:26px;font-weight:900;letter-spacing:4px;background:rgba(255,255,255,0.15);padding:12px 24px;border-radius:8px;margin:16px auto;display:inline-block;">${bookingId}</div>
-        </div>
-        <div style="padding:32px;box-sizing:border-box;">
-          <div style="text-align:center;margin-bottom:20px;"><span style="display:inline-block;background:${statusBg};color:${statusColor};padding:6px 16px;border-radius:999px;font-weight:700;font-size:14px;">${statusLabel}</span></div>
-          
-          <table style="width:100%;border-collapse:collapse;margin-bottom:20px;table-layout:fixed;">
-            <tbody>
-              <tr style="border-bottom:1px solid #f3f4f6;">
-                <td style="width:30%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Event</td>
-                <td style="width:70%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;word-break:break-word;">${eventName}</td>
-              </tr>
-              <tr style="border-bottom:1px solid #f3f4f6;">
-                <td style="width:30%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Venue</td>
-                <td style="width:70%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;word-break:break-word;">${event.venue}</td>
-              </tr>
-              <tr style="border-bottom:1px solid #f3f4f6;">
-                <td style="width:30%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Date</td>
-                <td style="width:70%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;">${event.eventDate || 'To Be Confirmed'}</td>
-              </tr>
-              <tr style="border-bottom:1px solid #f3f4f6;">
-                <td style="width:30%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Time</td>
-                <td style="width:70%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;">${event.eventTime || '10:00 AM'}</td>
-              </tr>
-              <tr style="border-bottom:1px solid #f3f4f6;">
-                <td style="width:30%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Seats (${seatsLength})</td>
-                <td style="width:70%;padding:12px 0;text-align:right;vertical-align:middle;">
-                  <div style="display:inline-block;text-align:right;">
-                    ${seatsHtml}
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+    // ── Canvas setup ──────────────────────────────────────────────────────────
+    const W = 640;          // logical width  (doubled for retina)
+    const SCALE = 2;        // HiDPI scale
+    const FONT = 'Arial, sans-serif';
 
-          <div style="padding:12px 0;border-bottom:1px solid #f3f4f6;margin-bottom:20px;">
-            <span style="color:#6b7280;font-size:13px;display:block;margin-bottom:8px;text-align:left;font-weight:bold;">Attendee Details:</span>
-            <div style="background:#f9fafb;border-radius:8px;padding:8px 12px;border:1px solid #e5e7eb;">
-              <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
-                <thead>
-                  <tr style="border-bottom:1px solid #d1fae5;background:#ecfdf5;">
-                    <th style="padding:6px;font-size:11px;font-weight:700;text-transform:uppercase;color:#047857;text-align:left;width:80px;">Seat</th>
-                    <th style="padding:6px;font-size:11px;font-weight:700;text-transform:uppercase;color:#047857;text-align:left;">Name</th>
-                    <th style="padding:6px;font-size:11px;font-weight:700;text-transform:uppercase;color:#047857;text-align:right;width:120px;">Phone</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${attendeesHtml}
-                </tbody>
-              </table>
-            </div>
-          </div>
+    // Pre-compute dynamic row heights
+    const HEADER_H   = 140;
+    const STATUS_H   = 44;
+    const INFO_ROWS  = 5;   // Event, Venue, Date, Time, Seats
+    const INFO_ROW_H = 42;
+    const ATTENDEE_HEADER_H = 30;
+    const ATTENDEE_ROW_H = 36;
+    const PRICE_ROWS = 4;
+    const PRICE_ROW_H = 40;
+    const TOTAL_H    = 60;
+    const QR_H       = qrImageUrl ? 200 : 0;
+    const FOOTER_H   = 56;
+    const PAD = 32;
 
-          <table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:12px;">
-            <tbody>
-              <tr style="border-bottom:1px solid #f3f4f6;">
-                <td style="width:40%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Price per Seat</td>
-                <td style="width:60%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;">₹${pricePerSeat}</td>
-              </tr>
-              <tr style="border-bottom:1px solid #f3f4f6;">
-                <td style="width:40%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Base Amount</td>
-                <td style="width:60%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;">₹${seatsLength * pricePerSeat}</td>
-              </tr>
-              <tr style="border-bottom:1px solid #f3f4f6;">
-                <td style="width:40%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">GST (18%)</td>
-                <td style="width:60%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;">₹${Math.round(seatsLength * pricePerSeat * 0.18)}</td>
-              </tr>
-              <tr style="border-bottom:1px solid #f3f4f6;">
-                <td style="width:40%;padding:12px 0;color:#6b7280;font-size:13px;text-align:left;vertical-align:middle;">Booked At</td>
-                <td style="width:60%;padding:12px 0;font-weight:600;color:#111827;text-align:right;vertical-align:middle;">${timestampToRender}</td>
-              </tr>
-            </tbody>
-          </table>
+    const ATTENDEES_H = ATTENDEE_HEADER_H + seatsLength * ATTENDEE_ROW_H + 24;
+    const H = HEADER_H + STATUS_H + (INFO_ROWS * INFO_ROW_H) + ATTENDEES_H + (PRICE_ROWS * PRICE_ROW_H) + TOTAL_H + QR_H + FOOTER_H + PAD * 3;
 
-          <div style="background:#ecfdf5;border-radius:8px;padding:16px;margin-top:16px;display:table;width:100%;box-sizing:border-box;">
-            <div style="display:table-row;">
-              <div style="display:table-cell;font-size:15px;font-weight:600;color:#374151;text-align:left;vertical-align:middle;">Grand Total (with GST)</div>
-              <div style="display:table-cell;font-size:24px;font-weight:800;color:#10b981;text-align:right;vertical-align:middle;">₹${priceToRender}</div>
-            </div>
-          </div>
-        </div>
-        ${qrImageUrl ? `<div style="text-align:center;padding:24px;border-top:2px dashed #a7f3d0;"><img src="${qrImageUrl}" alt="QR Code" width="160" height="160" crossorigin="anonymous" style="display:block;margin:0 auto;" /><p style="font-size:12px;color:#9ca3af;margin-top:8px;">Scan QR code for verification</p></div>` : ''}
-        <div style="text-align:center;font-size:12px;color:#9ca3af;padding:16px 32px;background:#f9fafb;">${explanationText}</div>
-      </div>
-    `;
+    const canvas = document.createElement('canvas');
+    canvas.width  = W * SCALE;
+    canvas.height = H * SCALE;
+    const ctx = canvas.getContext('2d')!;
+    ctx.scale(SCALE, SCALE);
 
-    document.body.appendChild(wrapper);
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    const roundRect = (x: number, y: number, w: number, h: number, r: number) => {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    };
 
-    // Pre-load all image assets inside the wrapper
-    const images = Array.from(wrapper.getElementsByTagName('img'));
-    await Promise.all(
-      images.map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise(resolve => {
-          img.onload = resolve;
-          img.onerror = resolve;
-        });
-      })
-    );
-    await new Promise(r => setTimeout(r, 200));
+    const fillText = (text: string, x: number, y: number, maxWidth?: number) => {
+      ctx.fillText(text, x, y, maxWidth);
+    };
 
-    try {
-      const canvas = await html2canvas(wrapper, {
-        useCORS: true,
-        backgroundColor: '#f0fdf4',
-        scale: 2,
-        logging: false,
-        width: 640,
-        windowWidth: 640,
-      });
-      const link = document.createElement('a');
-      link.download = `SuccessTeam-Ticket-${bookingId}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    } finally {
-      document.body.removeChild(wrapper);
+    const divider = (y: number, alpha = 0.12) => {
+      ctx.save();
+      ctx.strokeStyle = `rgba(0,0,0,${alpha})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(PAD, y);
+      ctx.lineTo(W - PAD, y);
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    // ── Background ───────────────────────────────────────────────────────────
+    ctx.fillStyle = '#f0fdf4';
+    ctx.fillRect(0, 0, W, H);
+
+    // Outer card
+    roundRect(12, 12, W - 24, H - 24, 16);
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(0,0,0,0.18)';
+    ctx.shadowBlur = 24;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // ── Header gradient ───────────────────────────────────────────────────────
+    const grad = ctx.createLinearGradient(12, 12, W - 12, HEADER_H);
+    grad.addColorStop(0, '#10b981');
+    grad.addColorStop(1, '#059669');
+    roundRect(12, 12, W - 24, HEADER_H, 16);
+    // Clip top rounded corners only (re-draw rect below header as square)
+    ctx.fillStyle = grad;
+    ctx.fill();
+    // Cover bottom corners with straight rectangle
+    ctx.fillStyle = '#059669';
+    ctx.fillRect(12, 12 + HEADER_H / 2, W - 24, HEADER_H / 2);
+
+    // Header text
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `900 26px ${FONT}`;
+    fillText('SUCCESS TEAM', W / 2, 52);
+    ctx.font = `400 13px ${FONT}`;
+    ctx.globalAlpha = 0.85;
+    fillText('Official Event Booking Confirmation', W / 2, 74);
+    ctx.globalAlpha = 1;
+
+    // Booking ID pill
+    const pillW = 220; const pillH = 38; const pillX = (W - pillW) / 2; const pillY = 84;
+    roundRect(pillX, pillY, pillW, pillH, 8);
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.fill();
+    ctx.font = `900 22px ${FONT}`;
+    ctx.fillStyle = '#ffffff';
+    ctx.letterSpacing = '4px';
+    fillText(bookingId, W / 2, pillY + 26);
+    ctx.letterSpacing = '0px';
+
+    // ── Status badge ──────────────────────────────────────────────────────────
+    let curY = HEADER_H + 20;
+    const badgeW = ctx.measureText(statusLabel).width + 48;
+    const badgeX = (W - badgeW) / 2;
+    roundRect(badgeX, curY, badgeW, 28, 14);
+    ctx.fillStyle = statusBg;
+    ctx.fill();
+    ctx.font = `700 13px ${FONT}`;
+    ctx.fillStyle = statusColor;
+    ctx.textAlign = 'center';
+    fillText(statusLabel, W / 2, curY + 19);
+
+    curY += STATUS_H + 8;
+    divider(curY);
+    curY += 8;
+
+    // ── Info rows (label left, value right) ───────────────────────────────────
+    const infoRows: [string, string][] = [
+      ['Event',            eventName],
+      ['Venue',            event.venue],
+      ['Date',             event.eventDate || 'To Be Confirmed'],
+      ['Time',             event.eventTime || '10:00 AM'],
+      ['Seats',            seatsToRender.join(', ')],
+    ];
+
+    for (const [label, value] of infoRows) {
+      ctx.font = `400 13px ${FONT}`;
+      ctx.fillStyle = '#6b7280';
+      ctx.textAlign = 'left';
+      fillText(label, PAD, curY + 26);
+
+      ctx.font = `600 13px ${FONT}`;
+      ctx.fillStyle = '#111827';
+      ctx.textAlign = 'right';
+      // Truncate long values
+      const maxW = W - PAD * 2 - 120;
+      fillText(value, W - PAD, curY + 26, maxW);
+
+      divider(curY + INFO_ROW_H);
+      curY += INFO_ROW_H;
     }
+
+    curY += 12;
+
+    // ── Attendee table ────────────────────────────────────────────────────────
+    ctx.font = `700 12px ${FONT}`;
+    ctx.fillStyle = '#6b7280';
+    ctx.textAlign = 'left';
+    fillText('ATTENDEE DETAILS', PAD, curY + 14);
+    curY += 22;
+
+    // Table header bg
+    ctx.fillStyle = '#ecfdf5';
+    ctx.fillRect(PAD, curY, W - PAD * 2, ATTENDEE_HEADER_H);
+    ctx.font = `700 11px ${FONT}`;
+    ctx.fillStyle = '#047857';
+    ctx.textAlign = 'left';
+    fillText('SEAT',  PAD + 8,       curY + 20);
+    fillText('NAME',  PAD + 90,      curY + 20);
+    ctx.textAlign = 'right';
+    fillText('PHONE', W - PAD - 8,   curY + 20);
+    curY += ATTENDEE_HEADER_H;
+
+    for (const s of seatsToRender) {
+      const info = currentAttendees[s];
+      const nameText  = typeof info === 'object' && info !== null ? info.name : (info || 'N/A');
+      const phoneText = typeof info === 'object' && info !== null ? (info.whatsapp || info.phone || bookerPhone || '') : '';
+
+      // Seat pill
+      roundRect(PAD + 4, curY + 8, 66, 20, 10);
+      ctx.fillStyle = '#10b981';
+      ctx.fill();
+      ctx.font = `700 11px ${FONT}`;
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      fillText(`Seat ${s}`, PAD + 37, curY + 22);
+
+      ctx.font = `600 12px ${FONT}`;
+      ctx.fillStyle = '#111827';
+      ctx.textAlign = 'left';
+      fillText(nameText,  PAD + 90,    curY + 22, W - PAD * 2 - 220);
+
+      ctx.fillStyle = '#4b5563';
+      ctx.textAlign = 'right';
+      fillText(phoneText || '—', W - PAD - 8, curY + 22);
+
+      divider(curY + ATTENDEE_ROW_H, 0.07);
+      curY += ATTENDEE_ROW_H;
+    }
+
+    curY += 12;
+    divider(curY);
+    curY += 8;
+
+    // ── Price rows ────────────────────────────────────────────────────────────
+    const priceRows: [string, string][] = [
+      ['Price per Seat',   `\u20B9${pricePerSeat}`],
+      ['Base Amount',      `\u20B9${seatsLength * pricePerSeat}`],
+      ['GST (18%)',        `\u20B9${Math.round(seatsLength * pricePerSeat * 0.18)}`],
+      ['Booked At',        timestampToRender || '—'],
+    ];
+
+    for (const [label, value] of priceRows) {
+      ctx.font = `400 13px ${FONT}`;
+      ctx.fillStyle = '#6b7280';
+      ctx.textAlign = 'left';
+      fillText(label, PAD, curY + 26);
+
+      ctx.font = `600 13px ${FONT}`;
+      ctx.fillStyle = '#111827';
+      ctx.textAlign = 'right';
+      fillText(value, W - PAD, curY + 26);
+
+      divider(curY + PRICE_ROW_H);
+      curY += PRICE_ROW_H;
+    }
+
+    curY += 8;
+
+    // ── Grand Total ───────────────────────────────────────────────────────────
+    ctx.fillStyle = '#ecfdf5';
+    ctx.fillRect(PAD, curY, W - PAD * 2, TOTAL_H);
+
+    ctx.font = `600 15px ${FONT}`;
+    ctx.fillStyle = '#374151';
+    ctx.textAlign = 'left';
+    fillText('Grand Total (incl. GST)', PAD + 12, curY + 36);
+
+    ctx.font = `800 24px ${FONT}`;
+    ctx.fillStyle = '#10b981';
+    ctx.textAlign = 'right';
+    fillText(`\u20B9${priceToRender}`, W - PAD - 12, curY + 38);
+
+    curY += TOTAL_H + 16;
+
+    // ── QR Code ───────────────────────────────────────────────────────────────
+    if (qrImageUrl) {
+      await new Promise<void>((resolve) => {
+        const qrImg = new Image();
+        qrImg.crossOrigin = 'anonymous';
+        qrImg.onload = () => {
+          const qrSize = 160;
+          const qrX = (W - qrSize) / 2;
+          // Dashed divider
+          ctx.setLineDash([6, 4]);
+          ctx.strokeStyle = '#a7f3d0';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(PAD, curY);
+          ctx.lineTo(W - PAD, curY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          curY += 16;
+
+          ctx.drawImage(qrImg, qrX, curY, qrSize, qrSize);
+          curY += qrSize + 8;
+
+          ctx.font = `400 12px ${FONT}`;
+          ctx.fillStyle = '#9ca3af';
+          ctx.textAlign = 'center';
+          fillText('Scan QR code for verification', W / 2, curY + 14);
+          curY += 28;
+          resolve();
+        };
+        qrImg.onerror = () => resolve();
+        qrImg.src = qrImageUrl;
+      });
+    }
+
+    curY += 8;
+
+    // ── Footer ────────────────────────────────────────────────────────────────
+    ctx.fillStyle = '#f9fafb';
+    ctx.fillRect(12, curY, W - 24, H - curY - 12);
+
+    // Round bottom corners of footer
+    roundRect(12, H - 28, W - 24, 28, 16);
+    ctx.fillStyle = '#f9fafb';
+    ctx.fill();
+
+    const footerNote = bookingStatus === 'approved'
+      ? 'This is a confirmed and verified ticket. Welcome to the Success Team Event!'
+      : bookingStatus === 'denied'
+        ? 'Payment verification rejected by administration. Please contact support.'
+        : 'Booking receipt — status pending admin approval. Confirmation sent upon review.';
+
+    ctx.font = `400 11px ${FONT}`;
+    ctx.fillStyle = '#9ca3af';
+    ctx.textAlign = 'center';
+    // Word-wrap footer note across two lines
+    const words = footerNote.split(' ');
+    let line = ''; const lines: string[] = [];
+    for (const w of words) {
+      const test = line ? `${line} ${w}` : w;
+      if (ctx.measureText(test).width > W - PAD * 2) { lines.push(line); line = w; }
+      else { line = test; }
+    }
+    if (line) lines.push(line);
+    lines.forEach((l, idx) => fillText(l, W / 2, curY + 18 + idx * 16));
+
+    // ── Download ──────────────────────────────────────────────────────────────
+    const link = document.createElement('a');
+    link.download = `SuccessTeam-Ticket-${bookingId}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
   };
 
   const handlePrint = () => window.print();
