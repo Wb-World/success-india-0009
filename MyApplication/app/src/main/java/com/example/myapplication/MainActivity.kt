@@ -127,14 +127,36 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
 
     private fun parsePipeFormattedQr(qrData: String): Map<String, String>? {
         val trimmed = qrData.trim()
-        if (trimmed.contains("BOOKING:") && trimmed.contains("|")) {
+        // Support both new format (BOOKING_ID:) and legacy format (BOOKING:)
+        val hasNewFormat = trimmed.contains("BOOKING_ID:") && trimmed.contains("|")
+        val hasLegacyFormat = trimmed.contains("BOOKING:") && trimmed.contains("|")
+        
+        if (hasNewFormat || hasLegacyFormat) {
             val map = mutableMapOf<String, String>()
             val parts = trimmed.split("|")
             for (part in parts) {
-                val kv = part.split(":", limit = 2)
-                if (kv.size == 2) {
-                    map[kv[0].trim().uppercase()] = kv[1].trim()
+                val colonIdx = part.indexOf(":")
+                if (colonIdx > 0) {
+                    val key = part.substring(0, colonIdx).trim().uppercase()
+                    val value = part.substring(colonIdx + 1).trim()
+                    map[key] = value
                 }
+            }
+            // Normalise: map BOOKING_ID -> BOOKING for internal use
+            if (map.containsKey("BOOKING_ID") && !map.containsKey("BOOKING")) {
+                map["BOOKING"] = map["BOOKING_ID"]!!
+            }
+            // Normalise: map EVENT_NAME -> EVENT
+            if (map.containsKey("EVENT_NAME") && !map.containsKey("EVENT")) {
+                map["EVENT"] = map["EVENT_NAME"]!!
+            }
+            // Normalise: map SEAT -> SEATS
+            if (map.containsKey("SEAT") && !map.containsKey("SEATS")) {
+                map["SEATS"] = map["SEAT"]!!
+            }
+            // Normalise: map ATTENDEE -> ATTENDEES (in Name=X format for compat)
+            if (map.containsKey("ATTENDEE") && !map.containsKey("ATTENDEES")) {
+                map["ATTENDEES"] = "Name=${map["ATTENDEE"]!!}"
             }
             if (map.containsKey("BOOKING")) {
                 return map
@@ -166,22 +188,29 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
     }
 
     private fun showLocalQrDetails(qrDetails: Map<String, String>, note: String) {
-        val event = qrDetails["EVENT"] ?: "—"
-        val seats = qrDetails["SEATS"] ?: "—"
+        // Support new field names with fallback to legacy names
+        val event = qrDetails["EVENT"] ?: qrDetails["EVENT_NAME"] ?: "—"
+        val seats = qrDetails["SEATS"] ?: qrDetails["SEAT"] ?: "—"
         val venue = qrDetails["VENUE"] ?: "—"
         val rawDate = qrDetails["DATE"] ?: "—"
+        val rawTime = qrDetails["TIME"] ?: ""
         val amount = qrDetails["AMOUNT"] ?: "—"
+        val phone = qrDetails["PHONE"] ?: ""
         val qrStatus = qrDetails["STATUS"] ?: "PENDING_VERIFICATION"
-        val bookingId = qrDetails["BOOKING"] ?: "—"
+        val bookingId = qrDetails["BOOKING"] ?: qrDetails["BOOKING_ID"] ?: "—"
 
         val cleanPrice = amount.replace("INR", "").replace("₹", "").trim()
-        val formattedDate = formatDateTime(rawDate)
+        val displayDate = if (rawDate != "—" && rawTime.isNotBlank()) {
+            "$rawDate  •  $rawTime"
+        } else {
+            formatDateTime(rawDate)
+        }
         
         val status: String
         val reason: String
         
         when (qrStatus.uppercase()) {
-            "APPROVED", "VALID", "SUCCESS" -> {
+            "APPROVED", "CONFIRMED", "VALID", "SUCCESS" -> {
                 status = "approved"
                 reason = if (note.isNotBlank()) note else ""
             }
@@ -197,16 +226,21 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
             }
         }
 
+        // Resolve attendee name from ATTENDEES field or ATTENDEE
         val attendeesRaw = qrDetails["ATTENDEES"] ?: ""
-        val attendeeNames = if (attendeesRaw.isNotBlank()) {
-            attendeesRaw.split(",")
-                .map { it.substringAfter("=", "").trim() }
-                .filter { it.isNotBlank() && it != "N/A" }
-                .joinToString(", ")
-        } else {
-            ""
+        val directAttendee = qrDetails["ATTENDEE"] ?: ""
+        val attendeeNames = when {
+            attendeesRaw.isNotBlank() -> {
+                attendeesRaw.split(",")
+                    .map { it.substringAfter("=", "").trim() }
+                    .filter { it.isNotBlank() && it != "N/A" }
+                    .joinToString(", ")
+            }
+            directAttendee.isNotBlank() -> directAttendee
+            else -> ""
         }
         val name = if (attendeeNames.isNotBlank()) attendeeNames else "Ticket Holder"
+        val displayPhone = if (phone.isNotBlank() && phone != "—") phone else ""
 
         showResultDialog(
             status = status,
@@ -217,7 +251,8 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
             price = cleanPrice,
             reason = reason,
             bookingId = bookingId,
-            date = formattedDate
+            date = displayDate,
+            phone = displayPhone
         )
     }
 
@@ -331,7 +366,21 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
             }
         }
 
-        // Try pipe separated
+        // Try new structured format (BOOKING_ID:...)
+        if (trimmed.contains("BOOKING_ID:") && trimmed.contains("|")) {
+            val parts = trimmed.split("|")
+            for (part in parts) {
+                val colonIdx = part.indexOf(":")
+                if (colonIdx > 0) {
+                    val key = part.substring(0, colonIdx).trim().uppercase()
+                    if (key == "BOOKING_ID") {
+                        return part.substring(colonIdx + 1).trim()
+                    }
+                }
+            }
+        }
+
+        // Try legacy pipe separated format (BOOKING:...)
         if (trimmed.contains("BOOKING:") && trimmed.contains("|")) {
             val parts = trimmed.split("|")
             for (part in parts) {
@@ -342,7 +391,7 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
             }
         }
 
-        // Plain string format check
+        // Plain EVT-... string
         if (trimmed.matches(Regex("EVT-\\d{4}-[A-Z0-9]{6,12}"))) {
             return trimmed
         }
@@ -354,8 +403,8 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
     private fun verifyBooking(bookingId: String) {
         Thread {
             try {
-                // PostgREST REST API call
-                val url = "$SUPABASE_URL/rest/v1/bookings?id=eq.${bookingId}&select=*,users(name,email,phone)"
+                // PostgREST REST API call — email column removed
+                val url = "$SUPABASE_URL/rest/v1/bookings?id=eq.${bookingId}&select=*,users(name,phone)"
                 
                 val request = Request.Builder()
                     .url(url)
@@ -416,8 +465,8 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
     private fun verifyBookingInBackground(bookingId: String) {
         Thread {
             try {
-                // PostgREST REST API call
-                val url = "$SUPABASE_URL/rest/v1/bookings?id=eq.${bookingId}&select=*,users(name,email,phone)"
+                // PostgREST REST API call — email column removed
+                val url = "$SUPABASE_URL/rest/v1/bookings?id=eq.${bookingId}&select=*,users(name,phone)"
                 
                 val request = Request.Builder()
                     .url(url)
@@ -633,10 +682,11 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
         price: String,
         reason: String,
         bookingId: String = "—",
-        date: String = "—"
+        date: String = "—",
+        phone: String = ""
     ) {
         val resultDialog = ValidationResultDialogFragment.newInstance(
-            status, name, seminar, venue, seats, price, reason, bookingId, date
+            status, name, seminar, venue, seats, price, reason, bookingId, date, phone
         )
         resultDialog.show(supportFragmentManager, "ValidationResultDialog")
     }

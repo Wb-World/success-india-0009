@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { generateQrSignature } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -148,8 +149,26 @@ export async function POST(request: Request) {
     // Sanitize screenshot URL (strip any pipe-delimited legacy suffix)
     const cleanScreenshot = (screenshot || 'DIRECT_BOOKING').split('|')[0];
 
-    // Build QR payload for ticket validation
-    const qrCodePayload = `BOOKING:${bookingRefId}|EVENT:${resolvedSeminarName}|SEATS:${seats.join(',')}|VENUE:${resolvedVenue}|DATE:${date}|AMOUNT:INR${totalPrice}|STATUS:PENDING_VERIFICATION`;
+    // Build QR payload for ticket validation in structured format with signature
+    const seatStr = seats.join(',');
+    const amountStr = String(totalPrice).replace("INR", "").replace("₹", "").trim();
+    // Resolve primary attendee name
+    const primaryName = (Object.values(attendeeDetails || {}) as any[])[0]?.name || bookerName || '—';
+    const signature = generateQrSignature(bookingRefId, 'PENDING', seatStr, amountStr);
+    
+    const qrCodePayload = [
+      `BOOKING_ID:${bookingRefId}`,
+      `STATUS:PENDING`,
+      `EVENT_NAME:${resolvedSeminarName}`,
+      `DATE:${date}`,
+      `TIME:${time || '10:00 AM'}`,
+      `VENUE:${resolvedVenue}`,
+      `SEAT:${seatStr}`,
+      `ATTENDEE:${primaryName}`,
+      `PHONE:${resolvedBookerPhone || '—'}`,
+      `AMOUNT:${amountStr}`,
+      `SIGNATURE:${signature}`
+    ].join('|');
 
     try {
       let { data: newBooking, error: insertError } = await supabaseAdmin
