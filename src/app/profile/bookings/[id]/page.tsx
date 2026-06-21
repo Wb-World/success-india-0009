@@ -688,7 +688,7 @@ function BookingDetailsContent() {
           flex-shrink: 0;
           width: 200px;
           display: flex;
-          flex-direction: column;
+          flex-direction: row;
           align-items: center;
           justify-content: center;
           padding-left: 2rem;
@@ -713,7 +713,6 @@ function BookingDetailsContent() {
           gap: 0.85rem;
           width: 100%;
           text-align: center;
-          margin: auto 0;
         }
         .tp-qr-label {
           font-size: 0.65rem;
