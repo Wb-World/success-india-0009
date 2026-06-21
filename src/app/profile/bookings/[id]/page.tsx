@@ -19,26 +19,34 @@ function StatusBadge({ status }: { status: string }) {
   const { label, color, bg, border, Icon } = cfg[status] ?? { label: 'Unknown', color: '#64748b', bg: '#f1f5f9', border: '#cbd5e1', Icon: AlertTriangle };
 
   return (
-    <span className="t-status-badge" style={{ background: bg, border: `1.5px solid ${border}`, color, display: 'inline-block', padding: '4px 14px', borderRadius: '9999px' }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', verticalAlign: 'middle' }}>
-        <Icon size={13} style={{ flexShrink: 0 }} />
-        <span style={{ fontSize: '0.72rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: '1' }}>{label}</span>
-      </span>
+    <span className="t-status-badge" style={{
+      background: bg,
+      border: `1.5px solid ${border}`,
+      color,
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '6px',
+      padding: '4px 14px',
+      borderRadius: '9999px',
+      height: 'fit-content',
+      boxSizing: 'border-box'
+    }}>
+      <Icon size={13} style={{ flexShrink: 0 }} />
+      <span style={{ fontSize: '0.72rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: '1.2' }}>{label}</span>
     </span>
   );
 }
 
 function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
-    <div className="t-info-row" style={{ display: 'table', width: '100%', borderCollapse: 'collapse' }}>
-      <div style={{ display: 'table-row' }}>
-        <div className="t-info-icon" style={{ display: 'table-cell', width: '25px', verticalAlign: 'middle', color: '#10b981' }}>
-          <Icon size={15} style={{ display: 'block' }} />
-        </div>
-        <div className="t-info-text" style={{ display: 'table-cell', verticalAlign: 'middle', paddingLeft: '4px', textAlign: 'left' }}>
-          <span className="t-info-label" style={{ display: 'block', fontSize: '0.67rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#94a3b8', lineHeight: '1.2' }}>{label}</span>
-          <span className="t-info-value" style={{ display: 'block', fontSize: '0.88rem', fontWeight: '600', color: '#1e293b', lineHeight: '1.3', wordBreak: 'break-word' }}>{value}</span>
-        </div>
+    <div className="t-info-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.55rem', marginBottom: '0.85rem', boxSizing: 'border-box' }}>
+      <div className="t-info-icon" style={{ color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon size={15} style={{ display: 'block' }} />
+      </div>
+      <div className="t-info-text" style={{ display: 'flex', flexDirection: 'column', gap: '1px', minWidth: 0, textAlign: 'left' }}>
+        <span className="t-info-label" style={{ fontSize: '0.67rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#94a3b8', lineHeight: '1.2' }}>{label}</span>
+        <span className="t-info-value" style={{ fontSize: '0.88rem', fontWeight: '600', color: '#1e293b', lineHeight: '1.3', wordBreak: 'break-word' }}>{value}</span>
       </div>
     </div>
   );
@@ -113,9 +121,9 @@ function BookingDetailsContent() {
       const clone = el.cloneNode(true) as HTMLElement;
       clone.classList.add('tp-desktop');
       clone.style.cssText = `
-        position:fixed;left:-9999px;top:0;z-index:-1;
+        position:absolute;left:0;top:0;opacity:0.001;pointer-events:none;z-index:-9999;
         width:${isSupp ? '600px' : '780px'};border-radius:20px;
-        font-family:system-ui,sans-serif;background:#ffffff;
+        background:#ffffff;
       `;
       document.body.appendChild(clone);
 
@@ -249,17 +257,15 @@ function BookingDetailsContent() {
           <>
             {/* Header */}
             <div className="tp-header">
-              <div className="tp-header-row">
-                <div className="tp-brand-logo-cell">
-                  <img src="/success-india-logo.jpeg" alt="Success Team" className="tp-logo" />
-                </div>
-                <div className="tp-brand-text-cell">
+              <div className="tp-header-left">
+                <img src="/success-india-logo.jpeg" alt="Success Team" className="tp-logo" />
+                <div className="tp-brand-text">
                   <p className="tp-brand-name">SUCCESS TEAM</p>
                   <p className="tp-brand-sub">Official Event Delegate Pass</p>
                 </div>
-                <div className="tp-status-cell">
-                  <StatusBadge status={ticket.status} />
-                </div>
+              </div>
+              <div className="tp-status-cell">
+                <StatusBadge status={ticket.status} />
               </div>
             </div>
 
@@ -279,49 +285,38 @@ function BookingDetailsContent() {
                   <p className="tp-session">{ticket.session}</p>
                 )}
 
-                <table className="tp-details-table">
-                  <tbody>
-                    <tr>
-                      <td className="tp-details-cell">
-                        <InfoRow icon={Hash} label="Booking ID" value={`#${ticket.bookingId?.toUpperCase()}`} />
-                      </td>
-                      <td className="tp-details-cell">
-                        <InfoRow icon={Calendar} label="Date" value={ticket.date} />
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="tp-details-cell">
-                        <InfoRow icon={Clock} label="Time" value={ticket.time} />
-                      </td>
-                      <td className="tp-details-cell">
-                        <InfoRow icon={MapPin} label="Venue" value={ticket.venue} />
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="tp-details-cell">
-                        <InfoRow icon={Ticket} label="Seats" value={ticket.seats?.join(', ') || '—'} />
-                      </td>
-                      <td className="tp-details-cell">
-                        <InfoRow icon={User} label="Booked By" value={ticket.attendeeName} />
-                      </td>
-                    </tr>
-                    {ticket.bookerPhone && ticket.bookerPhone !== '—' && (
-                      <tr>
-                        <td className="tp-details-cell" style={{ borderBottom: 'none' }}>
-                          <InfoRow icon={Phone} label="Phone Number" value={ticket.bookerPhone} />
-                        </td>
-                        <td className="tp-details-cell" style={{ borderBottom: 'none' }}>{/* Balanced empty cell */}</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                <div className="tp-details-grid">
+                  <div className="tp-details-grid-item">
+                    <InfoRow icon={Hash} label="Booking ID" value={`#${ticket.bookingId?.toUpperCase()}`} />
+                  </div>
+                  <div className="tp-details-grid-item">
+                    <InfoRow icon={Calendar} label="Date" value={ticket.date} />
+                  </div>
+                  <div className="tp-details-grid-item">
+                    <InfoRow icon={Clock} label="Time" value={ticket.time} />
+                  </div>
+                  <div className="tp-details-grid-item">
+                    <InfoRow icon={MapPin} label="Venue" value={ticket.venue} />
+                  </div>
+                  <div className="tp-details-grid-item">
+                    <InfoRow icon={Ticket} label="Seats" value={ticket.seats?.join(', ') || '—'} />
+                  </div>
+                  <div className="tp-details-grid-item">
+                    <InfoRow icon={User} label="Booked By" value={ticket.attendeeName} />
+                  </div>
+                  {ticket.bookerPhone && ticket.bookerPhone !== '—' && (
+                    <div className="tp-details-grid-item">
+                      <InfoRow icon={Phone} label="Phone Number" value={ticket.bookerPhone} />
+                    </div>
+                  )}
+                </div>
 
-                {/* Attendees Table */}
+                {/* Attendees Section */}
                 {attendeeEntries.length > 0 && (
                   <div className="tp-attendees">
                     <div className="tp-attendees-head">
-                      <Users size={14} style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle', marginTop: '-2px' }} />
-                      <span style={{ verticalAlign: 'middle' }}>Attendees ({attendeeEntries.length})</span>
+                      <Users size={14} style={{ flexShrink: 0 }} />
+                      <span>Attendees ({attendeeEntries.length})</span>
                     </div>
                     <table className="tp-att-table">
                       <thead>
@@ -339,7 +334,7 @@ function BookingDetailsContent() {
                             </td>
                             <td className="tp-att-col-name tp-att-name">{info.name || '—'}</td>
                             <td className="tp-att-col-phone tp-att-phone">
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', lineHeight: '1.2' }}>
                                 <Phone size={11} style={{ flexShrink: 0 }} />
                                 <span>
                                   {info.phone || (ticket.bookerPhone && ticket.bookerPhone !== '—' ? ticket.bookerPhone : '') || '—'}
@@ -373,7 +368,7 @@ function BookingDetailsContent() {
 
             {/* Footer bar */}
             <div className="tp-footer-bar">
-              <span>This ticket is non-transferable · Valid for one-time entry</span>
+              <span>This ticket is non-transferable - Valid for one-time entry</span>
             </div>
           </>
         )}
@@ -457,6 +452,8 @@ function BookingDetailsContent() {
           overflow: hidden;
           box-shadow: 0 16px 48px rgba(15,23,42,0.09), 0 4px 16px rgba(15,23,42,0.05);
           border: 1px solid #e2e8f0;
+          box-sizing: border-box;
+          width: 100%;
         }
 
         /* Accent bar */
@@ -467,33 +464,19 @@ function BookingDetailsContent() {
 
         /* Header */
         .tp-header {
-          display: table;
-          width: 100%;
-          table-layout: fixed;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
           background: #f8fafc;
           border-bottom: 1px solid #f1f5f9;
           padding: 1.5rem 2rem;
           box-sizing: border-box;
+          width: 100%;
         }
-        .tp-header-row {
-          display: table-row;
-        }
-        .tp-brand-logo-cell {
-          display: table-cell;
-          vertical-align: middle;
-          width: 44px;
-        }
-        .tp-brand-text-cell {
-          display: table-cell;
-          vertical-align: middle;
-          padding-left: 0.8rem;
-          text-align: left;
-        }
-        .tp-status-cell {
-          display: table-cell;
-          vertical-align: middle;
-          text-align: right;
-          width: 160px;
+        .tp-header-left {
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
         }
         .tp-logo {
           width: 44px;
@@ -502,6 +485,9 @@ function BookingDetailsContent() {
           object-fit: cover;
           border: 1.5px solid #e2e8f0;
           display: block;
+        }
+        .tp-brand-text {
+          text-align: left;
         }
         .tp-brand-name {
           font-weight: 900;
@@ -516,6 +502,11 @@ function BookingDetailsContent() {
           color: #64748b;
           margin: 0;
           line-height: 1.2;
+        }
+        .tp-status-cell {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
         }
 
         /* Status badge */
@@ -551,14 +542,11 @@ function BookingDetailsContent() {
 
         /* Body */
         .tp-body {
-          display: table;
+          display: flex;
           width: 100%;
-          table-layout: fixed;
           padding: 2rem;
           box-sizing: border-box;
-        }
-        .tp-body-solo .tp-details {
-          margin-right: 0;
+          gap: 2rem;
         }
 
         /* Event name */
@@ -569,53 +557,32 @@ function BookingDetailsContent() {
           margin: 0 0 0.2rem;
           line-height: 1.2;
           font-family: var(--font-heading, system-ui);
+          text-align: left;
         }
         .tp-session {
           font-size: 0.88rem;
           color: #64748b;
           margin: 0 0 1.5rem;
           font-weight: 500;
+          text-align: left;
         }
 
-        /* Info grid */
-        .tp-grid {
+        /* Details Grid */
+        .tp-details-grid {
           display: flex;
           flex-wrap: wrap;
           margin-bottom: 1.5rem;
-          margin-left: -0.75rem;
-          margin-right: -0.75rem;
+          width: 100%;
         }
-        .t-info-row {
+        .tp-details-grid-item {
           width: 50%;
           box-sizing: border-box;
-          padding-left: 0.75rem;
-          padding-right: 0.75rem;
-          display: flex;
-          align-items: center;
-          padding-bottom: 0.55rem;
-          border-bottom: 1px solid #f1f5f9;
-          margin-bottom: 0.85rem;
+          padding: 0 0.75rem 0 0;
         }
-        .t-info-icon {
-          color: #10b981;
-          flex-shrink: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .t-info-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-        .t-info-label {
-          font-size: 0.67rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: #94a3b8;
-        }
-        .t-info-value {
-          font-size: 0.88rem;
-          font-weight: 600;
-          color: #1e293b;
-          word-break: break-word;
+
+        .tp-details {
+          flex: 1;
+          min-width: 0;
         }
 
         /* Attendees section */
@@ -624,10 +591,13 @@ function BookingDetailsContent() {
           border: 1px solid #bbf7d0;
           border-radius: 12px;
           overflow: hidden;
+          width: 100%;
+          box-sizing: border-box;
         }
         .tp-attendees-head {
           display: flex;
           align-items: center;
+          gap: 6px;
           padding: 0.65rem 1rem;
           background: #dcfce7;
           border-bottom: 1px solid #bbf7d0;
@@ -636,10 +606,6 @@ function BookingDetailsContent() {
           text-transform: uppercase;
           letter-spacing: 0.06em;
           color: #047857;
-        }
-        .tp-attendees-table {
-          display: flex;
-          flex-direction: column;
         }
         .tp-att-table {
           width: 100%;
@@ -677,16 +643,20 @@ function BookingDetailsContent() {
         }
 
         .tp-att-seat {
-          display: inline-block;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           background: #10b981;
           color: white;
           font-size: 0.68rem;
           font-weight: 700;
-          padding: 2px 8px;
+          padding: 3px 8px;
           border-radius: 999px;
           min-width: 36px;
+          height: 18px;
           text-align: center;
-          line-height: 1.2;
+          line-height: 1;
+          box-sizing: border-box;
         }
         .tp-att-name {
           font-size: 0.82rem;
@@ -698,40 +668,26 @@ function BookingDetailsContent() {
           color: #4b5563;
         }
 
-        .tp-details {
-          display: table-cell;
-          vertical-align: top;
-          padding-right: 2rem;
-        }
-        .tp-details-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 1.5rem;
-          table-layout: fixed;
-        }
-        .tp-details-cell {
-          width: 50%;
-          padding: 0.55rem 0.75rem;
-          border-bottom: 1px solid #f1f5f9;
-          vertical-align: middle;
-          box-sizing: border-box;
-          text-align: left;
-        }
-
         /* QR column */
         .tp-qr-col {
-          display: table-cell;
-          vertical-align: middle;
-          border-left: 2px dashed #e2e8f0;
-          padding-left: 2rem;
+          flex-shrink: 0;
           width: 170px;
-          text-align: center;
-        }
-        .tp-qr-wrap {
-          display: inline-flex;
+          display: flex;
           flex-direction: column;
           align-items: center;
+          justify-content: center;
+          border-left: 2px dashed #e2e8f0;
+          padding-left: 2rem;
+          text-align: center;
+          box-sizing: border-box;
+        }
+        .tp-qr-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
           gap: 0.55rem;
+          width: 100%;
           text-align: center;
         }
         .tp-qr-label {
@@ -741,6 +697,9 @@ function BookingDetailsContent() {
           letter-spacing: 0.06em;
           color: #94a3b8;
           margin: 0;
+          display: block;
+          width: 100%;
+          text-align: center;
         }
         .tp-qr-img {
           width: 130px;
@@ -766,6 +725,9 @@ function BookingDetailsContent() {
           font-weight: 700;
           color: #334155;
           margin: 0;
+          display: block;
+          width: 100%;
+          text-align: center;
         }
         .tp-qr-hint {
           font-size: 0.67rem;
@@ -773,16 +735,29 @@ function BookingDetailsContent() {
           color: #94a3b8;
           text-transform: uppercase;
           letter-spacing: 0.02em;
+          display: block;
+          width: 100%;
+          text-align: center;
         }
 
         /* Footer bar */
         .tp-footer-bar {
+          display: flex;
+          align-items: center;
+          justify-content: center;
           padding: 0.75rem 2rem;
           background: #0f172a;
           color: rgba(255,255,255,0.6);
           font-size: 0.72rem;
           font-weight: 500;
           letter-spacing: 0.02em;
+          text-align: center;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        .tp-footer-bar span {
+          display: block;
+          width: 100%;
           text-align: center;
         }
 
@@ -820,6 +795,7 @@ function BookingDetailsContent() {
           box-shadow: 0 16px 48px rgba(15,23,42,0.09);
           max-width: 600px;
           margin: 0 auto;
+          box-sizing: border-box;
         }
         .tp-supporter-body {
           padding: 2.5rem 2.5rem 2.5rem;
@@ -948,42 +924,77 @@ function BookingDetailsContent() {
 
         /* Responsive */
         @media (max-width: 720px) {
+          .tp-ticket:not(.tp-desktop) .tp-header {
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+          }
+          .tp-ticket:not(.tp-desktop) .tp-header-left {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.5rem;
+          }
+          .tp-ticket:not(.tp-desktop) .tp-brand-text {
+            text-align: center;
+          }
+          .tp-ticket:not(.tp-desktop) .tp-status-cell {
+            justify-content: center;
+            width: 100%;
+          }
           .tp-ticket:not(.tp-desktop) .tp-body {
-            display: block;
+            flex-direction: column;
             padding: 1.5rem;
+            gap: 1.5rem;
           }
           .tp-ticket:not(.tp-desktop) .tp-details {
-            display: block;
             padding-right: 0;
           }
           .tp-ticket:not(.tp-desktop) .tp-qr-col {
-            display: block;
-            width: 100%;
             border-left: none;
             border-top: 2px dashed #e2e8f0;
             padding-left: 0;
             padding-top: 1.5rem;
-            text-align: center;
-          }
-          .tp-ticket:not(.tp-desktop) .tp-qr-wrap {
-            display: flex;
             width: 100%;
-            justify-content: center;
           }
-          .tp-ticket:not(.tp-desktop) .t-info-row {
-            width: calc(100% - 1.5rem);
+          .tp-ticket:not(.tp-desktop) .tp-details-grid-item {
+            width: 100%;
+            padding: 0;
           }
-          .tp-ticket:not(.tp-desktop) .tp-header { padding: 1.25rem 1.5rem; }
-          .tp-ticket:not(.tp-desktop) .tp-footer-bar { padding: 0.65rem 1.5rem; }
+          .tp-ticket:not(.tp-desktop) .tp-footer-bar {
+            padding: 0.65rem 1.5rem;
+          }
         }
 
         @media (max-width: 480px) {
-          .tp-ticket:not(.tp-desktop) .tp-event-name { font-size: 1.25rem; }
-          .tp-ticket:not(.tp-desktop) .tp-att-name {
-            font-size: 0.75rem;
+          .tp-ticket:not(.tp-desktop) .tp-event-name {
+            font-size: 1.25rem;
           }
-          .tp-ticket:not(.tp-desktop) .tp-att-phone {
-            font-size: 0.72rem;
+          .tp-ticket:not(.tp-desktop) .tp-att-table {
+            display: block;
+            width: 100%;
+          }
+          .tp-ticket:not(.tp-desktop) .tp-att-table thead {
+            display: none;
+          }
+          .tp-ticket:not(.tp-desktop) .tp-att-table tbody,
+          .tp-ticket:not(.tp-desktop) .tp-att-table tr,
+          .tp-ticket:not(.tp-desktop) .tp-att-table td {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+          }
+          .tp-ticket:not(.tp-desktop) .tp-att-row {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #d1fae5;
+          }
+          .tp-ticket:not(.tp-desktop) .tp-att-row td {
+            padding: 0.25rem 0.5rem;
+            border: none;
+          }
+          .tp-ticket:not(.tp-desktop) .tp-att-col-seat {
+            display: flex;
+            justify-content: flex-start;
           }
         }
       `}</style>
