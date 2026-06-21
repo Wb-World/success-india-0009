@@ -24,8 +24,12 @@ import okhttp3.Request
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
+import android.util.Log
+import com.google.gson.JsonArray
+
 class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListener {
 
+    private val TAG = "QR_VALIDATION"
     private lateinit var binding: ActivityMainBinding
     private val CAMERA_PERMISSION_CODE = 101
     
@@ -312,6 +316,9 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
 
     // Callback when QR code is decoded
     override fun onQRScanned(data: String) {
+        Log.d(TAG, "New QR Scanned. Clearing previous state.")
+        lastScannedQrDetails = null
+        
         val urlMap = parseUrlQr(data)
         val hasLocalData = (urlMap != null && urlMap.containsKey("EVENT"))
         val pipeMap = parsePipeFormattedQr(data)
@@ -322,15 +329,20 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
         if (resolvedMap != null) {
             lastScannedQrDetails = resolvedMap
             bookingId = resolvedMap["BOOKING"] ?: ""
+            
+            Log.d(TAG, "Local data found for Booking ID: $bookingId. Status in QR: ${resolvedMap["STATUS"]}")
+            
             // Show local ticket details instantly (fast!)
             showLocalQrDetails(resolvedMap, "")
-            // Run server status verification in background
+            // Run server status verification in background to get the ABSOLUTE authority status
             verifyBookingInBackground(bookingId)
         } else {
-            lastScannedQrDetails = null
             bookingId = if (urlMap != null) urlMap["BOOKING"] ?: "" else extractBookingId(data)
             
+            Log.d(TAG, "No local data. Extracted Booking ID: $bookingId")
+
             if (bookingId.isBlank()) {
+                Log.w(TAG, "Invalid QR Code: No Booking ID found.")
                 showResultDialog(
                     status = "error",
                     name = "—",
@@ -401,6 +413,7 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
     }
 
     private fun verifyBooking(bookingId: String) {
+        Log.d(TAG, "Starting verification for Booking ID: $bookingId")
         Thread {
             try {
                 // PostgREST REST API call — email column removed
@@ -416,6 +429,8 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
 
                 val response = okHttpClient.newCall(request).execute()
                 val body = response.body?.string() ?: "[]"
+                
+                Log.d(TAG, "Raw API Response for $bookingId: $body")
 
                 mainHandler.post {
                     showLoading(false)
@@ -423,6 +438,7 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                 }
 
             } catch (e: IOException) {
+                Log.e(TAG, "Network error during verification for $bookingId", e)
                 mainHandler.post {
                     showLoading(false)
                     val qrDetails = lastScannedQrDetails
@@ -441,6 +457,7 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                     }
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "Unexpected error during verification for $bookingId", e)
                 mainHandler.post {
                     showLoading(false)
                     val qrDetails = lastScannedQrDetails
@@ -463,6 +480,7 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
     }
 
     private fun verifyBookingInBackground(bookingId: String) {
+        Log.d(TAG, "Starting background verification for Booking ID: $bookingId")
         Thread {
             try {
                 // PostgREST REST API call — email column removed
@@ -479,38 +497,63 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                 val response = okHttpClient.newCall(request).execute()
                 val body = response.body?.string() ?: "[]"
 
+                Log.d(TAG, "Raw Background API Response for $bookingId: $body")
+
                 mainHandler.post {
-                    updateDialogWithServerResult(body)
+                    updateDialogWithServerResult(body, bookingId)
                 }
 
             } catch (e: Exception) {
+                Log.e(TAG, "Background verification failed for $bookingId", e)
                 // Ignore background fetch errors
             }
         }.start()
     }
 
-    private fun updateDialogWithServerResult(jsonBody: String) {
-        try {
+    private fun getFirstBookingFromResponse(jsonBody: String): JsonObject? {
+        val trimmed = jsonBody.trim()
+        if (trimmed.isEmpty()) return null
+        
+        return try {
             val gson = Gson()
-            val array = gson.fromJson(jsonBody, Array<JsonObject>::class.java)
-            if (array != null && array.isNotEmpty()) {
-                val booking = array[0]
+            if (trimmed.startsWith("[")) {
+                Log.d(TAG, "Response type: Array")
+                val array = gson.fromJson(jsonBody, JsonArray::class.java)
+                if (array.size() > 0) array[0].asJsonObject else null
+            } else if (trimmed.startsWith("{")) {
+                Log.d(TAG, "Response type: Object")
+                gson.fromJson(jsonBody, JsonObject::class.java)
+            } else {
+                Log.w(TAG, "Unknown response format: ${trimmed.take(20)}...")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing JSON response", e)
+            throw e
+        }
+    }
+
+    private fun updateDialogWithServerResult(jsonBody: String, bookingId: String) {
+        try {
+            val booking = getFirstBookingFromResponse(jsonBody)
+            if (booking != null) {
                 val status = booking.get("status")?.asString ?: "unknown"
+                Log.d(TAG, "Background update - Booking: $bookingId, Status: $status")
                 
                 val dialog = supportFragmentManager.findFragmentByTag("ValidationResultDialog") as? ValidationResultDialogFragment
                 dialog?.updateStatus(status)
             }
         } catch (e: Exception) {
-            // Ignore
+            Log.e(TAG, "Failed to update dialog with background result for $bookingId", e)
         }
     }
 
     private fun parseResultAndShow(jsonBody: String, bookingId: String) {
         try {
-            val gson = Gson()
-            val array = gson.fromJson(jsonBody, Array<JsonObject>::class.java)
+            val booking = getFirstBookingFromResponse(jsonBody)
 
-            if (array == null || array.isEmpty()) {
+            if (booking == null) {
+                Log.w(TAG, "No booking found for ID: $bookingId")
                 val qrDetails = lastScannedQrDetails
                 if (qrDetails != null) {
                     showLocalQrDetails(qrDetails, "")
@@ -528,8 +571,10 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                 return
             }
 
-            val booking = array[0]
             val status = booking.get("status")?.asString ?: "unknown"
+            Log.d(TAG, "Parsed Status for $bookingId: $status")
+
+            val gson = Gson()
 
             // Get nested user details
             val usersEl = booking.get("users")
@@ -600,10 +645,13 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                 }
             }
 
-            when (status) {
-                "approved" -> {
+            val normalizedStatus = status.lowercase()
+            Log.d(TAG, "Validation Result for $bookingId: $normalizedStatus")
+
+            when (normalizedStatus) {
+                "approved", "confirmed", "valid", "success" -> {
                     showResultDialog(
-                        status = "approved",
+                        status = normalizedStatus,
                         name = resolvedName,
                         seminar = resolvedSeminar,
                         venue = resolvedVenue,
@@ -656,20 +704,16 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
             }
 
         } catch (e: Exception) {
-            val qrDetails = lastScannedQrDetails
-            if (qrDetails != null) {
-                showLocalQrDetails(qrDetails, "Parse error on server response: showing local details")
-            } else {
-                showResultDialog(
-                    status = "error",
-                    name = "—",
-                    seminar = "—",
-                    venue = "—",
-                    seats = "—",
-                    price = "—",
-                    reason = "Error parsing response: ${e.message}"
-                )
-            }
+            Log.e(TAG, "Critical parsing error for $bookingId", e)
+            showResultDialog(
+                status = "error",
+                name = "—",
+                seminar = "—",
+                venue = "—",
+                seats = "—",
+                price = "—",
+                reason = "Verification Service Unavailable\n(Error parsing response)"
+            )
         }
     }
 

@@ -19,22 +19,23 @@ function StatusBadge({ status }: { status: string }) {
   const { label, color, bg, border, Icon } = cfg[status] ?? { label: 'Unknown', color: '#64748b', bg: '#f1f5f9', border: '#cbd5e1', Icon: AlertTriangle };
 
   return (
-    <span className="t-status-badge" style={{
+    <div className="t-status-badge" style={{
       background: bg,
       border: `1.5px solid ${border}`,
       color,
-      display: 'inline-flex',
+      display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '6px',
-      padding: '4px 14px',
+      padding: '0 14px',
       borderRadius: '9999px',
-      height: 'fit-content',
+      height: '28px',
       boxSizing: 'border-box'
     }}>
-      <Icon size={13} style={{ flexShrink: 0 }} />
-      <span style={{ fontSize: '0.72rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: '1.2' }}>{label}</span>
-    </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Icon size={13} style={{ flexShrink: 0, display: 'block' }} />
+        <span style={{ fontSize: '0.72rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: '1', paddingTop: '2px' }}>{label}</span>
+      </div>
+    </div>
   );
 }
 
@@ -315,8 +316,10 @@ function BookingDetailsContent() {
                 {attendeeEntries.length > 0 && (
                   <div className="tp-attendees">
                     <div className="tp-attendees-head">
-                      <Users size={14} style={{ flexShrink: 0 }} />
-                      <span>Attendees ({attendeeEntries.length})</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Users size={14} style={{ flexShrink: 0, display: 'block' }} />
+                        <span style={{ lineHeight: '1', paddingTop: '1px' }}>Attendees ({attendeeEntries.length})</span>
+                      </div>
                     </div>
                     <table className="tp-att-table">
                       <thead>
@@ -330,16 +333,18 @@ function BookingDetailsContent() {
                         {attendeeEntries.map(([seat, info], i) => (
                           <tr key={seat} className={`tp-att-row ${i % 2 === 0 ? 'tp-att-even' : ''}`}>
                             <td className="tp-att-col-seat">
-                              <span className="tp-att-seat">{seat}</span>
+                              <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                                <span className="tp-att-seat"><span style={{ paddingTop: '1px' }}>{seat}</span></span>
+                              </div>
                             </td>
                             <td className="tp-att-col-name tp-att-name">{info.name || '—'}</td>
                             <td className="tp-att-col-phone tp-att-phone">
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', lineHeight: '1.2' }}>
-                                <Phone size={11} style={{ flexShrink: 0 }} />
-                                <span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Phone size={11} style={{ flexShrink: 0, display: 'block' }} />
+                                <span style={{ lineHeight: '1', paddingTop: '1px' }}>
                                   {info.phone || (ticket.bookerPhone && ticket.bookerPhone !== '—' ? ticket.bookerPhone : '') || '—'}
                                 </span>
-                              </span>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -617,6 +622,7 @@ function BookingDetailsContent() {
         .tp-att-table {
           width: 100%;
           border-collapse: collapse;
+          table-layout: fixed;
         }
         .tp-att-header th {
           padding: 0.55rem 1rem;
@@ -629,28 +635,30 @@ function BookingDetailsContent() {
           text-align: left;
         }
         .tp-att-row td {
-          padding: 0.65rem 1rem;
+          padding: 0 1rem;
           border-bottom: 1px solid #ecfdf5;
           font-size: 0.82rem;
           color: #111827;
           text-align: left;
           vertical-align: middle;
+          height: 44px;
+          box-sizing: border-box;
         }
         .tp-att-row:last-child td { border-bottom: none; }
         .tp-att-even { background: rgba(240,253,244,0.6); }
 
         .tp-att-col-seat {
-          width: 20%;
+          width: 22%;
         }
         .tp-att-col-name {
-          width: 45%;
+          width: 43%;
         }
         .tp-att-col-phone {
           width: 35%;
         }
 
         .tp-att-seat {
-          display: inline-flex;
+          display: flex;
           align-items: center;
           justify-content: center;
           background: #10b981;
@@ -658,11 +666,12 @@ function BookingDetailsContent() {
           font-size: 0.68rem;
           font-weight: 700;
           border-radius: 999px;
-          width: 46px;
-          height: 20px;
+          width: 44px;
+          height: 22px;
           text-align: center;
           line-height: 1;
           box-sizing: border-box;
+          padding: 0;
         }
         .tp-att-name {
           font-size: 0.82rem;
@@ -677,7 +686,7 @@ function BookingDetailsContent() {
         /* QR column */
         .tp-qr-col {
           flex-shrink: 0;
-          width: 170px;
+          width: 200px;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -691,8 +700,8 @@ function BookingDetailsContent() {
           content: "";
           position: absolute;
           left: 0;
-          top: 2rem;
-          bottom: 2rem;
+          top: 0;
+          bottom: 0;
           width: 0;
           border-left: 2px dashed #e2e8f0;
         }
@@ -701,9 +710,10 @@ function BookingDetailsContent() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 0.75rem;
+          gap: 0.85rem;
           width: 100%;
           text-align: center;
+          margin: auto 0;
         }
         .tp-qr-label {
           font-size: 0.65rem;
