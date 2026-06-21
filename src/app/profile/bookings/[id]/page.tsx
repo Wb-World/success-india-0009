@@ -454,6 +454,11 @@ function BookingDetailsContent() {
           border: 1px solid #e2e8f0;
           box-sizing: border-box;
           width: 100%;
+          max-width: 780px;
+          margin: 0 auto;
+        }
+        .tp-supporter-ticket {
+          max-width: 600px !important;
         }
 
         /* Accent bar */
@@ -572,12 +577,14 @@ function BookingDetailsContent() {
           display: flex;
           flex-wrap: wrap;
           margin-bottom: 1.5rem;
-          width: 100%;
+          width: calc(100% + 1rem);
+          margin-left: -0.5rem;
+          margin-right: -0.5rem;
         }
         .tp-details-grid-item {
           width: 50%;
           box-sizing: border-box;
-          padding: 0 0.75rem 0 0;
+          padding: 0 0.5rem;
         }
 
         .tp-details {
@@ -622,7 +629,7 @@ function BookingDetailsContent() {
           text-align: left;
         }
         .tp-att-row td {
-          padding: 0.55rem 1rem;
+          padding: 0.65rem 1rem;
           border-bottom: 1px solid #ecfdf5;
           font-size: 0.82rem;
           color: #111827;
@@ -636,10 +643,10 @@ function BookingDetailsContent() {
           width: 20%;
         }
         .tp-att-col-name {
-          width: 40%;
+          width: 45%;
         }
         .tp-att-col-phone {
-          width: 40%;
+          width: 35%;
         }
 
         .tp-att-seat {
@@ -650,10 +657,9 @@ function BookingDetailsContent() {
           color: white;
           font-size: 0.68rem;
           font-weight: 700;
-          padding: 3px 8px;
           border-radius: 999px;
-          min-width: 36px;
-          height: 18px;
+          width: 46px;
+          height: 20px;
           text-align: center;
           line-height: 1;
           box-sizing: border-box;
@@ -676,17 +682,26 @@ function BookingDetailsContent() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          border-left: 2px dashed #e2e8f0;
           padding-left: 2rem;
           text-align: center;
           box-sizing: border-box;
+          position: relative;
+        }
+        .tp-qr-col::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 2rem;
+          bottom: 2rem;
+          width: 0;
+          border-left: 2px dashed #e2e8f0;
         }
         .tp-qr-wrap {
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 0.55rem;
+          gap: 0.75rem;
           width: 100%;
           text-align: center;
         }
@@ -696,10 +711,12 @@ function BookingDetailsContent() {
           text-transform: uppercase;
           letter-spacing: 0.06em;
           color: #94a3b8;
-          margin: 0;
+          margin: 0 !important;
+          padding: 0 !important;
           display: block;
           width: 100%;
           text-align: center;
+          line-height: 1.2 !important;
         }
         .tp-qr-img {
           width: 130px;
@@ -708,6 +725,7 @@ function BookingDetailsContent() {
           border: 1px solid #e2e8f0;
           box-shadow: 0 4px 12px rgba(0,0,0,0.03);
           display: block;
+          margin: 0 auto;
         }
         .tp-qr-placeholder {
           width: 130px;
@@ -718,6 +736,7 @@ function BookingDetailsContent() {
           background: #f8fafc;
           border: 1px solid #e2e8f0;
           border-radius: 10px;
+          margin: 0 auto;
         }
         .tp-qr-ref {
           font-family: monospace;
