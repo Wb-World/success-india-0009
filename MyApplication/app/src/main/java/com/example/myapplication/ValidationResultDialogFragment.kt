@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import com.example.myapplication.databinding.DialogValidationResultBinding
 
@@ -65,11 +66,9 @@ class ValidationResultDialogFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Dismiss action on background tap or button tap
         binding.viewDismissDimResult.setOnClickListener { dismiss() }
         binding.btnDismissResult.setOnClickListener { dismiss() }
 
-        // Start animating the entrance of the result card
         binding.cardResultContainer.alpha = 0f
         binding.cardResultContainer.scaleX = 0.8f
         binding.cardResultContainer.scaleY = 0.8f
@@ -90,7 +89,6 @@ class ValidationResultDialogFragment : DialogFragment() {
         val bookingId = arguments?.getString("bookingId") ?: "—"
         val date = arguments?.getString("date") ?: "—"
 
-        // Set text details
         binding.tvValBookingId.text = bookingId
         binding.tvValAttendeeName.text = name
         binding.tvValSeminar.text = seminar
@@ -99,14 +97,12 @@ class ValidationResultDialogFragment : DialogFragment() {
         binding.tvValSeats.text = seats
         binding.tvValPrice.text = "₹$price"
 
-        // Configure look based on status
         applyStatusStyle(status, reason, name)
 
-        // Animate the icon circle
-        binding.layoutStatusIconBg.alpha = 0f
-        binding.layoutStatusIconBg.scaleX = 0f
-        binding.layoutStatusIconBg.scaleY = 0f
-        binding.layoutStatusIconBg.animate()
+        binding.layoutStatusIconContainer.alpha = 0f
+        binding.layoutStatusIconContainer.scaleX = 0f
+        binding.layoutStatusIconContainer.scaleY = 0f
+        binding.layoutStatusIconContainer.animate()
             .alpha(1f)
             .scaleX(1f)
             .scaleY(1f)
@@ -118,7 +114,6 @@ class ValidationResultDialogFragment : DialogFragment() {
     fun updateStatus(status: String) {
         val reason = arguments?.getString("reason") ?: ""
         val name = arguments?.getString("name") ?: "—"
-        
         arguments?.putString("status", status)
         
         activity?.runOnUiThread {
@@ -129,43 +124,45 @@ class ValidationResultDialogFragment : DialogFragment() {
     }
 
     private fun applyStatusStyle(status: String, reason: String, name: String) {
+        val context = requireContext()
         when (status.lowercase()) {
             "approved", "valid", "success" -> {
-                binding.tvStatusIndicatorText.text = "✓"
-                binding.tvStatusIndicatorText.setTextColor(Color.WHITE)
+                binding.ivStatusLogo.visibility = View.VISIBLE
+                binding.tvStatusIndicatorEmoji.visibility = View.GONE
+                
                 binding.tvValidationTitle.text = "Valid QR Code"
-                binding.tvValidationTitle.setTextColor(Color.parseColor("#16a34a"))
+                binding.tvValidationTitle.setTextColor(ContextCompat.getColor(context, R.color.primary))
                 binding.tvValidationSubtitle.text = "Entry Authorized"
                 
-                binding.layoutStatusIconBg.setBackgroundResource(R.drawable.circle_primary_bg)
                 binding.layoutAttendeeDetails.visibility = View.VISIBLE
                 binding.layoutErrorReason.visibility = View.GONE
             }
             "pending" -> {
-                binding.tvStatusIndicatorText.text = "⏳"
+                binding.ivStatusLogo.visibility = View.GONE
+                binding.tvStatusIndicatorEmoji.visibility = View.VISIBLE
+                binding.tvStatusIndicatorEmoji.text = "⏳"
+                binding.tvStatusIndicatorEmoji.setTextColor(ContextCompat.getColor(context, R.color.warning))
+
                 binding.tvValidationTitle.text = "Awaiting Approval"
-                binding.tvValidationTitle.setTextColor(Color.parseColor("#f59e0b"))
+                binding.tvValidationTitle.setTextColor(ContextCompat.getColor(context, R.color.warning))
                 binding.tvValidationSubtitle.text = "Payment Pending"
-                
-                binding.layoutStatusIconBg.setBackgroundResource(0)
-                binding.layoutStatusIconBg.setBackgroundColor(Color.parseColor("#FEF3C7"))
-                binding.tvStatusIndicatorText.setTextColor(Color.parseColor("#d97706"))
                 
                 binding.layoutAttendeeDetails.visibility = View.VISIBLE
                 binding.layoutErrorReason.visibility = View.VISIBLE
-                binding.layoutErrorReason.setBackgroundColor(Color.parseColor("#FEF3C7"))
+                binding.layoutErrorReason.setBackgroundColor(ContextCompat.getColor(context, R.color.warning_bg))
                 binding.tvErrorReasonHeader.text = "PENDING STATUS"
-                binding.tvErrorReasonHeader.setTextColor(Color.parseColor("#d97706"))
-                binding.tvErrorReasonText.text = if (reason.isNotBlank()) reason else "This booking is valid but is currently pending organizer approval."
+                binding.tvErrorReasonHeader.setTextColor(ContextCompat.getColor(context, R.color.warning))
+                binding.tvErrorReasonText.text = reason.ifBlank { "This booking is valid but is currently pending organizer approval." }
             }
-            else -> { // Denied / Not Found / Error
-                binding.tvStatusIndicatorText.text = "✗"
-                binding.tvStatusIndicatorText.setTextColor(Color.WHITE)
+            else -> {
+                binding.ivStatusLogo.visibility = View.GONE
+                binding.tvStatusIndicatorEmoji.visibility = View.VISIBLE
+                binding.tvStatusIndicatorEmoji.text = "✗"
+                binding.tvStatusIndicatorEmoji.setTextColor(ContextCompat.getColor(context, R.color.danger))
+
                 binding.tvValidationTitle.text = "Invalid QR Code"
-                binding.tvValidationTitle.setTextColor(Color.parseColor("#ef4444"))
+                binding.tvValidationTitle.setTextColor(ContextCompat.getColor(context, R.color.danger))
                 binding.tvValidationSubtitle.text = "Entry Denied"
-                
-                binding.layoutStatusIconBg.setBackgroundResource(R.drawable.circle_danger_bg)
                 
                 if (name != "—" && name.isNotBlank() && name != "Unknown") {
                     binding.layoutAttendeeDetails.visibility = View.VISIBLE
@@ -174,13 +171,12 @@ class ValidationResultDialogFragment : DialogFragment() {
                 }
                 
                 binding.layoutErrorReason.visibility = View.VISIBLE
-                binding.layoutErrorReason.setBackgroundColor(Color.parseColor("#FEE2E2"))
+                binding.layoutErrorReason.setBackgroundColor(ContextCompat.getColor(context, R.color.danger_bg))
                 binding.tvErrorReasonHeader.text = "REJECTION DETAILS"
-                binding.tvErrorReasonHeader.setTextColor(Color.parseColor("#ef4444"))
-                binding.tvErrorReasonText.text = if (reason.isNotBlank()) reason else "This booking was explicitly rejected or does not exist."
+                binding.tvErrorReasonHeader.setTextColor(ContextCompat.getColor(context, R.color.danger))
+                binding.tvErrorReasonText.text = reason.ifBlank { "This booking was explicitly rejected or does not exist." }
             }
         }
-    }
     }
 
     override fun onDestroyView() {

@@ -34,24 +34,31 @@
             android:padding="24dp"
             android:gravity="center_horizontal">
 
-            <!-- Status Circle Indicator -->
+            <!-- Status Icon/Logo Container (No circle background) -->
             <FrameLayout
-                android:id="@+id/layoutStatusIconBg"
-                android:layout_width="74dp"
-                android:layout_height="74dp"
-                android:background="@drawable/circle_primary_bg"
+                android:id="@+id/layoutStatusIconContainer"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="16dp">
 
+                <ImageView
+                    android:id="@+id/ivStatusLogo"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/app_logo"
+                    android:visibility="gone" />
+
                 <TextView
-                    android:id="@+id/tvStatusIndicatorText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
+                    android:id="@+id/tvStatusIndicatorEmoji"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
                     android:text="✓"
-                    android:textColor="@color/white"
-                    android:textSize="38sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/foreground"
+                    android:textSize="56sp"
+                    android:visibility="visible" />
             </FrameLayout>
 
             <!-- Verification Title -->
