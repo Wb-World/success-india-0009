@@ -23,7 +23,8 @@ class ValidationResultDialogFragment : DialogFragment() {
             price: String,
             reason: String,
             bookingId: String = "—",
-            date: String = "—"
+            date: String = "—",
+            phone: String = ""
         ): ValidationResultDialogFragment {
             val fragment = ValidationResultDialogFragment()
             val args = Bundle().apply {
@@ -36,6 +37,7 @@ class ValidationResultDialogFragment : DialogFragment() {
                 putString("reason", reason)
                 putString("bookingId", bookingId)
                 putString("date", date)
+                putString("phone", phone)
             }
             fragment.arguments = args
             return fragment
@@ -88,6 +90,7 @@ class ValidationResultDialogFragment : DialogFragment() {
         val reason = arguments?.getString("reason") ?: "—"
         val bookingId = arguments?.getString("bookingId") ?: "—"
         val date = arguments?.getString("date") ?: "—"
+        val phone = arguments?.getString("phone") ?: ""
 
         binding.tvValBookingId.text = bookingId
         binding.tvValAttendeeName.text = name
@@ -96,6 +99,15 @@ class ValidationResultDialogFragment : DialogFragment() {
         binding.tvValDate.text = date
         binding.tvValSeats.text = seats
         binding.tvValPrice.text = "₹$price"
+
+        // Show phone if available
+        if (phone.isNotBlank() && phone != "—") {
+            try {
+                val tvPhone = binding.root.findViewWithTag<android.widget.TextView>("tvValPhone")
+                tvPhone?.text = phone
+                tvPhone?.visibility = View.VISIBLE
+            } catch (_: Exception) { }
+        }
 
         applyStatusStyle(status, reason, name)
 
@@ -126,55 +138,58 @@ class ValidationResultDialogFragment : DialogFragment() {
     private fun applyStatusStyle(status: String, reason: String, name: String) {
         val context = requireContext()
         when (status.lowercase()) {
-            "approved", "valid", "success" -> {
+            "approved", "confirmed", "valid", "success" -> {
+                // ✅ VALID TICKET
                 binding.ivStatusLogo.visibility = View.VISIBLE
                 binding.tvStatusIndicatorEmoji.visibility = View.GONE
-                
-                binding.tvValidationTitle.text = "Valid QR Code"
+
+                binding.tvValidationTitle.text = "✅ VALID TICKET"
                 binding.tvValidationTitle.setTextColor(ContextCompat.getColor(context, R.color.primary))
-                binding.tvValidationSubtitle.text = "Entry Authorized"
-                
+                binding.tvValidationSubtitle.text = "Entry Authorized — Welcome!"
+
                 binding.layoutAttendeeDetails.visibility = View.VISIBLE
                 binding.layoutErrorReason.visibility = View.GONE
             }
             "pending" -> {
+                // ⏳ PENDING — not yet valid
                 binding.ivStatusLogo.visibility = View.GONE
                 binding.tvStatusIndicatorEmoji.visibility = View.VISIBLE
                 binding.tvStatusIndicatorEmoji.text = "⏳"
                 binding.tvStatusIndicatorEmoji.setTextColor(ContextCompat.getColor(context, R.color.warning))
 
-                binding.tvValidationTitle.text = "Awaiting Approval"
-                binding.tvValidationTitle.setTextColor(ContextCompat.getColor(context, R.color.warning))
-                binding.tvValidationSubtitle.text = "Payment Pending"
-                
+                binding.tvValidationTitle.text = "❌ INVALID TICKET"
+                binding.tvValidationTitle.setTextColor(ContextCompat.getColor(context, R.color.danger))
+                binding.tvValidationSubtitle.text = "Payment Pending — Entry Denied"
+
                 binding.layoutAttendeeDetails.visibility = View.VISIBLE
                 binding.layoutErrorReason.visibility = View.VISIBLE
                 binding.layoutErrorReason.setBackgroundColor(ContextCompat.getColor(context, R.color.warning_bg))
-                binding.tvErrorReasonHeader.text = "PENDING STATUS"
+                binding.tvErrorReasonHeader.text = "PENDING APPROVAL"
                 binding.tvErrorReasonHeader.setTextColor(ContextCompat.getColor(context, R.color.warning))
-                binding.tvErrorReasonText.text = reason.ifBlank { "This booking is valid but is currently pending organizer approval." }
+                binding.tvErrorReasonText.text = reason.ifBlank { "This booking is awaiting admin confirmation. Entry is not permitted until approved." }
             }
             else -> {
+                // ❌ INVALID TICKET (denied / error / unknown)
                 binding.ivStatusLogo.visibility = View.GONE
                 binding.tvStatusIndicatorEmoji.visibility = View.VISIBLE
-                binding.tvStatusIndicatorEmoji.text = "✗"
+                binding.tvStatusIndicatorEmoji.text = "❌"
                 binding.tvStatusIndicatorEmoji.setTextColor(ContextCompat.getColor(context, R.color.danger))
 
-                binding.tvValidationTitle.text = "Invalid QR Code"
+                binding.tvValidationTitle.text = "❌ INVALID TICKET"
                 binding.tvValidationTitle.setTextColor(ContextCompat.getColor(context, R.color.danger))
                 binding.tvValidationSubtitle.text = "Entry Denied"
-                
+
                 if (name != "—" && name.isNotBlank() && name != "Unknown") {
                     binding.layoutAttendeeDetails.visibility = View.VISIBLE
                 } else {
                     binding.layoutAttendeeDetails.visibility = View.GONE
                 }
-                
+
                 binding.layoutErrorReason.visibility = View.VISIBLE
                 binding.layoutErrorReason.setBackgroundColor(ContextCompat.getColor(context, R.color.danger_bg))
                 binding.tvErrorReasonHeader.text = "REJECTION DETAILS"
                 binding.tvErrorReasonHeader.setTextColor(ContextCompat.getColor(context, R.color.danger))
-                binding.tvErrorReasonText.text = reason.ifBlank { "This booking was explicitly rejected or does not exist." }
+                binding.tvErrorReasonText.text = reason.ifBlank { "This booking was rejected or does not exist." }
             }
         }
     }

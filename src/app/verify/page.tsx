@@ -180,47 +180,18 @@ function VerifyContent() {
       setScanMode(false);
       setScanning(false);
 
-      // Try extracting embedded data from base64
-      if (dataParam) {
-        try {
-          const decoded = decodeURIComponent(atob(unescape(encodeURIComponent(dataParam))).replace(/\0/g, ''));
-          const parsed = JSON.parse(atob(dataParam));
-          // Use offline data immediately
-          const offlineTicket = {
-            bookingId: parsed.id || bookingId,
-            eventName: parsed.event || parsed.eventName || '—',
-            date: parsed.date || '—',
-            time: parsed.time || '—',
-            venue: parsed.venue || '—',
-            seats: Array.isArray(parsed.seats) ? parsed.seats : [parsed.seats || '—'],
-            attendeeName: parsed.name || parsed.attendeeName || '—',
-            bookerPhone: parsed.phone || '—',
-            amountPaid: parsed.amount || parsed.amountPaid || '—',
-            status: parsed.status || 'pending',
-            bookedOn: '—',
-            attendees: {},
-            paymentStatus: parsed.status === 'approved' ? 'Confirmed' : 'Pending',
-          };
-          setResult({ valid: true, ticket: offlineTicket, offline: true });
-        } catch {
-          // Continue to server verify
-        }
-      }
-
-      // Always verify online
+      // Always verify online against the server
       setLoading(true);
       fetch(`/api/verify?id=${encodeURIComponent(bookingId)}`)
         .then(r => r.json())
         .then(data => { setResult({ ...data, offline: false }); })
         .catch(() => {
-          if (!result) {
-            setResult({ valid: false, reason: 'server_error', error: 'Verification service temporarily unavailable.' });
-          }
+          setResult({ valid: false, reason: 'server_error', error: 'Verification service temporarily unavailable.' });
         })
         .finally(() => setLoading(false));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookingId, dataParam]);
+  }, [bookingId]);
 
   const handleQRResult = useCallback((rawData: string) => {
     setScanning(false);
@@ -228,20 +199,35 @@ function VerifyContent() {
     setScanMode(false);
     setLoading(true);
 
-    // Parse URL-format QR (from our ticket QR codes)
     let id = '';
-    let offlineData: any = null;
 
-    try {
-      const url = new URL(rawData);
-      id = url.searchParams.get('id') || '';
-      const b64 = url.searchParams.get('data');
-      if (b64) {
-        offlineData = JSON.parse(atob(b64));
+    // ── NEW FORMAT: Structured KEY:VALUE|KEY:VALUE payload ─────────────────
+    // Detect by checking if raw data contains 'BOOKING_ID:'
+    if (rawData.includes('BOOKING_ID:')) {
+      try {
+        const fields: Record<string, string> = {};
+        rawData.split('|').forEach(part => {
+          const colonIdx = part.indexOf(':');
+          if (colonIdx > 0) {
+            const key = part.substring(0, colonIdx).trim();
+            const val = part.substring(colonIdx + 1).trim();
+            fields[key] = val;
+          }
+        });
+        id = fields['BOOKING_ID'] || '';
+      } catch {
+        id = '';
       }
-    } catch {
-      // Not a URL - try plain ID
-      id = rawData.trim();
+    }
+    // ── LEGACY FORMAT: URL-based QR (backward compatibility) ───────────────
+    else {
+      try {
+        const url = new URL(rawData);
+        id = url.searchParams.get('id') || '';
+      } catch {
+        // Plain booking ID
+        id = rawData.trim();
+      }
     }
 
     if (!id) {
@@ -250,34 +236,12 @@ function VerifyContent() {
       return;
     }
 
-    // Show offline data immediately
-    if (offlineData) {
-      const offlineTicket = {
-        bookingId: offlineData.id || id,
-        eventName: offlineData.event || offlineData.eventName || '—',
-        date: offlineData.date || '—',
-        time: offlineData.time || '—',
-        venue: offlineData.venue || '—',
-        seats: Array.isArray(offlineData.seats) ? offlineData.seats : [offlineData.seats || '—'],
-        attendeeName: offlineData.name || '—',
-        bookerPhone: offlineData.phone || '—',
-        amountPaid: offlineData.amount || '—',
-        status: offlineData.status || 'pending',
-        bookedOn: '—',
-        attendees: {},
-        paymentStatus: offlineData.status === 'approved' ? 'Confirmed' : 'Pending',
-      };
-      setResult({ valid: true, ticket: offlineTicket, offline: true });
-    }
-
-    // Verify online
+    // Verify against database (always online)
     fetch(`/api/verify?id=${encodeURIComponent(id)}`)
       .then(r => r.json())
       .then(data => { setResult({ ...data, offline: false }); })
       .catch(() => {
-        if (!offlineData) {
-          setResult({ valid: false, reason: 'server_error', error: 'Could not reach server. Check internet connection.' });
-        }
+        setResult({ valid: false, reason: 'server_error', error: 'Could not reach server. Check internet connection.' });
       })
       .finally(() => setLoading(false));
   }, []);

@@ -29,3 +29,20 @@ export function verifyPassword(password: string, storedValue: string): boolean {
   const verifyHash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
   return hash === verifyHash;
 }
+
+/**
+ * Generate a secure signature for QR payload to prevent tampering/forgery.
+ */
+export function generateQrSignature(bookingId: string, status: string, seats: string, amount: string): string {
+  const salt = process.env.QR_SECRET_SALT || 'success_team_secret_salt_2026';
+  const data = `${bookingId.trim().toUpperCase()}|${status.trim().toUpperCase()}|${seats.trim()}|${amount.trim()}|${salt}`;
+  return crypto.createHash('sha256').update(data).digest('hex').substring(0, 16);
+}
+
+/**
+ * Verify a QR payload's signature.
+ */
+export function verifyQrSignature(bookingId: string, status: string, seats: string, amount: string, signature: string): boolean {
+  const expected = generateQrSignature(bookingId, status, seats, amount);
+  return expected.toLowerCase() === signature.trim().toLowerCase();
+}

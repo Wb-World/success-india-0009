@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { generateQrSignature, verifyQrSignature } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -121,15 +122,45 @@ export async function GET(request: Request) {
     const status: string = bk.status || 'pending';
     const statusLabel: string = statusMap[status] ?? 'Unknown';
 
-    // A booking is considered "valid" if it exists AND is not denied
-    // (pending is valid — just awaiting admin approval)
-    const isValid = status === 'approved' || status === 'pending';
+    // A booking is considered "valid" only if status is approved (CONFIRMED)
+    const isValid = status === 'approved';
 
     const paymentStatusMap: Record<string, string> = {
       approved: 'Verified & Cleared',
       pending:  'Pending Review',
       denied:   'Rejected',
     };
+
+    const seatStr = Array.isArray(bk.seats) ? bk.seats.join(',') : '';
+    const amountStr = String(bk.total_price || '').replace("INR", "").replace("₹", "").trim();
+    const statusStr = status.toUpperCase() === 'APPROVED' ? 'CONFIRMED' : status.toUpperCase();
+    const localSig = generateQrSignature(bk.id, statusStr, seatStr, amountStr);
+
+    const clientSig = searchParams.get('sig');
+    if (clientSig) {
+      const isSigValid = verifyQrSignature(bk.id, statusStr, seatStr, amountStr, clientSig);
+      if (!isSigValid) {
+        console.warn('[verify] Signature verification failed for id=%s. Expected=%s Got=%s', bk.id, localSig, clientSig);
+        return NextResponse.json(
+          { valid: false, reason: 'invalid_sig', error: 'Invalid QR code signature. Ticket forgery detected.' },
+          { status: 400 }
+        );
+      }
+    }
+
+    const qrCodePayload = [
+      `BOOKING_ID:${bk.id}`,
+      `STATUS:${statusStr}`,
+      `EVENT_NAME:${bk.seminar_name || bk.bus_name || '—'}`,
+      `DATE:${bk.date || '—'}`,
+      `TIME:${bk.time || '—'}`,
+      `VENUE:${bk.source || '—'}`,
+      `SEAT:${seatStr}`,
+      `ATTENDEE:${primaryAttendeeName}`,
+      `PHONE:${bookerPhone || '—'}`,
+      `AMOUNT:${amountStr}`,
+      `SIGNATURE:${localSig}`
+    ].join('|');
 
     // ── Build safe public ticket object ────────────────────────────────────
     const ticket = {
@@ -151,6 +182,7 @@ export async function GET(request: Request) {
         ? new Date(bk.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
         : '—',
       paymentStatus:   paymentStatusMap[status] ?? 'Unknown',
+      qrCodePayload:   qrCodePayload,
     };
 
     console.log('[verify] Returning ticket for id=%s status=%s valid=%s', sanitised, status, isValid);

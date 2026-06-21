@@ -83,24 +83,11 @@ function BookingDetailsContent() {
             data.ticket.seminarName?.toLowerCase().includes('supporter') ||
             data.ticket.eventName?.toLowerCase().includes('supporter');
           if (!isSupporter) {
-            const origin = typeof window !== 'undefined' ? window.location.origin : '';
-            const bookingData = {
-              id: data.ticket.bookingId,
-              event: data.ticket.eventName,
-              date: data.ticket.date,
-              time: data.ticket.time,
-              venue: data.ticket.venue,
-              seats: data.ticket.seats,
-              name: data.ticket.attendeeName,
-              phone: data.ticket.bookerPhone || '',
-              amount: data.ticket.amountPaid || data.ticket.totalPrice || '',
-              status: data.ticket.status
-            };
-            const base64Data = typeof window !== 'undefined'
-              ? window.btoa(unescape(encodeURIComponent(JSON.stringify(bookingData))))
-              : '';
-            const qrText = `${origin}/verify?id=${encodeURIComponent(bookingId)}&data=${encodeURIComponent(base64Data)}`;
-            generateQR(qrText).then(setQrUrl);
+            // Use structured key-value QR payload from server (includes SIGNATURE)
+            const qrPayload = data.ticket.qrCodePayload;
+            if (qrPayload) {
+              generateQR(qrPayload).then(setQrUrl);
+            }
           }
         } else {
           setError('Failed to load booking details.');
