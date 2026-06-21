@@ -121,7 +121,7 @@ function BookingDetailsContent() {
       const clone = el.cloneNode(true) as HTMLElement;
       clone.classList.add('tp-desktop');
       clone.style.cssText = `
-        position:absolute;left:0;top:0;opacity:0.001;pointer-events:none;z-index:-9999;
+        position:absolute;left:-9999px;top:-9999px;
         width:${isSupp ? '600px' : '780px'};border-radius:20px;
         background:#ffffff;
       `;
