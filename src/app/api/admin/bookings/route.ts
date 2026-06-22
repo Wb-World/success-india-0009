@@ -89,8 +89,12 @@ export async function GET(request: Request) {
       }
 
       const bookerPhone = b.booker_phone || attendees.__booker_phone || '';
+      const bookerVpName = b.booker_vp_name || attendees.__booker_vp_name || '';
       const cleanAttendees = { ...attendees };
       delete cleanAttendees.__booker_phone;
+      delete cleanAttendees.__user_email;
+      delete cleanAttendees.__username;
+      delete cleanAttendees.__booker_vp_name;
 
       return {
         id: b.id,
@@ -115,7 +119,7 @@ export async function GET(request: Request) {
         bookerName: b.booker_name || '',
         bookerMemberId: b.booker_member_id || '',
         bookerPhone: bookerPhone,
-        bookerVpName: b.booker_vp_name || '',
+        bookerVpName: bookerVpName,
       };
     });
 
