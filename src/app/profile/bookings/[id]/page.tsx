@@ -11,30 +11,31 @@ import {
    Helpers
 ───────────────────────────────────────────────────────── */
 function StatusBadge({ status }: { status: string }) {
-  const cfg: Record<string, { label: string; color: string; bg: string; border: string; Icon: any }> = {
-    approved: { label: 'Confirmed',        color: '#059669', bg: '#d1fae5', border: '#6ee7b7', Icon: CheckCircle },
-    pending:  { label: 'Pending Approval', color: '#d97706', bg: '#fef3c7', border: '#fcd34d', Icon: Clock },
-    denied:   { label: 'Rejected',         color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', Icon: XCircle },
+  const cfg: Record<string, { label: string; color: string; bg: string; border: string; iconChar: string }> = {
+    approved: { label: 'Confirmed',        color: '#059669', bg: '#d1fae5', border: '#6ee7b7', iconChar: '✓' },
+    pending:  { label: 'Pending Approval', color: '#d97706', bg: '#fef3c7', border: '#fcd34d', iconChar: '⏳' },
+    denied:   { label: 'Rejected',         color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', iconChar: '✗' },
   };
-  const { label, color, bg, border, Icon } = cfg[status] ?? { label: 'Unknown', color: '#64748b', bg: '#f1f5f9', border: '#cbd5e1', Icon: AlertTriangle };
+  const { label, color, bg, border, iconChar } = cfg[status] ?? { label: 'Unknown', color: '#64748b', bg: '#f1f5f9', border: '#cbd5e1', iconChar: '?' };
 
   return (
     <div className="t-status-badge" style={{
       background: bg,
       border: `1.5px solid ${border}`,
       color,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '0 14px',
+      padding: '2px 14px 6px',
       borderRadius: '9999px',
-      height: '28px',
-      boxSizing: 'border-box'
+      display: 'inline-block',
+      verticalAlign: 'middle',
+      boxSizing: 'border-box',
+      whiteSpace: 'nowrap',
+      lineHeight: '1',
+      textAlign: 'center'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <Icon size={13} style={{ flexShrink: 0, display: 'block' }} />
-        <span style={{ fontSize: '0.72rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: '1', paddingTop: '2px' }}>{label}</span>
-      </div>
+      <span style={{ fontSize: '0.72rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', verticalAlign: 'middle' }}>
+        <span style={{ marginRight: '6px', fontSize: '0.85rem', verticalAlign: 'middle' }}>{iconChar}</span>
+        {label}
+      </span>
     </div>
   );
 }
@@ -57,10 +58,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value
    QR Generator
 ───────────────────────────────────────────────────────── */
 async function generateQR(text: string): Promise<string> {
-  try {
-    const QRCode = (await import('qrcode')).default;
-    return await QRCode.toDataURL(text, { width: 200, margin: 1, color: { dark: '#0f172a', light: '#ffffff' } });
-  } catch { return ''; }
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}&color=0f172a&bgcolor=ffffff&qzone=1&margin=1&format=png`;
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -130,12 +128,23 @@ function BookingDetailsContent() {
 
       // Pre-load all image assets inside the cloned node
       const images = Array.from(clone.getElementsByTagName('img'));
+      
+      // Apply cache-busting to image URLs to ensure freshest render
+      images.forEach(img => {
+        if (img.src && !img.src.startsWith('data:')) {
+          const sep = img.src.includes('?') ? '&' : '?';
+          img.src = `${img.src}${sep}cb=${Date.now()}`;
+          img.crossOrigin = 'anonymous';
+        }
+      });
+
       await Promise.all(
         images.map(img => {
           if (img.complete) return Promise.resolve();
           return new Promise(resolve => {
-            img.onload = resolve;
-            img.onerror = resolve;
+            const timer = setTimeout(resolve, 1500); // safety timeout
+            img.onload = () => { clearTimeout(timer); resolve(null); };
+            img.onerror = () => { clearTimeout(timer); resolve(null); };
           });
         })
       );
@@ -318,40 +327,47 @@ function BookingDetailsContent() {
                     <div className="tp-attendees-head">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Users size={14} style={{ flexShrink: 0, display: 'block' }} />
-                        <span style={{ lineHeight: '1', paddingTop: '1px' }}>Attendees ({attendeeEntries.length})</span>
+                        <span style={{ lineHeight: '1' }}>Attendees ({attendeeEntries.length})</span>
                       </div>
                     </div>
-                    <table className="tp-att-table">
-                      <thead>
-                        <tr className="tp-att-header">
-                          <th className="tp-att-col-seat">Seat</th>
-                          <th className="tp-att-col-name">Name</th>
-                          <th className="tp-att-col-phone">Phone</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <div className="tp-att-list">
+                      <div className="tp-att-header-row">
+                        <div className="tp-att-col tp-col-seat">Seat</div>
+                        <div className="tp-att-col tp-col-name">Name</div>
+                        <div className="tp-att-col tp-col-phone">Phone</div>
+                      </div>
+                      <div className="tp-att-body">
                         {attendeeEntries.map(([seat, info], i) => (
-                          <tr key={seat} className={`tp-att-row ${i % 2 === 0 ? 'tp-att-even' : ''}`}>
-                            <td className="tp-att-col-seat">
-                              <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-                                <span className="tp-att-seat"><span style={{ paddingTop: '1px' }}>{seat}</span></span>
-                              </div>
-                            </td>
-                            <td className="tp-att-col-name tp-att-name">{info.name || '—'}</td>
-                            <td className="tp-att-col-phone tp-att-phone">
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Phone size={11} style={{ flexShrink: 0, display: 'block' }} />
-                                <span style={{ lineHeight: '1', paddingTop: '1px' }}>
-                                  {info.phone || (ticket.bookerPhone && ticket.bookerPhone !== '—' ? ticket.bookerPhone : '') || '—'}
-                                </span>
-                              </div>
-                            </td>
-                          </tr>
+                          <div key={seat} className={`tp-att-item-row ${i % 2 === 0 ? 'tp-att-even' : ''}`}>
+                            <div className="tp-att-col tp-col-seat">
+                              <span className="tp-att-seat-badge">{seat}</span>
+                            </div>
+                            <div className="tp-att-col tp-col-name tp-att-name">{info.name || '—'}</div>
+                            <div className="tp-att-col tp-col-phone tp-att-phone">
+                              <span style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+                                <Phone size={11} />
+                              </span>
+                              <span style={{ display: 'inline-block', verticalAlign: 'middle', lineHeight: '1' }}>
+                                {info.phone || (ticket.bookerPhone && ticket.bookerPhone !== '—' ? ticket.bookerPhone : '') || '—'}
+                              </span>
+                            </div>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
+                      </div>
+                    </div>
                   </div>
                 )}
+
+                {/* Event Perks */}
+                <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#f0fdf4', borderRadius: '8px', border: '1px dashed #bbf7d0', fontSize: '0.85rem' }}>
+                  <div style={{ fontWeight: '900', color: '#166534', marginBottom: '0.5rem', textAlign: 'center', letterSpacing: '0.5px' }}>COMPLETELY FREE EDUCATION</div>
+                  <div style={{ color: '#065f46', marginBottom: '0.4rem', fontWeight: 700 }}>₹1000 REGISTRATION FEE COVERS:</div>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#064e3b', display: 'flex', flexDirection: 'column', gap: '0.3rem', fontWeight: 500 }}>
+                    <li>✅ LUNCH</li>
+                    <li>✅ 2 TIMES SNACKS</li>
+                    <li>✅ MEETING HALL AND ARRANGEMENTS</li>
+                  </ul>
+                </div>
               </div>
 
               {/* Right — QR Code */}
@@ -619,59 +635,66 @@ function BookingDetailsContent() {
           letter-spacing: 0.06em;
           color: #047857;
         }
-        .tp-att-table {
+        .tp-att-list {
           width: 100%;
-          border-collapse: collapse;
-          table-layout: fixed;
-        }
-        .tp-att-header th {
-          padding: 0.55rem 1rem;
-          font-size: 0.65rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          color: #6b7280;
-          border-bottom: 1px solid #d1fae5;
-          text-align: left;
-        }
-        .tp-att-row td {
-          padding: 0 1rem;
-          border-bottom: 1px solid #ecfdf5;
-          font-size: 0.82rem;
-          color: #111827;
-          text-align: left;
-          vertical-align: middle;
-          height: 44px;
-          box-sizing: border-box;
-        }
-        .tp-att-row:last-child td { border-bottom: none; }
-        .tp-att-even { background: rgba(240,253,244,0.6); }
-
-        .tp-att-col-seat {
-          width: 22%;
-        }
-        .tp-att-col-name {
-          width: 43%;
-        }
-        .tp-att-col-phone {
-          width: 35%;
-        }
-
-        .tp-att-seat {
           display: flex;
+          flex-direction: column;
+        }
+        .tp-att-header-row {
+          display: flex;
+          padding: 8px 12px;
+          border-bottom: 2px solid #e2e8f0;
+          font-size: 0.68rem;
+          font-weight: 700;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .tp-att-item-row {
+          display: flex;
+          padding: 8px 12px;
           align-items: center;
-          justify-content: center;
+          border-bottom: 1px solid #f1f5f9;
+        }
+        .tp-att-item-row:last-child {
+          border-bottom: none;
+        }
+        .tp-att-even {
+          background-color: #f8fafc;
+        }
+        .tp-col-seat {
+          width: 70px;
+          flex-shrink: 0;
+        }
+        .tp-col-name {
+          flex: 1;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          padding-bottom: 2px;
+        }
+        .tp-col-phone {
+          width: 110px;
+          flex-shrink: 0;
+          text-align: right;
+          white-space: nowrap;
+        }
+        .tp-att-seat-badge {
+          display: inline-block;
+          vertical-align: middle;
           background: #10b981;
           color: white;
           font-size: 0.68rem;
           font-weight: 700;
           border-radius: 999px;
-          width: 44px;
-          height: 22px;
-          text-align: center;
-          line-height: 1;
+          min-width: 48px;
+          padding: 2px 8px 6px;
           box-sizing: border-box;
-          padding: 0;
+          white-space: pre !important;
+          word-break: keep-all !important;
+          line-height: 1;
+          text-align: center;
         }
         .tp-att-name {
           font-size: 0.82rem;

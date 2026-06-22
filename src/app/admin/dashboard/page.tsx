@@ -828,10 +828,6 @@ export default function AdminDashboard() {
                             <span>Base ({b.seats.length} Seat{b.seats.length === 1 ? '' : 's'})</span>
                             <span>₹{b.seats.length * 1000}</span>
                           </div>
-                          <div className="invoice-receipt-row">
-                            <span>GST (18%)</span>
-                            <span>₹{Math.round(b.seats.length * 1000 * 0.18)}</span>
-                          </div>
                           <div className="invoice-receipt-total">
                             <span>Total Amount Paid</span>
                             <span>₹{b.totalPrice}</span>
@@ -1105,15 +1101,9 @@ export default function AdminDashboard() {
                           </h4>
                           <div className="pane-details">
                             <div className="info-table-row">
-                              <span className="info-label">{gstAmount > 0 ? "Base Contribution" : "Contribution Amount"}</span>
-                              <span className="info-value">₹{baseAmount}</span>
+                              <span className="info-label">Contribution Amount</span>
+                              <span className="info-value">₹{totalAmount}</span>
                             </div>
-                            {gstAmount > 0 && (
-                              <div className="info-table-row">
-                                <span className="info-label">GST (18%)</span>
-                                <span className="info-value">₹{gstAmount}</span>
-                              </div>
-                            )}
                             
                             <div className="invoice-receipt-block" style={{ marginTop: '1.5rem' }}>
                               <div className="invoice-receipt-total">
@@ -1498,18 +1488,10 @@ export default function AdminDashboard() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.88rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#6b7280' }}>
-                      {selectedContributionDetail.totalPrice > (selectedContributionDetail.attendees?.SUPPORTER?.designation === 'Chief Executive Director' ? 1000 : 500) 
-                        ? 'Base Contribution Amount:' 
-                        : 'Contribution Amount:'}
+                      Contribution Amount:
                     </span>
-                    <strong>₹{selectedContributionDetail.attendees?.SUPPORTER?.designation === 'Chief Executive Director' ? 1000 : 500}</strong>
+                    <strong>₹{selectedContributionDetail.totalPrice}</strong>
                   </div>
-                  {selectedContributionDetail.totalPrice > (selectedContributionDetail.attendees?.SUPPORTER?.designation === 'Chief Executive Director' ? 1000 : 500) && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#6b7280' }}>GST Amount (18%):</span>
-                      <strong>₹{selectedContributionDetail.attendees?.SUPPORTER?.designation === 'Chief Executive Director' ? 180 : 90}</strong>
-                    </div>
-                  )}
                   <hr style={{ border: 0, borderTop: '1px dashed #e5e7eb', margin: '0.4rem 0' }} />
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>Total Payable Amount:</span>

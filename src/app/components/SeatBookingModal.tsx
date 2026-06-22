@@ -72,7 +72,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const [bookingTimestamp, setBookingTimestamp] = useState('');
   const [confirmedData, setConfirmedData] = useState<any>(null);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
-  const [attendeeDetails, setAttendeeDetails] = useState<Record<string, { name: string; whatsapp: string }>>({});
+  const [attendeeDetails, setAttendeeDetails] = useState<Record<string, { name: string; whatsapp: string; lunch?: string }>>({});
   const [currentAttendeeIndex, setCurrentAttendeeIndex] = useState(0);
 
   // Card ref for scroll reset on step transition
@@ -161,10 +161,9 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const eventName = event.title || event.name || 'Success Team Seminar';
   const pricePerSeat = 1000;
   const basePrice = selectedSeats.length * pricePerSeat;
-  const gstAmount = Math.round(basePrice * 0.18);
-  const totalPrice = basePrice + gstAmount;
-  // Dynamic QR scanner image based on seat count (1 seat=1000.png, 2=2000.png, …10=10000.png)
-  const scannerImage = selectedSeats.length > 0 ? `/UPIs/${selectedSeats.length * pricePerSeat}.png` : '/UPIs/1000.png';
+  const totalPrice = basePrice;
+  // Payment scanner image (using uploaded PhonePe QR)
+  const scannerImage = '/phonepe.jpeg';
 
   // Build booked seats from event data
   useEffect(() => {
@@ -220,9 +219,9 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       .catch((err) => console.error('Failed to load configs:', err));
   }, []);
 
-  // UPI Link payload & Dynamic QR Image (emerald green color combo #10b981)
+  // UPI Link payload & Static QR Image (PhonePe)
   const upiPayload = `upi://pay?pa=${upiConfig.upiId}&pn=${encodeURIComponent(upiConfig.upiName)}&am=${totalPrice}&cu=INR`;
-  const qrCodeUrl = `/UPIs/${(selectedSeats.length || quantity) * 1000}.png`;
+  const qrCodeUrl = '/phonepe.jpeg';
 
   // QR code data for ticket validation
   const qrPayload = confirmedData
@@ -373,9 +372,10 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       acc[seat] = {
         name: attendeeDetails[seat]?.name || '',
         whatsapp: attendeeDetails[seat]?.whatsapp || '',
+        lunch: attendeeDetails[seat]?.lunch || 'Vegetarian',
       };
       return acc;
-    }, {} as Record<string, { name: string; whatsapp: string }>);
+    }, {} as Record<string, { name: string; whatsapp: string; lunch?: string }>);
 
     let userId = null;
     let userEmail = null;
@@ -690,7 +690,6 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     const priceRows: [string, string][] = [
       ['Price per Seat',   `\u20B9${pricePerSeat}`],
       ['Base Amount',      `\u20B9${seatsLength * pricePerSeat}`],
-      ['GST (18%)',        `\u20B9${Math.round(seatsLength * pricePerSeat * 0.18)}`],
       ['Booked At',        timestampToRender || '—'],
     ];
 
@@ -718,7 +717,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     ctx.font = `600 15px ${FONT}`;
     ctx.fillStyle = '#374151';
     ctx.textAlign = 'left';
-    fillText('Grand Total (incl. GST)', PAD + 12, curY + 36);
+    fillText('Grand Total', PAD + 12, curY + 36);
 
     ctx.font = `800 24px ${FONT}`;
     ctx.fillStyle = '#10b981';
@@ -1149,10 +1148,17 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                     <span>Base Amount</span>
                     <span className="summary-val">₹{basePrice}</span>
                   </div>
-                  <div className="summary-row">
-                    <span>GST (18%)</span>
-                    <span className="summary-val">₹{gstAmount}</span>
+
+                  <div className="summary-perks" style={{ margin: '1rem 0', padding: '0.85rem', background: '#f0fdf4', borderRadius: '8px', border: '1px dashed #bbf7d0', fontSize: '0.85rem' }}>
+                    <div style={{ fontWeight: '900', color: '#166534', marginBottom: '0.5rem', textAlign: 'center', letterSpacing: '0.5px' }}>COMPLETELY FREE EDUCATION</div>
+                    <div style={{ color: '#065f46', marginBottom: '0.4rem', fontWeight: 700 }}>₹1000 REGISTRATION FEE COVERS:</div>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#064e3b', display: 'flex', flexDirection: 'column', gap: '0.3rem', fontWeight: 500 }}>
+                      <li>✅ LUNCH</li>
+                      <li>✅ 2 TIMES SNACKS</li>
+                      <li>✅ MEETING HALL AND ARRANGEMENTS</li>
+                    </ul>
                   </div>
+
                   <div className="summary-divider" />
                   <div className="summary-total-row">
                     <span>Grand Total</span>
@@ -1203,8 +1209,13 @@ export default function SeatBookingModal({ event, onClose }: Props) {
               e.preventDefault();
               const currentName = attendeeDetails[selectedSeats[currentAttendeeIndex]]?.name || '';
               const currentPhone = attendeeDetails[selectedSeats[currentAttendeeIndex]]?.whatsapp || '';
+              const currentLunch = attendeeDetails[selectedSeats[currentAttendeeIndex]]?.lunch || '';
               if (!currentName.trim()) {
                 alert('Please enter the name of the attendee.');
+                return;
+              }
+              if (!currentLunch) {
+                alert('Please select a lunch preference.');
                 return;
               }
               const phoneRegex = /^[0-9]{10}$/;
@@ -1247,8 +1258,8 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                       setAttendeeDetails(prev => ({
                         ...prev,
                         [selectedSeats[currentAttendeeIndex]]: {
+                          ...prev[selectedSeats[currentAttendeeIndex]],
                           name: val,
-                          whatsapp: prev[selectedSeats[currentAttendeeIndex]]?.whatsapp || ''
                         }
                       }));
                     }}
@@ -1256,6 +1267,33 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                     autoFocus
                     className="text-input-field"
                   />
+                </div>
+              </div>
+
+              <div className="form-input-group">
+                <label className="input-field-label">Lunch Preference <span style={{ color: '#ef4444' }}>*</span></label>
+                <div className="input-field-wrap">
+                  <span className="input-field-icon">🍽️</span>
+                  <select 
+                    value={attendeeDetails[selectedSeats[currentAttendeeIndex]]?.lunch || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setAttendeeDetails(prev => ({
+                        ...prev,
+                        [selectedSeats[currentAttendeeIndex]]: {
+                          ...prev[selectedSeats[currentAttendeeIndex]],
+                          lunch: val
+                        }
+                      }));
+                    }}
+                    required
+                    className="text-input-field"
+                    style={{ appearance: 'none', backgroundColor: 'transparent', outline: 'none' }}
+                  >
+                    <option value="" disabled>Choose preference...</option>
+                    <option value="Vegetarian">Vegetarian</option>
+                    <option value="Non-Vegetarian">Non-Vegetarian</option>
+                  </select>
                 </div>
               </div>
 
@@ -1278,7 +1316,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                       setAttendeeDetails(prev => ({
                         ...prev,
                         [selectedSeats[currentAttendeeIndex]]: {
-                          name: prev[selectedSeats[currentAttendeeIndex]]?.name || '',
+                          ...prev[selectedSeats[currentAttendeeIndex]],
                           whatsapp: val
                         }
                       }));
@@ -1355,13 +1393,20 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                     <span>Base Amount:</span>
                     <span className="summary-val">₹{basePrice}</span>
                   </div>
-                  <div className="summary-row">
-                    <span>GST (18%):</span>
-                    <span className="summary-val">₹{gstAmount}</span>
+
+                  <div className="summary-perks" style={{ margin: '1rem 0', padding: '0.85rem', background: '#f0fdf4', borderRadius: '8px', border: '1px dashed #bbf7d0', fontSize: '0.85rem' }}>
+                    <div style={{ fontWeight: '900', color: '#166534', marginBottom: '0.5rem', textAlign: 'center', letterSpacing: '0.5px' }}>COMPLETELY FREE EDUCATION</div>
+                    <div style={{ color: '#065f46', marginBottom: '0.4rem', fontWeight: 700 }}>₹1000 REGISTRATION FEE COVERS:</div>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#064e3b', display: 'flex', flexDirection: 'column', gap: '0.3rem', fontWeight: 500 }}>
+                      <li>✅ LUNCH</li>
+                      <li>✅ 2 TIMES SNACKS</li>
+                      <li>✅ MEETING HALL AND ARRANGEMENTS</li>
+                    </ul>
                   </div>
+
                   <div className="summary-divider" />
                   <div className="summary-total-row">
-                    <span>Grand Total (with GST):</span>
+                    <span>Grand Total:</span>
                     <span className="summary-total-val" style={{ color: '#10b981' }}>₹{totalPrice}</span>
                   </div>
                 </div>
@@ -1439,10 +1484,6 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                   <div className="upi-detail-row">
                     <span className="upi-label">Base Amount</span>
                     <strong className="upi-value">₹{basePrice}</strong>
-                  </div>
-                  <div className="upi-detail-row">
-                    <span className="upi-label">GST (18%)</span>
-                    <strong className="upi-value">₹{gstAmount}</strong>
                   </div>
                   <div className="upi-detail-row">
                     <span className="upi-label">Payable Amount</span>
@@ -1638,10 +1679,20 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                   <div className="bsc-info-row"><span>Price / Seat</span><strong>₹{pricePerSeat}</strong></div>
                   <div className="bsc-info-row"><span>No. of Seats</span><strong>{confirmedData?.seats?.length || quantity}</strong></div>
                   <div className="bsc-info-row"><span>Base Amount</span><strong>₹{(confirmedData?.seats?.length || quantity) * pricePerSeat}</strong></div>
-                  <div className="bsc-info-row"><span>GST (18%)</span><strong>₹{Math.round((confirmedData?.seats?.length || quantity) * pricePerSeat * 0.18)}</strong></div>
+                  
+                  <div style={{ margin: '1rem 0', padding: '0.85rem', background: '#f0fdf4', borderRadius: '8px', border: '1px dashed #bbf7d0', fontSize: '0.85rem' }}>
+                    <div style={{ fontWeight: '900', color: '#166534', marginBottom: '0.5rem', textAlign: 'center', letterSpacing: '0.5px' }}>COMPLETELY FREE EDUCATION</div>
+                    <div style={{ color: '#065f46', marginBottom: '0.4rem', fontWeight: 700 }}>₹1000 REGISTRATION FEE COVERS:</div>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#064e3b', display: 'flex', flexDirection: 'column', gap: '0.3rem', fontWeight: 500 }}>
+                      <li>✅ LUNCH</li>
+                      <li>✅ 2 TIMES SNACKS</li>
+                      <li>✅ MEETING HALL AND ARRANGEMENTS</li>
+                    </ul>
+                  </div>
+
                   <div className="bsc-divider" />
                   <div className="bsc-info-row bsc-total-row">
-                    <span>Grand Total (incl. GST)</span>
+                    <span>Grand Total</span>
                     <strong className="bsc-total-amount">₹{confirmedData?.totalPrice !== undefined ? confirmedData.totalPrice : totalPrice}</strong>
                   </div>
                   <div className="bsc-info-row" style={{ marginTop: '0.85rem' }}>
@@ -2840,7 +2891,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
         .qr-image-wrap {
           background: white;
-          padding: 14px;
+          padding: 0;
           border-radius: 14px;
           box-shadow: 0 10px 30px rgba(16, 185, 129, 0.15);
           border: 2px solid #6ee7b7;
@@ -2848,19 +2899,22 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           align-items: center;
           justify-content: center;
           width: 100%;
-          max-width: 320px;
+          max-width: 250px;
           aspect-ratio: 1 / 1;
           margin: 0 auto;
           flex-shrink: 0;
           box-sizing: border-box;
+          overflow: hidden;
         }
 
         .payment-qr-img {
           width: 100% !important;
           height: 100% !important;
-          max-width: 290px;
-          max-height: 290px;
-          object-fit: contain !important;
+          max-width: none !important;
+          max-height: none !important;
+          object-fit: cover !important;
+          object-position: center 50%;
+          transform: scale(1.6);
           image-rendering: -webkit-optimize-contrast;
           image-rendering: crisp-edges;
           display: block;
@@ -2869,7 +2923,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           transition: transform 0.3s ease;
         }
         .payment-qr-img:hover {
-          transform: scale(1.05);
+          transform: scale(1.65);
         }
 
         .qr-pay-caption {

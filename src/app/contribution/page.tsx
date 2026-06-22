@@ -353,7 +353,7 @@ export default function ContributionPage() {
               <div className="payment-right-panel">
                 <div className="qr-container-box">
                   <div className="qr-image-wrap">
-                    <img src={qrImageUrl} alt={`UPI QR Code for ₹${totalPrice}`} className="payment-qr-img" />
+                    <img src={upiConfig.upiQrUrl} alt={`UPI QR Code for ₹${totalPrice}`} className="payment-qr-img" />
                   </div>
                   <div className="qr-pay-caption">Scan this UPI QR code to transfer ₹{totalPrice}</div>
                 </div>
