@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText, Upload, Trophy, Award, Star, Crown } from 'lucide-react';
+import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText, Upload, Trophy, Award, Star, Crown, Coffee, Users, Download } from 'lucide-react';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -29,7 +29,7 @@ export default function AdminDashboard() {
   const [selectedContributionDetail, setSelectedContributionDetail] = useState<any | null>(null);
   const [mounted, setMounted] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions' | 'achievers'>('registrations');
+  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions' | 'achievers' | 'foodList' | 'attendeeList'>('registrations');
   const [events, setEvents] = useState<any[]>([]);
   const [eventSaving, setEventSaving] = useState(false);
   const [eventMessage, setEventMessage] = useState('');
@@ -539,6 +539,79 @@ export default function AdminDashboard() {
   const filteredBookings = eventBookings.filter((b) => b.status === activeTab);
   const filteredContributions = contributionBookings.filter((b) => b.status === contribActiveTab);
 
+  // Data extraction for Food and Attendee Lists
+  const approvedEventBookings = eventBookings.filter(b => b.status === 'approved');
+  
+  const allAttendeesList = approvedEventBookings.flatMap(b => {
+    if (!b.attendees) return [];
+    return Object.entries(b.attendees).map(([seat, val]: any) => {
+      const name = typeof val === 'object' && val !== null ? val.name : val;
+      const phone = typeof val === 'object' && val !== null ? val.phone : '';
+      const whatsapp = typeof val === 'object' && val !== null ? val.whatsapp : '';
+      const vpName = typeof val === 'object' && val !== null ? val.vpName : '';
+      const lunch = typeof val === 'object' && val !== null ? val.lunch : 'Vegetarian';
+      return {
+        bookingId: b.id.toUpperCase(),
+        seat,
+        name: name || 'N/A',
+        phone: phone || 'N/A',
+        whatsapp: whatsapp || 'N/A',
+        vpName: vpName || 'N/A',
+        lunch: lunch || 'Vegetarian',
+        event: b.seminarName || b.eventName || 'N/A'
+      };
+    });
+  });
+
+  const vegAttendees = allAttendeesList.filter(a => a.lunch === 'Vegetarian');
+  const nonVegAttendees = allAttendeesList.filter(a => a.lunch === 'Non-Vegetarian');
+
+  const exportToCSV = (data: any[], filename: string) => {
+    if (data.length === 0) {
+      alert("No data to export");
+      return;
+    }
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+      headers.map(h => `"${h.toUpperCase()}"`).join(','),
+      ...data.map(row => headers.map(h => `"${String(row[h]).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToWord = (elementId: string, filename: string) => {
+    const el = document.getElementById(elementId);
+    if (!el) {
+      alert("No table found to export");
+      return;
+    }
+    const html = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head><meta charset='utf-8'><title>Export</title>
+      <style>table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid black; padding: 5px; text-align: left; }</style>
+      </head><body>
+      ${el.outerHTML}
+      </body></html>
+    `;
+    const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="admin-dashboard-page animate-fade-in">
       {/* Header bar */}
@@ -671,6 +744,20 @@ export default function AdminDashboard() {
             >
               <Trophy size={16} />
               <span>Top Achievers</span>
+            </button>
+            <button
+              onClick={() => setAdminSection('foodList')}
+              className={`section-tab ${adminSection === 'foodList' ? 'active' : ''}`}
+            >
+              <Coffee size={16} />
+              <span>Food List</span>
+            </button>
+            <button
+              onClick={() => setAdminSection('attendeeList')}
+              className={`section-tab ${adminSection === 'attendeeList' ? 'active' : ''}`}
+            >
+              <Users size={16} />
+              <span>Total Booking List</span>
             </button>
           </div>
         </div>
@@ -1306,7 +1393,7 @@ export default function AdminDashboard() {
               )}
             </form>
           </div>
-        ) : (
+        ) : adminSection === 'configs' ? (
           <div className="payment-settings-area animate-slide-up">
             <div className="event-form-card glass-card">
               <div className="event-manager-header">
@@ -1386,7 +1473,103 @@ export default function AdminDashboard() {
               </form>
             </div>
           </div>
-        )}
+        ) : adminSection === 'foodList' ? (
+          <div className="dashboard-main-area animate-slide-up">
+            <div className="event-manager-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h2 className="heading-md">Dietary Requirements List</h2>
+                <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Total Vegetarians: <strong>{vegAttendees.length}</strong> | Total Non-Vegetarians: <strong>{nonVegAttendees.length}</strong></p>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button onClick={() => exportToCSV(allAttendeesList, 'food_list.csv')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Download size={14} /> Export Excel
+                </button>
+                <button onClick={() => exportToWord('food-table-export', 'food_list.doc')} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FileText size={14} /> Export Word
+                </button>
+              </div>
+            </div>
+            <div className="glass-card" style={{ padding: '0', overflowX: 'auto' }}>
+              <table id="food-table-export" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #f1f5f9', background: '#f8fafc' }}>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Booking Ref</th>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Seat No</th>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Attendee Name</th>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Food Preference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allAttendeesList.length === 0 ? (
+                    <tr><td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No attendees found in confirmed bookings</td></tr>
+                  ) : (
+                    [...allAttendeesList].sort((a,b) => b.lunch.localeCompare(a.lunch)).map((attendee, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '1rem', fontWeight: 600, border: '1px solid #e2e8f0' }}>{attendee.bookingId}</td>
+                        <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.seat}</td>
+                        <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.name}</td>
+                        <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>
+                          <span className={`badge ${attendee.lunch === 'Vegetarian' ? 'badge-approved' : 'badge-pending'}`}>
+                            {attendee.lunch}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : adminSection === 'attendeeList' ? (
+          <div className="dashboard-main-area animate-slide-up">
+            <div className="event-manager-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h2 className="heading-md">Total Booking List (Attendees)</h2>
+                <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Total Registered Attendees: <strong>{allAttendeesList.length}</strong></p>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button onClick={() => exportToCSV(allAttendeesList, 'attendee_list.csv')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Download size={14} /> Export Excel
+                </button>
+                <button onClick={() => exportToWord('attendee-table-export', 'attendee_list.doc')} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FileText size={14} /> Export Word
+                </button>
+              </div>
+            </div>
+            <div className="glass-card" style={{ padding: '0', overflowX: 'auto' }}>
+              <table id="attendee-table-export" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #f1f5f9', background: '#f8fafc' }}>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Booking Ref</th>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Seat No</th>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Attendee Name</th>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Phone Number</th>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>WhatsApp Number</th>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>VP Name</th>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Event/Program</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allAttendeesList.length === 0 ? (
+                    <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No attendees found in confirmed bookings</td></tr>
+                  ) : (
+                    allAttendeesList.map((attendee, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '1rem', fontWeight: 600, border: '1px solid #e2e8f0' }}>{attendee.bookingId}</td>
+                        <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.seat}</td>
+                        <td style={{ padding: '1rem', fontWeight: 500, border: '1px solid #e2e8f0' }}>{attendee.name}</td>
+                        <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.phone}</td>
+                        <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.whatsapp}</td>
+                        <td style={{ padding: '1rem', fontStyle: 'italic', color: '#64748b', border: '1px solid #e2e8f0' }}>{attendee.vpName}</td>
+                        <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.event}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* Screenshot Lightbox Modal */}
