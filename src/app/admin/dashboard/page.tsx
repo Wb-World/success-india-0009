@@ -1478,10 +1478,10 @@ export default function AdminDashboard() {
             <div className="event-manager-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h2 className="heading-md">Dietary Requirements List</h2>
-                <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Total Vegetarians: <strong>{vegAttendees.length}</strong> | Total Non-Vegetarians: <strong>{nonVegAttendees.length}</strong></p>
+                <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Total Attendees: <strong>{allAttendeesList.length}</strong> | Total Vegetarians: <strong>{vegAttendees.length}</strong> | Total Non-Vegetarians: <strong>{nonVegAttendees.length}</strong></p>
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => exportToCSV(allAttendeesList, 'food_list.csv')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button onClick={() => exportToCSV([...vegAttendees, ...nonVegAttendees], 'food_list.csv')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Download size={14} /> Export Excel
                 </button>
                 <button onClick={() => exportToWord('food-table-export', 'food_list.doc')} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1491,27 +1491,56 @@ export default function AdminDashboard() {
             </div>
             <div className="glass-card" style={{ padding: '0', overflowX: 'auto' }}>
               <table id="food-table-export" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
-                <thead>
+                <tbody>
+                  {/* VEGETARIAN SECTION */}
+                  <tr style={{ background: '#f1f5f9' }}>
+                    <th colSpan={4} style={{ padding: '1.25rem 1rem', fontSize: '1.1rem', color: '#0f172a', border: '1px solid #e2e8f0' }}>
+                      Vegetarian ({vegAttendees.length})
+                    </th>
+                  </tr>
                   <tr style={{ borderBottom: '2px solid #f1f5f9', background: '#f8fafc' }}>
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Booking Ref</th>
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Seat No</th>
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Attendee Name</th>
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Food Preference</th>
                   </tr>
-                </thead>
-                <tbody>
-                  {allAttendeesList.length === 0 ? (
-                    <tr><td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No attendees found in confirmed bookings</td></tr>
+                  {vegAttendees.length === 0 ? (
+                    <tr><td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No vegetarian attendees found</td></tr>
                   ) : (
-                    [...allAttendeesList].sort((a,b) => b.lunch.localeCompare(a.lunch)).map((attendee, idx) => (
-                      <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    vegAttendees.map((attendee, idx) => (
+                      <tr key={`v-${idx}`} style={{ borderBottom: '1px solid #f1f5f9' }}>
                         <td style={{ padding: '1rem', fontWeight: 600, border: '1px solid #e2e8f0' }}>{attendee.bookingId}</td>
                         <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.seat}</td>
                         <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.name}</td>
                         <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>
-                          <span className={`badge ${attendee.lunch === 'Vegetarian' ? 'badge-approved' : 'badge-pending'}`}>
-                            {attendee.lunch}
-                          </span>
+                          <span className="badge badge-approved">{attendee.lunch}</span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+
+                  {/* NON-VEGETARIAN SECTION */}
+                  <tr style={{ background: '#f1f5f9' }}>
+                    <th colSpan={4} style={{ padding: '1.25rem 1rem', fontSize: '1.1rem', color: '#0f172a', border: '1px solid #e2e8f0' }}>
+                      Non-Vegetarian ({nonVegAttendees.length})
+                    </th>
+                  </tr>
+                  <tr style={{ borderBottom: '2px solid #f1f5f9', background: '#f8fafc' }}>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Booking Ref</th>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Seat No</th>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Attendee Name</th>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Food Preference</th>
+                  </tr>
+                  {nonVegAttendees.length === 0 ? (
+                    <tr><td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No non-vegetarian attendees found</td></tr>
+                  ) : (
+                    nonVegAttendees.map((attendee, idx) => (
+                      <tr key={`n-${idx}`} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '1rem', fontWeight: 600, border: '1px solid #e2e8f0' }}>{attendee.bookingId}</td>
+                        <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.seat}</td>
+                        <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.name}</td>
+                        <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>
+                          <span className="badge badge-pending">{attendee.lunch}</span>
                         </td>
                       </tr>
                     ))
