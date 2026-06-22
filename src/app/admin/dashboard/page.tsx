@@ -25,6 +25,7 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'denied'>('pending');
+  const [selectedEventFilter, setSelectedEventFilter] = useState<string>('All');
   const [contribActiveTab, setContribActiveTab] = useState<'pending' | 'approved' | 'denied'>('pending');
   const [selectedContributionDetail, setSelectedContributionDetail] = useState<any | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -548,7 +549,7 @@ export default function AdminDashboard() {
       const name = typeof val === 'object' && val !== null ? val.name : val;
       const phone = typeof val === 'object' && val !== null ? val.phone : '';
       const whatsapp = typeof val === 'object' && val !== null ? val.whatsapp : '';
-      const vpName = typeof val === 'object' && val !== null ? val.vpName : '';
+      const vpName = b.bookerVpName || b.booker_vp_name || (typeof val === 'object' && val !== null ? val.vpName : '') || 'N/A';
       const lunch = typeof val === 'object' && val !== null ? val.lunch : 'Vegetarian';
       return {
         bookingId: b.id.toUpperCase(),
@@ -563,8 +564,30 @@ export default function AdminDashboard() {
     });
   });
 
-  const vegAttendees = allAttendeesList.filter(a => a.lunch === 'Vegetarian');
-  const nonVegAttendees = allAttendeesList.filter(a => a.lunch === 'Non-Vegetarian');
+  const uniqueEvents = Array.from(new Set(allAttendeesList.map(a => a.event)));
+
+  const eventFilteredAttendees = selectedEventFilter === 'All' 
+    ? allAttendeesList 
+    : allAttendeesList.filter(a => a.event === selectedEventFilter);
+
+  const vegAttendees = eventFilteredAttendees.filter(a => a.lunch === 'Vegetarian');
+  const nonVegAttendees = eventFilteredAttendees.filter(a => a.lunch === 'Non-Vegetarian');
+
+  const foodExportData = [...vegAttendees, ...nonVegAttendees].map(a => ({
+    'Booking Ref': a.bookingId,
+    'Seat No': a.seat,
+    'Attendee Name': a.name,
+    'Food Preference': a.lunch
+  }));
+
+  const attendeeExportData = eventFilteredAttendees.map(a => ({
+    'Booking Ref': a.bookingId,
+    'Seat No': a.seat,
+    'Attendee Name': a.name,
+    'WhatsApp Number': a.whatsapp,
+    'VP Name': a.vpName,
+    'Event/Program': a.event
+  }));
 
   const exportToCSV = (data: any[], filename: string) => {
     if (data.length === 0) {
@@ -1478,10 +1501,18 @@ export default function AdminDashboard() {
             <div className="event-manager-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h2 className="heading-md">Dietary Requirements List</h2>
-                <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Total Attendees: <strong>{allAttendeesList.length}</strong> | Total Vegetarians: <strong>{vegAttendees.length}</strong> | Total Non-Vegetarians: <strong>{nonVegAttendees.length}</strong></p>
+                <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Total Attendees: <strong>{eventFilteredAttendees.length}</strong> | Total Vegetarians: <strong>{vegAttendees.length}</strong> | Total Non-Vegetarians: <strong>{nonVegAttendees.length}</strong></p>
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => exportToCSV([...vegAttendees, ...nonVegAttendees], 'food_list.csv')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <select 
+                  value={selectedEventFilter} 
+                  onChange={(e) => setSelectedEventFilter(e.target.value)}
+                  style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
+                >
+                  <option value="All">All Events</option>
+                  {uniqueEvents.map(ev => <option key={ev} value={ev}>{ev}</option>)}
+                </select>
+                <button onClick={() => exportToCSV(foodExportData, 'food_list.csv')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Download size={14} /> Export Excel
                 </button>
                 <button onClick={() => exportToWord('food-table-export', 'food_list.doc')} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1554,10 +1585,18 @@ export default function AdminDashboard() {
             <div className="event-manager-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h2 className="heading-md">Total Booking List (Attendees)</h2>
-                <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Total Registered Attendees: <strong>{allAttendeesList.length}</strong></p>
+                <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Total Registered Attendees: <strong>{eventFilteredAttendees.length}</strong></p>
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => exportToCSV(allAttendeesList, 'attendee_list.csv')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <select 
+                  value={selectedEventFilter} 
+                  onChange={(e) => setSelectedEventFilter(e.target.value)}
+                  style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
+                >
+                  <option value="All">All Events</option>
+                  {uniqueEvents.map(ev => <option key={ev} value={ev}>{ev}</option>)}
+                </select>
+                <button onClick={() => exportToCSV(attendeeExportData, 'attendee_list.csv')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Download size={14} /> Export Excel
                 </button>
                 <button onClick={() => exportToWord('attendee-table-export', 'attendee_list.doc')} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1572,22 +1611,20 @@ export default function AdminDashboard() {
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Booking Ref</th>
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Seat No</th>
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Attendee Name</th>
-                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Phone Number</th>
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>WhatsApp Number</th>
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>VP Name</th>
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Event/Program</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {allAttendeesList.length === 0 ? (
-                    <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No attendees found in confirmed bookings</td></tr>
+                  {eventFilteredAttendees.length === 0 ? (
+                    <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No attendees found</td></tr>
                   ) : (
-                    allAttendeesList.map((attendee, idx) => (
+                    eventFilteredAttendees.map((attendee, idx) => (
                       <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
                         <td style={{ padding: '1rem', fontWeight: 600, border: '1px solid #e2e8f0' }}>{attendee.bookingId}</td>
                         <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.seat}</td>
                         <td style={{ padding: '1rem', fontWeight: 500, border: '1px solid #e2e8f0' }}>{attendee.name}</td>
-                        <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.phone}</td>
                         <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.whatsapp}</td>
                         <td style={{ padding: '1rem', fontStyle: 'italic', color: '#64748b', border: '1px solid #e2e8f0' }}>{attendee.vpName}</td>
                         <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.event}</td>
