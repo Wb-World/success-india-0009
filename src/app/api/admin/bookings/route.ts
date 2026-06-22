@@ -115,6 +115,7 @@ export async function GET(request: Request) {
         bookerName: b.booker_name || '',
         bookerMemberId: b.booker_member_id || '',
         bookerPhone: bookerPhone,
+        bookerVpName: b.booker_vp_name || '',
       };
     });
 

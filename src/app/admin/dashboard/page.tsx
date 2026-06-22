@@ -545,7 +545,12 @@ export default function AdminDashboard() {
   
   const allAttendeesList = approvedEventBookings.flatMap(b => {
     if (!b.attendees) return [];
-    return Object.entries(b.attendees).map(([seat, val]: any) => {
+    return Object.entries(b.attendees).filter(([seat, val]: any) => {
+      if (b.seats && Array.isArray(b.seats) && b.seats.length > 0) {
+        return b.seats.includes(seat);
+      }
+      return typeof val === 'object' && val !== null;
+    }).map(([seat, val]: any) => {
       const name = typeof val === 'object' && val !== null ? val.name : val;
       const phone = typeof val === 'object' && val !== null ? val.phone : '';
       const whatsapp = typeof val === 'object' && val !== null ? val.whatsapp : '';
