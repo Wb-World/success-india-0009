@@ -148,11 +148,10 @@ export async function POST(request: Request) {
     }
 
     const { data: adminUser, error: adminError } = await supabaseAdmin
-      .from('users')
-      .select('id, role')
+      .from('admin')
+      .select('id, username, role')
       .eq('id', adminId)
-      .eq('role', 'admin')
-      .single();
+      .maybeSingle();
 
     if (adminError || !adminUser) {
       return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });
@@ -241,11 +240,10 @@ export async function PATCH(request: Request) {
     }
 
     const { data: adminUser, error: adminError } = await supabaseAdmin
-      .from('users')
-      .select('id, role')
+      .from('admin')
+      .select('id, username, role')
       .eq('id', adminId)
-      .eq('role', 'admin')
-      .single();
+      .maybeSingle();
 
     if (adminError || !adminUser) {
       return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });
@@ -334,11 +332,10 @@ export async function DELETE(request: Request) {
     }
 
     const { data: adminUser, error: adminError } = await supabaseAdmin
-      .from('users')
-      .select('id, role')
+      .from('admin')
+      .select('id, username, role')
       .eq('id', adminId)
-      .eq('role', 'admin')
-      .single();
+      .maybeSingle();
 
     if (adminError || !adminUser) {
       return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });

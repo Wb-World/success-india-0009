@@ -10,13 +10,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Verify requester is an admin in Supabase
+    // Verify requester is an admin in the admin table
     const { data: adminUser, error: adminError } = await supabaseAdmin
-      .from('users')
-      .select('*')
+      .from('admin')
+      .select('id, username, role')
       .eq('id', adminId)
-      .eq('role', 'admin')
-      .single();
+      .maybeSingle();
 
     if (adminError || !adminUser) {
       return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });

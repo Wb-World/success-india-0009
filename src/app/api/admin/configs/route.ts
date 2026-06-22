@@ -43,13 +43,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Verify admin role in users table
+    // Verify admin role in admin table
     const { data: adminUser, error: adminError } = await supabaseAdmin
-      .from('users')
-      .select('*')
+      .from('admin')
+      .select('id, username, role')
       .eq('id', adminId)
-      .eq('role', 'admin')
-      .single();
+      .maybeSingle();
 
     if (adminError || !adminUser) {
       return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });

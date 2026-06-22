@@ -36,7 +36,7 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/admin-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -45,12 +45,6 @@ export default function AdminLogin() {
       const data = await res.json();
 
       if (res.ok) {
-        if (data.user.role !== 'admin') {
-          setErrorMsg('Access denied. Administrative privileges required.');
-          setLoading(false);
-          return;
-        }
-
         localStorage.setItem('user', JSON.stringify(data.user));
         window.dispatchEvent(new Event('auth-change'));
         router.push('/admin/dashboard');

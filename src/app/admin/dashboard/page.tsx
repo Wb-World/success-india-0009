@@ -652,14 +652,14 @@ export default function AdminDashboard() {
                 Success<span className="text-primary-green"> Team</span>
                 <span className="workspace-suffix">Operations Console</span>
               </h1>
-              <p className="admin-subtitle-desc">Premium Administration & Operations Portal</p>
+              {/* <p className="admin-subtitle-desc">Premium Administration & Operations Portal</p> */}
             </div>
           </div>
           <div className="header-right-actions">
-            <span className="live-status-indicator">
+            {/* <span className="live-status-indicator">
               <span className="status-dot"></span>
               Live Sync Active
-            </span>
+            </span> */}
             <button onClick={handleLogout} className="btn-admin-logout">
               <LogOut size={15} /> Close Console
             </button>
