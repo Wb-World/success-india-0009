@@ -233,6 +233,7 @@ export async function POST(request: Request) {
               __booker_phone: resolvedBookerPhone,
               __user_email: resolvedUserEmail,
               __username: resolvedUsername,
+              __booker_vp_name: resolvedBookerVpName,
             },
             qr_code_payload: qrCodePayload,
             booker_name: resolvedBookerName,
@@ -257,6 +258,7 @@ export async function POST(request: Request) {
           __booker_phone: resolvedBookerPhone,
           __user_email: resolvedUserEmail,
           __username: resolvedUsername,
+          __booker_vp_name: resolvedBookerVpName,
         })}|${qrCodePayload}`;
 
         await supabaseAdmin.from('buses').upsert(
