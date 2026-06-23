@@ -12,7 +12,7 @@ export async function GET() {
       .from('bookings')
       .select('id, attendee_details, created_at, screenshot, homepage_visible')
       .eq('status', 'approved')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: true });
 
     bookings = queryData;
     error = queryError;
@@ -23,7 +23,7 @@ export async function GET() {
         .from('bookings')
         .select('id, attendee_details, created_at, screenshot')
         .eq('status', 'approved')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
       const res = await fallbackQuery;
       bookings = res.data;
       error = res.error;
@@ -66,3 +66,4 @@ export async function GET() {
     return NextResponse.json({ error: err.message || 'An error occurred' }, { status: 500 });
   }
 }
+

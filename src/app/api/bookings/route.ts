@@ -24,20 +24,46 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'eventId parameter is required' }, { status: 400 });
     }
 
-    const { data: bookings, error } = await supabaseAdmin
-      .from('bookings')
-      .select('seats')
-      .eq('bus_id', eventId)
-      .in('status', ['approved', 'pending']);
+    // ── Primary: query using OR to match both seminar_id and bus_id ──────────
+    // New bookings: seminar_id = eventId, bus_id = null
+    // Legacy bookings: bus_id = eventId, seminar_id = null/missing
+    let takenSeats: string[] = [];
+    let querySucceeded = false;
 
-    if (error) {
-      console.error('Failed to fetch booked seats:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('bookings')
+        .select('seats')
+        .or(`seminar_id.eq.${eventId},bus_id.eq.${eventId}`)
+        .in('status', ['approved', 'pending']);
+
+      if (!error) {
+        takenSeats = (data || []).flatMap((bk: any) => bk.seats || []);
+        querySucceeded = true;
+      } else {
+        // seminar_id column may not exist — fall back to bus_id only
+        console.warn('[bookings GET] OR query failed, falling back to bus_id only:', error.message);
+      }
+    } catch (e) {
+      console.warn('[bookings GET] OR query threw, falling back:', e);
     }
 
-    const takenSeats = (bookings || []).flatMap((bk: any) => bk.seats || []);
-    const uniqueSeats = Array.from(new Set(takenSeats));
+    // ── Fallback: bus_id only (older schema) ─────────────────────────────────
+    if (!querySucceeded) {
+      const { data, error } = await supabaseAdmin
+        .from('bookings')
+        .select('seats')
+        .eq('bus_id', eventId)
+        .in('status', ['approved', 'pending']);
 
+      if (error) {
+        console.error('[bookings GET] fallback query failed:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+      takenSeats = (data || []).flatMap((bk: any) => bk.seats || []);
+    }
+
+    const uniqueSeats = Array.from(new Set(takenSeats));
     return NextResponse.json({ seats: uniqueSeats });
   } catch (err: any) {
     console.error('Error in GET /api/bookings:', err);
@@ -116,15 +142,30 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check for seat conflicts on approved bookings (best effort)
+    // Check for seat conflicts on approved/pending bookings (best effort)
     try {
-      const { data: conflicting } = await supabaseAdmin
+      const orFilter = `seminar_id.eq.${resolvedSeminarId},bus_id.eq.${resolvedSeminarId}`;
+      let conflictQuery = supabaseAdmin
         .from('bookings')
         .select('seats')
-        .eq('bus_id', resolvedSeminarId)
+        .or(orFilter)
         .eq('date', date)
         .eq('time', time)
         .in('status', ['approved', 'pending']);
+
+      let { data: conflicting, error: conflictError } = await conflictQuery;
+
+      // Fallback to bus_id only if OR fails (older schema)
+      if (conflictError) {
+        const fb = await supabaseAdmin
+          .from('bookings')
+          .select('seats')
+          .eq('bus_id', resolvedSeminarId)
+          .eq('date', date)
+          .eq('time', time)
+          .in('status', ['approved', 'pending']);
+        conflicting = fb.data;
+      }
 
       const alreadyBooked = (conflicting || []).flatMap((bk: any) => bk.seats || []);
       const hasConflict = seats.some((s: string) => alreadyBooked.includes(s));

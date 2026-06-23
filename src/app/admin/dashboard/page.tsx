@@ -1731,7 +1731,7 @@ export default function AdminDashboard() {
                     >
                       <img src={selectedContributionDetail.attendees.SUPPORTER.vpImage} alt="VP Upload" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
-                    <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>VP Image</span>
+                    <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>Your Image</span>
                   </div>
                 )}
               </div>

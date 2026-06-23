@@ -14,6 +14,7 @@ type SeminarEvent = {
   price: number;
   totalSeats?: number;
   bookedCount?: number;
+  availableSeats?: number;
   name?: string;
   bookedSeatsByTime?: Record<string, string[]>;
 };
@@ -23,24 +24,43 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [modalEvent, setModalEvent] = useState<SeminarEvent | null>(null);
 
+  // The displayed title for the primary event (overridden from backend title)
+  const PRIMARY_EVENT_TITLE = "SUCCESS TEAM MEGA MASS EDUCATIONAL TRAINING";
+  const PRIMARY_EVENT_ID = "seminar_mega_mass_2026";
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await fetch('/api/events');
+        // Pass the frontend-override title so server-side seat counting can match
+        // bookings that stored destination = this title (even if DB event title differs)
+        const res = await fetch(`/api/events?displayTitle=${encodeURIComponent(PRIMARY_EVENT_TITLE)}`);
         const data = await res.json();
         if (res.ok) {
           let list = data.events || [];
           if (list.length === 0) {
+            let bookedCount = 0;
+            try {
+              const bookedRes = await fetch(`/api/bookings?eventId=${encodeURIComponent(PRIMARY_EVENT_ID)}`);
+              if (bookedRes.ok) {
+                const bookedData = await bookedRes.json();
+                bookedCount = Array.isArray(bookedData.seats) ? bookedData.seats.length : 0;
+              }
+            } catch {
+              bookedCount = 0;
+            }
+
             list = [
               {
-                id: "seminar_mega_mass_2026",
-                title: "SUCCESS TEAM MEGA MASS EDUCATIONAL TRAINING",
-                name: "SUCCESS TEAM MEGA MASS EDUCATIONAL TRAINING",
+                id: PRIMARY_EVENT_ID,
+                title: PRIMARY_EVENT_TITLE,
+                name: PRIMARY_EVENT_TITLE,
                 venue: "Hotel Chennai Deluxe",
                 eventDate: "2026-06-28",
                 eventTime: "09:00 AM",
                 price: 1000,
                 totalSeats: 300,
+                bookedCount,
+                availableSeats: Math.max(0, 300 - bookedCount),
               }
             ];
           } else {
@@ -48,17 +68,22 @@ export default function EventsPage() {
               if (idx === 0) {
                 return {
                   ...ev,
-                  title: "SUCCESS TEAM MEGA MASS EDUCATIONAL TRAINING",
-                  name: "SUCCESS TEAM MEGA MASS EDUCATIONAL TRAINING",
+                  title: PRIMARY_EVENT_TITLE,
+                  name: PRIMARY_EVENT_TITLE,
                   venue: "Hotel Chennai Deluxe",
                   eventDate: "2026-06-28",
                   eventTime: "09:00 AM",
-                  totalSeats: 300,
+                  totalSeats: ev.totalSeats || 300,
+                  // bookedCount and availableSeats come from server — preserve them
+                  bookedCount: ev.bookedCount ?? 0,
+                  availableSeats: ev.availableSeats !== undefined ? ev.availableSeats : Math.max(0, (ev.totalSeats || 300) - (ev.bookedCount || 0)),
                 };
               }
               return {
                 ...ev,
-                totalSeats: 300,
+                totalSeats: ev.totalSeats || 300,
+                bookedCount: ev.bookedCount ?? 0,
+                availableSeats: ev.availableSeats !== undefined ? ev.availableSeats : Math.max(0, (ev.totalSeats || 300) - (ev.bookedCount || 0)),
               };
             });
           }
@@ -70,7 +95,11 @@ export default function EventsPage() {
         setLoading(false);
       }
     };
+
     fetchEvents();
+    // Poll every 30 seconds to keep seat count live
+    const interval = setInterval(fetchEvents, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -147,7 +176,10 @@ export default function EventsPage() {
                   {event.totalSeats && (() => {
                     const total = event.totalSeats || 0;
                     const booked = event.bookedCount || 0;
-                    const available = Math.max(0, total - booked);
+                    // availableSeats from API (server-computed) takes priority; fallback to calculation
+                    const available = (event.availableSeats !== undefined && event.availableSeats < total)
+                      ? event.availableSeats
+                      : Math.max(0, total - booked);
                     const pct = total > 0 ? Math.min(100, Math.round((booked / total) * 100)) : 0;
                     const isLow = available <= 30;
                     return (
@@ -516,3 +548,6 @@ export default function EventsPage() {
     </AuthGuard>
   );
 }
+
+
+

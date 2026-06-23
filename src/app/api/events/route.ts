@@ -28,16 +28,44 @@ function getTimePart(value: string) {
   });
 }
 
-function normalizeEvent(event: any, bookedSeatsByTime: Record<string, string[]> = {}) {
+function normalizeComparable(value: unknown) {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function countSeats(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean).length;
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return 0;
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(Boolean).length;
+      }
+    } catch {
+      // Fall through to comma-separated parsing.
+    }
+
+    return trimmed.split(',').map((seat) => seat.trim()).filter(Boolean).length;
+  }
+
+  return 0;
+}
+
+function normalizeEvent(event: any, approvedBookedCount: number = 0) {
   const eventDateTime = event.event_datetime || event.eventDateTime || event.datetime;
   const eventDate = getDatePart(eventDateTime);
   const eventTime = getTimePart(eventDateTime);
-
-  // Count all booked seats across all time slots
-  const bookedCount = Object.values(bookedSeatsByTime).reduce(
-    (total, seats) => total + (Array.isArray(seats) ? seats.length : 0),
-    0
-  );
+  const totalSeats = Number(event.total_seats || event.totalSeats || DEFAULT_TOTAL_SEATS);
 
   return {
     id: event.id,
@@ -48,8 +76,9 @@ function normalizeEvent(event: any, bookedSeatsByTime: Record<string, string[]> 
     eventDate,
     eventTime,
     price: Number(event.price || 0),
-    totalSeats: Number(event.total_seats || event.totalSeats || DEFAULT_TOTAL_SEATS),
-    bookedCount,
+    totalSeats,
+    bookedCount: approvedBookedCount,
+    availableSeats: Math.max(0, totalSeats - approvedBookedCount),
     status: event.status === 'inactive' ? 'Inactive' : DEFAULT_STATUS,
 
     // Compatibility shape consumed by existing seat selection components.
@@ -57,36 +86,70 @@ function normalizeEvent(event: any, bookedSeatsByTime: Record<string, string[]> 
     type: 'success team Event Event',
     duration: 'Scheduled Program',
     times: [eventTime],
-    bookedSeatsByTime: {
-      [eventTime]: bookedSeatsByTime[eventTime] || [],
-    },
+    bookedSeatsByTime: {},
   };
 }
 
-async function getApprovedSeatMap(eventIds: string[], date?: string) {
-  if (eventIds.length === 0) return {};
+/**
+ * Count approved seats for a specific event.
+ * Fetches ALL approved bookings (no like/pattern filter) then matches in JS
+ * across ALL possible event-linking fields.
+ * Mirrors the admin route approach which uses select('*') reliably.
+ */
+async function countApprovedSeats(eventId: string, eventTitle: string): Promise<number> {
+  try {
+    // Same pattern as admin/bookings/route.ts - fetch all approved, filter in JS.
+    const { data, error } = await supabaseAdmin
+      .from('bookings')
+      .select('*')
+      .eq('status', 'approved');
 
-  let query = supabaseAdmin
-    .from('bookings')
-    .select('bus_id, time, seats')
-    .in('status', ['approved', 'pending']);
+    if (error) {
+      console.error('[countApprovedSeats] query failed:', error.message);
+      return 0;
+    }
 
-  if (date) query = query.eq('date', date);
+    const rows = data || [];
+    const idKey = normalizeComparable(eventId);
+    const titleKey = normalizeComparable(eventTitle);
 
-  const { data, error } = await query;
-  if (error) {
-    console.error('Event booking availability fetch error:', error);
-    return {};
+    // Match by ANY field that could link the booking to this event
+    const matched = rows.filter((bk: any) => {
+      const candidateValues = [
+        bk.seminar_id,
+        bk.bus_id,
+        bk.event_id,
+        bk.eventId,
+        bk.seminar_name,
+        bk.bus_name,
+        bk.event_name,
+        bk.eventName,
+        bk.destination,
+        bk.title,
+        bk.name,
+      ];
+
+      return candidateValues.some((value) => {
+        const key = normalizeComparable(value);
+        return key && (key === idKey || key === titleKey);
+      });
+    });
+
+    const totalSeatsBooked = matched.reduce(
+      (sum: number, bk: any) => sum + countSeats(bk.seats),
+      0
+    );
+
+    console.log(
+      `[countApprovedSeats] eventId=${eventId} title="${eventTitle}" ` +
+      `all_approved=${rows.length} matched=${matched.length} seats_taken=${totalSeatsBooked}`
+    );
+
+    return totalSeatsBooked;
+  } catch (e) {
+    console.error('[countApprovedSeats] threw:', e);
+    return 0;
   }
-
-  return (data || []).reduce<Record<string, Record<string, string[]>>>((acc, booking: any) => {
-    const id = booking.seminar_id || booking.bus_id;
-    if (!eventIds.includes(id)) return acc;
-    if (!acc[id]) acc[id] = {};
-    if (!acc[id][booking.time]) acc[id][booking.time] = [];
-    acc[id][booking.time].push(...(booking.seats || []));
-    return acc;
-  }, {});
 }
 
 export async function GET(request: Request) {
@@ -96,6 +159,9 @@ export async function GET(request: Request) {
     const seminar = searchParams.get('seminar') || searchParams.get('destination') || '';
     const date = searchParams.get('date') || '';
     const eventId = searchParams.get('eventId') || '';
+    // displayTitle = the title shown in the frontend (may differ from DB title)
+    // Used to match bookings that were stored with this frontend-overridden title
+    const displayTitle = searchParams.get('displayTitle') || '';
 
     let query = supabaseAdmin
       .from('events')
@@ -137,10 +203,15 @@ export async function GET(request: Request) {
 
     const events = await Promise.all(
       (data || []).map(async (event) => {
-        // Fetch real booked seat counts for each event
-        const seatMap = await getApprovedSeatMap([event.id], date || undefined);
-        const bookedByTime = seatMap[event.id] || {};
-        return normalizeEvent(event, bookedByTime);
+        // Count approved bookings matching this event.
+        // Pass both the DB title AND the frontend displayTitle so all booking variants match.
+        const titlesToTry = [event.title || '', displayTitle].filter(Boolean);
+        let approvedCount = 0;
+        for (const t of titlesToTry) {
+          const c = await countApprovedSeats(event.id, t);
+          if (c > approvedCount) approvedCount = c;
+        }
+        return normalizeEvent(event, approvedCount);
       })
     );
 
@@ -392,4 +463,6 @@ export async function DELETE(request: Request) {
     );
   }
 }
+
+
 
