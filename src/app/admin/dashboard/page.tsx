@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText, Upload, Trophy, Award, Star, Crown, Coffee, Users, Download } from 'lucide-react';
+import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText, Upload, Trophy, Award, Star, Crown, Coffee, Users, Download, Umbrella } from 'lucide-react';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -30,7 +30,9 @@ export default function AdminDashboard() {
   const [selectedContributionDetail, setSelectedContributionDetail] = useState<any | null>(null);
   const [mounted, setMounted] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions' | 'achievers' | 'foodList' | 'attendeeList'>('registrations');
+  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions' | 'achievers' | 'foodList' | 'attendeeList' | 'resortBookings'>('registrations');
+  const [resortBookings, setResortBookings] = useState<any[]>([]);
+  const [resortLoading, setResortLoading] = useState(false);
   const [events, setEvents] = useState<any[]>([]);
   const [eventSaving, setEventSaving] = useState(false);
   const [eventMessage, setEventMessage] = useState('');
@@ -87,11 +89,66 @@ export default function AdminDashboard() {
       }
       setAdminUser(u);
       fetchAdminBookings(u.id);
+      fetchAdminResortBookings(u.id);
       fetchAdminEvents();
       fetchAdminConfigs();
       fetchAdminAchievers();
     } catch (e) {
       router.push('/admin/login');
+    }
+  };
+
+  const fetchAdminResortBookings = async (adminId: string) => {
+    setResortLoading(true);
+    try {
+      const res = await fetch('/api/admin/resort-bookings', {
+        headers: {
+          'x-admin-id': adminId,
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setResortBookings(data.resortBookings || []);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setToastMessage({ type: 'error', text: data.error || 'Failed to fetch resort bookings' });
+      }
+    } catch (err: any) {
+      console.error('Error fetching resort bookings:', err);
+      setToastMessage({ type: 'error', text: `Network error fetching resort bookings: ${err.message || String(err)}` });
+    } finally {
+      setResortLoading(false);
+    }
+  };
+
+  const handleUpdateResortBookingStatus = async (bookingId: string, actionStatus: 'CONFIRMED' | 'REJECTED') => {
+    if (!confirm(`Are you sure you want to ${actionStatus === 'CONFIRMED' ? 'Approve' : 'Reject'} this resort booking?`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/resort-bookings/${bookingId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-id': adminUser.id,
+        },
+        body: JSON.stringify({ status: actionStatus }),
+      });
+
+      if (res.ok) {
+        // Update local state
+        setResortBookings(prev =>
+          prev.map((b) => (b.id === bookingId ? { ...b, status: actionStatus } : b))
+        );
+        alert(`Resort booking successfully ${actionStatus === 'CONFIRMED' ? 'approved' : 'rejected'}!`);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to update resort booking status');
+      }
+    } catch (err) {
+      alert('Network error updating resort booking status');
     }
   };
 
@@ -780,12 +837,19 @@ export default function AdminDashboard() {
               <Coffee size={16} />
               <span>Food List</span>
             </button>
-            <button
+             <button
               onClick={() => setAdminSection('attendeeList')}
               className={`section-tab ${adminSection === 'attendeeList' ? 'active' : ''}`}
             >
               <Users size={16} />
               <span>Total Booking List</span>
+            </button>
+            <button
+              onClick={() => setAdminSection('resortBookings')}
+              className={`section-tab ${adminSection === 'resortBookings' ? 'active' : ''}`}
+            >
+              <Umbrella size={16} />
+              <span>Resort Bookings</span>
             </button>
           </div>
         </div>
@@ -1639,6 +1703,102 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
+          </div>
+        ) : adminSection === 'resortBookings' ? (
+          <div className="dashboard-main-area animate-slide-up">
+            <div className="event-manager-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h2 className="heading-md">Resort Bookings Management</h2>
+                <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Total Resort Bookings: <strong>{resortBookings.length}</strong></p>
+              </div>
+            </div>
+
+            {resortLoading ? (
+              <div style={{ textAlign: 'center', padding: '3rem' }}>
+                <RefreshCw className="animate-spin" size={32} style={{ color: '#22c55e', margin: '0 auto 1rem' }} />
+                <p>Loading resort bookings...</p>
+              </div>
+            ) : (
+              <div className="glass-card" style={{ padding: '0', overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid #f1f5f9', background: '#f8fafc' }}>
+                      <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Booking ID</th>
+                      <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>User Name</th>
+                      <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Contact Details</th>
+                      <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Accommodation</th>
+                      <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Check-In / Out</th>
+                      <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Amount</th>
+                      <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>UTR Number</th>
+                      <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Submitted Date</th>
+                      <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Status</th>
+                      <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {resortBookings.length === 0 ? (
+                      <tr><td colSpan={10} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No resort bookings found</td></tr>
+                    ) : (
+                      resortBookings.map((b) => (
+                        <tr key={b.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '1rem', fontWeight: 600, border: '1px solid #e2e8f0', fontFamily: 'monospace' }}>
+                            {b.id.replace(/-/g, '').substring(0, 12).toUpperCase()}
+                          </td>
+                          <td style={{ padding: '1rem', fontWeight: 500, border: '1px solid #e2e8f0' }}>{b.full_name}</td>
+                          <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}>
+                            <div>📧 {b.email}</div>
+                            <div style={{ marginTop: '2px' }}>📞 {b.phone}</div>
+                          </td>
+                          <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontWeight: 'bold' }}>{b.accommodation_type}</td>
+                          <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}>
+                            <div>📅 In: {new Date(b.check_in_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                            <div style={{ marginTop: '2px' }}>📅 Out: {new Date(b.check_out_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                            <div style={{ marginTop: '2px', color: '#64748b' }}>({b.guests} guests)</div>
+                          </td>
+                          <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontWeight: 'bold', color: '#0f172a' }}>
+                            ₹{parseFloat(b.amount).toLocaleString('en-IN')}
+                          </td>
+                          <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontFamily: 'monospace', fontWeight: 'bold', color: '#4b5563' }}>
+                            {b.utr_number}
+                          </td>
+                          <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontSize: '0.85rem', color: '#64748b' }}>
+                            {new Date(b.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </td>
+                          <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>
+                            <span className={`badge ${b.status === 'CONFIRMED' ? 'badge-approved' : b.status === 'REJECTED' ? 'badge-denied' : 'badge-pending'}`}>
+                              {b.status === 'CONFIRMED' ? 'Confirmed' : b.status === 'REJECTED' ? 'Rejected' : 'Pending Verification'}
+                            </span>
+                          </td>
+                          <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>
+                            {b.status === 'PENDING VERIFICATION' && (
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <button
+                                  onClick={() => handleUpdateResortBookingStatus(b.id, 'CONFIRMED')}
+                                  className="btn btn-sm btn-primary"
+                                  style={{ padding: '0.25rem 0.5rem', background: '#10b981', borderColor: '#10b981', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px' }}
+                                >
+                                  <Check size={12} /> Approve
+                                </button>
+                                <button
+                                  onClick={() => handleUpdateResortBookingStatus(b.id, 'REJECTED')}
+                                  className="btn btn-sm btn-secondary"
+                                  style={{ padding: '0.25rem 0.5rem', background: '#ef4444', borderColor: '#ef4444', color: '#ffffff', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px' }}
+                                >
+                                  <X size={12} /> Reject
+                                </button>
+                              </div>
+                            )}
+                            {b.status !== 'PENDING VERIFICATION' && (
+                              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic' }}>No actions</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         ) : null}
       </div>

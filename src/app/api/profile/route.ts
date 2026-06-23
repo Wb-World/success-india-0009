@@ -94,7 +94,23 @@ export async function GET(request: Request) {
       console.warn('Notifications query failed (table might not exist yet):', err);
     }
 
-    return NextResponse.json({ user, bookings, notifications });
+    // Fetch resort bookings
+    let resortBookings: any[] = [];
+    try {
+      const { data: rawResortBookings, error: resortError } = await supabaseAdmin
+        .from('resort_bookings')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (!resortError && rawResortBookings) {
+        resortBookings = rawResortBookings;
+      }
+    } catch (err) {
+      console.error('Error fetching user resort bookings:', err);
+    }
+
+    return NextResponse.json({ user, bookings, resortBookings, notifications });
   } catch (error) {
     console.error('Profile GET error:', error);
     return NextResponse.json(

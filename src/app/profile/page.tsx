@@ -104,6 +104,87 @@ function BookingCard({ booking }: { booking: any }) {
   );
 }
 
+// ─── Single Resort Booking Card ──────────────────────────────────────────────
+function ResortBookingCard({ booking, onDownload }: { booking: any; onDownload: () => void }) {
+  const status = booking.status || 'PENDING VERIFICATION';
+  
+  const getResortStatusLabel = (st: string) => {
+    if (st === 'CONFIRMED') return 'Confirmed';
+    if (st === 'REJECTED') return 'Rejected';
+    return 'Pending Verification';
+  };
+
+  const getResortStatusClass = (st: string) => {
+    if (st === 'CONFIRMED') return 'approved';
+    if (st === 'REJECTED') return 'denied';
+    return 'pending';
+  };
+
+  return (
+    <div className={`bk-horizontal-card status-${getResortStatusClass(status)}`}>
+      <div className="bk-card-info-wrap">
+        <div className="bk-card-title-row">
+          <h3 className="bk-card-event-name">🏖️ {booking.accommodation_type}</h3>
+        </div>
+        
+        <div className="bk-card-details-list">
+          <div className="bk-card-detail-item">
+            <span className="bk-detail-lbl">Booking Ref:</span>
+            <span className="bk-detail-val font-mono">{booking.id?.substring(0, 8).toUpperCase()}</span>
+          </div>
+          <div className="bk-card-detail-item">
+            <span className="bk-detail-lbl">Check-In:</span>
+            <span className="bk-detail-val">{new Date(booking.check_in_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+          </div>
+          <div className="bk-card-detail-item">
+            <span className="bk-detail-lbl">Check-Out:</span>
+            <span className="bk-detail-val">{new Date(booking.check_out_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+          </div>
+          <div className="bk-card-detail-item">
+            <span className="bk-detail-lbl">Guests:</span>
+            <span className="bk-detail-val">{booking.guests} Guests</span>
+          </div>
+          <div className="bk-card-detail-item">
+            <span className="bk-detail-lbl">Amount:</span>
+            <span className="bk-detail-val highlight">₹{parseFloat(booking.amount).toLocaleString('en-IN')}</span>
+          </div>
+        </div>
+
+        <div className="bk-card-footer">
+          <div className="bk-card-status-side">
+            <span className={`bk-badge-${getResortStatusClass(status)}`}>
+              {status === 'CONFIRMED' && <CheckCircle size={13} className="badge-icon" />}
+              {status === 'PENDING VERIFICATION' && <Clock size={13} className="badge-icon" />}
+              {status === 'REJECTED' && <ShieldAlert size={13} className="badge-icon" />}
+              {getResortStatusLabel(status)}
+            </span>
+          </div>
+          <div className="bk-card-btn-side">
+            {status === 'CONFIRMED' && (
+              <button 
+                className="bk-card-details-btn" 
+                onClick={onDownload}
+                style={{ background: '#10b981', color: '#ffffff', borderColor: '#10b981' }}
+              >
+                Download Ticket ↓
+              </button>
+            )}
+            {status === 'PENDING VERIFICATION' && (
+              <button 
+                className="bk-card-details-btn" 
+                onClick={onDownload}
+                style={{ background: '#f59e0b', color: '#ffffff', borderColor: '#f59e0b' }}
+              >
+                Download Ack ↓
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Profile Component ───────────────────────────────────────────────────
 function ProfileDashboard() {
   const router = useRouter();
@@ -127,13 +208,13 @@ function ProfileDashboard() {
 
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState<'bookings' | 'notifications'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'resortBookings' | 'notifications'>('bookings');
   const [notifications, setNotifications] = useState<any[]>([]);
-
-  // Modal state (deprecated, redirecting to details page instead)
+  const [resortBookings, setResortBookings] = useState<any[]>([]);
+  const [downloadingResort, setDownloadingResort] = useState<any>(null);
 
   useEffect(() => {
-    if (tabParam === 'notifications' || tabParam === 'bookings') {
+    if (tabParam === 'notifications' || tabParam === 'bookings' || tabParam === 'resortBookings') {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
@@ -144,6 +225,7 @@ function ProfileDashboard() {
     const channel = supabase
       .channel(`user-bookings-${currentUser.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: `user_id=eq.${currentUser.id}` }, () => fetchProfileData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'resort_bookings', filter: `user_id=eq.${currentUser.id}` }, () => fetchProfileData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${currentUser.id}` }, () => fetchProfileData())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -167,6 +249,7 @@ function ProfileDashboard() {
         const data = await res.json();
         setCurrentUser(data.user);
         setBookings(data.bookings || []);
+        setResortBookings(data.resortBookings || []);
         setNotifications(data.notifications || []);
         setEditForm({ name: data.user.name, phone: data.user.phone });
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -241,9 +324,36 @@ function ProfileDashboard() {
     finally { setUpdateLoading(false); }
   };
 
-  const handleTabChange = (tabName: 'bookings' | 'notifications') => {
+  const handleTabChange = (tabName: 'bookings' | 'resortBookings' | 'notifications') => {
     setActiveTab(tabName);
     router.push(`/profile?tab=${tabName}`);
+  };
+
+  const triggerResortTicketDownload = async (booking: any) => {
+    setDownloadingResort(booking);
+    // Give it a tiny moment to render the ticket element in the DOM
+    await new Promise(r => setTimeout(r, 150));
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const el = document.getElementById(`resort-ticket-printable-${booking.id}`);
+      if (!el) return;
+      
+      const canvas = await html2canvas(el, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      });
+      
+      const link = document.createElement('a');
+      const isConfirmed = booking.status === 'CONFIRMED';
+      link.download = `Resort-${isConfirmed ? 'Ticket' : 'Acknowledgement'}-${booking.id.substring(0, 8).toUpperCase()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error('Resort ticket download failed:', err);
+    } finally {
+      setDownloadingResort(null);
+    }
   };
 
   const handleMarkAllRead = async () => {
@@ -352,7 +462,8 @@ function ProfileDashboard() {
             <hr className="card-divider" />
 
             <div className="profile-sidebar-tabs">
-              <button type="button" className={`sidebar-tab-btn ${activeTab === 'bookings' ? 'active' : ''}`} onClick={() => handleTabChange('bookings')}><span>🎫 My Bookings</span></button>
+              <button type="button" className={`sidebar-tab-btn ${activeTab === 'bookings' ? 'active' : ''}`} onClick={() => handleTabChange('bookings')}><span>🎫 Event Bookings</span></button>
+              <button type="button" className={`sidebar-tab-btn ${activeTab === 'resortBookings' ? 'active' : ''}`} onClick={() => handleTabChange('resortBookings')}><span>🏖️ Resort Bookings</span></button>
               <button type="button" className={`sidebar-tab-btn ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => handleTabChange('notifications')}>
                 <span>🔔 Notifications</span>
                 {notifications.filter(n => !n.isRead).length > 0 && <span className="tab-unread-count">{notifications.filter(n => !n.isRead).length}</span>}
@@ -365,7 +476,8 @@ function ProfileDashboard() {
         <div className="bookings-history-column">
           {/* Mobile Tab Bar */}
           <div className="mobile-tabs-bar">
-            <button type="button" className={`mobile-tab-item ${activeTab === 'bookings' ? 'active' : ''}`} onClick={() => handleTabChange('bookings')}>🎫 Bookings</button>
+            <button type="button" className={`mobile-tab-item ${activeTab === 'bookings' ? 'active' : ''}`} onClick={() => handleTabChange('bookings')}>🎫 Events</button>
+            <button type="button" className={`mobile-tab-item ${activeTab === 'resortBookings' ? 'active' : ''}`} onClick={() => handleTabChange('resortBookings')}>🏖️ Resorts</button>
             <button type="button" className={`mobile-tab-item ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => handleTabChange('notifications')}>
               🔔 Alerts {notifications.filter(n => !n.isRead).length > 0 && <span className="mobile-unread-badge">{notifications.filter(n => !n.isRead).length}</span>}
             </button>
@@ -420,6 +532,35 @@ function ProfileDashboard() {
             </div>
           )}
 
+          {/* TAB: RESORT BOOKINGS */}
+          {activeTab === 'resortBookings' && (
+            <div className="history-card glass-card">
+              <h2 className="heading-md history-card-title">My Resort Bookings</h2>
+
+              {/* Stats */}
+              <div className="bookings-stats-grid">
+                <div className="stat-box"><span className="stat-num">{resortBookings.length}</span><span className="stat-label">Total</span></div>
+                <div className="stat-box confirmed" style={{ background: '#ecfdf5', color: '#065f46' }}><span className="stat-num">{resortBookings.filter(b => b.status === 'CONFIRMED').length}</span><span className="stat-label">Confirmed</span></div>
+                <div className="stat-box pending" style={{ background: '#fef3c7', color: '#92400e' }}><span className="stat-num">{resortBookings.filter(b => b.status === 'PENDING VERIFICATION' || !b.status).length}</span><span className="stat-label">Pending</span></div>
+              </div>
+
+              {resortBookings.length === 0 ? (
+                <div className="empty-bookings">
+                  <Calendar size={48} className="empty-icon" />
+                  <h4 className="heading-sm">No Resort Bookings Yet</h4>
+                  <p>Ready for a luxury getaway? Book your stay at Suren Inn Beach Resort or Suren Villa now.</p>
+                  <button onClick={() => router.push('/tools')} className="btn btn-primary" style={{ background: '#22c55e', borderColor: '#22c55e' }}>Book Resort Now</button>
+                </div>
+              ) : (
+                <div className="booking-cards-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
+                  {resortBookings.map(b => (
+                    <ResortBookingCard key={b.id} booking={b} onDownload={() => triggerResortTicketDownload(b)} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* TAB 2: NOTIFICATIONS */}
           {activeTab === 'notifications' && (
             <div className="history-card glass-card">
@@ -450,7 +591,106 @@ function ProfileDashboard() {
         </div>
       </div>
 
-      {/* Booking Modal (removed since details render in a separate route) */}
+      {/* Hidden printable resort ticket templates */}
+      {downloadingResort && (
+        <div 
+          id={`resort-ticket-printable-${downloadingResort.id}`}
+          style={{
+            position: 'absolute',
+            left: '-9999px',
+            top: '-9999px',
+            width: '600px',
+            background: '#ffffff',
+            padding: '30px',
+            borderRadius: '20px',
+            fontFamily: 'Inter, system-ui, sans-serif',
+            boxSizing: 'border-box'
+          }}
+        >
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px dashed #e2e8f0', paddingBottom: '20px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '2rem' }}>🏖️</span>
+              <div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>
+                  {downloadingResort.status === 'CONFIRMED' ? 'RESORT STAY TICKET' : 'BOOKING ACKNOWLEDGEMENT'}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>Suren Inn Beach Resort & Suren Villa</div>
+              </div>
+            </div>
+            <div style={{
+              background: downloadingResort.status === 'CONFIRMED' ? '#d1fae5' : '#fef3c7',
+              border: `1.5px solid ${downloadingResort.status === 'CONFIRMED' ? '#6ee7b7' : '#fcd34d'}`,
+              color: downloadingResort.status === 'CONFIRMED' ? '#059669' : '#d97706',
+              padding: '6px 16px',
+              borderRadius: '9999px',
+              fontSize: '0.75rem',
+              fontWeight: '800',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              {downloadingResort.status === 'CONFIRMED' ? 'CONFIRMED ✓' : 'PENDING VERIFICATION'}
+            </div>
+          </div>
+
+          {/* Body */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '25px' }}>
+            <div>
+              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '4px' }}>BOOKING ID</span>
+              <strong style={{ fontSize: '1.15rem', color: '#22c55e', fontFamily: 'monospace' }}>
+                {downloadingResort.id.replace(/-/g, '').substring(0, 12).toUpperCase()}
+              </strong>
+            </div>
+            <div>
+              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '4px' }}>ACCOMMODATION</span>
+              <strong style={{ fontSize: '1rem', color: '#0f172a' }}>{downloadingResort.accommodation_type}</strong>
+            </div>
+            <div>
+              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '4px' }}>GUEST NAME</span>
+              <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1e293b' }}>{downloadingResort.full_name}</span>
+            </div>
+            <div>
+              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '4px' }}>PHONE</span>
+              <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1e293b' }}>{downloadingResort.phone}</span>
+            </div>
+            <div>
+              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '4px' }}>CHECK-IN DATE</span>
+              <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1e293b' }}>
+                {new Date(downloadingResort.check_in_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+              </span>
+            </div>
+            <div>
+              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '4px' }}>CHECK-OUT DATE</span>
+              <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1e293b' }}>
+                {new Date(downloadingResort.check_out_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+              </span>
+            </div>
+            <div>
+              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '4px' }}>GUESTS COUNT</span>
+              <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1e293b' }}>{downloadingResort.guests} Persons</span>
+            </div>
+            <div>
+              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '4px' }}>UTR NUMBER</span>
+              <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1e293b', fontFamily: 'monospace' }}>{downloadingResort.utr_number}</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px dashed #e2e8f0', paddingTop: '20px', marginTop: '20px' }}>
+            <div>
+              <span style={{ fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', color: '#94a3b8' }}>TOTAL PAID</span>
+              <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#0f172a' }}>₹{parseFloat(downloadingResort.amount).toLocaleString('en-IN')}</div>
+            </div>
+            <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#64748b' }}>
+              <div>📍 Beachfront Location | 🕐 Check-in: 12:00 PM</div>
+              {downloadingResort.status === 'CONFIRMED' ? (
+                <div style={{ color: '#10b981', fontWeight: 'bold', marginTop: '4px' }}>✓ OFFICIAL CONFIRMED TICKET</div>
+              ) : (
+                <div style={{ color: '#d97706', fontWeight: 'bold', marginTop: '4px' }}>⚠️ ACKNOWLEDGEMENT ONLY - PENDING VERIFICATION</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         /* ── Layout ─────────────────────────────────────────────────── */
