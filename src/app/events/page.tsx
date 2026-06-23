@@ -13,6 +13,7 @@ type SeminarEvent = {
   eventTime?: string;
   price: number;
   totalSeats?: number;
+  bookedCount?: number;
   name?: string;
   bookedSeatsByTime?: Record<string, string[]>;
 };
@@ -143,12 +144,39 @@ export default function EventsPage() {
                       <span>{event.eventTime}</span>
                     </div>
                   )}
-                  {event.totalSeats && (
-                    <div className="event-meta-row">
-                      <Users size={14} />
-                      <span>{event.totalSeats} seats available</span>
-                    </div>
-                  )}
+                  {event.totalSeats && (() => {
+                    const total = event.totalSeats || 0;
+                    const booked = event.bookedCount || 0;
+                    const available = Math.max(0, total - booked);
+                    const pct = total > 0 ? Math.min(100, Math.round((booked / total) * 100)) : 0;
+                    const isLow = available <= 30;
+                    return (
+                      <div className="seat-availability-block">
+                        <div className="event-meta-row" style={{ marginBottom: '6px' }}>
+                          <Users size={14} />
+                          <span>
+                            <strong style={{ color: isLow ? '#ef4444' : '#10b981' }}>{available}</strong>
+                            <span style={{ color: '#9ca3af' }}> / {total} seats available</span>
+                          </span>
+                        </div>
+                        <div className="seats-progress-bar-wrap">
+                          <div
+                            className="seats-progress-fill"
+                            style={{
+                              width: `${pct}%`,
+                              background: pct >= 80 ? '#ef4444' : pct >= 50 ? '#f59e0b' : '#10b981',
+                            }}
+                          />
+                        </div>
+                        {isLow && available > 0 && (
+                          <span className="seats-low-warning">⚡ Only {available} left!</span>
+                        )}
+                        {available === 0 && (
+                          <span className="seats-full-warning">🔴 Seats Full</span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="event-card-footer">
@@ -446,6 +474,42 @@ export default function EventsPage() {
 
         .event-card:hover .event-card-image {
           transform: scale(1.05);
+        }
+
+        /* Seat availability */
+        .seat-availability-block {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          width: 100%;
+        }
+
+        .seats-progress-bar-wrap {
+          width: 100%;
+          height: 5px;
+          background: #e5e7eb;
+          border-radius: 999px;
+          overflow: hidden;
+        }
+
+        .seats-progress-fill {
+          height: 100%;
+          border-radius: 999px;
+          transition: width 0.4s ease;
+        }
+
+        .seats-low-warning {
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: #d97706;
+          margin-top: 2px;
+        }
+
+        .seats-full-warning {
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: #ef4444;
+          margin-top: 2px;
         }
       `}</style>
     </div>
