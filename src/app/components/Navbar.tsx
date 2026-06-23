@@ -163,6 +163,7 @@ export default function Navbar() {
           <Link href="/" className={`nav-link ${pathname === '/' ? 'active' : ''}`}>Home</Link>
           <Link href="/events" className={`nav-link ${pathname === '/events' ? 'active' : ''}`}>Event</Link>
           <Link href="/contribution" className={`nav-link ${pathname === '/contribution' ? 'active' : ''}`}>Contribution</Link>
+          <Link href="/tools" className={`nav-link ${pathname === '/tools' ? 'active' : ''}`}>Tools</Link>
           <Link href="/about" className={`nav-link ${pathname === '/about' ? 'active' : ''}`}>About</Link>
           <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`}>Contact</Link>
         </nav>
@@ -186,7 +187,8 @@ export default function Navbar() {
                   <div className="profile-dropdown-overlay" onClick={() => setProfileDropdownOpen(false)} />
                   <div className="profile-dropdown-menu glass-card animate-slide-down">
                     <div className="dropdown-user-info">
-                      <p className="dropdown-username">{user.name}</p>
+                      {/* <p className="dropdown-user-greeting">Hello 👋</p> */}
+                      <p className="dropdown-username">{user.username || user.name || 'User'}</p>
                     </div>
                     <hr className="dropdown-divider" />
                     <Link
@@ -256,6 +258,7 @@ export default function Navbar() {
                 <Link href="/" className={`mobile-link ${pathname === '/' ? 'active' : ''}`} onClick={closeMenu}>Home</Link>
                 <Link href="/events" className={`mobile-link ${pathname === '/events' ? 'active' : ''}`} onClick={closeMenu}>Event</Link>
                 <Link href="/contribution" className={`mobile-link ${pathname === '/contribution' ? 'active' : ''}`} onClick={closeMenu}>Contribution</Link>
+                <Link href="/tools" className={`mobile-link ${pathname === '/tools' ? 'active' : ''}`} onClick={closeMenu}>Tools</Link>
                 <Link href="/about" className={`mobile-link ${pathname === '/about' ? 'active' : ''}`} onClick={closeMenu}>About</Link>
                 <Link href="/contact" className={`mobile-link ${pathname === '/contact' ? 'active' : ''}`} onClick={closeMenu}>Contact</Link>
                 {user ? (
@@ -757,10 +760,19 @@ export default function Navbar() {
           padding: 0.5rem 0.75rem;
         }
 
+        .dropdown-user-greeting {
+          font-size: 0.72rem;
+          color: var(--muted);
+          font-weight: 500;
+          margin: 0 0 2px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
         .dropdown-username {
-          font-weight: 700;
+          font-weight: 800;
           color: var(--foreground);
-          font-size: 0.9rem;
+          font-size: 0.97rem;
           margin: 0;
           white-space: nowrap;
           overflow: hidden;
