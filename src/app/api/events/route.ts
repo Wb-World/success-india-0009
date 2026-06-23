@@ -33,6 +33,12 @@ function normalizeEvent(event: any, bookedSeatsByTime: Record<string, string[]> 
   const eventDate = getDatePart(eventDateTime);
   const eventTime = getTimePart(eventDateTime);
 
+  // Count all booked seats across all time slots
+  const bookedCount = Object.values(bookedSeatsByTime).reduce(
+    (total, seats) => total + (Array.isArray(seats) ? seats.length : 0),
+    0
+  );
+
   return {
     id: event.id,
     eventId: event.id,
@@ -43,6 +49,7 @@ function normalizeEvent(event: any, bookedSeatsByTime: Record<string, string[]> 
     eventTime,
     price: Number(event.price || 0),
     totalSeats: Number(event.total_seats || event.totalSeats || DEFAULT_TOTAL_SEATS),
+    bookedCount,
     status: event.status === 'inactive' ? 'Inactive' : DEFAULT_STATUS,
 
     // Compatibility shape consumed by existing seat selection components.
@@ -128,7 +135,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ events: fallbackEvents });
     }
 
-    const events = (data || []).map((event) => normalizeEvent(event, {}));
+    const events = await Promise.all(
+      (data || []).map(async (event) => {
+        // Fetch real booked seat counts for each event
+        const seatMap = await getApprovedSeatMap([event.id], date || undefined);
+        const bookedByTime = seatMap[event.id] || {};
+        return normalizeEvent(event, bookedByTime);
+      })
+    );
 
     return NextResponse.json({ events });
   } catch (error: any) {
