@@ -45,14 +45,11 @@ export default function ToolsPage() {
         <div className="hero-overlay"></div>
         <div className={`hero-content ${isVisible ? 'fade-up-active' : 'fade-up'}`}>
           <div className="badge">
-            <span className="badge-icon">🏖️</span>
-            Beachfront Resort Experience
+            <span className="badge-icon">🛠️</span>
+            SUCCESS TEAM PRESENTS
           </div>
-          <h1 className="main-title">SUREN INN BEACH RESORT</h1>
-          <h2 className="sub-title">Premium Beach Resort & Relaxation Experience</h2>
-          <p className="hero-desc">
-            Experience comfort, nature, and peace near the beautiful beachfront location. Perfect for family trips, team outings, and weekend relaxation.
-          </p>
+          <h1 className="main-title">TEAM ACTIVATION TOOLS</h1>
+          <h2 className="sub-title">Professional Tools & Resources for Success Team Members</h2>
           <div className="hero-buttons">
             <Link href="/tools/book" className="btn-primary">
               Book Now <ArrowRight size={18} />
@@ -309,12 +306,14 @@ export default function ToolsPage() {
         }
 
         .main-title {
-          font-size: clamp(2.5rem, 6vw, 4.5rem);
+          font-family: var(--font-heading), 'Outfit', sans-serif;
+          font-size: clamp(1.8rem, 4.2vw, 3.2rem);
           font-weight: 800;
           line-height: 1.1;
           margin-bottom: 16px;
           text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-          letter-spacing: -1px;
+          letter-spacing: -0.5px;
+          white-space: nowrap;
         }
 
         .sub-title {
@@ -908,7 +907,8 @@ export default function ToolsPage() {
           }
           
           .main-title {
-            font-size: 2.2rem;
+            font-size: clamp(1.2rem, 7.2vw, 1.8rem);
+            white-space: nowrap;
           }
           
           .sub-title {
