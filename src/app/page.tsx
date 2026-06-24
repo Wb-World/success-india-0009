@@ -1100,9 +1100,10 @@ export default function Home() {
 
         .owner-profile-img {
           width: 100%;
-          height: auto;
+          aspect-ratio: 1 / 1;
           display: block;
           object-fit: cover;
+          object-position: center top;
         }
 
         .owner-image-overlay {
@@ -1314,6 +1315,7 @@ export default function Home() {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          object-position: center top;
           display: block;
         }
 
@@ -1497,6 +1499,7 @@ export default function Home() {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          object-position: center top;
           display: block;
         }
 

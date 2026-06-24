@@ -25,11 +25,11 @@ export async function PATCH(
     }
 
     const { id } = await params;
-    const { status, homepage_visible } = await request.json();
+    const { status, homepage_visible, attendee_details } = await request.json();
 
-    if (status === undefined && homepage_visible === undefined) {
+    if (status === undefined && homepage_visible === undefined && attendee_details === undefined) {
       return NextResponse.json(
-        { error: 'Missing parameters. Must provide status or homepage_visible' },
+        { error: 'Missing parameters. Must provide status, homepage_visible or attendee_details' },
         { status: 400 }
       );
     }
@@ -44,6 +44,7 @@ export async function PATCH(
     const updatePayload: any = {};
     if (status !== undefined) updatePayload.status = status;
     if (homepage_visible !== undefined) updatePayload.homepage_visible = homepage_visible;
+    if (attendee_details !== undefined) updatePayload.attendee_details = attendee_details;
 
     // Automatically default homepage_visible to true when approving a contributor registration if not explicitly specified
     if (id.startsWith('SUP-') && status === 'approved' && homepage_visible === undefined) {

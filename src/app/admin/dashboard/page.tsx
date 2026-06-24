@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText, Upload, Trophy, Award, Star, Crown, Coffee, Users, Download, Umbrella } from 'lucide-react';
+import ImageCropperModal from '@/app/components/ImageCropperModal';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -58,6 +59,26 @@ export default function AdminDashboard() {
   const [achieversLoading, setAchieversLoading] = useState(false);
   const [achieversMessage, setAchieversMessage] = useState('');
   const [uploadingAchieverKey, setUploadingAchieverKey] = useState<string | null>(null);
+
+  // Image cropping state
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [cropperSrc, setCropperSrc] = useState('');
+  const [cropperRatio, setCropperRatio] = useState(1);
+  const [cropperCallback, setCropperCallback] = useState<((blob: Blob) => void) | null>(null);
+
+  const openCropper = (src: string, ratio: number, callback: (blob: Blob) => void) => {
+    setCropperSrc(src);
+    setCropperRatio(ratio);
+    setCropperCallback(() => callback);
+    setCropperOpen(true);
+  };
+
+  const handleCropperSave = (blob: Blob) => {
+    setCropperOpen(false);
+    if (cropperCallback) {
+      cropperCallback(blob);
+    }
+  };
 
   // Statistic counters
   const [stats, setStats] = useState({
@@ -549,6 +570,77 @@ export default function AdminDashboard() {
     } catch (err) {
       alert('Network error updating visibility');
     }
+  };
+
+  const handleEditCropContributor = (booking: any) => {
+    const supporter = booking.attendees?.SUPPORTER || {};
+    const vpImage = supporter.vpImage || '';
+    if (!vpImage) return;
+
+    const designation = supporter.designation || 'System Supporter';
+    const ratio = designation === 'Executive Director' ? 0.8 : 1.0;
+
+    openCropper(vpImage, ratio, async (croppedBlob) => {
+      const formData = new FormData();
+      formData.append('file', new File([croppedBlob], 'cropped_vp_image.jpg', { type: 'image/jpeg' }));
+
+      try {
+        const uploadRes = await fetch('/api/bookings/upload-proof', {
+          method: 'POST',
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+        
+        if (!uploadRes.ok || !uploadData.url) {
+          alert(uploadData.error || 'Failed to upload cropped image');
+          return;
+        }
+
+        const newVpImage = uploadData.url;
+        const updatedAttendees = JSON.parse(JSON.stringify(booking.attendees || {}));
+        if (!updatedAttendees.SUPPORTER) {
+          updatedAttendees.SUPPORTER = {};
+        }
+        updatedAttendees.SUPPORTER.vpImage = newVpImage;
+
+        const patchRes = await fetch(`/api/admin/bookings/${booking.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-id': adminUser.id,
+          },
+          body: JSON.stringify({ attendee_details: updatedAttendees }),
+        });
+
+        if (patchRes.ok) {
+          const updatedBookings = bookings.map((b) => {
+            if (b.id === booking.id) {
+              return {
+                ...b,
+                attendees: updatedAttendees,
+              };
+            }
+            return b;
+          });
+          setBookings(updatedBookings);
+          
+          if (selectedContributionDetail && selectedContributionDetail.id === booking.id) {
+            setSelectedContributionDetail({
+              ...selectedContributionDetail,
+              attendees: updatedAttendees,
+            });
+          }
+          
+          alert('Profile image updated successfully.');
+        } else {
+          const patchData = await patchRes.json();
+          alert(patchData.error || 'Failed to update member image in database');
+        }
+      } catch (err) {
+        console.error('Error recropping contributor image:', err);
+        alert('An error occurred while updating the profile image.');
+      }
+    });
   };
 
   const handleLogout = () => {
@@ -1262,11 +1354,21 @@ export default function AdminDashboard() {
                             {vpImage && (
                               <div className="info-table-row image-preview-row">
                                 <span className="info-label">VP Upload</span>
-                                <div className="vp-preview-box" onClick={() => setZoomedImage(vpImage)}>
-                                  <img src={vpImage} alt="VP Upload" />
-                                  <div className="vp-preview-overlay">
-                                    <Eye size={12} />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                  <div className="vp-preview-box" onClick={() => setZoomedImage(vpImage)}>
+                                    <img src={vpImage} alt="VP Upload" />
+                                    <div className="vp-preview-overlay">
+                                      <Eye size={12} />
+                                    </div>
                                   </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleEditCropContributor(b)}
+                                    className="btn btn-secondary"
+                                    style={{ padding: '4px 8px', fontSize: '0.75rem', height: 'auto', display: 'flex', alignItems: 'center', gap: '0.25rem', margin: 0 }}
+                                  >
+                                    Edit Crop
+                                  </button>
                                 </div>
                               </div>
                             )}
@@ -1431,12 +1533,39 @@ export default function AdminDashboard() {
                                       disabled={isUploading}
                                       onChange={(e) => {
                                         const file = e.target.files?.[0];
-                                        if (file) handleAchieverImageUpload(uploadKey, file);
+                                        if (file) {
+                                          const reader = new FileReader();
+                                          reader.onload = () => {
+                                            if (typeof reader.result === 'string') {
+                                              openCropper(reader.result, 0.8, (croppedBlob) => {
+                                                const croppedFile = new File([croppedBlob], file.name || 'cropped_achiever.jpg', { type: 'image/jpeg' });
+                                                handleAchieverImageUpload(uploadKey, croppedFile);
+                                              });
+                                            }
+                                          };
+                                          reader.readAsDataURL(file);
+                                        }
                                       }}
                                     />
                                   </div>
                                   <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontSize: '0.68rem', color: color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px' }}>Achiever</div>
+                                    <div style={{ fontSize: '0.68rem', color: color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <span>Achiever</span>
+                                      {item.image && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            openCropper(item.image, 0.8, (croppedBlob) => {
+                                              const croppedFile = new File([croppedBlob], 'recropped_achiever.jpg', { type: 'image/jpeg' });
+                                              handleAchieverImageUpload(uploadKey, croppedFile);
+                                            });
+                                          }}
+                                          style={{ background: 'transparent', border: 'none', color: color, padding: '0 4px', fontSize: '0.65rem', fontWeight: 800, cursor: 'pointer', textTransform: 'uppercase', textDecoration: 'underline' }}
+                                        >
+                                          Edit Crop
+                                        </button>
+                                      )}
+                                    </div>
                                     
                                     {/* User Friendly Name Input */}
                                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -1892,6 +2021,14 @@ export default function AdminDashboard() {
                       <img src={selectedContributionDetail.attendees.SUPPORTER.vpImage} alt="VP Upload" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                     <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>Your Image</span>
+                    <button
+                      type="button"
+                      onClick={() => handleEditCropContributor(selectedContributionDetail)}
+                      className="btn btn-secondary"
+                      style={{ padding: '2px 6px', fontSize: '0.7rem', marginTop: '4px', height: 'auto' }}
+                    >
+                      Edit Crop
+                    </button>
                   </div>
                 )}
               </div>
@@ -2005,6 +2142,15 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Image Cropper Modal */}
+      <ImageCropperModal
+        isOpen={cropperOpen}
+        imageUrl={cropperSrc}
+        aspectRatio={cropperRatio}
+        onClose={() => setCropperOpen(false)}
+        onSave={handleCropperSave}
+      />
 
       {toastMessage && (
         <div className={`admin-toast admin-toast-${toastMessage.type} animate-slide-up`}>
