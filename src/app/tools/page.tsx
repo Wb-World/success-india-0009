@@ -550,22 +550,22 @@ export default function ToolsPage() {
         
         .gallery-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          grid-auto-rows: 250px;
-          gap: 1.5rem;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 1.25rem;
         }
         
         .gallery-item {
           position: relative;
-          border-radius: 20px;
+          border-radius: 12px;
           overflow: hidden;
           cursor: pointer;
-          box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+          box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+          aspect-ratio: 4 / 3;
         }
         
         .gallery-item.featured {
-          grid-column: span 2;
-          grid-row: span 2;
+          grid-column: span 1;
+          grid-row: span 1;
         }
         
         .gallery-item img {
@@ -907,6 +907,11 @@ export default function ToolsPage() {
           .location-map {
             min-height: 300px;
           }
+          
+          .gallery-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+          }
         }
 
         @media (max-width: 768px) {
@@ -949,8 +954,8 @@ export default function ToolsPage() {
           }
           
           .gallery-grid {
-            grid-template-columns: 1fr;
-            grid-auto-rows: 250px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
           }
           
           .gallery-item.featured {
@@ -974,6 +979,11 @@ export default function ToolsPage() {
           
           .card-content {
             padding: 1.5rem;
+          }
+          
+          .gallery-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
           }
         }
       `}</style>
