@@ -555,7 +555,7 @@ export default function ContributionPage() {
 
               <div className="supporter-form-grid">
                 {/* Supporter Name */}
-                <div className="form-group">
+                <div className="form-group form-group-name">
                   <label className="form-label">Supporter Name <span className="req">*</span></label>
                   <input
                     type="text"
@@ -577,7 +577,7 @@ export default function ContributionPage() {
                 </div>
 
                 {/* VP Name */}
-                <div className="form-group">
+                <div className="form-group form-group-vp">
                   <label className="form-label">VP Name <span className="req">*</span></label>
                   <input
                     type="text"
@@ -599,7 +599,7 @@ export default function ContributionPage() {
                 </div>
 
                 {/* Designation */}
-                <div className="form-group">
+                <div className="form-group form-group-designation">
                   <label className="form-label">Designation <span className="req">*</span></label>
                   <select
                     value={designation}
@@ -612,7 +612,7 @@ export default function ContributionPage() {
                 </div>
 
                 {/* VP Image Upload */}
-                <div className="form-group span-2">
+                <div className="form-group form-group-image">
                   <label className="form-label">Your Image <span className="req">*</span></label>
                   <div className="file-uploader-box">
                     {vpImageUrl ? (
@@ -721,10 +721,48 @@ export default function ContributionPage() {
 
         @media (min-width: 600px) {
           .supporter-form-grid {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 1.2fr 1fr;
+            grid-template-rows: auto auto auto;
+            gap: 1.5rem;
           }
-          .span-2 {
-            grid-column: span 2;
+          .form-group-name {
+            grid-row: 1;
+            grid-column: 1;
+          }
+          .form-group-vp {
+            grid-row: 2;
+            grid-column: 1;
+          }
+          .form-group-designation {
+            grid-row: 3;
+            grid-column: 1;
+          }
+          .form-group-image {
+            grid-row: 1 / span 3;
+            grid-column: 2;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+          }
+          .form-group-image .file-uploader-box {
+            flex-grow: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+          }
+          .form-group-image .drag-drop-label {
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+          }
+          .form-group-image .image-preview-container {
+            height: 100%;
+            min-height: 220px;
           }
         }
 

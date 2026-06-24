@@ -1354,21 +1354,11 @@ export default function AdminDashboard() {
                             {vpImage && (
                               <div className="info-table-row image-preview-row">
                                 <span className="info-label">VP Upload</span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                  <div className="vp-preview-box" onClick={() => setZoomedImage(vpImage)}>
-                                    <img src={vpImage} alt="VP Upload" />
-                                    <div className="vp-preview-overlay">
-                                      <Eye size={12} />
-                                    </div>
+                                <div className="vp-preview-box" onClick={() => setZoomedImage(vpImage)}>
+                                  <img src={vpImage} alt="VP Upload" />
+                                  <div className="vp-preview-overlay">
+                                    <Eye size={12} />
                                   </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleEditCropContributor(b)}
-                                    className="btn btn-secondary"
-                                    style={{ padding: '4px 8px', fontSize: '0.75rem', height: 'auto', display: 'flex', alignItems: 'center', gap: '0.25rem', margin: 0 }}
-                                  >
-                                    Edit Crop
-                                  </button>
                                 </div>
                               </div>
                             )}
@@ -1549,23 +1539,7 @@ export default function AdminDashboard() {
                                     />
                                   </div>
                                   <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontSize: '0.68rem', color: color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                      <span>Achiever</span>
-                                      {item.image && (
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            openCropper(item.image, 0.8, (croppedBlob) => {
-                                              const croppedFile = new File([croppedBlob], 'recropped_achiever.jpg', { type: 'image/jpeg' });
-                                              handleAchieverImageUpload(uploadKey, croppedFile);
-                                            });
-                                          }}
-                                          style={{ background: 'transparent', border: 'none', color: color, padding: '0 4px', fontSize: '0.65rem', fontWeight: 800, cursor: 'pointer', textTransform: 'uppercase', textDecoration: 'underline' }}
-                                        >
-                                          Edit Crop
-                                        </button>
-                                      )}
-                                    </div>
+                                    <div style={{ fontSize: '0.68rem', color: color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px' }}>Achiever</div>
                                     
                                     {/* User Friendly Name Input */}
                                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -2021,14 +1995,6 @@ export default function AdminDashboard() {
                       <img src={selectedContributionDetail.attendees.SUPPORTER.vpImage} alt="VP Upload" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                     <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>Your Image</span>
-                    <button
-                      type="button"
-                      onClick={() => handleEditCropContributor(selectedContributionDetail)}
-                      className="btn btn-secondary"
-                      style={{ padding: '2px 6px', fontSize: '0.7rem', marginTop: '4px', height: 'auto' }}
-                    >
-                      Edit Crop
-                    </button>
                   </div>
                 )}
               </div>
