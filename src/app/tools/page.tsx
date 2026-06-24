@@ -13,7 +13,17 @@ export default function ToolsPage() {
 
   const images = [
     { src: '/images/pool.jpg', alt: 'Swimming Pool' },
+    { src: '/images/pool2.jpeg', alt: 'Swimming Pool View' },
+    { src: '/images/resort front 2.jpeg', alt: 'Resort Front View 2' },
+    { src: '/images/resort front.jpeg', alt: 'Resort Front View' },
     { src: '/images/resort.jpg', alt: 'Resort Exterior View' },
+    { src: '/images/rest area.jpeg', alt: 'Rest Area' },
+    { src: '/images/roompic1.jpeg', alt: 'Room View 1' },
+    { src: '/images/roompic2.jpeg', alt: 'Room View 2' },
+    { src: '/images/roompic3.jpeg', alt: 'Room View 3' },
+    { src: '/images/roompic4.jpeg', alt: 'Room View 4' },
+    { src: '/images/roompic5.jpeg', alt: 'Room View 5' },
+    { src: '/images/swim area.jpeg', alt: 'Swimming Area' },
     { src: '/images/villa.jpg', alt: 'Villa Building' }
   ];
 
