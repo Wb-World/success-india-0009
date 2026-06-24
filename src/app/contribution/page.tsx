@@ -102,9 +102,9 @@ export default function ContributionPage() {
 
       const data = await res.json();
       setVpImageUrl(data.url); // Set public uploaded URL
-      console.log('VP Image uploaded successfully. URL:', data.url);
+      console.log('Your Image uploaded successfully. URL:', data.url);
     } catch (err: any) {
-      console.error('Error uploading VP Image:', err);
+      console.error('Error uploading Your Image:', err);
       setFormErrors((prev) => ({
         ...prev,
         vpImage: err.message || 'Failed to upload image. Please try again.',
@@ -124,9 +124,9 @@ export default function ContributionPage() {
       errors.vpName = 'VP Name is required.';
     }
     if (!vpImageUrl) {
-      errors.vpImage = 'VP Image is required.';
+      errors.vpImage = 'Your Image is required.';
     } else if (isUploadingImage) {
-      errors.vpImage = 'VP Image is still uploading. Please wait.';
+      errors.vpImage = 'Your Image is still uploading. Please wait.';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -649,7 +649,7 @@ export default function ContributionPage() {
                         <div className="uploader-icon-wrap">
                           <Upload size={24} />
                         </div>
-                        <span className="uploader-title">Upload VP Image</span>
+                        <span className="uploader-title">Upload Your Image</span>
                         <span className="uploader-sub">JPG, PNG, JPEG or WEBP (Max 3MB)</span>
                       </label>
                     )}
