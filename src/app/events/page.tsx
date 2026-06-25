@@ -187,8 +187,10 @@ export default function EventsPage() {
                         <div className="event-meta-row" style={{ marginBottom: '6px' }}>
                           <Users size={14} />
                           <span>
+                            <strong>{total}</strong>
+                            <span style={{ color: '#9ca3af' }}> / </span>
                             <strong style={{ color: isLow ? '#ef4444' : '#10b981' }}>{available}</strong>
-                            <span style={{ color: '#9ca3af' }}> / {total} seats available</span>
+                            <span style={{ color: '#9ca3af' }}> seats available</span>
                           </span>
                         </div>
                         <div className="seats-progress-bar-wrap">

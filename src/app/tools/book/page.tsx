@@ -5,7 +5,7 @@ import Link from 'next/link';
 import AuthGuard from '../../components/AuthGuard';
 import {
   ArrowLeft, ArrowRight, CheckCircle, AlertTriangle,
-  User, Phone, Mail, Users, Calendar, Home, FileText,
+  User, Phone, Users, Calendar, Home, FileText,
   CreditCard, Download, Loader2, Check, Info, Clock,
   ChevronLeft, ChevronRight
 } from 'lucide-react';
@@ -14,7 +14,6 @@ import {
 interface BookingForm {
   full_name: string;
   phone: string;
-  email: string;
   guests: string;
   check_in_date: string;
   check_out_date: string;
@@ -112,7 +111,7 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
 export default function ResortBookingPage() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<BookingForm>({
-    full_name: '', phone: '', email: '', guests: '1',
+    full_name: '', phone: '', guests: '1',
     check_in_date: '', check_out_date: '',
     accommodation_type: '', special_notes: '', utr_number: ''
   });
@@ -128,6 +127,11 @@ export default function ResortBookingPage() {
   ]);
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
+  const [villaImages, setVillaImages] = useState<string[]>([
+    '/images/villa.jpg'
+  ]);
+  const [currentVillaImgIndex, setCurrentVillaImgIndex] = useState(0);
+
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (stored) {
@@ -137,7 +141,6 @@ export default function ResortBookingPage() {
           ...prev,
           full_name: prev.full_name || u.name || '',
           phone: prev.phone || u.phone || '',
-          email: prev.email || u.email || '',
         }));
       } catch (e) {
         console.error('Error auto-populating from local storage user:', e);
@@ -158,6 +161,21 @@ export default function ResortBookingPage() {
       }
     };
     loadResortImages();
+
+    const loadVillaImages = async () => {
+      try {
+        const res = await fetch('/api/admin/villa-images');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.images) && data.images.length > 0) {
+            setVillaImages(data.images);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching villa images:', err);
+      }
+    };
+    loadVillaImages();
   }, []);
   const ticketRef = useRef<HTMLDivElement>(null);
   const pricing = calculatePrice(form.check_in_date, form.check_out_date, form.accommodation_type);
@@ -177,7 +195,6 @@ export default function ResortBookingPage() {
     const newErrors: Record<string, string> = {};
     if (!form.full_name.trim()) newErrors.full_name = 'Name is required';
     if (!form.phone.trim() || !/^\d{10}$/.test(form.phone.trim())) newErrors.phone = 'Valid 10-digit phone required';
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) newErrors.email = 'Valid email is required';
     if (!form.guests || parseInt(form.guests) < 1) newErrors.guests = 'At least 1 guest required';
     if (!form.check_in_date) newErrors.check_in_date = 'Check-in date required';
     if (!form.check_out_date) newErrors.check_out_date = 'Check-out date required';
@@ -347,9 +364,43 @@ export default function ResortBookingPage() {
                 className={`rb-accom-card ${form.accommodation_type === 'SUREN VILLA' ? 'selected' : ''}`}
                 onClick={() => setForm(p => ({ ...p, accommodation_type: 'SUREN VILLA' }))}
               >
-                <div className="rb-accom-img" style={{ backgroundImage: "url('/images/villa.jpg')" }}>
-                  {form.accommodation_type === 'SUREN VILLA' && (
-                    <div className="rb-selected-badge"><Check size={14}/> Selected</div>
+                <div className="rb-accom-img-carousel-container" onClick={(e) => e.stopPropagation()}>
+                  <div 
+                    className="rb-accom-img" 
+                    style={{ 
+                      backgroundImage: `url('${villaImages[currentVillaImgIndex]}')`,
+                      transition: 'background-image 0.5s ease-in-out'
+                    }}
+                    onClick={() => setForm(p => ({ ...p, accommodation_type: 'SUREN VILLA' }))}
+                  >
+                    {form.accommodation_type === 'SUREN VILLA' && (
+                      <div className="rb-selected-badge"><Check size={14}/> Selected</div>
+                    )}
+                  </div>
+                  
+                  {villaImages.length > 1 && (
+                    <>
+                      <button 
+                        type="button"
+                        className="carousel-arrow left"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentVillaImgIndex(prev => (prev === 0 ? villaImages.length - 1 : prev - 1));
+                        }}
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+                      <button 
+                        type="button"
+                        className="carousel-arrow right"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentVillaImgIndex(prev => (prev === villaImages.length - 1 ? 0 : prev + 1));
+                        }}
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </>
                   )}
                 </div>
                 <div className="rb-accom-info">
@@ -450,11 +501,6 @@ export default function ResortBookingPage() {
                 <input name="phone" value={form.phone} onChange={handleChange} placeholder="10-digit mobile number" maxLength={10} className={errors.phone ? 'error' : ''} />
                 {errors.phone && <span className="rb-err">{errors.phone}</span>}
               </div>
-              <div className="rb-field rb-field-full">
-                <label><Mail size={15} /> Email Address <span className="req">*</span></label>
-                <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="your@email.com" className={errors.email ? 'error' : ''} />
-                {errors.email && <span className="rb-err">{errors.email}</span>}
-              </div>
               <div className="rb-field">
                 <label><Users size={15} /> Number of Guests <span className="req">*</span></label>
                 <input name="guests" type="number" min="1" max="50" value={form.guests} onChange={handleChange} className={errors.guests ? 'error' : ''} />
@@ -510,13 +556,11 @@ export default function ResortBookingPage() {
               {/* QR Section */}
               <div className="rb-qr-section">
                 <div className="rb-qr-box">
-                  <div className="rb-qr-placeholder">
-                    <div className="rb-qr-inner">
-                      <div className="rb-qr-icon">📱</div>
-                      <p><strong>UPI QR Code</strong></p>
-                      <p className="rb-qr-note">QR code will be placed here by the owner</p>
-                    </div>
-                  </div>
+                  <img 
+                    src="/tools-payment-qr.jpg" 
+                    alt="UPI QR Code" 
+                    style={{ maxWidth: '100%', maxHeight: '280px', objectFit: 'contain', borderRadius: '12px' }}
+                  />
                 </div>
                 <div className="rb-payment-steps">
                   <div className="rb-pay-step"><span className="rb-pay-num">1</span> Scan the QR code</div>

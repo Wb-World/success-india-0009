@@ -16,7 +16,7 @@ export async function GET() {
       // Fallback: return default configurations
       return NextResponse.json({
         configs: [
-          { key: 'upi_id', value: 'shesh.dav07-1@okaxis' },
+          { key: 'upi_id', value: '8637684229-3@ybl' },
           { key: 'upi_name', value: 'david' },
           { key: 'upi_qr_url', value: '/upi-qr-code.jpg?v=2' }
         ]
@@ -36,21 +36,12 @@ export async function GET() {
   }
 }
 
+import { verifyAdminSession } from '@/lib/auth-server';
+
 export async function POST(request: Request) {
   try {
-    const adminId = request.headers.get('x-admin-id');
-    if (!adminId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Verify admin role in admin table
-    const { data: adminUser, error: adminError } = await supabaseAdmin
-      .from('admin')
-      .select('id, username, role')
-      .eq('id', adminId)
-      .maybeSingle();
-
-    if (adminError || !adminUser) {
+    const adminUser = await verifyAdminSession(request);
+    if (!adminUser) {
       return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });
     }
 

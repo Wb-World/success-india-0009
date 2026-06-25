@@ -8,15 +8,7 @@ import {
 import html2canvas from 'html2canvas';
 
 // ─── Seat Configuration ───────────────────────────────────────────────────────
-const ROWS = [
-  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-  'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-  'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'BB', 'CC', 'DD'
-];
-const SEATS_PER_ROW = 20;
-const ALL_SEATS: string[] = ROWS.flatMap((row) =>
-  Array.from({ length: SEATS_PER_ROW }, (_, i) => `${row}${i + 1}`)
-);
+import { ROWS, SEATS_PER_ROW, ALL_SEATS } from '@/lib/seat-config';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 function generateBookingId(): string {
@@ -150,7 +142,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
 
   // Payment configuration and UTR states
-  const [upiConfig, setUpiConfig] = useState({ upiId: 'shesh.dav07-1@okaxis', upiName: 'david', upiQrUrl: '/upi-qr-code.jpg?v=2' });
+  const [upiConfig, setUpiConfig] = useState({ upiId: '8637684229-3@ybl', upiName: 'david', upiQrUrl: '/upi-qr-code.jpg?v=2' });
   const [utrNumber, setUtrNumber] = useState<string>('');
   const [utrError, setUtrError] = useState<string | null>(null);
 
@@ -210,7 +202,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       .then((res) => res.json())
       .then((data) => {
         if (data.configs) {
-          const upiId = data.configs.find((c: any) => c.key === 'upi_id')?.value || 'shesh.dav07-1@okaxis';
+          const upiId = data.configs.find((c: any) => c.key === 'upi_id')?.value || '8637684229-3@ybl';
           const upiName = data.configs.find((c: any) => c.key === 'upi_name')?.value || 'david';
           const upiQrUrl = data.configs.find((c: any) => c.key === 'upi_qr_url')?.value || '/upi-qr-code.jpg?v=2';
           setUpiConfig({ upiId, upiName, upiQrUrl });
