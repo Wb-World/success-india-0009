@@ -61,7 +61,7 @@ function countSeats(value: unknown) {
   return 0;
 }
 
-function normalizeEvent(event: any, approvedBookedCount: number = 0) {
+function normalizeEvent(event: any, approvedBookedCount: number = 0, blockedCount: number = 0) {
   const eventDateTime = event.event_datetime || event.eventDateTime || event.datetime;
   const eventDate = getDatePart(eventDateTime);
   const eventTime = getTimePart(eventDateTime);
@@ -77,8 +77,8 @@ function normalizeEvent(event: any, approvedBookedCount: number = 0) {
     eventTime,
     price: Number(event.price || 0),
     totalSeats,
-    bookedCount: approvedBookedCount,
-    availableSeats: Math.max(0, totalSeats - approvedBookedCount),
+    bookedCount: approvedBookedCount + blockedCount,
+    availableSeats: Math.max(0, totalSeats - approvedBookedCount - blockedCount),
     status: event.status === 'inactive' ? 'Inactive' : DEFAULT_STATUS,
 
     // Compatibility shape consumed by existing seat selection components.
@@ -163,12 +163,33 @@ export async function GET(request: Request) {
     // Used to match bookings that were stored with this frontend-overridden title
     const displayTitle = searchParams.get('displayTitle') || '';
 
+    const adminId = request.headers.get('x-admin-id');
+    let isAuthorizedAdmin = false;
+    if (adminId) {
+      try {
+        const { data: adminUser } = await supabaseAdmin
+          .from('admin')
+          .select('id')
+          .eq('id', adminId)
+          .maybeSingle();
+        if (adminUser) {
+          isAuthorizedAdmin = true;
+        }
+      } catch (e) {
+        console.warn('Failed to verify admin header in events GET:', e);
+      }
+    }
+
     let query = supabaseAdmin
       .from('events')
       .select('*')
-      .eq('status', 'active')
-      .gte('event_datetime', new Date().toISOString())
-      .order('event_datetime', { ascending: true });
+      .eq('status', 'active');
+
+    if (!isAuthorizedAdmin) {
+      query = query.gte('event_datetime', new Date().toISOString());
+    }
+
+    query = query.order('event_datetime', { ascending: true });
 
     if (eventId) query = query.eq('id', eventId);
     if (venue) query = query.ilike('venue', venue);
@@ -211,7 +232,26 @@ export async function GET(request: Request) {
           const c = await countApprovedSeats(event.id, t);
           if (c > approvedCount) approvedCount = c;
         }
-        return normalizeEvent(event, approvedCount);
+
+        // Fetch blocked seats count for this event
+        let blockedCount = 0;
+        try {
+          const { data: configData } = await supabaseAdmin
+            .from('configs')
+            .select('value')
+            .eq('key', `blocked_seats_${event.id}`)
+            .maybeSingle();
+          if (configData?.value) {
+            const parsed = JSON.parse(configData.value);
+            if (Array.isArray(parsed)) {
+              blockedCount = parsed.length;
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to fetch blocked seats for event count:', e);
+        }
+
+        return normalizeEvent(event, approvedCount, blockedCount);
       })
     );
 
@@ -452,6 +492,16 @@ export async function DELETE(request: Request) {
 
     if (legacyError) {
       console.error('Delete legacy bus error:', legacyError);
+    }
+
+    // 3. Delete blocked seats config
+    try {
+      await supabaseAdmin
+        .from('configs')
+        .delete()
+        .eq('key', `blocked_seats_${eventId}`);
+    } catch (e) {
+      console.warn('Failed to delete blocked seats config:', e);
     }
 
     return NextResponse.json({ success: true, message: 'Event deleted successfully' });

@@ -8,16 +8,14 @@ export async function GET() {
     const { data, error } = await supabaseAdmin
       .from('configs')
       .select('*')
-      .eq('key', 'resort_images')
+      .eq('key', 'villa_images')
       .maybeSingle();
 
     if (error || !data) {
       // Fallback default images
       return NextResponse.json({
         images: [
-          '/images/resort.jpg',
-          '/images/resort front.jpeg',
-          '/images/pool.jpg'
+          '/images/villa.jpg'
         ]
       });
     }
@@ -33,14 +31,12 @@ export async function GET() {
 
     return NextResponse.json({
       images: [
-        '/images/resort.jpg',
-        '/images/resort front.jpeg',
-        '/images/pool.jpg'
+        '/images/villa.jpg'
       ]
     });
   } catch (err) {
-    console.error('Resort images GET error:', err);
-    return NextResponse.json({ error: 'Failed to retrieve resort images' }, { status: 500 });
+    console.error('Villa images GET error:', err);
+    return NextResponse.json({ error: 'Failed to retrieve villa images' }, { status: 500 });
   }
 }
 
@@ -63,18 +59,18 @@ export async function POST(request: Request) {
     const { error: upsertError } = await supabaseAdmin
       .from('configs')
       .upsert({
-        key: 'resort_images',
+        key: 'villa_images',
         value: JSON.stringify(images)
       });
 
     if (upsertError) {
-      console.error("RESORT_IMAGES_SAVE_FAILED:", upsertError);
-      return NextResponse.json({ error: `Failed to save resort settings to database: ${upsertError.message} (code: ${upsertError.code})` }, { status: 500 });
+      console.error("VILLA_IMAGES_SAVE_FAILED:", upsertError);
+      return NextResponse.json({ error: `Failed to save villa settings to database: ${upsertError.message} (code: ${upsertError.code})` }, { status: 500 });
     }
 
-    return NextResponse.json({ message: 'Resort images saved successfully' });
+    return NextResponse.json({ message: 'Villa images saved successfully' });
   } catch (err: any) {
-    console.error('Resort images POST error:', err);
-    return NextResponse.json({ error: `Failed to save resort images: ${err.message || String(err)}` }, { status: 500 });
+    console.error('Villa images POST error:', err);
+    return NextResponse.json({ error: `Failed to save villa images: ${err.message || String(err)}` }, { status: 500 });
   }
 }
