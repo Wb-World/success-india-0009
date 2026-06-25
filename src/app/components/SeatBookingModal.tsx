@@ -10,8 +10,7 @@ import html2canvas from 'html2canvas';
 // ─── Seat Configuration ───────────────────────────────────────────────────────
 const ROWS = [
   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-  'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-  'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'BB', 'CC', 'DD'
+  'K', 'L', 'M', 'N', 'O'
 ];
 const SEATS_PER_ROW = 20;
 const ALL_SEATS: string[] = ROWS.flatMap((row) =>
