@@ -128,6 +128,11 @@ export default function ResortBookingPage() {
   ]);
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
+  const [villaImages, setVillaImages] = useState<string[]>([
+    '/images/villa.jpg'
+  ]);
+  const [currentVillaImgIndex, setCurrentVillaImgIndex] = useState(0);
+
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (stored) {
@@ -158,6 +163,21 @@ export default function ResortBookingPage() {
       }
     };
     loadResortImages();
+
+    const loadVillaImages = async () => {
+      try {
+        const res = await fetch('/api/admin/villa-images');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.images) && data.images.length > 0) {
+            setVillaImages(data.images);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching villa images:', err);
+      }
+    };
+    loadVillaImages();
   }, []);
   const ticketRef = useRef<HTMLDivElement>(null);
   const pricing = calculatePrice(form.check_in_date, form.check_out_date, form.accommodation_type);
@@ -347,9 +367,43 @@ export default function ResortBookingPage() {
                 className={`rb-accom-card ${form.accommodation_type === 'SUREN VILLA' ? 'selected' : ''}`}
                 onClick={() => setForm(p => ({ ...p, accommodation_type: 'SUREN VILLA' }))}
               >
-                <div className="rb-accom-img" style={{ backgroundImage: "url('/images/villa.jpg')" }}>
-                  {form.accommodation_type === 'SUREN VILLA' && (
-                    <div className="rb-selected-badge"><Check size={14}/> Selected</div>
+                <div className="rb-accom-img-carousel-container" onClick={(e) => e.stopPropagation()}>
+                  <div 
+                    className="rb-accom-img" 
+                    style={{ 
+                      backgroundImage: `url('${villaImages[currentVillaImgIndex]}')`,
+                      transition: 'background-image 0.5s ease-in-out'
+                    }}
+                    onClick={() => setForm(p => ({ ...p, accommodation_type: 'SUREN VILLA' }))}
+                  >
+                    {form.accommodation_type === 'SUREN VILLA' && (
+                      <div className="rb-selected-badge"><Check size={14}/> Selected</div>
+                    )}
+                  </div>
+                  
+                  {villaImages.length > 1 && (
+                    <>
+                      <button 
+                        type="button"
+                        className="carousel-arrow left"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentVillaImgIndex(prev => (prev === 0 ? villaImages.length - 1 : prev - 1));
+                        }}
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+                      <button 
+                        type="button"
+                        className="carousel-arrow right"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentVillaImgIndex(prev => (prev === villaImages.length - 1 ? 0 : prev + 1));
+                        }}
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </>
                   )}
                 </div>
                 <div className="rb-accom-info">

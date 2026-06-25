@@ -60,6 +60,12 @@ export default function AdminDashboard() {
   const [resortImagesMessage, setResortImagesMessage] = useState('');
   const [isUploadingResortImg, setIsUploadingResortImg] = useState(false);
 
+  // Villa carousel images settings
+  const [villaImages, setVillaImages] = useState<string[]>([]);
+  const [villaImagesLoading, setVillaImagesLoading] = useState(false);
+  const [villaImagesMessage, setVillaImagesMessage] = useState('');
+  const [isUploadingVillaImg, setIsUploadingVillaImg] = useState(false);
+
   // Achievers state
   const [achieversData, setAchieversData] = useState<any>(null);
   const [achieversLoading, setAchieversLoading] = useState(false);
@@ -121,6 +127,7 @@ export default function AdminDashboard() {
       fetchAdminConfigs();
       fetchAdminAchievers();
       fetchResortImages();
+      fetchVillaImages();
     } catch (e) {
       router.push('/admin/login');
     }
@@ -350,6 +357,96 @@ export default function AdminDashboard() {
   const deleteImage = (index: number) => {
     const newImages = resortImages.filter((_, i) => i !== index);
     setResortImages(newImages);
+  };
+
+  // Villa image management functions
+  const fetchVillaImages = async () => {
+    try {
+      const res = await fetch('/api/admin/villa-images');
+      if (res.ok) {
+        const data = await res.json();
+        setVillaImages(data.images || []);
+      }
+    } catch (err) {
+      console.error('Error fetching villa images:', err);
+    }
+  };
+
+  const handleSaveVillaImages = async (newImages: string[]) => {
+    setVillaImagesLoading(true);
+    setVillaImagesMessage('');
+    try {
+      const stored = localStorage.getItem('user');
+      const adminId = stored ? JSON.parse(stored).id : '';
+
+      const res = await fetch('/api/admin/villa-images', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-id': adminId,
+        },
+        body: JSON.stringify({ images: newImages }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setVillaImagesMessage('Villa images saved successfully.');
+      } else {
+        setVillaImagesMessage(data.error || 'Failed to save villa images');
+      }
+    } catch (err) {
+      setVillaImagesMessage('Network error saving villa images');
+    } finally {
+      setVillaImagesLoading(false);
+    }
+  };
+
+  const handleVillaImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingVillaImg(true);
+    setVillaImagesMessage('');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/bookings/upload-proof', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.url) {
+        const updated = [...villaImages, data.url];
+        setVillaImages(updated);
+        setVillaImagesMessage('Image uploaded. Click Save Villa Settings to persist.');
+      } else {
+        setVillaImagesMessage(data.error || 'Failed to upload image');
+      }
+    } catch (err) {
+      setVillaImagesMessage('Error uploading image');
+    } finally {
+      setIsUploadingVillaImg(false);
+    }
+  };
+
+  const moveVillaImage = (index: number, direction: 'left' | 'right') => {
+    const newImages = [...villaImages];
+    const targetIndex = direction === 'left' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newImages.length) return;
+    
+    const temp = newImages[index];
+    newImages[index] = newImages[targetIndex];
+    newImages[targetIndex] = temp;
+    
+    setVillaImages(newImages);
+  };
+
+  const deleteVillaImage = (index: number) => {
+    const newImages = villaImages.filter((_, i) => i !== index);
+    setVillaImages(newImages);
   };
 
   const fetchAdminAchievers = async () => {
@@ -2089,6 +2186,92 @@ export default function AdminDashboard() {
                     style={{ height: '44px', minWidth: '180px' }}
                   >
                     {resortImagesLoading ? 'Saving Settings...' : 'Save Resort Settings'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Suren Villa Images Section */}
+            <div className="event-form-card glass-card" style={{ marginTop: '2rem' }}>
+              <div className="event-manager-header">
+                <div>
+                  <span className="manager-kicker">Villa Gallery Settings</span>
+                  <h2 className="heading-md">Suren Villa Images</h2>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '1.5rem' }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>Manage Villa Carousel Images (Add, Remove, and Reorder)</label>
+                
+                <div className="resort-images-grid">
+                  {villaImages.map((imgUrl, index) => (
+                    <div key={index} className="resort-image-card">
+                      <img src={imgUrl} alt={`Villa ${index + 1}`} />
+                      {index === 0 && <span className="resort-cover-badge">Default Cover</span>}
+                      
+                      <div className="resort-image-actions">
+                        <button
+                          type="button"
+                          onClick={() => moveVillaImage(index, 'left')}
+                          disabled={index === 0}
+                          className="resort-img-btn"
+                          title="Move Left"
+                          style={{ opacity: index === 0 ? 0.4 : 1, cursor: index === 0 ? 'not-allowed' : 'pointer' }}
+                        >
+                          <ArrowLeft size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveVillaImage(index, 'right')}
+                          disabled={index === villaImages.length - 1}
+                          className="resort-img-btn"
+                          title="Move Right"
+                          style={{ opacity: index === villaImages.length - 1 ? 0.4 : 1, cursor: index === villaImages.length - 1 ? 'not-allowed' : 'pointer' }}
+                        >
+                          <ArrowRight size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteVillaImage(index)}
+                          className="resort-img-btn delete"
+                          title="Delete"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Upload Card */}
+                  <label className="resort-upload-card" style={{ cursor: isUploadingVillaImg ? 'not-allowed' : 'pointer' }}>
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp"
+                      onChange={handleVillaImageUpload}
+                      style={{ display: 'none' }}
+                      disabled={isUploadingVillaImg}
+                    />
+                    <Upload size={24} color="#64748b" style={{ display: 'block', margin: '0 auto 0.5rem' }} />
+                    <span>{isUploadingVillaImg ? 'Uploading...' : 'Add Image'}</span>
+                  </label>
+                </div>
+
+                <div className="event-form-actions span-2" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ flex: 1 }}>
+                    {villaImagesMessage && (
+                      <span className="event-message" style={{ display: 'block', color: villaImagesMessage.includes('saved') || villaImagesMessage.includes('uploaded') ? '#16a34a' : '#ef4444', fontWeight: '600' }}>
+                        {villaImagesMessage}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveVillaImages(villaImages)}
+                    className="btn btn-primary"
+                    disabled={villaImagesLoading}
+                    style={{ height: '44px', minWidth: '180px' }}
+                  >
+                    {villaImagesLoading ? 'Saving Settings...' : 'Save Villa Settings'}
                   </button>
                 </div>
               </div>
