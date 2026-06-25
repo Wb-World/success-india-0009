@@ -1,4 +1,4 @@
-package com.example.myapplication
+﻿package com.example.myapplication
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -182,7 +182,7 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                     timePart
                 }
                 val shortTime = if (cleanTime.length >= 5) cleanTime.substring(0, 5) else cleanTime
-                "$datePart  •  $shortTime"
+                "$datePart  â€¢  $shortTime"
             } else {
                 dateTimeStr
             }
@@ -192,72 +192,7 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
     }
 
     private fun showLocalQrDetails(qrDetails: Map<String, String>, note: String) {
-        // Support new field names with fallback to legacy names
-        val event = qrDetails["EVENT"] ?: qrDetails["EVENT_NAME"] ?: "—"
-        val seats = qrDetails["SEATS"] ?: qrDetails["SEAT"] ?: "—"
-        val venue = qrDetails["VENUE"] ?: "—"
-        val rawDate = qrDetails["DATE"] ?: "—"
-        val rawTime = qrDetails["TIME"] ?: ""
-        val amount = qrDetails["AMOUNT"] ?: "—"
-        val phone = qrDetails["PHONE"] ?: ""
-        val qrStatus = qrDetails["STATUS"] ?: "PENDING_VERIFICATION"
-        val bookingId = qrDetails["BOOKING"] ?: qrDetails["BOOKING_ID"] ?: "—"
-
-        val cleanPrice = amount.replace("INR", "").replace("₹", "").trim()
-        val displayDate = if (rawDate != "—" && rawTime.isNotBlank()) {
-            "$rawDate  •  $rawTime"
-        } else {
-            formatDateTime(rawDate)
-        }
-        
-        val status: String
-        val reason: String
-        
-        when (qrStatus.uppercase()) {
-            "APPROVED", "CONFIRMED", "VALID", "SUCCESS" -> {
-                status = "approved"
-                reason = if (note.isNotBlank()) note else ""
-            }
-            "PENDING_VERIFICATION", "PENDING" -> {
-                status = "pending"
-                reason = "This booking exists in local ticket data but payment is awaiting admin confirmation." + 
-                        if (note.isNotBlank()) "\n\n($note)" else ""
-            }
-            else -> {
-                status = "denied"
-                reason = "Status in local ticket data: $qrStatus" + 
-                        if (note.isNotBlank()) "\n\n($note)" else ""
-            }
-        }
-
-        // Resolve attendee name from ATTENDEES field or ATTENDEE
-        val attendeesRaw = qrDetails["ATTENDEES"] ?: ""
-        val directAttendee = qrDetails["ATTENDEE"] ?: ""
-        val attendeeNames = when {
-            attendeesRaw.isNotBlank() -> {
-                attendeesRaw.split(",")
-                    .map { it.substringAfter("=", "").trim() }
-                    .filter { it.isNotBlank() && it != "N/A" }
-                    .joinToString(", ")
-            }
-            directAttendee.isNotBlank() -> directAttendee
-            else -> ""
-        }
-        val name = if (attendeeNames.isNotBlank()) attendeeNames else "Ticket Holder"
-        val displayPhone = if (phone.isNotBlank() && phone != "—") phone else ""
-
-        showResultDialog(
-            status = status,
-            name = name,
-            seminar = event,
-            venue = venue,
-            seats = seats,
-            price = cleanPrice,
-            reason = reason,
-            bookingId = bookingId,
-            date = displayDate,
-            phone = displayPhone
-        )
+        showResultDialog(TicketSnapshotFactory.fromQrDetails(qrDetails, note))
     }
 
     private fun parseUrlQr(qrData: String): Map<String, String>? {
@@ -275,17 +210,17 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                         val decodedString = String(decodedBytes, Charsets.UTF_8)
                         val json = Gson().fromJson(decodedString, JsonObject::class.java)
                         
-                        val event = json.get("event")?.asString ?: json.get("eventName")?.asString ?: "—"
-                        val date = json.get("date")?.asString ?: "—"
-                        val time = json.get("time")?.asString ?: "—"
-                        val venue = json.get("venue")?.asString ?: "—"
-                        val amount = json.get("amount")?.asString ?: json.get("amountPaid")?.asString ?: json.get("totalPrice")?.asString ?: "—"
+                        val event = json.get("event")?.asString ?: json.get("eventName")?.asString ?: "â€”"
+                        val date = json.get("date")?.asString ?: "â€”"
+                        val time = json.get("time")?.asString ?: "â€”"
+                        val venue = json.get("venue")?.asString ?: "â€”"
+                        val amount = json.get("amount")?.asString ?: json.get("amountPaid")?.asString ?: json.get("totalPrice")?.asString ?: "â€”"
                         val status = json.get("status")?.asString ?: "PENDING_VERIFICATION"
-                        val name = json.get("name")?.asString ?: json.get("attendeeName")?.asString ?: "—"
+                        val name = json.get("name")?.asString ?: json.get("attendeeName")?.asString ?: "â€”"
                         
                         val seatsEl = json.get("seats")
                         val seats = when {
-                            seatsEl == null || seatsEl.isJsonNull -> "—"
+                            seatsEl == null || seatsEl.isJsonNull -> "â€”"
                             seatsEl.isJsonArray -> {
                                 val arr = seatsEl.asJsonArray
                                 val list = mutableListOf<String>()
@@ -298,7 +233,7 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                         }
                         
                         map["EVENT"] = event
-                        map["DATE"] = if (date != "—" && time != "—") "${date}T${time}" else date
+                        map["DATE"] = if (date != "â€”" && time != "â€”") "${date}T${time}" else date
                         map["VENUE"] = venue
                         map["AMOUNT"] = amount
                         map["STATUS"] = status
@@ -345,11 +280,11 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                 Log.w(TAG, "Invalid QR Code: No Booking ID found.")
                 showResultDialog(
                     status = "error",
-                    name = "—",
-                    seminar = "—",
-                    venue = "—",
-                    seats = "—",
-                    price = "—",
+                    name = "â€”",
+                    seminar = "â€”",
+                    venue = "â€”",
+                    seats = "â€”",
+                    price = "â€”",
                     reason = "This QR code does not contain a valid booking reference.\nPlease scan a valid Success Team ticket."
                 )
                 return
@@ -416,7 +351,7 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
         Log.d(TAG, "Starting verification for Booking ID: $bookingId")
         Thread {
             try {
-                // PostgREST REST API call — email column removed
+                // PostgREST REST API call â€” email column removed
                 val url = "$SUPABASE_URL/rest/v1/bookings?id=eq.${bookingId}&select=*,users(name,phone)"
                 
                 val request = Request.Builder()
@@ -447,11 +382,11 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                     } else {
                         showResultDialog(
                             status = "error",
-                            name = "—",
-                            seminar = "—",
-                            venue = "—",
-                            seats = "—",
-                            price = "—",
+                            name = "â€”",
+                            seminar = "â€”",
+                            venue = "â€”",
+                            seats = "â€”",
+                            price = "â€”",
                             reason = "Network error: Could not reach verification server. Please check your internet connection."
                         )
                     }
@@ -466,11 +401,11 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                     } else {
                         showResultDialog(
                             status = "error",
-                            name = "—",
-                            seminar = "—",
-                            venue = "—",
-                            seats = "—",
-                            price = "—",
+                            name = "â€”",
+                            seminar = "â€”",
+                            venue = "â€”",
+                            seats = "â€”",
+                            price = "â€”",
                             reason = "An unexpected error occurred: ${e.message}"
                         )
                     }
@@ -483,7 +418,7 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
         Log.d(TAG, "Starting background verification for Booking ID: $bookingId")
         Thread {
             try {
-                // PostgREST REST API call — email column removed
+                // PostgREST REST API call â€” email column removed
                 val url = "$SUPABASE_URL/rest/v1/bookings?id=eq.${bookingId}&select=*,users(name,phone)"
                 
                 val request = Request.Builder()
@@ -537,11 +472,11 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
         try {
             val booking = getFirstBookingFromResponse(jsonBody)
             if (booking != null) {
-                val status = booking.get("status")?.asString ?: "unknown"
-                Log.d(TAG, "Background update - Booking: $bookingId, Status: $status")
-                
+                val snapshot = TicketSnapshotFactory.fromBooking(booking, bookingId, lastScannedQrDetails)
+                Log.d(TAG, "Background update - Booking: $bookingId, Status: ${snapshot.status}")
+
                 val dialog = supportFragmentManager.findFragmentByTag("ValidationResultDialog") as? ValidationResultDialogFragment
-                dialog?.updateStatus(status)
+                dialog?.updateTicketData(snapshot)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to update dialog with background result for $bookingId", e)
@@ -560,161 +495,38 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                 } else {
                     showResultDialog(
                         status = "error",
-                        name = "—",
-                        seminar = "—",
-                        venue = "—",
-                        seats = "—",
-                        price = "—",
+                        name = "â€”",
+                        seminar = "â€”",
+                        venue = "â€”",
+                        seats = "â€”",
+                        price = "â€”",
                         reason = "Booking ID \"$bookingId\" was not found in the system.\nThe ticket may be expired or fake."
                     )
                 }
                 return
             }
 
-            val status = booking.get("status")?.asString ?: "unknown"
-            Log.d(TAG, "Parsed Status for $bookingId: $status")
-
-            val gson = Gson()
-
-            // Get nested user details
-            val usersEl = booking.get("users")
-            val userName: String = if (usersEl != null && !usersEl.isJsonNull) {
-                if (usersEl.isJsonArray) {
-                    val usersArr = usersEl.asJsonArray
-                    val user = if (usersArr.size() > 0) usersArr[0].asJsonObject else JsonObject()
-                    user.get("name")?.asString ?: "Unknown"
-                } else {
-                    val user = usersEl.asJsonObject
-                    user.get("name")?.asString ?: "Unknown"
-                }
-            } else {
-                "Unknown"
-            }
-
-            val seminarName = booking.get("seminar_name")
-                ?: booking.get("bus_name")
-                ?: gson.toJsonTree("—")
-            val venue = booking.get("source")?.asString ?: "—"
-            val seminar = booking.get("destination")?.asString ?: "—"
-            val date = booking.get("date")?.asString ?: "—"
-            val time = booking.get("time")?.asString ?: "—"
-            val totalPrice = booking.get("total_price")?.asString ?: "—"
-
-            val seatsEl = booking.get("seats")
-            val seats = if (seatsEl != null && seatsEl.isJsonArray) {
-                val arr = seatsEl.asJsonArray
-                (0 until arr.size()).map { arr[it].asString }.joinToString(", ")
-            } else {
-                seatsEl?.asString ?: "—"
-            }
-
-            // Fallback merging from local QR scan
-            var resolvedName = userName
-            var resolvedSeminar = if (seminarName.isJsonNull) "—" else seminarName.asString
-            var resolvedVenue = venue
-            var resolvedDate = if (date != "—" && time != "—") "$date  •  $time" else "—"
-            var resolvedSeats = seats
-            var resolvedPrice = totalPrice
-
-            val qr = lastScannedQrDetails
-            if (qr != null) {
-                if (resolvedName == "Unknown" || resolvedName == "—" || resolvedName.isBlank()) {
-                    val attendeesRaw = qr["ATTENDEES"] ?: ""
-                    val attendeeNames = if (attendeesRaw.isNotBlank()) {
-                        attendeesRaw.split(",")
-                            .map { it.substringAfter("=", "").trim() }
-                            .filter { it.isNotBlank() && it != "N/A" }
-                            .joinToString(", ")
-                    } else ""
-                    resolvedName = if (attendeeNames.isNotBlank()) attendeeNames else "Ticket Holder"
-                }
-                if (resolvedSeminar == "—" || resolvedSeminar.isBlank()) {
-                    resolvedSeminar = qr["EVENT"] ?: "—"
-                }
-                if (resolvedVenue == "—" || resolvedVenue.isBlank()) {
-                    resolvedVenue = qr["VENUE"] ?: "—"
-                }
-                if (resolvedDate == "—  •  —" || resolvedDate == "—" || resolvedDate.isBlank()) {
-                    resolvedDate = formatDateTime(qr["DATE"] ?: "—")
-                }
-                if (resolvedSeats == "—" || resolvedSeats.isBlank()) {
-                    resolvedSeats = qr["SEATS"] ?: "—"
-                }
-                if (resolvedPrice == "—" || resolvedPrice.isBlank()) {
-                    resolvedPrice = (qr["AMOUNT"] ?: "—").replace("INR", "").replace("₹", "").trim()
-                }
-            }
-
-            val normalizedStatus = status.lowercase()
-            Log.d(TAG, "Validation Result for $bookingId: $normalizedStatus")
-
-            when (normalizedStatus) {
-                "approved", "confirmed", "valid", "success" -> {
-                    showResultDialog(
-                        status = normalizedStatus,
-                        name = resolvedName,
-                        seminar = resolvedSeminar,
-                        venue = resolvedVenue,
-                        seats = resolvedSeats,
-                        price = resolvedPrice,
-                        reason = "",
-                        bookingId = bookingId,
-                        date = resolvedDate
-                    )
-                }
-                "pending" -> {
-                    showResultDialog(
-                        status = "pending",
-                        name = resolvedName,
-                        seminar = resolvedSeminar,
-                        venue = resolvedVenue,
-                        seats = resolvedSeats,
-                        price = resolvedPrice,
-                        reason = "This booking exists but payment is awaiting admin confirmation before entry is allowed.",
-                        bookingId = bookingId,
-                        date = resolvedDate
-                    )
-                }
-                "denied" -> {
-                    showResultDialog(
-                        status = "denied",
-                        name = resolvedName,
-                        seminar = resolvedSeminar,
-                        venue = resolvedVenue,
-                        seats = resolvedSeats,
-                        price = resolvedPrice,
-                        reason = "This booking was explicitly rejected/denied by the admin.",
-                        bookingId = bookingId,
-                        date = resolvedDate
-                    )
-                }
-                else -> {
-                    showResultDialog(
-                        status = "error",
-                        name = resolvedName,
-                        seminar = resolvedSeminar,
-                        venue = resolvedVenue,
-                        seats = resolvedSeats,
-                        price = resolvedPrice,
-                        reason = "Status \"$status\" is unrecognized. Entry not permitted.",
-                        bookingId = bookingId,
-                        date = resolvedDate
-                    )
-                }
-            }
+            val snapshot = TicketSnapshotFactory.fromBooking(booking, bookingId, lastScannedQrDetails)
+            Log.d(TAG, "Validation Result for $bookingId: ${snapshot.status}")
+            showResultDialog(snapshot)
 
         } catch (e: Exception) {
             Log.e(TAG, "Critical parsing error for $bookingId", e)
             showResultDialog(
                 status = "error",
-                name = "—",
-                seminar = "—",
-                venue = "—",
-                seats = "—",
-                price = "—",
+                name = "â€”",
+                seminar = "â€”",
+                venue = "â€”",
+                seats = "â€”",
+                price = "â€”",
                 reason = "Verification Service Unavailable\n(Error parsing response)"
             )
         }
+    }
+
+    private fun showResultDialog(snapshot: GateTicketSnapshot) {
+        val resultDialog = ValidationResultDialogFragment.newInstance(snapshot)
+        resultDialog.show(supportFragmentManager, "ValidationResultDialog")
     }
 
     private fun showResultDialog(
@@ -725,12 +537,24 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
         seats: String,
         price: String,
         reason: String,
-        bookingId: String = "—",
-        date: String = "—",
+        bookingId: String = "â€”",
+        date: String = "â€”",
         phone: String = ""
     ) {
         val resultDialog = ValidationResultDialogFragment.newInstance(
-            status, name, seminar, venue, seats, price, reason, bookingId, date, phone
+            GateTicketSnapshot(
+                status = status,
+                name = name,
+                seminar = seminar,
+                venue = venue,
+                seats = seats,
+                price = price,
+                reason = reason,
+                bookingId = bookingId,
+                date = date,
+                phone = phone,
+                attendees = emptyList()
+            )
         )
         resultDialog.show(supportFragmentManager, "ValidationResultDialog")
     }
@@ -756,3 +580,4 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
         progressDialog?.dismiss()
     }
 }
+
