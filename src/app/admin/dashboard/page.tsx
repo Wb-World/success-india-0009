@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, ArrowLeft, Trash2, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText, Upload, Trophy, Award, Star, Crown, Coffee, Users, Download, Umbrella, Grid } from 'lucide-react';
+import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, ArrowLeft, Trash2, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText, Upload, Trophy, Award, Star, Crown, Coffee, Users, Download, Umbrella, Grid, Key } from 'lucide-react';
 import ImageCropperModal from '@/app/components/ImageCropperModal';
 import SeatBlockTab from './SeatBlockTab';
+import ChangePasswordModal from '@/app/components/ChangePasswordModal';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -40,6 +41,7 @@ export default function AdminDashboard() {
   const [eventMessage, setEventMessage] = useState('');
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [eventForm, setEventForm] = useState({
     title: 'success team Leadership Development Event',
@@ -847,7 +849,12 @@ export default function AdminDashboard() {
     });
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/admin-logout', { method: 'POST' });
+    } catch (e) {
+      console.error('Failed to logout on server:', e);
+    }
     localStorage.removeItem('user');
     window.dispatchEvent(new Event('auth-change'));
     router.push('/admin/login');
@@ -1013,6 +1020,9 @@ export default function AdminDashboard() {
               <span className="status-dot"></span>
               Live Sync Active
             </span> */}
+            <button onClick={() => setChangePasswordOpen(true)} className="btn-admin-change-pwd">
+              <Key size={15} /> Change Password
+            </button>
             <button onClick={handleLogout} className="btn-admin-logout">
               <LogOut size={15} /> Close Console
             </button>
@@ -2360,6 +2370,16 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* Change Password Modal */}
+      {changePasswordOpen && (
+        <ChangePasswordModal
+          onClose={() => setChangePasswordOpen(false)}
+          adminUser={adminUser}
+          setToastMessage={setToastMessage}
+          handleLogout={handleLogout}
+        />
+      )}
+
       {/* Contribution Details Modal */}
       {selectedContributionDetail && (
         <div className="confirm-modal-overlay" onClick={() => setSelectedContributionDetail(null)}>
@@ -2676,6 +2696,30 @@ export default function AdminDashboard() {
           color: #ffffff;
           border-color: #ef4444;
           box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+          transform: translateY(-1px);
+        }
+
+        .btn-admin-change-pwd {
+          background: rgba(16, 185, 129, 0.1);
+          color: #a7f3d0;
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          padding: 0.55rem 1.1rem;
+          border-radius: 10px;
+          font-weight: 600;
+          font-size: 0.85rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          margin-right: 0.75rem;
+        }
+
+        .btn-admin-change-pwd:hover {
+          background: #10b981;
+          color: #ffffff;
+          border-color: #10b981;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
           transform: translateY(-1px);
         }
 

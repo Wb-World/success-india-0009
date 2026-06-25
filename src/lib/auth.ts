@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 
 /**
  * Hash a password using PBKDF2 with a random salt.
@@ -12,10 +13,15 @@ export function hashPassword(password: string): string {
 
 /**
  * Verify a password against a stored value.
- * Supports legacy plain-text passwords as a fallback if no colon is present.
+ * Supports legacy plain-text/PBKDF2 passwords as well as bcrypt.
  */
 export function verifyPassword(password: string, storedValue: string): boolean {
   if (!storedValue) return false;
+  
+  // Check if bcrypt hash
+  if (storedValue.startsWith('$2a$') || storedValue.startsWith('$2b$')) {
+    return bcrypt.compareSync(password, storedValue);
+  }
   
   // Legacy plain-text fallback (e.g. for seed data users)
   if (!storedValue.includes(':')) {

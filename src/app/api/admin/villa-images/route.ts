@@ -40,27 +40,13 @@ export async function GET() {
   }
 }
 
+import { verifyAdminSession } from '@/lib/auth-server';
+
 export async function POST(request: Request) {
   try {
-    const adminId = request.headers.get('x-admin-id');
-    if (!adminId) {
-      return NextResponse.json({ error: 'Unauthorized: Missing admin ID header' }, { status: 401 });
-    }
-
-    // Verify admin role in admin table
-    const { data: adminUser, error: adminError } = await supabaseAdmin
-      .from('admin')
-      .select('id, username, role')
-      .eq('id', adminId)
-      .maybeSingle();
-
-    if (adminError) {
-      console.error("ADMIN_AUTH_CHECK_FAILED:", adminError);
-      return NextResponse.json({ error: `Forbidden: Admin check failed: ${adminError.message}` }, { status: 403 });
-    }
-
+    const adminUser = await verifyAdminSession(request);
     if (!adminUser) {
-      return NextResponse.json({ error: 'Forbidden: Admin user not found' }, { status: 403 });
+      return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });
     }
 
     const { images } = await request.json();

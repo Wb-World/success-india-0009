@@ -1,23 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+import { verifyAdminSession } from '@/lib/auth-server';
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    const adminId = request.headers.get('x-admin-id');
-    if (!adminId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Verify admin
-    const { data: adminUser, error: adminError } = await supabaseAdmin
-      .from('admin')
-      .select('id, username, role')
-      .eq('id', adminId)
-      .maybeSingle();
-
-    if (adminError || !adminUser) {
+    const adminUser = await verifyAdminSession(request);
+    if (!adminUser) {
       return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });
     }
 
@@ -59,19 +50,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const adminId = request.headers.get('x-admin-id');
-    if (!adminId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Verify admin
-    const { data: adminUser, error: adminError } = await supabaseAdmin
-      .from('admin')
-      .select('id, username, role')
-      .eq('id', adminId)
-      .maybeSingle();
-
-    if (adminError || !adminUser) {
+    const adminUser = await verifyAdminSession(request);
+    if (!adminUser) {
       return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });
     }
 
