@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Success Team Brand Palette — matches website theme -->
+    <!-- Success Team Brand Palette - matches website theme -->
     <color name="primary">#16a34a</color>
     <color name="primary_dark">#14532d</color>
     <color name="primary_hover">#15803d</color>
@@ -28,3 +28,5 @@
     <color name="gray_divider">#e5e7eb</color>
     <color name="dim_background">#99000000</color>
 </resources>
+
+

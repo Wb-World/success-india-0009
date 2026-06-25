@@ -148,6 +148,17 @@ export async function GET(request: Request) {
       }
     }
 
+    // Build per-seat attendee string: "A1=John Doe,A2=Jane Doe"
+    const attendeesStr = Array.isArray(bk.seats) && bk.seats.length > 0
+      ? bk.seats
+          .map((seat: string) => {
+            const info = cleanAttendees[seat];
+            const name = (typeof info === 'object' && info?.name) ? info.name : (typeof info === 'string' ? info : '');
+            return `${seat}=${name || primaryAttendeeName}`;
+          })
+          .join(',')
+      : primaryAttendeeName;
+
     const qrCodePayload = [
       `BOOKING_ID:${bk.id}`,
       `STATUS:${statusStr}`,
@@ -156,11 +167,12 @@ export async function GET(request: Request) {
       `TIME:${bk.time || '—'}`,
       `VENUE:${bk.source || '—'}`,
       `SEAT:${seatStr}`,
-      `ATTENDEE:${primaryAttendeeName}`,
+      `ATTENDEES:${attendeesStr}`,
       `PHONE:${bookerPhone || '—'}`,
       `AMOUNT:${amountStr}`,
       `SIGNATURE:${localSig}`
     ].join('|');
+
 
     // ── Build safe public ticket object ────────────────────────────────────
     const ticket = {
