@@ -3,16 +3,7 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, Save, Lock, Unlock, ChevronDown, ChevronUp, AlertCircle, CheckCircle } from 'lucide-react';
 
-const ROWS = [
-  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-  'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-  'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'BB', 'CC', 'DD'
-];
-const SEATS_PER_ROW = 20;
-const ALL_SEATS: string[] = ROWS.flatMap((row) =>
-  Array.from({ length: SEATS_PER_ROW }, (_, i) => `${row}${i + 1}`)
-);
-const TOTAL_SEATS = ROWS.length * SEATS_PER_ROW;
+import { ROWS, SEATS_PER_ROW, ALL_SEATS, TOTAL_SEATS, parseBulkSeats } from '@/lib/seat-config';
 
 type EventData = {
   id: string;
@@ -121,19 +112,24 @@ export default function SeatBlockTab({ event, adminUser }: Props) {
   // Bulk block
   const handleBulkBlock = () => {
     if (!bulkInput.trim()) return;
-    const seatCodes = bulkInput
-      .split(',')
-      .map((s) => s.trim().toUpperCase())
-      .filter((s) => ALL_SEATS.includes(s) && !bookedSeats.includes(s));
+    const { seats, errors } = parseBulkSeats(bulkInput);
 
-    if (seatCodes.length === 0) {
-      alert('Please enter valid, non-booked seat numbers (e.g. A1, B12).');
+    if (errors.length > 0) {
+      alert(`The following validation errors were encountered and skipped:\n${errors.join('\n')}`);
+    }
+
+    const validSeats = seats.filter((s) => !bookedSeats.includes(s));
+
+    if (validSeats.length === 0) {
+      if (errors.length === 0) {
+        alert('No valid, non-booked seats were entered.');
+      }
       return;
     }
 
     setLocalBlockedSeats((prev) => {
       const updated = [...prev];
-      seatCodes.forEach((code) => {
+      validSeats.forEach((code) => {
         if (!updated.includes(code)) {
           updated.push(code);
         }
@@ -146,11 +142,20 @@ export default function SeatBlockTab({ event, adminUser }: Props) {
   // Bulk unblock
   const handleBulkUnblock = () => {
     if (!bulkInput.trim()) return;
-    const seatCodes = bulkInput
-      .split(',')
-      .map((s) => s.trim().toUpperCase());
+    const { seats, errors } = parseBulkSeats(bulkInput);
 
-    setLocalBlockedSeats((prev) => prev.filter((s) => !seatCodes.includes(s)));
+    if (errors.length > 0) {
+      alert(`The following validation errors were encountered and skipped:\n${errors.join('\n')}`);
+    }
+
+    if (seats.length === 0) {
+      if (errors.length === 0) {
+        alert('No valid seats were entered.');
+      }
+      return;
+    }
+
+    setLocalBlockedSeats((prev) => prev.filter((s) => !seats.includes(s)));
     setBulkInput('');
   };
 
