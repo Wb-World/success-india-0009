@@ -541,7 +541,6 @@ export default function SeatBlockTab({ event, adminUser }: Props) {
                 <span><i className="legend-dot ld-available" /> Available</span>
                 <span><i className="legend-dot ld-blocked" /> Blocked by Admin</span>
                 <span><i className="legend-dot ld-booked" /> Booked by Users</span>
-                <span><i className="legend-dot ld-disabled" /> Disabled / Unavailable</span>
               </div>
 
               <div className="seat-block-save-row" style={{ marginTop: '1.25rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0' }}>
