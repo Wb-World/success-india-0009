@@ -556,13 +556,11 @@ export default function ResortBookingPage() {
               {/* QR Section */}
               <div className="rb-qr-section">
                 <div className="rb-qr-box">
-                  <div className="rb-qr-placeholder">
-                    <div className="rb-qr-inner">
-                      <div className="rb-qr-icon">📱</div>
-                      <p><strong>UPI QR Code</strong></p>
-                      <p className="rb-qr-note">QR code will be placed here by the owner</p>
-                    </div>
-                  </div>
+                  <img 
+                    src="/tools-payment-qr.jpg" 
+                    alt="UPI QR Code" 
+                    style={{ maxWidth: '100%', maxHeight: '280px', objectFit: 'contain', borderRadius: '12px' }}
+                  />
                 </div>
                 <div className="rb-payment-steps">
                   <div className="rb-pay-step"><span className="rb-pay-num">1</span> Scan the QR code</div>
