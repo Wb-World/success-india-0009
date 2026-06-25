@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, ArrowLeft, Trash2, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText, Upload, Trophy, Award, Star, Crown, Coffee, Users, Download, Umbrella } from 'lucide-react';
+import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, ArrowLeft, Trash2, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText, Upload, Trophy, Award, Star, Crown, Coffee, Users, Download, Umbrella, Grid } from 'lucide-react';
 import ImageCropperModal from '@/app/components/ImageCropperModal';
+import SeatBlockTab from './SeatBlockTab';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function AdminDashboard() {
   const [selectedContributionDetail, setSelectedContributionDetail] = useState<any | null>(null);
   const [mounted, setMounted] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions' | 'achievers' | 'foodList' | 'attendeeList' | 'resortBookings' | 'resortSettings'>('registrations');
+  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions' | 'achievers' | 'foodList' | 'attendeeList' | 'resortBookings' | 'resortSettings' | 'seatBlock'>('registrations');
   const [resortBookings, setResortBookings] = useState<any[]>([]);
   const [resortLoading, setResortLoading] = useState(false);
   const [events, setEvents] = useState<any[]>([]);
@@ -244,7 +245,16 @@ export default function AdminDashboard() {
 
   const fetchAdminEvents = async () => {
     try {
-      const res = await fetch('/api/events');
+      const stored = localStorage.getItem('user');
+      let adminId = '';
+      if (stored) {
+        try {
+          adminId = JSON.parse(stored).id || '';
+        } catch (e) {}
+      }
+      const res = await fetch('/api/events', {
+        headers: adminId ? { 'x-admin-id': adminId } : {}
+      });
       const data = await res.json();
       if (res.ok) {
         setEvents(data.events || []);
@@ -1086,7 +1096,7 @@ export default function AdminDashboard() {
               className={`section-tab ${adminSection === 'registrations' ? 'active' : ''}`}
             >
               <CreditCard size={16} />
-              <span>Payment Verification</span>
+              <span>Event Request</span>
             </button>
             <button
               onClick={() => setAdminSection('contributions')}
@@ -1150,6 +1160,29 @@ export default function AdminDashboard() {
         {/* List Controls */}
         {adminSection === 'registrations' ? (
           <div className="dashboard-main-area animate-slide-up">
+            
+            {/* Active Events & Seat Block Section */}
+            <div className="events-list-card glass-card" style={{ marginBottom: '2rem' }}>
+              <div className="event-manager-header" style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
+                <div>
+                  <span className="manager-kicker">Event Operations</span>
+                  <h2 className="heading-md">Published Active Events (Seat Block Manager)</h2>
+                </div>
+                <button onClick={fetchAdminEvents} className="btn btn-secondary btn-refresh">
+                  <RefreshCw size={14} /> Refresh Events
+                </button>
+              </div>
+              {events.length === 0 ? (
+                <p className="events-empty" style={{ padding: '1rem', color: '#64748b', fontStyle: 'italic' }}>No active events available.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {events.map((event) => (
+                    <SeatBlockTab key={event.id} event={event} adminUser={adminUser} />
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="list-controls-bar">
               <div className="tab-buttons">
                 <button

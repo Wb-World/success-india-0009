@@ -19,6 +19,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const eventId = searchParams.get('eventId');
+    const excludeBlocked = searchParams.get('excludeBlocked') === 'true';
+    const adminId = request.headers.get('x-admin-id');
 
     if (!eventId) {
       return NextResponse.json({ error: 'eventId parameter is required' }, { status: 400 });
@@ -64,7 +66,45 @@ export async function GET(request: Request) {
     }
 
     const uniqueSeats = Array.from(new Set(takenSeats));
-    return NextResponse.json({ seats: uniqueSeats });
+
+    // Fetch blocked seats for this event
+    let blockedSeats: string[] = [];
+    let isAuthorizedAdmin = false;
+    if (adminId) {
+      try {
+        const { data: adminUser } = await supabaseAdmin
+          .from('admin')
+          .select('id')
+          .eq('id', adminId)
+          .maybeSingle();
+        if (adminUser) {
+          isAuthorizedAdmin = true;
+        }
+      } catch (e) {
+        console.warn('Failed to verify admin for excludeBlocked:', e);
+      }
+    }
+
+    if (!excludeBlocked || !isAuthorizedAdmin) {
+      try {
+        const { data: configData, error: configError } = await supabaseAdmin
+          .from('configs')
+          .select('value')
+          .eq('key', `blocked_seats_${eventId}`)
+          .maybeSingle();
+        if (!configError && configData?.value) {
+          const parsed = JSON.parse(configData.value);
+          if (Array.isArray(parsed)) {
+            blockedSeats = parsed;
+          }
+        }
+      } catch (e) {
+        console.warn('[bookings GET] failed to fetch blocked seats:', e);
+      }
+    }
+
+    const mergedSeats = Array.from(new Set([...uniqueSeats, ...blockedSeats]));
+    return NextResponse.json({ seats: mergedSeats });
   } catch (err: any) {
     console.error('Error in GET /api/bookings:', err);
     return NextResponse.json({ error: err.message || 'An error occurred' }, { status: 500 });
@@ -168,7 +208,26 @@ export async function POST(request: Request) {
       }
 
       const alreadyBooked = (conflicting || []).flatMap((bk: any) => bk.seats || []);
-      const hasConflict = seats.some((s: string) => alreadyBooked.includes(s));
+
+      // Fetch blocked seats for conflict check
+      let blockedSeats: string[] = [];
+      try {
+        const { data: configData } = await supabaseAdmin
+          .from('configs')
+          .select('value')
+          .eq('key', `blocked_seats_${resolvedSeminarId}`)
+          .maybeSingle();
+        if (configData?.value) {
+          const parsed = JSON.parse(configData.value);
+          if (Array.isArray(parsed)) {
+            blockedSeats = parsed;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch blocked seats for conflict check:', e);
+      }
+
+      const hasConflict = seats.some((s: string) => alreadyBooked.includes(s) || blockedSeats.includes(s));
 
       if (hasConflict) {
         return NextResponse.json(
