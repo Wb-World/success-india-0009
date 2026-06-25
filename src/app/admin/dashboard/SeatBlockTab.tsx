@@ -31,6 +31,8 @@ type Props = {
 };
 
 export default function SeatBlockTab({ event, adminUser }: Props) {
+  const resolvedEventId = event.id === 'seminar_101' ? 'seminar_mega_mass_2026' : event.id;
+
   const [expanded, setExpanded] = useState(false);
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
   const [blockedSeats, setBlockedSeats] = useState<string[]>([]);
@@ -45,37 +47,45 @@ export default function SeatBlockTab({ event, adminUser }: Props) {
     setLoadingSeats(true);
     setMessage(null);
     try {
-      // 1. Fetch only booked seats (excludeBlocked=true)
-      const bookedRes = await fetch(`/api/bookings?eventId=${encodeURIComponent(event.id)}&excludeBlocked=true&t=${Date.now()}`, {
+      // 1. Fetch blocked seats list first
+      const blockedRes = await fetch(`/api/admin/blocked-seats?eventId=${encodeURIComponent(resolvedEventId)}&t=${Date.now()}`, {
         cache: 'no-store',
         headers: {
           'x-admin-id': adminUser.id,
         },
       });
-      let bookedList: string[] = [];
+      let blockedList: string[] = [];
+      if (blockedRes.ok) {
+        const blockedData = await blockedRes.json();
+        blockedList = blockedData.blockedSeats || [];
+      } else {
+        console.error('Failed to fetch blocked seats');
+      }
+
+      // 2. Fetch merged bookings (the exact same call as the customer booking modal)
+      const bookedRes = await fetch(`/api/bookings?eventId=${encodeURIComponent(resolvedEventId)}&t=${Date.now()}`, {
+        cache: 'no-store'
+      });
+      let mergedSeatsList: string[] = [];
       if (bookedRes.ok) {
         const bookedData = await bookedRes.json();
-        bookedList = bookedData.seats || [];
-        setBookedSeats(bookedList);
+        mergedSeatsList = bookedData.seats || [];
       } else {
         console.error('Failed to fetch booked seats');
       }
 
-      // 2. Fetch blocked seats
-      const blockedRes = await fetch(`/api/admin/blocked-seats?eventId=${encodeURIComponent(event.id)}&t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: {
-          'x-admin-id': adminUser.id,
-        },
-      });
-      if (blockedRes.ok) {
-        const blockedData = await blockedRes.json();
-        const blockedList = blockedData.blockedSeats || [];
-        setBlockedSeats(blockedList);
-        setLocalBlockedSeats(blockedList);
-      } else {
-        console.error('Failed to fetch blocked seats');
-      }
+      // 3. Compute confirmed/pending bookings by filtering out blocked seats
+      const actualBooked = mergedSeatsList.filter((s) => !blockedList.includes(s));
+      
+      // Temporary debug logs
+      console.log("Customer booking response", { seats: mergedSeatsList });
+      console.log("Merged seats", mergedSeatsList);
+      console.log("Blocked seats", blockedList);
+      console.log("Final booked seats", actualBooked);
+
+      setBookedSeats(actualBooked);
+      setBlockedSeats(blockedList);
+      setLocalBlockedSeats(blockedList);
     } catch (err) {
       console.error(err);
       setMessage({ type: 'error', text: 'Failed to retrieve seat mapping details.' });
@@ -156,7 +166,7 @@ export default function SeatBlockTab({ event, adminUser }: Props) {
           'x-admin-id': adminUser.id,
         },
         body: JSON.stringify({
-          eventId: event.id,
+          eventId: resolvedEventId,
           blockedSeats: localBlockedSeats,
         }),
       });
