@@ -5,7 +5,7 @@ import Link from 'next/link';
 import AuthGuard from '../../components/AuthGuard';
 import {
   ArrowLeft, ArrowRight, CheckCircle, AlertTriangle,
-  User, Phone, Mail, Users, Calendar, Home, FileText,
+  User, Phone, Users, Calendar, Home, FileText,
   CreditCard, Download, Loader2, Check, Info, Clock,
   ChevronLeft, ChevronRight
 } from 'lucide-react';
@@ -14,7 +14,6 @@ import {
 interface BookingForm {
   full_name: string;
   phone: string;
-  email: string;
   guests: string;
   check_in_date: string;
   check_out_date: string;
@@ -112,7 +111,7 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
 export default function ResortBookingPage() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<BookingForm>({
-    full_name: '', phone: '', email: '', guests: '1',
+    full_name: '', phone: '', guests: '1',
     check_in_date: '', check_out_date: '',
     accommodation_type: '', special_notes: '', utr_number: ''
   });
@@ -142,7 +141,6 @@ export default function ResortBookingPage() {
           ...prev,
           full_name: prev.full_name || u.name || '',
           phone: prev.phone || u.phone || '',
-          email: prev.email || u.email || '',
         }));
       } catch (e) {
         console.error('Error auto-populating from local storage user:', e);
@@ -197,7 +195,6 @@ export default function ResortBookingPage() {
     const newErrors: Record<string, string> = {};
     if (!form.full_name.trim()) newErrors.full_name = 'Name is required';
     if (!form.phone.trim() || !/^\d{10}$/.test(form.phone.trim())) newErrors.phone = 'Valid 10-digit phone required';
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) newErrors.email = 'Valid email is required';
     if (!form.guests || parseInt(form.guests) < 1) newErrors.guests = 'At least 1 guest required';
     if (!form.check_in_date) newErrors.check_in_date = 'Check-in date required';
     if (!form.check_out_date) newErrors.check_out_date = 'Check-out date required';
@@ -503,11 +500,6 @@ export default function ResortBookingPage() {
                 <label><Phone size={15} /> Phone Number <span className="req">*</span></label>
                 <input name="phone" value={form.phone} onChange={handleChange} placeholder="10-digit mobile number" maxLength={10} className={errors.phone ? 'error' : ''} />
                 {errors.phone && <span className="rb-err">{errors.phone}</span>}
-              </div>
-              <div className="rb-field rb-field-full">
-                <label><Mail size={15} /> Email Address <span className="req">*</span></label>
-                <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="your@email.com" className={errors.email ? 'error' : ''} />
-                {errors.email && <span className="rb-err">{errors.email}</span>}
               </div>
               <div className="rb-field">
                 <label><Users size={15} /> Number of Guests <span className="req">*</span></label>
