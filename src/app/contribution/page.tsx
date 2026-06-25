@@ -26,7 +26,7 @@ export default function ContributionPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState('');
   const [upiConfig, setUpiConfig] = useState({ 
-    upiId: 'shesh.dav07-1@okaxis', 
+    upiId: '8637684229-3@ybl', 
     upiName: 'david', 
     upiQrUrl: '/upi-qr-code.jpg?v=2' 
   });
@@ -38,7 +38,7 @@ export default function ContributionPage() {
         const res = await fetch('/api/admin/configs');
         if (res.ok) {
           const data = await res.json();
-          const upiId = data.configs.find((c: any) => c.key === 'upi_id')?.value || 'shesh.dav07-1@okaxis';
+          const upiId = data.configs.find((c: any) => c.key === 'upi_id')?.value || '8637684229-3@ybl';
           const upiName = data.configs.find((c: any) => c.key === 'upi_name')?.value || 'david';
           const upiQrUrl = data.configs.find((c: any) => c.key === 'upi_qr_url')?.value || '/upi-qr-code.jpg?v=2';
           setUpiConfig({ upiId, upiName, upiQrUrl });

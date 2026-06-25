@@ -16,7 +16,7 @@ export async function GET() {
       // Fallback: return default configurations
       return NextResponse.json({
         configs: [
-          { key: 'upi_id', value: 'shesh.dav07-1@okaxis' },
+          { key: 'upi_id', value: '8637684229-3@ybl' },
           { key: 'upi_name', value: 'david' },
           { key: 'upi_qr_url', value: '/upi-qr-code.jpg?v=2' }
         ]
