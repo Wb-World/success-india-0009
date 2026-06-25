@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText, Upload, Trophy, Award, Star, Crown, Coffee, Users, Download, Umbrella } from 'lucide-react';
+import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, ArrowLeft, Trash2, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText, Upload, Trophy, Award, Star, Crown, Coffee, Users, Download, Umbrella } from 'lucide-react';
 import ImageCropperModal from '@/app/components/ImageCropperModal';
 
 export default function AdminDashboard() {
@@ -31,7 +31,7 @@ export default function AdminDashboard() {
   const [selectedContributionDetail, setSelectedContributionDetail] = useState<any | null>(null);
   const [mounted, setMounted] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions' | 'achievers' | 'foodList' | 'attendeeList' | 'resortBookings'>('registrations');
+  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions' | 'achievers' | 'foodList' | 'attendeeList' | 'resortBookings' | 'resortSettings'>('registrations');
   const [resortBookings, setResortBookings] = useState<any[]>([]);
   const [resortLoading, setResortLoading] = useState(false);
   const [events, setEvents] = useState<any[]>([]);
@@ -53,6 +53,12 @@ export default function AdminDashboard() {
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState('');
   const [isUploadingQr, setIsUploadingQr] = useState(false);
+
+  // Resort carousel images settings
+  const [resortImages, setResortImages] = useState<string[]>([]);
+  const [resortImagesLoading, setResortImagesLoading] = useState(false);
+  const [resortImagesMessage, setResortImagesMessage] = useState('');
+  const [isUploadingResortImg, setIsUploadingResortImg] = useState(false);
 
   // Achievers state
   const [achieversData, setAchieversData] = useState<any>(null);
@@ -114,6 +120,7 @@ export default function AdminDashboard() {
       fetchAdminEvents();
       fetchAdminConfigs();
       fetchAdminAchievers();
+      fetchResortImages();
     } catch (e) {
       router.push('/admin/login');
     }
@@ -253,6 +260,96 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('Error fetching configurations:', err);
     }
+  };
+
+  const fetchResortImages = async () => {
+    try {
+      const res = await fetch('/api/admin/resort-images');
+      if (res.ok) {
+        const data = await res.json();
+        setResortImages(data.images || []);
+      }
+    } catch (err) {
+      console.error('Error fetching resort images:', err);
+    }
+  };
+
+  const handleSaveResortImages = async (newImages: string[]) => {
+    setResortImagesLoading(true);
+    setResortImagesMessage('');
+    try {
+      const stored = localStorage.getItem('user');
+      const adminId = stored ? JSON.parse(stored).id : '';
+
+      const res = await fetch('/api/admin/resort-images', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-id': adminId,
+        },
+        body: JSON.stringify({ images: newImages }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setResortImagesMessage('Resort images saved successfully.');
+      } else {
+        setResortImagesMessage(data.error || 'Failed to save resort images');
+      }
+    } catch (err) {
+      setResortImagesMessage('Network error saving resort images');
+    } finally {
+      setResortImagesLoading(false);
+    }
+  };
+
+  const handleResortImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingResortImg(true);
+    setResortImagesMessage('');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/bookings/upload-proof', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.url) {
+        const updated = [...resortImages, data.url];
+        setResortImages(updated);
+        setResortImagesMessage('Image uploaded. Click Save Resort Settings to persist.');
+      } else {
+        setResortImagesMessage(data.error || 'Failed to upload image');
+      }
+    } catch (err) {
+      setResortImagesMessage('Error uploading image');
+    } finally {
+      setIsUploadingResortImg(false);
+    }
+  };
+
+  const moveImage = (index: number, direction: 'left' | 'right') => {
+    const newImages = [...resortImages];
+    const targetIndex = direction === 'left' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newImages.length) return;
+    
+    // Swap
+    const temp = newImages[index];
+    newImages[index] = newImages[targetIndex];
+    newImages[targetIndex] = temp;
+    
+    setResortImages(newImages);
+  };
+
+  const deleteImage = (index: number) => {
+    const newImages = resortImages.filter((_, i) => i !== index);
+    setResortImages(newImages);
   };
 
   const fetchAdminAchievers = async () => {
@@ -942,6 +1039,13 @@ export default function AdminDashboard() {
             >
               <Umbrella size={16} />
               <span>Resort Bookings</span>
+            </button>
+            <button
+              onClick={() => setAdminSection('resortSettings')}
+              className={`section-tab ${adminSection === 'resortSettings' ? 'active' : ''}`}
+            >
+              <Settings size={16} />
+              <span>Resort Settings</span>
             </button>
           </div>
         </div>
@@ -1902,6 +2006,93 @@ export default function AdminDashboard() {
                 </table>
               </div>
             )}
+          </div>
+        ) : adminSection === 'resortSettings' ? (
+          <div className="payment-settings-area animate-slide-up">
+            <div className="event-form-card glass-card">
+              <div className="event-manager-header">
+                <div>
+                  <span className="manager-kicker">Resort Gallery Settings</span>
+                  <h2 className="heading-md">Suren Inn Beach Resort Images</h2>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '1.5rem' }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>Manage Resort Carousel Images (Add, Remove, and Reorder)</label>
+                
+                <div className="resort-images-grid">
+                  {resortImages.map((imgUrl, index) => (
+                    <div key={index} className="resort-image-card">
+                      <img src={imgUrl} alt={`Resort ${index + 1}`} />
+                      {index === 0 && <span className="resort-cover-badge">Default Cover</span>}
+                      
+                      <div className="resort-image-actions">
+                        <button
+                          type="button"
+                          onClick={() => moveImage(index, 'left')}
+                          disabled={index === 0}
+                          className="resort-img-btn"
+                          title="Move Left"
+                          style={{ opacity: index === 0 ? 0.4 : 1, cursor: index === 0 ? 'not-allowed' : 'pointer' }}
+                        >
+                          <ArrowLeft size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveImage(index, 'right')}
+                          disabled={index === resortImages.length - 1}
+                          className="resort-img-btn"
+                          title="Move Right"
+                          style={{ opacity: index === resortImages.length - 1 ? 0.4 : 1, cursor: index === resortImages.length - 1 ? 'not-allowed' : 'pointer' }}
+                        >
+                          <ArrowRight size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteImage(index)}
+                          className="resort-img-btn delete"
+                          title="Delete"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Upload Card */}
+                  <label className="resort-upload-card" style={{ cursor: isUploadingResortImg ? 'not-allowed' : 'pointer' }}>
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp"
+                      onChange={handleResortImageUpload}
+                      style={{ display: 'none' }}
+                      disabled={isUploadingResortImg}
+                    />
+                    <Upload size={24} color="#64748b" style={{ display: 'block', margin: '0 auto 0.5rem' }} />
+                    <span>{isUploadingResortImg ? 'Uploading...' : 'Add Image'}</span>
+                  </label>
+                </div>
+
+                <div className="event-form-actions span-2" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ flex: 1 }}>
+                    {resortImagesMessage && (
+                      <span className="event-message" style={{ display: 'block', color: resortImagesMessage.includes('saved') || resortImagesMessage.includes('uploaded') ? '#16a34a' : '#ef4444', fontWeight: '600' }}>
+                        {resortImagesMessage}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveResortImages(resortImages)}
+                    className="btn btn-primary"
+                    disabled={resortImagesLoading}
+                    style={{ height: '44px', minWidth: '180px' }}
+                  >
+                    {resortImagesLoading ? 'Saving Settings...' : 'Save Resort Settings'}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         ) : null}
       </div>
@@ -3347,6 +3538,112 @@ export default function AdminDashboard() {
           max-width: 320px;
           line-height: 1.6;
           margin: 0;
+        }
+
+        /* Resort Images Settings CSS */
+        .resort-images-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 1.5rem;
+          margin-top: 1.5rem;
+          margin-bottom: 2rem;
+        }
+        
+        .resort-image-card {
+          position: relative;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          overflow: hidden;
+          aspect-ratio: 4 / 3;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .resort-image-card img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        
+        .resort-image-actions {
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.4);
+          opacity: 0;
+          transition: opacity 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+        
+        .resort-image-card:hover .resort-image-actions {
+          opacity: 1;
+        }
+        
+        .resort-img-btn {
+          background: white;
+          border: none;
+          color: #334155;
+          padding: 6px;
+          border-radius: 6px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+        }
+        
+        .resort-img-btn:hover {
+          background: #f1f5f9;
+          color: #000;
+        }
+        
+        .resort-img-btn.delete {
+          color: #ef4444;
+        }
+        
+        .resort-img-btn.delete:hover {
+          background: #fee2e2;
+          color: #b91c1c;
+        }
+        
+        .resort-cover-badge {
+          position: absolute;
+          top: 8px;
+          left: 8px;
+          background: #22c55e;
+          color: white;
+          font-size: 0.75rem;
+          font-weight: 600;
+          padding: 3px 8px;
+          border-radius: 9999px;
+          box-shadow: 0 2px 5px rgba(34, 197, 94, 0.3);
+        }
+        
+        .resort-upload-card {
+          border: 2px dashed #cbd5e1;
+          background: #f8fafc;
+          border-radius: 12px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          cursor: pointer;
+          aspect-ratio: 4 / 3;
+          transition: all 0.2s ease;
+        }
+        
+        .resort-upload-card:hover {
+          border-color: #22c55e;
+          background: #f0fdf4;
+        }
+        
+        .resort-upload-card span {
+          font-size: 0.85rem;
+          color: #64748b;
+          font-weight: 500;
         }
       `}</style>
     </div>

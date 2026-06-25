@@ -6,7 +6,8 @@ import AuthGuard from '../../components/AuthGuard';
 import {
   ArrowLeft, ArrowRight, CheckCircle, AlertTriangle,
   User, Phone, Mail, Users, Calendar, Home, FileText,
-  CreditCard, Download, Loader2, Check, Info, Clock
+  CreditCard, Download, Loader2, Check, Info, Clock,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────
@@ -120,6 +121,13 @@ export default function ResortBookingPage() {
   const [bookingId, setBookingId] = useState('');
   const [submitError, setSubmitError] = useState('');
 
+  const [resortImages, setResortImages] = useState<string[]>([
+    '/images/resort.jpg',
+    '/images/resort front.jpeg',
+    '/images/pool.jpg'
+  ]);
+  const [currentImgIndex, setCurrentImgIndex] = useState(0);
+
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (stored) {
@@ -135,6 +143,21 @@ export default function ResortBookingPage() {
         console.error('Error auto-populating from local storage user:', e);
       }
     }
+
+    const loadResortImages = async () => {
+      try {
+        const res = await fetch('/api/admin/resort-images');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.images) && data.images.length > 0) {
+            setResortImages(data.images);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching resort images:', err);
+      }
+    };
+    loadResortImages();
   }, []);
   const ticketRef = useRef<HTMLDivElement>(null);
   const pricing = calculatePrice(form.check_in_date, form.check_out_date, form.accommodation_type);
@@ -259,9 +282,43 @@ export default function ResortBookingPage() {
                 className={`rb-accom-card ${form.accommodation_type === 'SUREN INN BEACH RESORT' ? 'selected' : ''}`}
                 onClick={() => setForm(p => ({ ...p, accommodation_type: 'SUREN INN BEACH RESORT' }))}
               >
-                <div className="rb-accom-img" style={{ backgroundImage: "url('/images/resort.jpg')" }}>
-                  {form.accommodation_type === 'SUREN INN BEACH RESORT' && (
-                    <div className="rb-selected-badge"><Check size={14}/> Selected</div>
+                <div className="rb-accom-img-carousel-container" onClick={(e) => e.stopPropagation()}>
+                  <div 
+                    className="rb-accom-img" 
+                    style={{ 
+                      backgroundImage: `url('${resortImages[currentImgIndex]}')`,
+                      transition: 'background-image 0.5s ease-in-out'
+                    }}
+                    onClick={() => setForm(p => ({ ...p, accommodation_type: 'SUREN INN BEACH RESORT' }))}
+                  >
+                    {form.accommodation_type === 'SUREN INN BEACH RESORT' && (
+                      <div className="rb-selected-badge"><Check size={14}/> Selected</div>
+                    )}
+                  </div>
+                  
+                  {resortImages.length > 1 && (
+                    <>
+                      <button 
+                        type="button"
+                        className="carousel-arrow left"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentImgIndex(prev => (prev === 0 ? resortImages.length - 1 : prev - 1));
+                        }}
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+                      <button 
+                        type="button"
+                        className="carousel-arrow right"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentImgIndex(prev => (prev === resortImages.length - 1 ? 0 : prev + 1));
+                        }}
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </>
                   )}
                 </div>
                 <div className="rb-accom-info">
@@ -828,6 +885,53 @@ export default function ResortBookingPage() {
           background-size: cover;
           background-position: center;
           position: relative;
+        }
+
+        .rb-accom-img-carousel-container {
+          position: relative;
+          height: 180px;
+          overflow: hidden;
+          width: 100%;
+        }
+        
+        .rb-accom-img-carousel-container .rb-accom-img {
+          height: 100%;
+          width: 100%;
+        }
+        
+        .carousel-arrow {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          background: rgba(0, 0, 0, 0.4);
+          border: none;
+          color: white;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: background 0.3s, transform 0.2s;
+          z-index: 10;
+        }
+        
+        .carousel-arrow:hover {
+          background: rgba(0, 0, 0, 0.7);
+          transform: translateY(-50%) scale(1.1);
+        }
+        
+        .carousel-arrow:active {
+          transform: translateY(-50%) scale(0.95);
+        }
+        
+        .carousel-arrow.left {
+          left: 10px;
+        }
+        
+        .carousel-arrow.right {
+          right: 10px;
         }
 
         .rb-selected-badge {
