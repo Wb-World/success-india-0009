@@ -12,10 +12,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Validate size (under 3MB for Vercel/Supabase payload limits)
-    const MAX_SIZE = 3 * 1024 * 1024;
+    // Validate size (under 5MB)
+    const MAX_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: 'File size must be under 3MB.' }, { status: 400 });
+      return NextResponse.json({ error: 'File size must be under 5MB.' }, { status: 400 });
     }
 
     // Validate extension
@@ -29,22 +29,23 @@ export async function POST(request: Request) {
     const randId = Math.floor(Math.random() * 100000);
     const fileName = `proof_${Date.now()}_${randId}.${fileExt}`;
 
-    // Read file as ArrayBuffer and convert to Buffer
+    // Read file as ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
 
     // Upload to Supabase Storage bucket 'payment-proofs'
     const { data: uploadData, error: uploadError } = await supabaseAdmin
       .storage
       .from('payment-proofs')
-      .upload(fileName, buffer, {
+      .upload(fileName, arrayBuffer, {
         contentType: file.type,
         upsert: true,
       });
 
     if (uploadError) {
       console.error('Supabase storage upload error details:', uploadError);
-      throw new Error(`Supabase Storage upload failed: ${uploadError.message}`);
+      const causeMsg = (uploadError as any).cause ? ` | Cause: ${(uploadError as any).cause.message || String((uploadError as any).cause)}` : '';
+      const stringified = JSON.stringify(uploadError);
+      throw new Error(`Supabase Storage upload failed: ${uploadError.message}${causeMsg} | Details: ${stringified}`);
     }
 
     // Generate Public URL for the uploaded file
@@ -61,8 +62,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ url: urlData.publicUrl }, { status: 201 });
   } catch (err: any) {
     console.error('Backend File upload error details:', err);
+    if (err.cause) {
+      console.error('Backend File upload error cause details:', err.cause);
+    }
+    const causeMsg = err.cause ? ` | Cause: ${err.cause.message || String(err.cause)}` : '';
+    const errorStack = err.stack ? ` | Stack: ${err.stack}` : '';
     return NextResponse.json({ 
-      error: `Failed to process and upload image proof. Error: ${err.message || String(err)}` 
+      error: `Failed to process and upload image proof. Error: ${err.message || String(err)}${causeMsg}${errorStack}` 
     }, { status: 500 });
   }
 }

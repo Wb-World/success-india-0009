@@ -591,6 +591,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (res.ok) {
         setSettingsMessage('Payment gateway settings saved successfully.');
+        await fetchAdminConfigs();
       } else {
         setSettingsMessage(data.error || 'Failed to save settings');
       }
@@ -1904,7 +1905,20 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="event-form-actions span-2" style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
-                  {settingsMessage && <span className="event-message">{settingsMessage}</span>}
+                  {settingsMessage && (
+                    <span
+                      className="event-message"
+                      style={{
+                        display: 'inline-block',
+                        color: settingsMessage.includes('successfully') ? '#16a34a' : '#ef4444',
+                        fontWeight: '600',
+                        marginRight: '1rem',
+                        fontSize: '0.9rem'
+                      }}
+                    >
+                      {settingsMessage}
+                    </span>
+                  )}
                   <button type="submit" className="btn btn-primary" disabled={settingsLoading} style={{ height: '44px' }}>
                     {settingsLoading ? 'Saving Settings...' : 'Save Payment Settings'}
                   </button>
