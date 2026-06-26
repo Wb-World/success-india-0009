@@ -38,9 +38,9 @@ export default function ContributionPage() {
         const res = await fetch('/api/admin/configs');
         if (res.ok) {
           const data = await res.json();
-          const upiId = data.configs.find((c: any) => c.key === 'upi_id')?.value || '8637684229-3@ybl';
-          const upiName = data.configs.find((c: any) => c.key === 'upi_name')?.value || 'david';
-          const upiQrUrl = data.configs.find((c: any) => c.key === 'upi_qr_url')?.value || '/upi-qr-code.jpg?v=2';
+          const upiId = data.configs.find((c: any) => c.key === 'contribution_upi_id')?.value || '8637684229-3@ybl';
+          const upiName = data.configs.find((c: any) => c.key === 'contribution_upi_name')?.value || 'david';
+          const upiQrUrl = data.configs.find((c: any) => c.key === 'contribution_upi_qr_url')?.value || '';
           setUpiConfig({ upiId, upiName, upiQrUrl });
         }
       } catch (err) {
@@ -146,7 +146,7 @@ export default function ContributionPage() {
   const totalPrice = basePrice;
 
   // QR Code
-  const qrImageUrl = '/UPIs/contribution-qr.jpg';
+  const qrImageUrl = upiConfig.upiQrUrl || '/UPIs/contribution-qr.jpg';
 
   const validateUTR = (val: string) => {
     return /^[0-9]{12}$/.test(val);

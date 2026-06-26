@@ -132,6 +132,12 @@ export default function ResortBookingPage() {
   ]);
   const [currentVillaImgIndex, setCurrentVillaImgIndex] = useState(0);
 
+  const [toolsUpiConfig, setToolsUpiConfig] = useState({
+    upiId: '',
+    upiName: '',
+    upiQrUrl: '/tools-payment-qr.jpg'
+  });
+
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (stored) {
@@ -176,6 +182,22 @@ export default function ResortBookingPage() {
       }
     };
     loadVillaImages();
+
+    const fetchToolsConfig = async () => {
+      try {
+        const res = await fetch('/api/admin/configs');
+        if (res.ok) {
+          const data = await res.json();
+          const upiId = data.configs.find((c: any) => c.key === 'tools_upi_id')?.value || '';
+          const upiName = data.configs.find((c: any) => c.key === 'tools_upi_name')?.value || '';
+          const upiQrUrl = data.configs.find((c: any) => c.key === 'tools_upi_qr_url')?.value || '/tools-payment-qr.jpg';
+          setToolsUpiConfig({ upiId, upiName, upiQrUrl });
+        }
+      } catch (err) {
+        console.error('Failed to load Tools UPI configurations:', err);
+      }
+    };
+    fetchToolsConfig();
   }, []);
   const ticketRef = useRef<HTMLDivElement>(null);
   const pricing = calculatePrice(form.check_in_date, form.check_out_date, form.accommodation_type);
@@ -557,7 +579,7 @@ export default function ResortBookingPage() {
               <div className="rb-qr-section">
                 <div className="rb-qr-box">
                   <img 
-                    src="/tools-payment-qr.jpg" 
+                    src={toolsUpiConfig.upiQrUrl || '/tools-payment-qr.jpg'} 
                     alt="UPI QR Code" 
                     style={{ maxWidth: '100%', maxHeight: '280px', objectFit: 'contain', borderRadius: '12px' }}
                   />

@@ -17,7 +17,15 @@ export async function GET() {
         configs: [
           { key: 'upi_id', value: '8637684229-3@ybl' },
           { key: 'upi_name', value: 'david' },
-          { key: 'upi_qr_url', value: '/upi-qr-code.jpg?v=2' }
+          { key: 'upi_qr_url', value: '/upi-qr-code.jpg?v=2' },
+
+          { key: 'contribution_upi_id', value: '8637684229-3@ybl' },
+          { key: 'contribution_upi_name', value: 'david' },
+          { key: 'contribution_upi_qr_url', value: '' },
+
+          { key: 'tools_upi_id', value: '8637684229-3@ybl' },
+          { key: 'tools_upi_name', value: 'david' },
+          { key: 'tools_upi_qr_url', value: '/tools-payment-qr.jpg' }
         ]
       });
     }
@@ -29,9 +37,20 @@ export async function GET() {
 
     return NextResponse.json({
       configs: [
+        // Event Payment Settings
         { key: 'upi_id', value: findValue('upi_id', '8637684229-3@ybl') },
         { key: 'upi_name', value: findValue('upi_name', 'david') },
-        { key: 'upi_qr_url', value: findValue('upi_qr_url', '/upi-qr-code.jpg?v=2') }
+        { key: 'upi_qr_url', value: findValue('upi_qr_url', '/upi-qr-code.jpg?v=2') },
+
+        // Contribution Payment Settings
+        { key: 'contribution_upi_id', value: findValue('contribution_upi_id', '8637684229-3@ybl') },
+        { key: 'contribution_upi_name', value: findValue('contribution_upi_name', 'david') },
+        { key: 'contribution_upi_qr_url', value: findValue('contribution_upi_qr_url', '') },
+
+        // Tools Payment Settings
+        { key: 'tools_upi_id', value: findValue('tools_upi_id', '8637684229-3@ybl') },
+        { key: 'tools_upi_name', value: findValue('tools_upi_name', 'david') },
+        { key: 'tools_upi_qr_url', value: findValue('tools_upi_qr_url', '/tools-payment-qr.jpg') }
       ]
     });
   } catch (err: any) {
@@ -47,10 +66,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });
     }
 
-    const { upiId, upiName, upiQrUrl } = await request.json();
+    const { upiId, upiName, upiQrUrl, type = 'event' } = await request.json();
 
     if (!upiId || !upiName) {
       return NextResponse.json({ error: 'UPI ID and Account Name are required' }, { status: 400 });
+    }
+
+    if (!['event', 'contribution', 'tools'].includes(type)) {
+      return NextResponse.json({ error: 'Invalid config type' }, { status: 400 });
+    }
+
+    // Determine the database keys depending on config type
+    let dbKeyId = 'upi_id';
+    let dbKeyName = 'upi_name';
+    let dbKeyQr = 'upi_qr_url';
+
+    if (type === 'contribution') {
+      dbKeyId = 'contribution_upi_id';
+      dbKeyName = 'contribution_upi_name';
+      dbKeyQr = 'contribution_upi_qr_url';
+    } else if (type === 'tools') {
+      dbKeyId = 'tools_upi_id';
+      dbKeyName = 'tools_upi_name';
+      dbKeyQr = 'tools_upi_qr_url';
     }
 
     // Retrieve the existing QR code URL to check for replacement/deletion
@@ -59,13 +97,13 @@ export async function POST(request: Request) {
       const { data: oldConfig } = await supabaseAdmin
         .from('configs')
         .select('value')
-        .eq('key', 'upi_qr_url')
+        .eq('key', dbKeyQr)
         .maybeSingle();
       if (oldConfig) {
         oldQrUrl = oldConfig.value || '';
       }
     } catch (fetchErr) {
-      console.warn('Could not fetch existing upi_qr_url (this is fine on first set):', fetchErr);
+      console.warn(`Could not fetch existing ${dbKeyQr} (this is fine on first set):`, fetchErr);
     }
 
     // If QR image changed/cleared, delete old image from storage bucket 'payment-proofs'
@@ -74,7 +112,7 @@ export async function POST(request: Request) {
         const parts = oldQrUrl.split('/payment-proofs/');
         if (parts.length > 1) {
           const fileName = parts[1];
-          console.log(`Replacing old QR image. Deleting file from storage: ${fileName}`);
+          console.log(`Replacing old QR image for ${type}. Deleting file from storage: ${fileName}`);
           const { error: deleteError } = await supabaseAdmin
             .storage
             .from('payment-proofs')
@@ -95,17 +133,17 @@ export async function POST(request: Request) {
       const { error: upsertError } = await supabaseAdmin
         .from('configs')
         .upsert([
-          { key: 'upi_id', value: upiId },
-          { key: 'upi_name', value: upiName },
-          { key: 'upi_qr_url', value: upiQrUrl || '' }
+          { key: dbKeyId, value: upiId },
+          { key: dbKeyName, value: upiName },
+          { key: dbKeyQr, value: upiQrUrl || '' }
         ]);
 
       if (upsertError) {
-        console.error("PAYMENT_CONFIG_SAVE_FAILED details:", upsertError);
+        console.error(`PAYMENT_CONFIG_SAVE_FAILED (${type}) details:`, upsertError);
         return NextResponse.json({ error: `Failed to save settings: ${upsertError.message || JSON.stringify(upsertError)}` }, { status: 500 });
       }
     } catch (dbErr: any) {
-      console.error("PAYMENT_CONFIG_SAVE_FAILED db error details:", dbErr);
+      console.error(`PAYMENT_CONFIG_SAVE_FAILED (${type}) db error details:`, dbErr);
       return NextResponse.json({ error: dbErr.message || 'Database write operation failed' }, { status: 500 });
     }
 
