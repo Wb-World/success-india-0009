@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.successteam.gateapp
 
 import android.animation.ValueAnimator
 import android.graphics.Color
@@ -9,7 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import androidx.fragment.app.DialogFragment
-import com.example.myapplication.databinding.DialogQrScannerBinding
+import com.successteam.gateapp.databinding.DialogQrScannerBinding
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
 

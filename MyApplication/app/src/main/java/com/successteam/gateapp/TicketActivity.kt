@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.successteam.gateapp
 
 import android.content.Intent
 import android.graphics.Bitmap
@@ -8,7 +8,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
-import com.example.myapplication.databinding.ActivityTicketBinding
+import com.successteam.gateapp.databinding.ActivityTicketBinding
 import java.io.File
 import java.io.FileOutputStream
 

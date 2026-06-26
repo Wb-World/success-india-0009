@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.successteam.gateapp
 
 import android.content.Intent
 import android.os.Bundle
@@ -6,7 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.example.myapplication.databinding.ActivitySplashBinding
+import com.successteam.gateapp.databinding.ActivitySplashBinding
 
 class SplashActivity : AppCompatActivity() {
 

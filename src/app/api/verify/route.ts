@@ -95,9 +95,18 @@ export async function GET(request: Request) {
           vpName: val.vpName || '',
           vpImage: val.vpImage || '',
           designation: val.designation || '',
+          checkedIn: val.checkedIn === true || val.checkedIn === 'true',
+          checkedInAt: val.checkedInAt || null,
+          checkedInBy: val.checkedInBy || null
         };
       } else if (typeof val === 'string') {
-        cleanAttendees[seat] = { name: val, phone: '' };
+        cleanAttendees[seat] = {
+          name: val,
+          phone: '',
+          checkedIn: false,
+          checkedInAt: null,
+          checkedInBy: null
+        };
       }
     }
 
@@ -113,27 +122,47 @@ export async function GET(request: Request) {
       (Object.values(cleanAttendees)[0]?.name) ||
       '—';
 
+    // Calculate check-in details
+    const attendeesList = Object.entries(cleanAttendees);
+    const totalAttendees = attendeesList.length;
+    const checkedInCount = attendeesList.filter(([_, val]) => val.checkedIn).length;
+    const pendingCount = totalAttendees - checkedInCount;
+
+    // Derived booking status
+    const dbStatus = bk.status || 'pending';
+    let derivedStatus = dbStatus;
+    if (dbStatus === 'approved') {
+      if (checkedInCount === totalAttendees && totalAttendees > 0) {
+        derivedStatus = 'completed';
+      } else if (checkedInCount > 0) {
+        derivedStatus = 'partially_checked_in';
+      }
+    }
+
     // ── Status mapping ──────────────────────────────────────────────────────
     const statusMap: Record<string, string> = {
-      approved: 'Confirmed',
-      pending:  'Pending Approval',
-      denied:   'Rejected',
+      approved:             'Confirmed',
+      partially_checked_in: 'Partially Checked-in',
+      completed:            'Completed',
+      pending:              'Pending Approval',
+      denied:               'Rejected',
     };
-    const status: string = bk.status || 'pending';
-    const statusLabel: string = statusMap[status] ?? 'Unknown';
+    const statusLabel: string = statusMap[derivedStatus] ?? 'Unknown';
 
-    // A booking is considered "valid" only if status is approved (CONFIRMED)
-    const isValid = status === 'approved';
+    // A booking is considered "valid" if status is approved, partially_checked_in, or completed
+    const isValid = ['approved', 'partially_checked_in', 'completed'].includes(derivedStatus);
 
     const paymentStatusMap: Record<string, string> = {
-      approved: 'Verified & Cleared',
-      pending:  'Pending Review',
-      denied:   'Rejected',
+      approved:             'Verified & Cleared',
+      partially_checked_in: 'Verified & Cleared',
+      completed:            'Verified & Cleared',
+      pending:              'Pending Review',
+      denied:               'Rejected',
     };
 
     const seatStr = Array.isArray(bk.seats) ? bk.seats.join(',') : '';
     const amountStr = String(bk.total_price || '').replace("INR", "").replace("₹", "").trim();
-    const statusStr = status.toUpperCase() === 'APPROVED' ? 'CONFIRMED' : status.toUpperCase();
+    const statusStr = dbStatus.toUpperCase() === 'APPROVED' ? 'CONFIRMED' : dbStatus.toUpperCase();
     const localSig = generateQrSignature(bk.id, statusStr, seatStr, amountStr);
 
     const clientSig = searchParams.get('sig');
@@ -187,17 +216,17 @@ export async function GET(request: Request) {
       attendeeName:    primaryAttendeeName,
       bookerPhone:     bookerPhone || '—',
       bookerVpName:    bk.booker_vp_name || '',
-      status,
+      status:          derivedStatus,
       statusLabel,
       attendees:       cleanAttendees,
       bookedOn:        bk.created_at
         ? new Date(bk.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
         : '—',
-      paymentStatus:   paymentStatusMap[status] ?? 'Unknown',
+      paymentStatus:   paymentStatusMap[derivedStatus] ?? 'Unknown',
       qrCodePayload:   qrCodePayload,
     };
 
-    console.log('[verify] Returning ticket for id=%s status=%s valid=%s', sanitised, status, isValid);
+    console.log('[verify] Returning ticket for id=%s status=%s valid=%s', sanitised, derivedStatus, isValid);
     return NextResponse.json({ valid: isValid, ticket }, { status: 200 });
 
   } catch (err: any) {

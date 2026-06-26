@@ -7,9 +7,11 @@ import { CheckCircle, XCircle, Clock, Calendar, MapPin, Ticket, User, Phone, Cre
 // ─── Status helpers ────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
   const cfg = {
-    approved: { label: 'Verified Ticket', color: '#059669', bg: '#d1fae5', border: '#6ee7b7', Icon: CheckCircle },
-    pending:  { label: 'Pending Approval', color: '#d97706', bg: '#fef3c7', border: '#fcd34d', Icon: Clock },
-    denied:   { label: 'Rejected', color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', Icon: XCircle },
+    approved:             { label: 'Verified Ticket', color: '#059669', bg: '#d1fae5', border: '#6ee7b7', Icon: CheckCircle },
+    partially_checked_in: { label: 'Partially Checked-in', color: '#0284c7', bg: '#e0f2fe', border: '#7dd3fc', Icon: CheckCircle },
+    completed:            { label: 'Fully Checked-in', color: '#059669', bg: '#d1fae5', border: '#6ee7b7', Icon: CheckCircle },
+    pending:              { label: 'Pending Approval', color: '#d97706', bg: '#fef3c7', border: '#fcd34d', Icon: Clock },
+    denied:               { label: 'Rejected', color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', Icon: XCircle },
   }[status] ?? { label: 'Unknown', color: '#64748b', bg: '#f1f5f9', border: '#cbd5e1', Icon: AlertTriangle };
 
   const { label, color, bg, border, Icon } = cfg;
@@ -338,10 +340,22 @@ function VerifyContent() {
               {result.ticket.status === 'pending' ? <Clock size={28} /> : result.ticket.status === 'denied' ? <XCircle size={28} /> : <CheckCircle size={28} />}
               <div>
                 <p className="vp-verified-title">
-                  {result.ticket.status === 'approved' ? '✓ Valid Ticket — Verified' : result.ticket.status === 'pending' ? '✓ Valid — Pending Approval' : '✗ Ticket Rejected'}
+                  {result.ticket.status === 'completed'
+                    ? '✓ Ticket — Fully Checked-in'
+                    : result.ticket.status === 'partially_checked_in'
+                    ? '✓ Ticket — Partially Checked-in'
+                    : result.ticket.status === 'approved'
+                    ? '✓ Valid Ticket — Verified'
+                    : result.ticket.status === 'pending'
+                    ? '✓ Valid — Pending Approval'
+                    : '✗ Ticket Rejected'}
                 </p>
                 <p className="vp-verified-sub">
-                  {result.ticket.status === 'approved'
+                  {result.ticket.status === 'completed'
+                    ? 'All attendees for this booking have successfully checked in.'
+                    : result.ticket.status === 'partially_checked_in'
+                    ? 'This ticket is verified, and some attendees have checked in.'
+                    : result.ticket.status === 'approved'
                     ? 'This ticket has been successfully verified by the Success Team system.'
                     : result.ticket.status === 'pending'
                     ? 'This ticket is valid but is currently pending organizer approval.'
@@ -400,11 +414,26 @@ function VerifyContent() {
                       {Object.entries(result.ticket.attendees).map(([seat, val]: any) => {
                         const name = typeof val === 'object' && val !== null ? val.name : val;
                         const phone = typeof val === 'object' && val !== null ? val.phone : '';
+                        const checkedIn = typeof val === 'object' && val !== null ? val.checkedIn : false;
+                        const checkedInAt = typeof val === 'object' && val !== null ? val.checkedInAt : null;
                         return (
-                          <div key={seat} className="vp-attendee-row">
-                            <span className="vp-attendee-seat">{seat}</span>
-                            <span className="vp-attendee-name">{name}</span>
-                            {phone && <span className="vp-attendee-phone">{phone}</span>}
+                          <div key={seat} className="vp-attendee-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span className="vp-attendee-seat">{seat}</span>
+                              <span className="vp-attendee-name">{name}</span>
+                              {phone && <span className="vp-attendee-phone">{phone}</span>}
+                            </div>
+                            <div style={{ flexShrink: 0 }}>
+                              {checkedIn ? (
+                                <span style={{ background: '#d1fae5', color: '#065f46', fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '999px', border: '1px solid #a7f3d0' }}>
+                                  ✓ Checked In {checkedInAt ? `(${new Date(checkedInAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })})` : ''}
+                                </span>
+                              ) : (
+                                <span style={{ background: '#f1f5f9', color: '#475569', fontSize: '0.72rem', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', border: '1px solid #e2e8f0' }}>
+                                  Pending
+                                </span>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
