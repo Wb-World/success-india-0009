@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.successteam.gateapp
 
 import org.junit.Test
 

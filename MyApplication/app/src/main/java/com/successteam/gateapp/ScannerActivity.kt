@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.successteam.gateapp
 
 import android.Manifest
 import android.content.Intent
@@ -9,7 +9,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.myapplication.databinding.ActivityScannerBinding
+import com.successteam.gateapp.databinding.ActivityScannerBinding
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
 

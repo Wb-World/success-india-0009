@@ -252,8 +252,16 @@ export async function POST(request: Request) {
     // Build QR payload for ticket validation in structured format with signature
     const seatStr = seats.join(',');
     const amountStr = String(totalPrice).replace("INR", "").replace("₹", "").trim();
-    // Resolve primary attendee name
-    const primaryName = (Object.values(attendeeDetails || {}) as any[])[0]?.name || bookerName || '—';
+    // Build per-seat attendee string: "A1=John Doe,A2=Jane Doe"
+    const attendeesStr = Array.isArray(seats) && seats.length > 0
+      ? seats
+          .map((seat: string) => {
+            const info = attendeeDetails?.[seat];
+            const name = (typeof info === 'object' && info?.name) ? info.name : (typeof info === 'string' ? info : '');
+            return `${seat}=${name || resolvedBookerName}`;
+          })
+          .join(',')
+      : resolvedBookerName;
     const signature = generateQrSignature(bookingRefId, 'PENDING', seatStr, amountStr);
     
     const qrCodePayload = [
@@ -264,7 +272,7 @@ export async function POST(request: Request) {
       `TIME:${time || '10:00 AM'}`,
       `VENUE:${resolvedVenue}`,
       `SEAT:${seatStr}`,
-      `ATTENDEE:${primaryName}`,
+      `ATTENDEES:${attendeesStr}`,
       `PHONE:${resolvedBookerPhone || '—'}`,
       `AMOUNT:${amountStr}`,
       `SIGNATURE:${signature}`

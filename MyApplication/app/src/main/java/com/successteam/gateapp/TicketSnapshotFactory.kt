@@ -1,11 +1,39 @@
-﻿package com.example.myapplication
+
+
+package com.successteam.gateapp
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 
 object TicketSnapshotFactory {
 
-    fun fromQrDetails(qrDetails: Map<String, String>, note: String = ""): GateTicketSnapshot {
+    private fun verifyQrSignature(
+        bookingId: String,
+        status: String,
+        seats: String,
+        amount: String,
+        signature: String?
+    ): Boolean {
+        if (signature.isNullOrBlank()) return false
+        return try {
+            val salt = "success_team_secret_salt_2026"
+            val statusStr = if (status.equals("approved", ignoreCase = true)) "CONFIRMED" else status.uppercase()
+            val data = "${bookingId.trim().uppercase()}|${statusStr.trim().uppercase()}|${seats.trim()}|${amount.trim()}|$salt"
+            val digest = java.security.MessageDigest.getInstance("SHA-256")
+            val hashBytes = digest.digest(data.toByteArray(Charsets.UTF_8))
+            val hashHex = hashBytes.joinToString("") { "%02x".format(it) }
+            val expectedSig = hashHex.substring(0, 16)
+            expectedSig.equals(signature.trim(), ignoreCase = true)
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    fun fromQrDetails(
+        qrDetails: Map<String, String>,
+        approvedKeys: Set<String> = emptySet(),
+        note: String = ""
+    ): GateTicketSnapshot {
         val event = qrDetails["EVENT"] ?: qrDetails["EVENT_NAME"] ?: "-"
         val seatsRaw = qrDetails["SEATS"] ?: qrDetails["SEAT"] ?: "-"
         val venue = qrDetails["VENUE"] ?: "-"
@@ -14,9 +42,42 @@ object TicketSnapshotFactory {
         val amount = cleanMoney(qrDetails["AMOUNT"] ?: "-")
         val phone = cleanPhone(qrDetails["PHONE"] ?: "")
         val statusRaw = qrDetails["STATUS"] ?: "PENDING_VERIFICATION"
-        val attendees = parseAttendeesFromQr(qrDetails, parseSeatList(seatsRaw))
+        
+        val bookingId = qrDetails["BOOKING"] ?: qrDetails["BOOKING_ID"] ?: "-"
+        val clientSig = qrDetails["SIGNATURE"]
+        val isSignatureValid = verifyQrSignature(bookingId, statusRaw, seatsRaw, amount, clientSig)
+
+        val rawAttendees = parseAttendeesFromQr(qrDetails, parseSeatList(seatsRaw))
+        val attendees = rawAttendees.map { attendee ->
+            attendee.copy(checkedIn = approvedKeys.contains(attendee.key))
+        }
+
+        val checkedInCount = attendees.count { it.checkedIn }
+        val totalAttendees = attendees.size
+
+        val (status, reason) = when {
+            clientSig != null && !isSignatureValid -> {
+                "denied" to "Invalid QR code signature. Ticket forgery detected."
+            }
+            statusRaw.equals("approved", ignoreCase = true) || 
+            statusRaw.equals("confirmed", ignoreCase = true) || 
+            statusRaw.equals("valid", ignoreCase = true) || 
+            statusRaw.equals("success", ignoreCase = true) -> {
+                if (checkedInCount == totalAttendees && totalAttendees > 0) {
+                    "completed" to "All attendees for this booking have successfully checked in."
+                } else if (checkedInCount > 0) {
+                    "partial" to ""
+                } else {
+                    "approved" to note
+                }
+            }
+            else -> {
+                val normalized = normalizeQrStatus(statusRaw, note)
+                normalized.first to normalized.second
+            }
+        }
+
         val name = resolveDisplayName(attendees, qrDetails["ATTENDEE"] ?: qrDetails["ATTENDEES"] ?: "")
-        val (status, reason) = normalizeQrStatus(statusRaw, note)
         val displayDate = formatDateTime(rawDate, rawTime)
         val approvalsEnabled = parseSeatList(seatsRaw).size == 1 || attendees.size > 1
 
@@ -28,7 +89,7 @@ object TicketSnapshotFactory {
             seats = seatsRaw,
             price = amount,
             reason = reason,
-            bookingId = qrDetails["BOOKING"] ?: qrDetails["BOOKING_ID"] ?: "-",
+            bookingId = bookingId,
             date = displayDate,
             phone = phone,
             attendees = attendees,
@@ -42,10 +103,10 @@ object TicketSnapshotFactory {
         fallbackQr: Map<String, String>? = null
     ): GateTicketSnapshot {
         val rawStatus = booking.firstStringValue("status", fallback = fallbackQr?.get("STATUS") ?: "unknown")
-        val normalizedStatus = normalizeBookingStatus(rawStatus)
 
         val bookingId = booking.firstStringValue(
             "id",
+            "bookingId",
             fallback = bookingIdFallback.ifBlank {
                 fallbackQr?.get("BOOKING")
                     ?: fallbackQr?.get("BOOKING_ID")
@@ -54,16 +115,18 @@ object TicketSnapshotFactory {
         )
 
         val event = booking.firstStringValue(
+            "eventName",
             "seminar_name",
             "bus_name",
             fallback = fallbackQr?.get("EVENT") ?: fallbackQr?.get("EVENT_NAME") ?: "-"
         )
-        val venue = booking.firstStringValue("source", fallback = fallbackQr?.get("VENUE") ?: "-")
+        val venue = booking.firstStringValue("venue", "source", fallback = fallbackQr?.get("VENUE") ?: "-")
         val date = booking.firstStringValue("date", fallback = fallbackQr?.get("DATE") ?: "-")
         val time = booking.firstStringValue("time", fallback = fallbackQr?.get("TIME") ?: "")
-        val price = cleanMoney(booking.firstStringValue("total_price", fallback = fallbackQr?.get("AMOUNT") ?: "-"))
+        val price = cleanMoney(booking.firstStringValue("amountPaid", "total_price", fallback = fallbackQr?.get("AMOUNT") ?: "-"))
         val phone = cleanPhone(
             booking.firstStringValue(
+                "bookerPhone",
                 "booker_phone",
                 fallback = fallbackQr?.get("PHONE") ?: ""
             )
@@ -73,7 +136,28 @@ object TicketSnapshotFactory {
         val seats = if (seatsList.isNotEmpty()) seatsList.joinToString(", ") else (fallbackQr?.get("SEATS") ?: fallbackQr?.get("SEAT") ?: "-")
         val attendees = parseAttendeesFromBooking(booking, seatsList, fallbackQr)
         val name = resolveDisplayName(attendees, resolveFallbackName(booking, fallbackQr))
-        val reason = resolveBookingReason(normalizedStatus, rawStatus)
+        
+        val totalAttendees = attendees.size
+        val checkedInCount = attendees.count { it.checkedIn }
+
+        val normalizedStatus = if (rawStatus.lowercase() in listOf("approved", "confirmed", "valid", "success", "partially_checked_in", "partial", "completed")) {
+            if (checkedInCount == totalAttendees && totalAttendees > 0) {
+                "completed"
+            } else if (checkedInCount > 0) {
+                "partial"
+            } else {
+                "approved"
+            }
+        } else {
+            normalizeBookingStatus(rawStatus)
+        }
+
+        val reason = if (normalizedStatus == "completed") {
+            "All attendees for this booking have successfully checked in."
+        } else {
+            resolveBookingReason(normalizedStatus, rawStatus)
+        }
+        
         val displayDate = formatDateTime(date, time)
 
         return GateTicketSnapshot(
@@ -96,6 +180,8 @@ object TicketSnapshotFactory {
         val trimmedNote = note.trim()
         return when (status.uppercase()) {
             "APPROVED", "CONFIRMED", "VALID", "SUCCESS" -> "approved" to trimmedNote
+            "PARTIALLY_CHECKED_IN", "PARTIAL" -> "partial" to trimmedNote
+            "COMPLETED" -> "completed" to trimmedNote
             "PENDING_VERIFICATION", "PENDING" -> {
                 val reason = buildString {
                     append("This booking exists in local ticket data but payment is awaiting admin confirmation.")
@@ -116,6 +202,8 @@ object TicketSnapshotFactory {
     private fun normalizeBookingStatus(status: String): String {
         return when (status.lowercase()) {
             "approved", "confirmed", "valid", "success" -> "approved"
+            "partial", "partially_checked_in" -> "partial"
+            "completed" -> "completed"
             "pending" -> "pending"
             "denied", "rejected" -> "denied"
             else -> "error"
@@ -125,6 +213,8 @@ object TicketSnapshotFactory {
     private fun resolveBookingReason(normalizedStatus: String, rawStatus: String): String {
         return when (normalizedStatus) {
             "approved" -> ""
+            "partial" -> ""
+            "completed" -> "All attendees for this booking have successfully checked in."
             "pending" -> "This booking exists but payment is awaiting admin confirmation before entry is allowed."
             "denied" -> "This booking was explicitly rejected/denied by the admin."
             else -> "Status \"$rawStatus\" is unrecognized. Entry not permitted."
@@ -157,7 +247,7 @@ object TicketSnapshotFactory {
         fallbackQr: Map<String, String>?
     ): List<GateAttendee> {
         val attendees = mutableListOf<GateAttendee>()
-        val detailsEl = booking.get("attendee_details")
+        val detailsEl = booking.get("attendee_details") ?: booking.get("attendees")
         val detailsObj = if (detailsEl != null && detailsEl.isJsonObject) detailsEl.asJsonObject else null
 
         if (detailsObj != null && detailsObj.entrySet().isNotEmpty()) {
@@ -197,12 +287,18 @@ object TicketSnapshotFactory {
                 val name = obj.firstStringValue("name", fallback = "Guest")
                 val whatsapp = obj.firstStringValue("whatsapp", fallback = "")
                 val lunch = obj.firstStringValue("lunch", fallback = "")
+                val checkedIn = if (obj.has("checkedIn")) obj.get("checkedIn").asBoolean else false
+                val checkedInAt = if (obj.has("checkedInAt") && !obj.get("checkedInAt").isJsonNull) obj.get("checkedInAt").asString else null
+                val checkedInBy = if (obj.has("checkedInBy") && !obj.get("checkedInBy").isJsonNull) obj.get("checkedInBy").asString else null
                 GateAttendee(
                     key = if (key.isNotBlank()) key else label,
                     name = name,
                     seatLabel = label,
                     whatsapp = whatsapp,
-                    lunch = lunch
+                    lunch = lunch,
+                    checkedIn = checkedIn,
+                    checkedInAt = checkedInAt,
+                    checkedInBy = checkedInBy
                 )
             }
             element.isJsonPrimitive -> {

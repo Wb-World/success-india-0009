@@ -1,4 +1,4 @@
-﻿package com.example.myapplication
+package com.successteam.gateapp
 
 import android.content.Context
 import android.content.res.ColorStateList
@@ -15,7 +15,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
-import com.example.myapplication.databinding.DialogValidationResultBinding
+import com.successteam.gateapp.databinding.DialogValidationResultBinding
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.gson.Gson
@@ -69,6 +69,7 @@ class ValidationResultDialogFragment : DialogFragment() {
     private val binding get() = _binding!!
     private val gson = Gson()
     private var approvalStore: GateApprovalStore? = null
+    private val newlySelectedKeys = mutableSetOf<String>()
 
     private var currentSnapshot: GateTicketSnapshot = GateTicketSnapshot(
         status = "error",
@@ -108,7 +109,23 @@ class ValidationResultDialogFragment : DialogFragment() {
         approvalStore = GateApprovalStore(requireContext().applicationContext)
 
         binding.viewDismissDimResult.setOnClickListener { dismiss() }
-        binding.btnDismissResult.setOnClickListener { dismiss() }
+        binding.btnDismissResult.setOnClickListener {
+            val bookingId = currentSnapshot.bookingId
+            if (bookingId.isNotBlank() && newlySelectedKeys.isNotEmpty()) {
+                val approvalStore = approvalStore
+                if (approvalStore != null) {
+                    for (key in newlySelectedKeys) {
+                        approvalStore.approveAttendee(bookingId, key)
+                    }
+                }
+                android.widget.Toast.makeText(
+                    requireContext(),
+                    "Attendee check-in saved locally.",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+            dismiss()
+        }
 
         binding.cardResultContainer.alpha = 0f
         binding.cardResultContainer.scaleX = 0.8f
@@ -185,6 +202,25 @@ class ValidationResultDialogFragment : DialogFragment() {
             .start()
     }
 
+    private fun formatTime(timestamp: String?): String {
+        if (timestamp.isNullOrBlank()) return ""
+        return try {
+            if (timestamp.contains("T")) {
+                val timePart = timestamp.substringAfter("T")
+                val cleanTime = when {
+                    timePart.contains("+") -> timePart.substringBefore("+")
+                    timePart.contains("Z") -> timePart.substringBefore("Z")
+                    else -> timePart
+                }
+                if (cleanTime.length >= 5) cleanTime.substring(0, 5) else cleanTime
+            } else {
+                timestamp
+            }
+        } catch (e: Exception) {
+            timestamp
+        }
+    }
+
     private fun renderAttendeeSection(snapshot: GateTicketSnapshot) {
         val attendees = snapshot.attendees
         if (attendees.isEmpty()) {
@@ -194,16 +230,16 @@ class ValidationResultDialogFragment : DialogFragment() {
 
         val bookingId = snapshot.bookingId.ifBlank { "-" }
         val canApprove = snapshot.approvalsEnabled && canApproveAttendees(snapshot.status)
-        val approvedKeys = approvalStore?.getApprovedAttendeeKeys(bookingId).orEmpty()
-        val approvedCount = attendees.count { approvedKeys.contains(it.key) }
-        val remainingCount = attendees.size - approvedCount
+        val serverApprovedCount = attendees.count { it.checkedIn }
+        val totalApprovedCount = serverApprovedCount + newlySelectedKeys.size
+        val remainingCount = attendees.size - totalApprovedCount
 
         binding.layoutAttendeeSection.visibility = View.VISIBLE
         binding.tvAttendeeSectionTitle.text = if (canApprove) "ATTENDEE APPROVALS" else "ATTENDEE LIST"
         binding.tvAttendeeSectionSummary.text = when {
-            approvedCount == attendees.size -> "All approved"
-            approvedCount == 0 -> "${attendees.size} total"
-            else -> "$approvedCount approved / ${attendees.size} total"
+            totalApprovedCount == attendees.size -> "All approved"
+            totalApprovedCount == 0 -> "${attendees.size} total"
+            else -> "$totalApprovedCount approved / ${attendees.size} total"
         }
         binding.tvAttendeeSectionHint.text = when {
             !snapshot.approvalsEnabled -> "Attendee details are still loading from the booking record. This list is read only for the moment."
@@ -219,7 +255,8 @@ class ValidationResultDialogFragment : DialogFragment() {
                     attendee = attendee,
                     bookingId = bookingId,
                     canApprove = canApprove,
-                    position = index + 1
+                    position = index + 1,
+                    attendees = attendees
                 )
             )
         }
@@ -229,10 +266,14 @@ class ValidationResultDialogFragment : DialogFragment() {
         attendee: GateAttendee,
         bookingId: String,
         canApprove: Boolean,
-        position: Int
+        position: Int,
+        attendees: List<GateAttendee>
     ): View {
         val context = requireContext()
-        val approved = approvalStore?.isApproved(bookingId, attendee.key) == true
+        val approved = attendee.checkedIn
+        val newlyChecked = newlySelectedKeys.contains(attendee.key)
+        val initiallyChecked = approved || newlyChecked
+
         val card = MaterialCardView(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -245,13 +286,18 @@ class ValidationResultDialogFragment : DialogFragment() {
             strokeWidth = dp(1)
             strokeColor = ContextCompat.getColor(
                 context,
-                if (approved) R.color.primary_light else R.color.gray_divider
+                when {
+                    approved -> R.color.primary
+                    newlyChecked -> R.color.primary
+                    else -> R.color.gray_divider
+                }
             )
             setCardBackgroundColor(
                 ContextCompat.getColor(
                     context,
                     when {
                         approved -> R.color.primary_light
+                        newlyChecked -> R.color.card_bg
                         canApprove -> R.color.white
                         else -> R.color.gray_light
                     }
@@ -290,8 +336,13 @@ class ValidationResultDialogFragment : DialogFragment() {
         }
 
         val metaParts = mutableListOf<String>()
-        if (attendee.whatsapp.isNotBlank()) metaParts.add(attendee.whatsapp)
-        if (attendee.lunch.isNotBlank()) metaParts.add(attendee.lunch)
+        if (approved) {
+            val formattedTime = formatTime(attendee.checkedInAt)
+            metaParts.add("Already Checked In" + (if (formattedTime.isNotBlank()) " ($formattedTime)" else ""))
+        } else {
+            if (attendee.whatsapp.isNotBlank()) metaParts.add(attendee.whatsapp)
+            if (attendee.lunch.isNotBlank()) metaParts.add(attendee.lunch)
+        }
 
         val metaText = TextView(context).apply {
             text = metaParts.joinToString("  •  ")
@@ -302,7 +353,7 @@ class ValidationResultDialogFragment : DialogFragment() {
         }
 
         val checkbox = MaterialCheckBox(context).apply {
-            isChecked = approved
+            isChecked = initiallyChecked
             isEnabled = canApprove && !approved
             contentDescription = if (approved) {
                 "Approved ${attendee.name}"
@@ -312,7 +363,7 @@ class ValidationResultDialogFragment : DialogFragment() {
             buttonTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(
                     context,
-                    if (approved) R.color.primary else R.color.primary_dark
+                    if (initiallyChecked) R.color.primary else R.color.primary_dark
                 )
             )
             layoutParams = LinearLayout.LayoutParams(
@@ -324,11 +375,34 @@ class ValidationResultDialogFragment : DialogFragment() {
         }
 
         checkbox.setOnCheckedChangeListener(null)
-        checkbox.isChecked = approved
-        checkbox.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked && !approved) {
-                approvalStore?.approveAttendee(bookingId, attendee.key)
-                refreshUi()
+        checkbox.setOnCheckedChangeListener { _, checked ->
+            if (checked) {
+                newlySelectedKeys.add(attendee.key)
+            } else {
+                newlySelectedKeys.remove(attendee.key)
+            }
+
+            card.setCardBackgroundColor(
+                ContextCompat.getColor(
+                    context,
+                    if (checked) R.color.card_bg else R.color.white
+                )
+            )
+            card.strokeColor = ContextCompat.getColor(
+                context,
+                if (checked) R.color.primary else R.color.gray_divider
+            )
+
+            val newTotalApprovedCount = attendees.count { it.checkedIn } + newlySelectedKeys.size
+            binding.tvAttendeeSectionSummary.text = when {
+                newTotalApprovedCount == attendees.size -> "All approved"
+                newTotalApprovedCount == 0 -> "${attendees.size} total"
+                else -> "$newTotalApprovedCount approved / ${attendees.size} total"
+            }
+            
+            binding.tvAttendeeSectionHint.text = when {
+                newTotalApprovedCount == attendees.size -> "All attendees have already been approved."
+                else -> "Tick the checkbox on the right for each attendee who has arrived."
             }
         }
 
@@ -346,17 +420,20 @@ class ValidationResultDialogFragment : DialogFragment() {
 
     private fun canApproveAttendees(status: String): Boolean {
         return when (status.lowercase()) {
-            "approved", "confirmed", "valid", "success" -> true
+            "approved", "confirmed", "valid", "success", "partial", "partially_checked_in" -> true
             else -> false
         }
     }
 
     private fun applyStatusStyle(status: String, reason: String, name: String) {
         val context = requireContext()
+        binding.ivStatusLogo.visibility = View.GONE
+        binding.tvStatusIndicatorEmoji.visibility = View.VISIBLE
+
         when (status.lowercase()) {
-            "approved", "confirmed", "valid", "success" -> {
-                binding.ivStatusLogo.visibility = View.VISIBLE
-                binding.tvStatusIndicatorEmoji.visibility = View.GONE
+            "approved", "confirmed", "valid", "success", "partial", "partially_checked_in" -> {
+                binding.tvStatusIndicatorEmoji.text = "✓"
+                binding.tvStatusIndicatorEmoji.setTextColor(ContextCompat.getColor(context, R.color.primary))
 
                 binding.tvValidationTitle.text = "VALID TICKET"
                 binding.tvValidationTitle.setTextColor(ContextCompat.getColor(context, R.color.primary))
@@ -365,9 +442,41 @@ class ValidationResultDialogFragment : DialogFragment() {
                 binding.layoutAttendeeDetails.visibility = View.VISIBLE
                 binding.layoutErrorReason.visibility = View.GONE
             }
+            "already_entered" -> {
+                binding.tvStatusIndicatorEmoji.text = "⛔"
+                binding.tvStatusIndicatorEmoji.setTextColor(ContextCompat.getColor(context, R.color.danger))
+
+                binding.tvValidationTitle.text = "ALREADY ENTERED"
+                binding.tvValidationTitle.setTextColor(ContextCompat.getColor(context, R.color.danger))
+                binding.tvValidationSubtitle.text = "Duplicate Scan — Re-entry Not Permitted"
+
+                binding.layoutAttendeeDetails.visibility = View.VISIBLE
+                binding.layoutErrorReason.visibility = View.VISIBLE
+                binding.layoutErrorReason.setBackgroundColor(ContextCompat.getColor(context, R.color.danger_bg))
+                binding.tvErrorReasonHeader.text = "ENTRY ALREADY RECORDED"
+                binding.tvErrorReasonHeader.setTextColor(ContextCompat.getColor(context, R.color.danger))
+                binding.tvErrorReasonText.text = reason.ifBlank {
+                    "This ticket has already been scanned and entry was granted. Re-entry is not permitted."
+                }
+            }
+            "completed" -> {
+                binding.tvStatusIndicatorEmoji.text = "⛔"
+                binding.tvStatusIndicatorEmoji.setTextColor(ContextCompat.getColor(context, R.color.danger))
+
+                binding.tvValidationTitle.text = "FULLY CHECKED IN"
+                binding.tvValidationTitle.setTextColor(ContextCompat.getColor(context, R.color.danger))
+                binding.tvValidationSubtitle.text = "All Attendees Verified"
+
+                binding.layoutAttendeeDetails.visibility = View.VISIBLE
+                binding.layoutErrorReason.visibility = View.VISIBLE
+                binding.layoutErrorReason.setBackgroundColor(ContextCompat.getColor(context, R.color.danger_bg))
+                binding.tvErrorReasonHeader.text = "ALL ATTENDEES CHECKED IN"
+                binding.tvErrorReasonHeader.setTextColor(ContextCompat.getColor(context, R.color.danger))
+                binding.tvErrorReasonText.text = reason.ifBlank {
+                    "All attendees for this booking have already been checked in. No pending attendees remain."
+                }
+            }
             "pending" -> {
-                binding.ivStatusLogo.visibility = View.GONE
-                binding.tvStatusIndicatorEmoji.visibility = View.VISIBLE
                 binding.tvStatusIndicatorEmoji.text = "⏳"
                 binding.tvStatusIndicatorEmoji.setTextColor(ContextCompat.getColor(context, R.color.warning))
 
@@ -385,8 +494,6 @@ class ValidationResultDialogFragment : DialogFragment() {
                 }
             }
             "denied" -> {
-                binding.ivStatusLogo.visibility = View.GONE
-                binding.tvStatusIndicatorEmoji.visibility = View.VISIBLE
                 binding.tvStatusIndicatorEmoji.text = "✕"
                 binding.tvStatusIndicatorEmoji.setTextColor(ContextCompat.getColor(context, R.color.danger))
 
@@ -409,8 +516,6 @@ class ValidationResultDialogFragment : DialogFragment() {
                 }
             }
             "error" -> {
-                binding.ivStatusLogo.visibility = View.GONE
-                binding.tvStatusIndicatorEmoji.visibility = View.VISIBLE
                 binding.tvStatusIndicatorEmoji.text = "⚠"
                 binding.tvStatusIndicatorEmoji.setTextColor(ContextCompat.getColor(context, R.color.warning))
 
@@ -428,8 +533,6 @@ class ValidationResultDialogFragment : DialogFragment() {
                 }
             }
             else -> {
-                binding.ivStatusLogo.visibility = View.GONE
-                binding.tvStatusIndicatorEmoji.visibility = View.VISIBLE
                 binding.tvStatusIndicatorEmoji.text = "?"
                 binding.tvStatusIndicatorEmoji.setTextColor(ContextCompat.getColor(context, R.color.danger))
 
