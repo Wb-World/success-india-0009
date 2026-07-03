@@ -147,7 +147,7 @@ export default function Home() {
 
   const getOrdinal = (num: number): string => {
     const j = num % 10,
-          k = num % 100;
+      k = num % 100;
     if (j === 1 && k !== 11) {
       return "st";
     }
@@ -192,7 +192,7 @@ export default function Home() {
           <h3 className="panel-designation">{designation}</h3>
           <h4 className={`panel-category ${categoryClass}`}>{categoryLabel}</h4>
         </div>
-        
+
         {!hasData ? (
           <div className="achiever-panel-empty-state">
             <div className="empty-badge-circle">🏆</div>
@@ -367,45 +367,45 @@ export default function Home() {
             </div>
 
             <div className="hero-quote-col animate-slide-up">
-  <h1
-  style={{
-    fontFamily: "var(--font-heading), Inter, sans-serif",
-    fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
-    fontWeight: 800,
-    lineHeight: 1.16,
-    color: "#ffffff",
-    margin: 0,
-    fontStyle: "italic",
-    textShadow: "0 4px 14px rgba(0, 0, 0, 0.15)",
-    maxWidth: "1100px", // adjust this
-    width: "100%",
-  }}
->
-  &ldquo;OUR BIGGEST DREAM IS
-  <br />
-  TO MAKE <span style={{ color: "#f7c948" }}>YOUR DREAM</span>
-  <br />
-  YOUR DREAM COME TRUE&rdquo;
-</h1>
+              <h1
+                style={{
+                  fontFamily: "var(--font-heading), Inter, sans-serif",
+                  fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
+                  fontWeight: 800,
+                  lineHeight: 1.16,
+                  color: "#ffffff",
+                  margin: 0,
+                  fontStyle: "italic",
+                  textShadow: "0 4px 14px rgba(0, 0, 0, 0.15)",
+                  maxWidth: "1100px", // adjust this
+                  width: "100%",
+                }}
+              >
+                &ldquo;OUR BIGGEST DREAM IS
+                <br />
+                TO MAKE <span style={{ color: "#f7c948" }}>YOUR DREAM</span>
+                <br />
+                YOUR DREAM COME TRUE&rdquo;
+              </h1>
 
-  <div
-    style={{
-      textAlign: "right",
-      marginTop: "12px",
-    }}
-  >
-    <span
-      style={{
-        fontSize: "clamp(0.9rem, 1.5vw, 1.3rem)",
-        fontWeight: 600,
-        fontStyle: "italic",
-        color: "#fff",
-      }}
-    >
-      29.03.2020
-    </span>
-  </div>
-</div>
+              <div
+                style={{
+                  textAlign: "right",
+                  marginTop: "12px",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "clamp(0.9rem, 1.5vw, 1.3rem)",
+                    fontWeight: 600,
+                    fontStyle: "italic",
+                    color: "#fff",
+                  }}
+                >
+                  29.03.2020
+                </span>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -417,7 +417,7 @@ export default function Home() {
               <h2 className="owner-title">J.SURENDAR</h2>
               <p className="owner-subtitle-role">BOARD OF VICE PRESIDENT</p>
               <p className="owner-subtitle-role">FOUNDER OF SUCCESS TEAM</p>
-              
+
               <div className="owner-image-wrapper mobile-only-image">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -489,7 +489,7 @@ export default function Home() {
             <div className="section-header" style={{ marginBottom: '3.5rem' }}>
               <span className="section-eyebrow">Honoring Excellence</span>
               <h2 className="heading-lg">{currentMonthUpper} MONTH TOP ACHIEVERS</h2>
-              <div 
+              <div
                 style={{
                   textAlign: 'center',
                   fontSize: '1.25rem',

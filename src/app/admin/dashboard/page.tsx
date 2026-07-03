@@ -61,6 +61,8 @@ export default function AdminDashboard() {
   const [isDeletingEvent, setIsDeletingEvent] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [deleteEventTitle, setDeleteEventTitle] = useState('');
+  const [selectedMonthFilter, setSelectedMonthFilter] = useState('All');
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   // Payment configuration settings
   const [upiSettings, setUpiSettings] = useState({ upiId: '', upiName: '', upiQrUrl: '' });
@@ -1134,6 +1136,77 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleBulkVisibilityToggle = async (showOnHomepage: boolean) => {
+    if (!selectedMonthFilter || selectedMonthFilter === 'All') return;
+
+    const targets = bookings.filter(b => {
+      const isSupporter = b.id.startsWith('SUP-') || (b.seats && b.seats.includes('SUPPORTER'));
+      if (!isSupporter || b.status !== 'approved') return false;
+      try {
+        const date = new Date(b.createdAt);
+        if (isNaN(date.getTime())) return false;
+        const monthLabel = `${date.toLocaleString('en-US', { month: 'long' })} ${date.getFullYear()}`;
+        return monthLabel === selectedMonthFilter;
+      } catch {
+        return false;
+      }
+    });
+
+    if (targets.length === 0) {
+      setToastMessage({ type: 'error', text: 'No approved contributions found in this month to update.' });
+      return;
+    }
+
+    setIsBulkUpdating(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    const targetIds = targets.map(t => t.id);
+
+    try {
+      await Promise.all(
+        targets.map(async (b) => {
+          try {
+            const res = await fetch(`/api/admin/bookings/${b.id}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-admin-id': adminUser.id,
+              },
+              body: JSON.stringify({ homepage_visible: showOnHomepage }),
+            });
+            if (res.ok) {
+              successCount++;
+            } else {
+              failCount++;
+            }
+          } catch (err) {
+            failCount++;
+          }
+        })
+      );
+
+      const updatedList = bookings.map((b) => {
+        if (targetIds.includes(b.id)) {
+          return { ...b, homepageVisible: showOnHomepage };
+        }
+        return b;
+      });
+      setBookings(updatedList);
+
+      setToastMessage({ 
+        type: failCount === 0 ? 'success' : 'error', 
+        text: `Bulk update complete. Successfully updated ${successCount} entries.${failCount > 0 ? ` Failed to update ${failCount} entries.` : ''}` 
+      });
+
+      fetchAdminBookings(adminUser.id);
+    } catch (err) {
+      setToastMessage({ type: 'error', text: 'Error performing bulk update.' });
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
   const handleEditCropContributor = (booking: any) => {
     const supporter = booking.attendees?.SUPPORTER || {};
     const vpImage = supporter.vpImage || '';
@@ -1252,9 +1325,45 @@ export default function AdminDashboard() {
   const contribStats = getStatsForList(contributionBookings);
   const currentStats = adminSection === 'contributions' ? contribStats : regStats;
 
+  const getMonthLabel = (b: any) => {
+    try {
+      const date = new Date(b.createdAt);
+      if (isNaN(date.getTime())) return null;
+      return `${date.toLocaleString('en-US', { month: 'long' })} ${date.getFullYear()}`;
+    } catch {
+      return null;
+    }
+  };
+
+  // Get distinct list of months present in all contribution entries
+  const uniqueMonths = Array.from(
+    new Set(
+      contributionBookings
+        .map(b => getMonthLabel(b))
+        .filter((m): m is string => m !== null)
+    )
+  ).sort((a, b) => {
+    return new Date(b).getTime() - new Date(a).getTime();
+  });
+
   // Filter bookings strictly by active status tab
   const filteredBookings = eventBookings.filter((b) => b.status === activeTab);
-  const filteredContributions = contributionBookings.filter((b) => b.status === contribActiveTab);
+  const filteredContributionsByStatus = contributionBookings.filter((b) => b.status === contribActiveTab);
+  const filteredContributions = filteredContributionsByStatus.filter((b) => {
+    if (selectedMonthFilter === 'All') return true;
+    const mLabel = getMonthLabel(b);
+    return mLabel === selectedMonthFilter;
+  });
+
+  // Filter approved contributors in the selected month for bulk actions
+  const approvedContributorsInSelectedMonth = contributionBookings.filter((b) => {
+    if (b.status !== 'approved') return false;
+    const mLabel = getMonthLabel(b);
+    return mLabel === selectedMonthFilter;
+  });
+
+  const isAllMonthHidden = approvedContributorsInSelectedMonth.length > 0 &&
+    approvedContributorsInSelectedMonth.every(b => b.homepageVisible === false);
 
   // Data extraction for Food and Attendee Lists
   const approvedEventBookings = eventBookings.filter(b => b.status === 'approved');
@@ -2000,158 +2109,292 @@ export default function AdminDashboard() {
               </button>
             </div>
 
-            {filteredContributions.length === 0 ? (
-              <div className="empty-stream-card glass-card">
-                <Ticket size={48} className="empty-icon" />
-                <h3 className="heading-sm">No Records Found</h3>
-                <p>There are no contribution entries matching the &quot;{contribActiveTab}&quot; filter currently registered in the database.</p>
+            {/* Monthly Contribution Management Controls */}
+            <div 
+              className="monthly-mgmt-toolbar glass-card animate-slide-up" 
+              style={{ 
+                padding: '1rem 1.5rem', 
+                borderRadius: '16px', 
+                background: '#ffffff', 
+                border: '1px solid #e2e8f0', 
+                marginBottom: '1.5rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '1rem',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.02)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#475569' }}>Filter Month:</span>
+                <select
+                  value={selectedMonthFilter}
+                  onChange={(e) => setSelectedMonthFilter(e.target.value)}
+                  style={{ 
+                    padding: '0.5rem 1rem', 
+                    borderRadius: '8px', 
+                    border: '1px solid #cbd5e1', 
+                    outline: 'none',
+                    fontSize: '0.88rem',
+                    background: '#ffffff',
+                    color: '#1e293b',
+                    fontWeight: 500,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="All">All Months</option>
+                  {uniqueMonths.map(month => (
+                    <option key={month} value={month}>{month}</option>
+                  ))}
+                </select>
               </div>
-            ) : (
-              <div className="bookings-stream-list">
-                {filteredContributions.map((b) => {
-                  const supporter = b.attendees?.SUPPORTER || {};
-                  const supporterName = supporter.name || b.bookerName || 'Unknown';
-                  const vpName = supporter.vpName || b.bookerVpName || 'N/A';
-                  const vpImage = supporter.vpImage || '';
-                  const designation = supporter.designation || 'System Supporter';
 
-                  const baseAmount = designation === 'Chief Executive Director' ? 1000 : 500;
-                  const totalAmount = b.totalPrice;
-                  const gstAmount = totalAmount > baseAmount ? (designation === 'Chief Executive Director' ? 180 : 90) : 0;
+              {/* Bulk Action Controls */}
+              {selectedMonthFilter !== 'All' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {isAllMonthHidden ? (
+                    <button
+                      type="button"
+                      disabled={isBulkUpdating}
+                      onClick={() => handleBulkVisibilityToggle(true)}
+                      className="btn btn-show-homepage animate-fade-in"
+                      style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem', 
+                        padding: '0.5rem 1.25rem', 
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        height: '38px',
+                        borderRadius: '8px',
+                        cursor: isBulkUpdating ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      <Eye size={14} /> Show All Member Images On Homepage
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={isBulkUpdating}
+                      onClick={() => handleBulkVisibilityToggle(false)}
+                      className="btn btn-hide-homepage animate-fade-in"
+                      style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem', 
+                        padding: '0.5rem 1.25rem', 
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        height: '38px',
+                        borderRadius: '8px',
+                        cursor: isBulkUpdating ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      <EyeOff size={14} /> Hide All Member Images From Homepage
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
-                  const utrNumber = b.screenshot && b.screenshot.startsWith('UTR:') 
-                    ? b.screenshot.split('|')[0].replace('UTR:', '') 
-                    : b.utrNumber || 'N/A';
+            {(() => {
+              if (filteredContributions.length === 0) {
+                return (
+                  <div className="empty-stream-card glass-card">
+                    <Ticket size={48} className="empty-icon" />
+                    <h3 className="heading-sm">No Records Found</h3>
+                    <p>There are no contribution entries matching the &quot;{contribActiveTab}&quot; filter currently registered in the database.</p>
+                  </div>
+                );
+              }
 
-                  return (
-                    <div key={b.id} className={`stream-item-card glass-card ${b.status} hover-glow-card`}>
-                      <div className="item-card-header">
-                        <div className="header-left">
-                          <span className="item-booking-id">CONTRIBUTION ID: {b.id.toUpperCase()}</span>
-                          <span className="item-created-at">{new Date(b.createdAt).toLocaleString()}</span>
-                        </div>
-                        <span className={`badge badge-${b.status}`}>
-                          {b.status === 'pending' ? 'Pending Verification' : b.status === 'approved' ? 'Confirmed' : 'Rejected'}
-                        </span>
-                      </div>
-                      {/* Redesigned Premium Body Grid */}
-                      <div className="item-card-body-grid">
-                        {/* Pane 1: Profile & Identity */}
-                        <div className="card-pane profile-pane">
-                          <div className="pane-header">
-                            <div className="avatar-circle contribution">
-                              {supporterName[0].toUpperCase()}
+              // Group contributions by month-year
+              const contributionsByMonth: Record<string, any[]> = {};
+              filteredContributions.forEach(b => {
+                const monthYear = getMonthLabel(b) || 'Unknown Date';
+                if (!contributionsByMonth[monthYear]) {
+                  contributionsByMonth[monthYear] = [];
+                }
+                contributionsByMonth[monthYear].push(b);
+              });
+
+              // Sort month keys: newest month first
+              const sortedMonthKeys = Object.keys(contributionsByMonth).sort((a, b) => {
+                if (a === 'Unknown Date') return 1;
+                if (b === 'Unknown Date') return -1;
+                return new Date(b).getTime() - new Date(a).getTime();
+              });
+
+              return sortedMonthKeys.map((monthKey) => {
+                const monthItems = contributionsByMonth[monthKey];
+                return (
+                  <div key={monthKey} className="month-group-section" style={{ marginBottom: '2.5rem' }}>
+                    <h3 
+                      className="month-group-title" 
+                      style={{ 
+                        fontSize: '1.15rem', 
+                        fontWeight: 700, 
+                        color: '#334155', 
+                        marginBottom: '1.25rem',
+                        borderBottom: '2px solid #f1f5f9',
+                        paddingBottom: '0.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      📅 {monthKey} Contributions <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)', background: '#ecfdf5', padding: '3px 10px', borderRadius: '9999px', border: '1px solid #d1fae5' }}>{monthItems.length}</span>
+                    </h3>
+
+                    <div className="bookings-stream-list">
+                      {monthItems.map((b) => {
+                        const supporter = b.attendees?.SUPPORTER || {};
+                        const supporterName = supporter.name || b.bookerName || 'Unknown';
+                        const vpName = supporter.vpName || b.bookerVpName || 'N/A';
+                        const vpImage = supporter.vpImage || '';
+                        const designation = supporter.designation || 'System Supporter';
+
+                        const baseAmount = designation === 'Chief Executive Director' ? 1000 : 500;
+                        const totalAmount = b.totalPrice;
+                        const gstAmount = totalAmount > baseAmount ? (designation === 'Chief Executive Director' ? 180 : 90) : 0;
+
+                        const utrNumber = b.screenshot && b.screenshot.startsWith('UTR:') 
+                          ? b.screenshot.split('|')[0].replace('UTR:', '') 
+                          : b.utrNumber || 'N/A';
+
+                        return (
+                          <div key={b.id} className={`stream-item-card glass-card ${b.status} hover-glow-card`}>
+                            <div className="item-card-header">
+                              <div className="header-left">
+                                <span className="item-booking-id">CONTRIBUTION ID: {b.id.toUpperCase()}</span>
+                                <span className="item-created-at">{new Date(b.createdAt).toLocaleString()}</span>
+                              </div>
+                              <span className={`badge badge-${b.status}`}>
+                                {b.status === 'pending' ? 'Pending Verification' : b.status === 'approved' ? 'Confirmed' : 'Rejected'}
+                              </span>
                             </div>
-                            <div>
-                              <h4 className="pane-title">{supporterName}</h4>
-                              <span className="designation-badge">{designation}</span>
-                            </div>
-                          </div>
-                          <div className="pane-details" style={{ marginTop: '1rem' }}>
-                            <div className="info-table-row">
-                              <span className="info-label">VP Name</span>
-                              <span className="info-value">{vpName}</span>
-                            </div>
-                            {vpImage && (
-                              <div className="info-table-row image-preview-row">
-                                <span className="info-label">VP Upload</span>
-                                <div className="vp-preview-box" onClick={() => setZoomedImage(vpImage)}>
-                                  <img src={vpImage} alt="VP Upload" />
-                                  <div className="vp-preview-overlay">
-                                    <Eye size={12} />
+                            {/* Redesigned Premium Body Grid */}
+                            <div className="item-card-body-grid">
+                              {/* Pane 1: Profile & Identity */}
+                              <div className="card-pane profile-pane">
+                                <div className="pane-header">
+                                  <div className="avatar-circle contribution">
+                                    {supporterName[0].toUpperCase()}
+                                  </div>
+                                  <div>
+                                    <h4 className="pane-title">{supporterName}</h4>
+                                    <span className="designation-badge">{designation}</span>
+                                  </div>
+                                </div>
+                                <div className="pane-details" style={{ marginTop: '1rem' }}>
+                                  <div className="info-table-row">
+                                    <span className="info-label">VP Name</span>
+                                    <span className="info-value">{vpName}</span>
+                                  </div>
+                                  {vpImage && (
+                                    <div className="info-table-row image-preview-row">
+                                      <span className="info-label">VP Upload</span>
+                                      <div className="vp-preview-box" onClick={() => setZoomedImage(vpImage)}>
+                                        <img src={vpImage} alt="VP Upload" />
+                                        <div className="vp-preview-overlay">
+                                          <Eye size={12} />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Pane 2: Financial Details */}
+                              <div className="card-pane financial-pane">
+                                <h4 className="pane-section-title">
+                                  <Coins size={14} /> Contribution Summary
+                                </h4>
+                                <div className="pane-details">
+                                  <div className="info-table-row">
+                                    <span className="info-label">Contribution Amount</span>
+                                    <span className="info-value">₹{totalAmount}</span>
+                                  </div>
+                                  
+                                  <div className="invoice-receipt-block" style={{ marginTop: '1.5rem' }}>
+                                    <div className="invoice-receipt-total">
+                                      <span>Total Amount Paid</span>
+                                      <span>₹{totalAmount}</span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                            )}
-                          </div>
-                        </div>
 
-                        {/* Pane 2: Financial Details */}
-                        <div className="card-pane financial-pane">
-                          <h4 className="pane-section-title">
-                            <Coins size={14} /> Contribution Summary
-                          </h4>
-                          <div className="pane-details">
-                            <div className="info-table-row">
-                              <span className="info-label">Contribution Amount</span>
-                              <span className="info-value">₹{totalAmount}</span>
-                            </div>
-                            
-                            <div className="invoice-receipt-block" style={{ marginTop: '1.5rem' }}>
-                              <div className="invoice-receipt-total">
-                                <span>Total Amount Paid</span>
-                                <span>₹{totalAmount}</span>
+                              {/* Pane 3: UTR Verification */}
+                              <div className="card-pane payment-pane">
+                                <h4 className="pane-section-title">
+                                  <CreditCard size={14} /> Verification Details
+                                </h4>
+                                
+                                <div className="utr-display-box" style={{ marginBottom: '1rem' }}>
+                                  <div className="utr-content-wrapper">
+                                    <span className="utr-label-admin">UPI Transaction ID (UTR)</span>
+                                    <span className="utr-value-admin">{utrNumber}</span>
+                                  </div>
+                                </div>
+                                
+                                <p className="utr-admin-hint">
+                                  Ensure the UTR matches the bank statements before approving contribution credentials.
+                                </p>
                               </div>
                             </div>
-                          </div>
-                        </div>
 
-                        {/* Pane 3: UTR Verification */}
-                        <div className="card-pane payment-pane">
-                          <h4 className="pane-section-title">
-                            <CreditCard size={14} /> Verification Details
-                          </h4>
-                          
-                          <div className="utr-display-box" style={{ marginBottom: '1rem' }}>
-                            <div className="utr-content-wrapper">
-                              <span className="utr-label-admin">UPI Transaction ID (UTR)</span>
-                              <span className="utr-value-admin">{utrNumber}</span>
+                            <div className="item-card-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem', borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}>
+                              <button
+                                onClick={() => setSelectedContributionDetail(b)}
+                                className="btn btn-secondary"
+                                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                              >
+                                View Full Details
+                              </button>
+                              {b.status === 'pending' && (
+                                <>
+                                  <button
+                                    onClick={() => handleStatusUpdate(b.id, 'denied')}
+                                    className="btn btn-deny-action"
+                                  >
+                                    <X size={14} /> Reject
+                                  </button>
+                                  <button
+                                    onClick={() => handleStatusUpdate(b.id, 'approved')}
+                                    className="btn btn-approve-action"
+                                  >
+                                    <Check size={14} /> Approve
+                                  </button>
+                                </>
+                              )}
+                              {b.status === 'approved' && (
+                                <button
+                                  onClick={() => handleHomepageVisibilityToggle(b.id, b.homepageVisible)}
+                                  className={`btn ${b.homepageVisible ? 'btn-hide-homepage' : 'btn-show-homepage'}`}
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                                >
+                                  {b.homepageVisible ? (
+                                    <>
+                                      <EyeOff size={14} /> Hide from Homepage
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Eye size={14} /> Show on Homepage
+                                    </>
+                                  )}
+                                </button>
+                              )}
                             </div>
                           </div>
-                          
-                          <p className="utr-admin-hint">
-                            Ensure the UTR matches the bank statements before approving contribution credentials.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="item-card-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem', borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}>
-                        <button
-                          onClick={() => setSelectedContributionDetail(b)}
-                          className="btn btn-secondary"
-                          style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                        >
-                          View Full Details
-                        </button>
-                        {b.status === 'pending' && (
-                          <>
-                            <button
-                              onClick={() => handleStatusUpdate(b.id, 'denied')}
-                              className="btn btn-deny-action"
-                            >
-                              <X size={14} /> Reject
-                            </button>
-                            <button
-                              onClick={() => handleStatusUpdate(b.id, 'approved')}
-                              className="btn btn-approve-action"
-                            >
-                              <Check size={14} /> Approve
-                            </button>
-                          </>
-                        )}
-                        {b.status === 'approved' && (
-                          <button
-                            onClick={() => handleHomepageVisibilityToggle(b.id, b.homepageVisible)}
-                            className={`btn ${b.homepageVisible ? 'btn-hide-homepage' : 'btn-show-homepage'}`}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                          >
-                            {b.homepageVisible ? (
-                              <>
-                                <EyeOff size={14} /> Hide from Homepage
-                              </>
-                            ) : (
-                              <>
-                                <Eye size={14} /> Show on Homepage
-                              </>
-                            )}
-                          </button>
-                        )}
-                      </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  </div>
+                );
+              });
+            })()}
           </div>
         ) : adminSection === 'achievers' ? (
           <div className="payment-settings-area animate-slide-up">
