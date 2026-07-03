@@ -10,6 +10,7 @@ import { isSeatValid } from '@/lib/seat-config';
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const currentMonthName = new Date().toLocaleString('en-US', { month: 'long' });
   const [adminUser, setAdminUser] = useState<any>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('user');
@@ -2164,7 +2165,7 @@ export default function AdminDashboard() {
               <div className="event-manager-header">
                 <div>
                   {/* <span className="manager-kicker">Achievers Management</span> */}
-                  <h2 className="heading-md">June Month Top Achievers</h2>
+                  <h2 className="heading-md">{currentMonthName} Month Top Achievers</h2>
                   <p style={{ color: 'var(--muted)', fontSize: '0.88rem', margin: '0.25rem 0 0' }}>Upload face photos and update names for each ranked position.</p>
                 </div>
                 {/* <button type="submit" className="btn btn-primary" disabled={achieversLoading} style={{ height: '44px', minWidth: '160px' }}>

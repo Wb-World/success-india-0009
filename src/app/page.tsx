@@ -133,6 +133,36 @@ const BronzeBadgeIcon = () => (
 );
 
 export default function Home() {
+  const currentMonthName = new Date().toLocaleString('en-US', { month: 'long' });
+  const currentMonthUpper = currentMonthName.toUpperCase();
+
+  // Helper to get calendar week of the year
+  const getWeekOfYear = (d: Date): number => {
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    return weekNo;
+  };
+
+  const getOrdinal = (num: number): string => {
+    const j = num % 10,
+          k = num % 100;
+    if (j === 1 && k !== 11) {
+      return "st";
+    }
+    if (j === 2 && k !== 12) {
+      return "nd";
+    }
+    if (j === 3 && k !== 13) {
+      return "rd";
+    }
+    return "th";
+  };
+
+  const weekNum = getWeekOfYear(new Date());
+  const weekOrdinal = `${weekNum}${getOrdinal(weekNum)}`;
+
   const [events, setEvents] = useState<SeminarEvent[]>([]);
   const [supporters, setSupporters] = useState<any[]>([]);
   const [venue, setVenue] = useState(fallbackLocations[0]);
@@ -458,7 +488,20 @@ export default function Home() {
           <div className="container">
             <div className="section-header" style={{ marginBottom: '3.5rem' }}>
               <span className="section-eyebrow">Honoring Excellence</span>
-              <h2 className="heading-lg">JUNE MONTH TOP ACHIEVERS</h2>
+              <h2 className="heading-lg">{currentMonthUpper} MONTH TOP ACHIEVERS</h2>
+              <div 
+                style={{
+                  textAlign: 'center',
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  color: 'var(--primary)',
+                  marginTop: '0.5rem',
+                  marginBottom: '0.75rem',
+                  fontFamily: 'var(--font-heading)'
+                }}
+              >
+                Current Week: {weekOrdinal} Week
+              </div>
               <p className="section-subtitle">
                 Recognizing the outstanding leadership, PV milestones, and income milestones of our Star Directors.
               </p>
@@ -469,7 +512,7 @@ export default function Home() {
                 <div className="no-records-icon">🏆</div>
                 <h3 className="no-records-title">No Record Found</h3>
                 <p className="no-records-desc">
-                  Top achiever standings for June are currently empty. Check back later for updates!
+                  Top achiever standings for {currentMonthName} are currently empty. Check back later for updates!
                 </p>
               </div>
             ) : (
