@@ -6,6 +6,7 @@ import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, ArrowL
 import ImageCropperModal from '@/app/components/ImageCropperModal';
 import SeatBlockTab from './SeatBlockTab';
 import ChangePasswordModal from '@/app/components/ChangePasswordModal';
+import { isSeatValid } from '@/lib/seat-config';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -48,8 +49,17 @@ export default function AdminDashboard() {
     venue: 'Chromepet, Chennai',
     eventDateTime: '',
     price: '1000',
-    totalSeats: '60',
+    seatsPerRow: '20',
+    totalRows: '15',
+    totalSeats: '300',
+    imageUrl: '',
   });
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [bannerUploadMessage, setBannerUploadMessage] = useState('');
+  const [originalImageUrl, setOriginalImageUrl] = useState('');
+  const [isDeletingEvent, setIsDeletingEvent] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteEventTitle, setDeleteEventTitle] = useState('');
 
   // Payment configuration settings
   const [upiSettings, setUpiSettings] = useState({ upiId: '', upiName: '', upiQrUrl: '' });
@@ -121,6 +131,30 @@ export default function AdminDashboard() {
     setMounted(true);
     verifyAdminAuth();
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && deleteModalOpen) {
+        setDeleteModalOpen(false);
+        setSelectedEventId(null);
+        setDeleteEventTitle('');
+        setDeleteError('');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [deleteModalOpen]);
+
+  useEffect(() => {
+    if (deleteModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [deleteModalOpen]);
 
   const verifyAdminAuth = () => {
     const stored = localStorage.getItem('user');
@@ -653,6 +687,85 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleEventBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (under 5MB)
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      setBannerUploadMessage('File size must be under 5MB.');
+      return;
+    }
+
+    // Validate extension
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setBannerUploadMessage('Only JPG, JPEG, PNG, and WEBP image uploads are allowed.');
+      return;
+    }
+
+    setIsUploadingBanner(true);
+    setBannerUploadMessage('Uploading banner...');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/events/upload-banner', {
+        method: 'POST',
+        headers: adminUser?.id ? { 'x-admin-id': adminUser.id } : {},
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.url) {
+        // If there was an old image uploaded during this session, delete it to prevent orphans
+        if (eventForm.imageUrl && eventForm.imageUrl !== originalImageUrl && eventForm.imageUrl.includes('/event-banners/')) {
+          try {
+            const parts = eventForm.imageUrl.split('/event-banners/');
+            if (parts.length > 1) {
+              await fetch(`/api/events/upload-banner?fileName=${encodeURIComponent(parts[1])}`, {
+                method: 'DELETE',
+                headers: adminUser?.id ? { 'x-admin-id': adminUser.id } : {},
+              });
+            }
+          } catch (delErr) {
+            console.warn('Failed to delete intermediate uploaded banner:', delErr);
+          }
+        }
+
+        setEventForm((prev) => ({ ...prev, imageUrl: data.url }));
+        setBannerUploadMessage('Banner image uploaded successfully.');
+      } else {
+        setBannerUploadMessage(data.error || 'Failed to upload banner');
+      }
+    } catch (err) {
+      setBannerUploadMessage('Error uploading banner image');
+    } finally {
+      setIsUploadingBanner(false);
+    }
+  };
+
+  const handleRemoveBanner = async () => {
+    // If the image being removed was uploaded during this session (not the original one), delete it from storage immediately
+    if (eventForm.imageUrl && eventForm.imageUrl !== originalImageUrl && eventForm.imageUrl.includes('/event-banners/')) {
+      try {
+        const parts = eventForm.imageUrl.split('/event-banners/');
+        if (parts.length > 1) {
+          await fetch(`/api/events/upload-banner?fileName=${encodeURIComponent(parts[1])}`, {
+            method: 'DELETE',
+            headers: adminUser?.id ? { 'x-admin-id': adminUser.id } : {},
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to delete intermediate uploaded banner on remove:', err);
+      }
+    }
+    setEventForm((prev) => ({ ...prev, imageUrl: '' }));
+    setBannerUploadMessage('Banner image removed.');
+  };
+
   const handleSaveEventSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!adminUser?.id) return;
@@ -768,7 +881,41 @@ export default function AdminDashboard() {
     setEventSaving(true);
     setEventMessage('');
 
+    const spr = Number(eventForm.seatsPerRow || 20);
+    const tr = Number(eventForm.totalRows || 15);
+    const total = spr * tr;
+
     const isEdit = !!editingEventId;
+
+    // Frontend validation: check if reducing dimensions would invalidate existing bookings
+    if (isEdit) {
+      const eventBookings = bookings.filter((b) => {
+        if (b.status !== 'approved' && b.status !== 'pending') return false;
+        const evId = String(editingEventId).toLowerCase();
+        const evTitle = String(eventForm.title).toLowerCase();
+        const candidateValues = [
+          b.seminarId,
+          b.busId,
+          b.eventId,
+          b.seminarName,
+          b.busName,
+          b.eventName,
+          b.destination,
+          b.title,
+          b.name,
+        ].map(v => String(v || '').trim().toLowerCase());
+        return candidateValues.some(val => val === evId || val === evTitle);
+      });
+
+      const takenSeats = eventBookings.flatMap(b => b.seats || []);
+      const invalidSeats = takenSeats.filter(seat => !isSeatValid(seat, spr, tr));
+      if (invalidSeats.length > 0) {
+        setEventMessage(`Cannot reduce layout because some booked seats would become invalid: ${Array.from(new Set(invalidSeats)).join(', ')}`);
+        setEventSaving(false);
+        return;
+      }
+    }
+
     const url = '/api/events';
     const method = isEdit ? 'PATCH' : 'POST';
     const bodyPayload = {
@@ -776,7 +923,10 @@ export default function AdminDashboard() {
       venue: eventForm.venue,
       eventDateTime: eventForm.eventDateTime,
       price: Number(eventForm.price),
-      totalSeats: Number(eventForm.totalSeats || 60),
+      seatsPerRow: spr,
+      totalRows: tr,
+      totalSeats: total,
+      imageUrl: eventForm.imageUrl || '',
       ...(isEdit && { eventId: editingEventId }),
     };
 
@@ -802,8 +952,13 @@ export default function AdminDashboard() {
         venue: 'Chromepet, Chennai',
         eventDateTime: '',
         price: '1000',
-        totalSeats: '60',
+        seatsPerRow: '20',
+        totalRows: '15',
+        totalSeats: '300',
+        imageUrl: '',
       });
+      setBannerUploadMessage('');
+      setOriginalImageUrl('');
       setEditingEventId(null);
       fetchAdminEvents();
     } catch (err) {
@@ -816,6 +971,7 @@ export default function AdminDashboard() {
   const handleEditClick = (event: any) => {
     setEditingEventId(event.id);
     setEventMessage('');
+    setBannerUploadMessage('');
 
     // Format the eventDateTime for datetime-local input (YYYY-MM-DDThh:mm)
     let formattedDateTime = '';
@@ -826,29 +982,61 @@ export default function AdminDashboard() {
       formattedDateTime = localTime.toISOString().slice(0, 16);
     }
 
+    const spr = event.seatsPerRow || event.seats_per_row || 20;
+    const tr = event.totalRows || event.total_rows || 15;
+    const total = event.totalSeats || event.total_seats || (spr * tr);
+    const imgUrl = event.imageUrl || event.image_url || '';
+
     setEventForm({
       title: event.title || event.name,
       venue: event.venue,
       eventDateTime: formattedDateTime,
       price: String(event.price),
-      totalSeats: String(event.totalSeats || 60),
+      seatsPerRow: String(spr),
+      totalRows: String(tr),
+      totalSeats: String(total),
+      imageUrl: imgUrl,
     });
+    setOriginalImageUrl(imgUrl);
   };
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = async () => {
+    // If a new banner was uploaded during this edit session but cancelled, delete it from storage
+    if (eventForm.imageUrl && eventForm.imageUrl !== originalImageUrl && eventForm.imageUrl.includes('/event-banners/')) {
+      try {
+        const parts = eventForm.imageUrl.split('/event-banners/');
+        if (parts.length > 1) {
+          await fetch(`/api/events/upload-banner?fileName=${encodeURIComponent(parts[1])}`, {
+            method: 'DELETE',
+            headers: adminUser?.id ? { 'x-admin-id': adminUser.id } : {},
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to clean up uploaded banner on cancel edit:', err);
+      }
+    }
+
     setEditingEventId(null);
     setEventMessage('');
+    setBannerUploadMessage('');
+    setOriginalImageUrl('');
     setEventForm({
       title: 'Success Team Leadership Development Event',
       venue: 'Chromepet, Chennai',
       eventDateTime: '',
       price: '1000',
-      totalSeats: '60',
+      seatsPerRow: '20',
+      totalRows: '15',
+      totalSeats: '300',
+      imageUrl: '',
     });
   };
 
   const handleConfirmDelete = async () => {
     if (!selectedEventId || !adminUser?.id) return;
+
+    setIsDeletingEvent(true);
+    setDeleteError('');
 
     try {
       const res = await fetch(`/api/events?eventId=${selectedEventId}`, {
@@ -859,18 +1047,25 @@ export default function AdminDashboard() {
       });
 
       if (res.ok) {
-        fetchAdminEvents();
+        // Remove instantly from list
+        setEvents(prev => prev.filter(ev => ev.id !== selectedEventId));
+        
         if (editingEventId === selectedEventId) {
           handleCancelEdit();
         }
         setDeleteModalOpen(false);
         setSelectedEventId(null);
+        setDeleteEventTitle('');
+        setToastMessage({ type: 'success', text: 'Event deleted successfully.' });
+        fetchAdminEvents();
       } else {
         const data = await res.json();
-        alert(data.error || 'Failed to delete event');
+        setDeleteError(data.error || 'Failed to delete event');
       }
     } catch (err) {
-      alert('Network error deleting event');
+      setDeleteError('Network error deleting event');
+    } finally {
+      setIsDeletingEvent(false);
     }
   };
 
@@ -1609,16 +1804,107 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="event-form-group">
-                  <label className="form-label">Total Available Seats</label>
+                  <label className="form-label">Horizontal Seats Per Row</label>
                   <input
                     type="number"
                     min="1"
-                    value={eventForm.totalSeats}
-                    onChange={(e) => setEventForm({ ...eventForm, totalSeats: e.target.value })}
+                    value={eventForm.seatsPerRow}
+                    onChange={(e) => {
+                      const spr = e.target.value;
+                      const tr = eventForm.totalRows;
+                      const total = Number(spr) * Number(tr);
+                      setEventForm({
+                        ...eventForm,
+                        seatsPerRow: spr,
+                        totalSeats: String(Number.isNaN(total) ? 0 : total)
+                      });
+                    }}
                     className="form-control"
-                    placeholder="60"
+                    placeholder="20"
                     required
                   />
+                </div>
+
+                <div className="event-form-group">
+                  <label className="form-label">Total Number of Rows</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={eventForm.totalRows}
+                    onChange={(e) => {
+                      const tr = e.target.value;
+                      const spr = eventForm.seatsPerRow;
+                      const total = Number(spr) * Number(tr);
+                      setEventForm({
+                        ...eventForm,
+                        totalRows: tr,
+                        totalSeats: String(Number.isNaN(total) ? 0 : total)
+                      });
+                    }}
+                    className="form-control"
+                    placeholder="15"
+                    required
+                  />
+                </div>
+
+                <div className="event-form-group">
+                  <label className="form-label">Total Seats (Calculated)</label>
+                  <input
+                    type="text"
+                    value={`${eventForm.totalSeats} Seats`}
+                    className="form-control"
+                    readOnly
+                    style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed', color: '#64748b' }}
+                  />
+                </div>
+
+                <div className="event-form-group span-2">
+                  <label className="form-label">Event Banner Image</label>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.25rem' }}>
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp"
+                      onChange={handleEventBannerUpload}
+                      style={{ display: 'none' }}
+                      id="admin-event-banner-file"
+                    />
+                    <label htmlFor="admin-event-banner-file" className="btn btn-secondary" style={{ cursor: isUploadingBanner ? 'not-allowed' : 'pointer', margin: 0 }}>
+                      {isUploadingBanner ? 'Uploading Banner...' : 'Choose Banner Image'}
+                    </label>
+                    {bannerUploadMessage && (
+                      <span style={{ fontSize: '0.85rem', color: bannerUploadMessage.includes('successfully') ? '#16a34a' : '#ef4444' }}>
+                        {bannerUploadMessage}
+                      </span>
+                    )}
+                  </div>
+                  {eventForm.imageUrl && (
+                    <div style={{ marginTop: '0.75rem', position: 'relative', display: 'inline-block' }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={eventForm.imageUrl}
+                        alt="Event Banner Preview"
+                        style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '12px', border: '1px solid #e2e8f0', objectFit: 'cover' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveBanner}
+                        className="btn btn-secondary"
+                        style={{
+                          position: 'absolute',
+                          top: '10px',
+                          right: '10px',
+                          padding: '6px 12px',
+                          fontSize: '0.8rem',
+                          color: '#dc2626',
+                          border: '1px solid #fca5a5',
+                          background: '#ffffff',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        }}
+                      >
+                        Remove Image
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="event-form-actions span-2">
@@ -1645,16 +1931,26 @@ export default function AdminDashboard() {
                 <div className="events-table-list">
                   {events.map((event) => (
                     <div key={event.id} className="event-row">
-                      <div>
-                        <strong>{event.title || event.name}</strong>
-                        <span>{event.venue}</span>
-                        <div className="event-row-actions">
-                          <button onClick={() => handleEditClick(event)} className="btn-edit-event">
-                            Edit
-                          </button>
-                          <button onClick={() => { setSelectedEventId(event.id); setDeleteModalOpen(true); }} className="btn-delete-event">
-                            Delete
-                          </button>
+                      <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+                        {(event.imageUrl || event.image_url) && (
+                          <img
+                            src={event.imageUrl || event.image_url}
+                            alt={event.title || event.name}
+                            style={{ width: '80px', height: '52px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #e2e8f0', cursor: 'zoom-in' }}
+                            onClick={() => setZoomedImage(event.imageUrl || event.image_url)}
+                          />
+                        )}
+                        <div>
+                          <strong>{event.title || event.name}</strong>
+                          <span style={{ display: 'block', marginTop: '2px' }}>{event.venue}</span>
+                          <div className="event-row-actions" style={{ marginTop: '6px' }}>
+                            <button onClick={() => handleEditClick(event)} className="btn-edit-event">
+                              Edit
+                            </button>
+                            <button onClick={() => { setSelectedEventId(event.id); setDeleteEventTitle(event.title || event.name || ''); setDeleteModalOpen(true); }} className="btn-delete-event">
+                              Delete
+                            </button>
+                          </div>
                         </div>
                       </div>
                       <div className="event-row-meta">
@@ -2689,35 +2985,172 @@ export default function AdminDashboard() {
 
       {/* Custom Delete Confirmation Modal */}
       {deleteModalOpen && (
-        <div className="confirm-modal-overlay" onClick={() => { setDeleteModalOpen(false); setSelectedEventId(null); }}>
-          <div className="confirm-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="confirm-modal-header">
-              <div className="confirm-modal-icon-box">
-                <svg className="confirm-modal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                  <line x1="12" y1="9" x2="12" y2="13" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-              </div>
-              <h2 className="confirm-modal-title">Permanently Delete Event?</h2>
-              <p className="confirm-modal-desc">
-                Are you sure you want to permanently delete this seminar event? This action cannot be undone.
-              </p>
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+          onClick={() => {
+            if (!isDeletingEvent) {
+              setDeleteModalOpen(false);
+              setSelectedEventId(null);
+              setDeleteEventTitle('');
+              setDeleteError('');
+            }
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#ffffff',
+              borderRadius: '24px',
+              padding: '2.5rem 2rem',
+              maxWidth: '440px',
+              width: '90%',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              border: '1px solid rgba(226, 232, 240, 0.8)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                background: '#fef2f2',
+                color: '#ef4444',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '1.25rem',
+              }}
+            >
+              <Trash2 size={28} />
             </div>
-            <div className="confirm-modal-actions">
+
+            <h3
+              style={{
+                fontSize: '1.25rem',
+                fontWeight: 800,
+                color: '#0f172a',
+                margin: '0 0 0.5rem 0',
+                fontFamily: 'var(--font-heading)',
+              }}
+            >
+              Delete Event
+            </h3>
+
+            <p
+              style={{
+                fontSize: '0.9rem',
+                color: '#64748b',
+                lineHeight: 1.5,
+                margin: '0 0 1rem 0',
+              }}
+            >
+              Are you sure you want to permanently delete this event? This action cannot be undone.
+            </p>
+
+            {deleteEventTitle && (
+              <div
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  padding: '0.75rem 1rem',
+                  width: '100%',
+                  fontWeight: 700,
+                  color: '#0f172a',
+                  fontSize: '0.9rem',
+                  marginBottom: '1.5rem',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {deleteEventTitle}
+              </div>
+            )}
+
+            {deleteError && (
+              <div
+                style={{
+                  width: '100%',
+                  color: '#ef4444',
+                  fontSize: '0.85rem',
+                  background: '#fef2f2',
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '8px',
+                  border: '1px solid #fee2e2',
+                  marginBottom: '1rem',
+                  textAlign: 'left',
+                }}
+              >
+                {deleteError}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.75rem', width: '100%' }}>
               <button
                 type="button"
-                onClick={() => { setDeleteModalOpen(false); setSelectedEventId(null); }}
-                className="btn-modal-cancel"
+                disabled={isDeletingEvent}
+                onClick={() => {
+                  setDeleteModalOpen(false);
+                  setSelectedEventId(null);
+                  setDeleteEventTitle('');
+                  setDeleteError('');
+                }}
+                className="btn btn-secondary"
+                style={{
+                  flex: 1,
+                  height: '44px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: isDeletingEvent ? 'not-allowed' : 'pointer',
+                }}
               >
                 Cancel
               </button>
               <button
                 type="button"
+                disabled={isDeletingEvent}
                 onClick={handleConfirmDelete}
-                className="btn-modal-delete"
+                style={{
+                  flex: 1,
+                  height: '44px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  background: '#ef4444',
+                  color: '#ffffff',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: isDeletingEvent ? 'not-allowed' : 'pointer',
+                  opacity: isDeletingEvent ? 0.7 : 1,
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)',
+                }}
               >
-                Confirm Delete
+                {isDeletingEvent ? (
+                  <>
+                    <RefreshCw className="animate-spin" size={16} style={{ marginRight: '8px' }} />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Event'
+                )}
               </button>
             </div>
           </div>

@@ -80,8 +80,11 @@ export interface DbEvent {
   event_datetime: string;
   price: number;
   total_seats: number;
+  seats_per_row?: number;
+  total_rows?: number;
   status: 'active' | 'inactive';
   created_at?: string;
+  image_url?: string | null;
 }
 
 export interface DbBooking {

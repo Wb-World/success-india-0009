@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, Save, Lock, Unlock, ChevronDown, ChevronUp, AlertCircle, CheckCircle } from 'lucide-react';
 
-import { ROWS, SEATS_PER_ROW, ALL_SEATS, TOTAL_SEATS, parseBulkSeats } from '@/lib/seat-config';
+import { getEventSeatLayout, parseBulkSeats } from '@/lib/seat-config';
 
 type EventData = {
   id: string;
@@ -14,6 +14,10 @@ type EventData = {
   eventTime?: string;
   price: number;
   totalSeats?: number;
+  seatsPerRow?: number;
+  totalRows?: number;
+  seats_per_row?: number;
+  total_rows?: number;
 };
 
 type Props = {
@@ -23,6 +27,7 @@ type Props = {
 
 export default function SeatBlockTab({ event, adminUser }: Props) {
   const resolvedEventId = event.id === 'seminar_101' ? 'seminar_mega_mass_2026' : event.id;
+  const { rows, seatsPerRow, allSeats, totalSeats } = getEventSeatLayout(event);
 
   const [expanded, setExpanded] = useState(false);
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
@@ -112,7 +117,7 @@ export default function SeatBlockTab({ event, adminUser }: Props) {
   // Bulk block
   const handleBulkBlock = () => {
     if (!bulkInput.trim()) return;
-    const { seats, errors } = parseBulkSeats(bulkInput);
+    const { seats, errors } = parseBulkSeats(bulkInput, allSeats, rows);
 
     if (errors.length > 0) {
       alert(`The following validation errors were encountered and skipped:\n${errors.join('\n')}`);
@@ -142,7 +147,7 @@ export default function SeatBlockTab({ event, adminUser }: Props) {
   // Bulk unblock
   const handleBulkUnblock = () => {
     if (!bulkInput.trim()) return;
-    const { seats, errors } = parseBulkSeats(bulkInput);
+    const { seats, errors } = parseBulkSeats(bulkInput, allSeats, rows);
 
     if (errors.length > 0) {
       alert(`The following validation errors were encountered and skipped:\n${errors.join('\n')}`);
@@ -504,11 +509,11 @@ export default function SeatBlockTab({ event, adminUser }: Props) {
 
               <div className="seat-map-outer-scroll">
                 <div className="seat-map-wrapper">
-                  {ROWS.map((row) => (
+                  {rows.map((row) => (
                     <div key={row} className="seat-row-group">
                       <span className="row-label">{row}</span>
                       <div className="seat-row">
-                        {Array.from({ length: SEATS_PER_ROW }, (_, i) => {
+                        {Array.from({ length: seatsPerRow }, (_, i) => {
                           const seatId = `${row}${i + 1}`;
                           const isBooked = bookedSeats.includes(seatId);
                           const isBlocked = localBlockedSeats.includes(seatId);
@@ -550,10 +555,10 @@ export default function SeatBlockTab({ event, adminUser }: Props) {
 
               <div className="seat-block-save-row" style={{ marginTop: '1.25rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0' }}>
                 <div className="seat-counts-summary" style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                  <span>Total Seats: <strong>{TOTAL_SEATS}</strong></span>
+                  <span>Total Seats: <strong>{totalSeats}</strong></span>
                   <span>Booked: <strong style={{ color: '#ef4444' }}>{bookedSeats.length}</strong></span>
                   <span>Blocked: <strong style={{ color: '#f97316' }}>{localBlockedSeats.length}</strong></span>
-                  <span>Available: <strong style={{ color: '#10b981' }}>{TOTAL_SEATS - bookedSeats.length - localBlockedSeats.length}</strong></span>
+                  <span>Available: <strong style={{ color: '#10b981' }}>{totalSeats - bookedSeats.length - localBlockedSeats.length}</strong></span>
                   {localBlockedSeats.length !== blockedSeats.length && (
                     <span className="pending-changes-badge" style={{ marginLeft: '0.5rem', background: '#fef3c7', color: '#d97706', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>Unsaved changes</span>
                   )}

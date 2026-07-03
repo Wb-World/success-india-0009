@@ -8,7 +8,7 @@ import {
 import html2canvas from 'html2canvas';
 
 // ─── Seat Configuration ───────────────────────────────────────────────────────
-import { ROWS, SEATS_PER_ROW, ALL_SEATS } from '@/lib/seat-config';
+import { getEventSeatLayout } from '@/lib/seat-config';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 function generateBookingId(): string {
@@ -44,6 +44,11 @@ type EventData = {
   eventTime?: string;
   price: number;
   bookedSeatsByTime?: Record<string, string[]>;
+  seatsPerRow?: number;
+  totalRows?: number;
+  seats_per_row?: number;
+  total_rows?: number;
+  totalSeats?: number;
 };
 
 type Props = {
@@ -53,6 +58,7 @@ type Props = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function SeatBookingModal({ event, onClose }: Props) {
+  const { rows, seatsPerRow, allSeats, totalSeats } = getEventSeatLayout(event);
   const [quantity, setQuantity] = useState(2);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
@@ -234,8 +240,10 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const handleSeatClick = (seatId: string) => {
     if (bookedSeats.includes(seatId) || alreadyBookedSeats.includes(seatId)) return;
 
-    const row = seatId[0];
-    const col = parseInt(seatId.slice(1), 10);
+    const match = seatId.match(/^([A-Z]+)([0-9]+)$/);
+    if (!match) return;
+    const row = match[1];
+    const col = parseInt(match[2], 10);
 
     // If the clicked seat is already selected, deselect everything (toggle off)
     if (selectedSeats.includes(seatId)) {
@@ -246,7 +254,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
     // Get all seats in the same row and determine availability
     const rowSeats: { col: number; seatId: string; isAvailable: boolean }[] = [];
-    for (let c = 1; c <= SEATS_PER_ROW; c++) {
+    for (let c = 1; c <= seatsPerRow; c++) {
       const sId = `${row}${c}`;
       rowSeats.push({
         col: c,
@@ -260,7 +268,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     // 1. Try to find a contiguous available block containing the clicked column 'col'
     // We shift the starting column left if clicking near the end of the row
     for (let s = col; s >= col - quantity + 1; s--) {
-      if (s >= 1 && s + quantity - 1 <= SEATS_PER_ROW) {
+      if (s >= 1 && s + quantity - 1 <= seatsPerRow) {
         let allAvailable = true;
         const candidateSeats: string[] = [];
         for (let offset = 0; offset < quantity; offset++) {
@@ -281,7 +289,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     // 2. Try to find ANY contiguous available block of size 'quantity' in the same row (prioritizing proximity to 'col')
     if (!foundBlock) {
       let bestDist = Infinity;
-      for (let s = 1; s <= SEATS_PER_ROW - quantity + 1; s++) {
+      for (let s = 1; s <= seatsPerRow - quantity + 1; s++) {
         let allAvailable = true;
         const candidateSeats: string[] = [];
         for (let offset = 0; offset < quantity; offset++) {
@@ -1038,11 +1046,11 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                 </div>
 
                 <div className="seat-map-wrapper">
-                  {ROWS.map((row) => (
+                  {rows.map((row) => (
                     <div key={row} className="seat-row-group">
                       <span className="row-label">{row}</span>
                       <div className="seat-row">
-                        {Array.from({ length: SEATS_PER_ROW }, (_, i) => {
+                        {Array.from({ length: seatsPerRow }, (_, i) => {
                           const currentSeatId = `${row}${i + 1}`;
                           const isSeatAlreadyBooked = alreadyBookedSeats.includes(currentSeatId) || bookedSeats.includes(currentSeatId);
                           const isSelected = selectedSeats.includes(currentSeatId);

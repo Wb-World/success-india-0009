@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { readDb } from '@/lib/db';
+import { isSeatValid } from '@/lib/seat-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,9 +78,12 @@ function normalizeEvent(event: any, approvedBookedCount: number = 0, blockedCoun
     eventTime,
     price: Number(event.price || 0),
     totalSeats,
+    seatsPerRow: Number(event.seats_per_row || event.seatsPerRow || 20),
+    totalRows: Number(event.total_rows || event.totalRows || 15),
     bookedCount: approvedBookedCount + blockedCount,
     availableSeats: Math.max(0, totalSeats - approvedBookedCount - blockedCount),
     status: event.status === 'inactive' ? 'Inactive' : DEFAULT_STATUS,
+    imageUrl: event.image_url || event.imageUrl || null,
 
     // Compatibility shape consumed by existing seat selection components.
     name: event.title,
@@ -287,7 +291,9 @@ export async function POST(request: Request) {
     const venue = String(body.venue || '').trim();
     const eventDateTime = String(body.eventDateTime || '').trim();
     const price = Number(body.price);
-    const totalSeats = Number(body.totalSeats || DEFAULT_TOTAL_SEATS);
+    const seatsPerRow = Number(body.seatsPerRow);
+    const totalRows = Number(body.totalRows);
+    const imageUrl = body.imageUrl ? String(body.imageUrl).trim() : null;
 
     if (!title || !venue || !eventDateTime || Number.isNaN(price) || price < 0) {
       return NextResponse.json(
@@ -296,9 +302,15 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!Number.isInteger(totalSeats) || totalSeats <= 0) {
-      return NextResponse.json({ error: 'Total available seats must be a positive number' }, { status: 400 });
+    if (!Number.isInteger(seatsPerRow) || seatsPerRow <= 0) {
+      return NextResponse.json({ error: 'Seats per row must be a positive integer' }, { status: 400 });
     }
+
+    if (!Number.isInteger(totalRows) || totalRows <= 0) {
+      return NextResponse.json({ error: 'Total number of rows must be a positive integer' }, { status: 400 });
+    }
+
+    const totalSeats = seatsPerRow * totalRows;
 
     const eventDate = new Date(eventDateTime);
     if (Number.isNaN(eventDate.getTime())) {
@@ -314,7 +326,10 @@ export async function POST(request: Request) {
       event_datetime: eventDate.toISOString(),
       price,
       total_seats: totalSeats,
+      seats_per_row: seatsPerRow,
+      total_rows: totalRows,
       status: 'active',
+      image_url: imageUrl,
     };
 
     const { data: event, error: eventError } = await supabaseAdmin
@@ -380,7 +395,9 @@ export async function PATCH(request: Request) {
     const venue = String(body.venue || '').trim();
     const eventDateTime = String(body.eventDateTime || '').trim();
     const price = Number(body.price);
-    const totalSeats = Number(body.totalSeats || DEFAULT_TOTAL_SEATS);
+    const seatsPerRow = Number(body.seatsPerRow);
+    const totalRows = Number(body.totalRows);
+    const imageUrl = body.imageUrl !== undefined ? (body.imageUrl ? String(body.imageUrl).trim() : null) : undefined;
 
     if (!eventId) {
       return NextResponse.json({ error: 'Event ID is required' }, { status: 400 });
@@ -393,30 +410,122 @@ export async function PATCH(request: Request) {
       );
     }
 
-    if (!Number.isInteger(totalSeats) || totalSeats <= 0) {
-      return NextResponse.json({ error: 'Total available seats must be a positive number' }, { status: 400 });
+    if (!Number.isInteger(seatsPerRow) || seatsPerRow <= 0) {
+      return NextResponse.json({ error: 'Seats per row must be a positive integer' }, { status: 400 });
     }
+
+    if (!Number.isInteger(totalRows) || totalRows <= 0) {
+      return NextResponse.json({ error: 'Total number of rows must be a positive integer' }, { status: 400 });
+    }
+
+    const totalSeats = seatsPerRow * totalRows;
 
     const eventDate = new Date(eventDateTime);
     if (Number.isNaN(eventDate.getTime())) {
       return NextResponse.json({ error: 'Please provide a valid event date and time' }, { status: 400 });
     }
 
+    // Validate that no booked seats become invalid under the new layout
+    try {
+      let bookingsData: any[] = [];
+      let querySucceeded = false;
+
+      try {
+        const { data, error } = await supabaseAdmin
+          .from('bookings')
+          .select('seats')
+          .or(`seminar_id.eq.${eventId},bus_id.eq.${eventId}`)
+          .in('status', ['approved', 'pending']);
+
+        if (!error) {
+          bookingsData = data || [];
+          querySucceeded = true;
+        } else {
+          console.warn('[events PATCH] OR query failed, falling back to bus_id only:', error.message);
+        }
+      } catch (e) {
+        console.warn('[events PATCH] OR query threw, falling back:', e);
+      }
+
+      // Fallback: query bus_id only (if seminar_id column doesn't exist in the database)
+      if (!querySucceeded) {
+        const { data, error: fallbackError } = await supabaseAdmin
+          .from('bookings')
+          .select('seats')
+          .eq('bus_id', eventId)
+          .in('status', ['approved', 'pending']);
+
+        if (fallbackError) {
+          console.error('Failed to fetch bookings for validation (fallback):', fallbackError);
+          return NextResponse.json({ error: 'Failed to validate existing bookings before update' }, { status: 500 });
+        }
+        bookingsData = data || [];
+      }
+
+      const takenSeats = (bookingsData || []).flatMap((bk: any) => bk.seats || []);
+      const invalidSeats: string[] = [];
+      for (const seat of takenSeats) {
+        if (!isSeatValid(seat, seatsPerRow, totalRows)) {
+          invalidSeats.push(seat);
+        }
+      }
+
+      if (invalidSeats.length > 0) {
+        return NextResponse.json({
+          error: `Cannot reduce layout because some booked seats would become invalid: ${Array.from(new Set(invalidSeats)).join(', ')}`
+        }, { status: 400 });
+      }
+    } catch (e) {
+      console.error('Error validating booked seats on layout reduction:', e);
+      return NextResponse.json({ error: 'Error validating existing bookings' }, { status: 500 });
+    }
+
+    // Fetch existing event for image URL comparison before update
+    const { data: existingEvent } = await supabaseAdmin
+      .from('events')
+      .select('image_url')
+      .eq('id', eventId)
+      .maybeSingle();
+
     // 1. Update events table
+    const updatePayload: any = {
+      title,
+      venue,
+      event_datetime: eventDate.toISOString(),
+      price,
+      total_seats: totalSeats,
+      seats_per_row: seatsPerRow,
+      total_rows: totalRows,
+    };
+    if (imageUrl !== undefined) {
+      updatePayload.image_url = imageUrl;
+    }
+
     const { error: eventError } = await supabaseAdmin
       .from('events')
-      .update({
-        title,
-        venue,
-        event_datetime: eventDate.toISOString(),
-        price,
-        total_seats: totalSeats,
-      })
+      .update(updatePayload)
       .eq('id', eventId);
 
     if (eventError) {
       console.error('Update event error:', eventError);
       return NextResponse.json({ error: eventError.message || 'Failed to update event' }, { status: 500 });
+    }
+
+    // If update succeeded, delete old file from storage if new image is different or removed
+    if (existingEvent && imageUrl !== undefined && existingEvent.image_url !== imageUrl) {
+      const oldUrl = existingEvent.image_url;
+      if (oldUrl && oldUrl.includes('/event-banners/')) {
+        try {
+          const parts = oldUrl.split('/event-banners/');
+          if (parts.length > 1) {
+            const fileName = parts[1];
+            await supabaseAdmin.storage.from('event-banners').remove([fileName]);
+            console.log('Successfully deleted old banner from storage:', fileName);
+          }
+        } catch (delErr) {
+          console.error('Failed to delete old banner from storage:', delErr);
+        }
+      }
     }
 
     // 2. Update legacy buses table
@@ -473,6 +582,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Event ID is required' }, { status: 400 });
     }
 
+    // Fetch existing event to get image_url for deletion
+    const { data: existingEvent } = await supabaseAdmin
+      .from('events')
+      .select('image_url')
+      .eq('id', eventId)
+      .maybeSingle();
+
     // 1. Delete from events table
     const { error: eventError } = await supabaseAdmin
       .from('events')
@@ -482,6 +598,20 @@ export async function DELETE(request: Request) {
     if (eventError) {
       console.error('Delete event error:', eventError);
       return NextResponse.json({ error: eventError.message || 'Failed to delete event' }, { status: 500 });
+    }
+
+    // If deletion from DB succeeded, delete banner from storage
+    if (existingEvent?.image_url && existingEvent.image_url.includes('/event-banners/')) {
+      try {
+        const parts = existingEvent.image_url.split('/event-banners/');
+        if (parts.length > 1) {
+          const fileName = parts[1];
+          await supabaseAdmin.storage.from('event-banners').remove([fileName]);
+          console.log('Successfully deleted deleted-event banner from storage:', fileName);
+        }
+      } catch (delErr) {
+        console.error('Failed to delete banner on event deletion:', delErr);
+      }
     }
 
     // 2. Delete from legacy buses table

@@ -17,6 +17,7 @@ type SeminarEvent = {
   availableSeats?: number;
   name?: string;
   bookedSeatsByTime?: Record<string, string[]>;
+  imageUrl?: string;
 };
 
 export default function EventsPage() {
@@ -145,10 +146,10 @@ export default function EventsPage() {
                 className="event-card"
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
-                {index === 0 && (
+                {(event.imageUrl || index === 0) && (
                   <div className="event-card-image-wrap">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/img.png" alt={event.title || event.name} className="event-card-image" />
+                    <img src={event.imageUrl || "/img.png"} alt={event.title || event.name} className="event-card-image" />
                   </div>
                 )}
                 <div className="event-card-badge">

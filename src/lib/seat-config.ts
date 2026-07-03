@@ -13,12 +13,84 @@ export const ALL_SEATS: string[] = ROWS.flatMap((row) =>
 export const TOTAL_SEATS = ROWS.length * SEATS_PER_ROW;
 
 /**
+ * Generates row labels: A-Z, then AA, BB, CC...
+ * Support at least 100 rows.
+ */
+export function getRowLabel(index: number): string {
+  const charCode = index % 26;
+  const repeatCount = Math.floor(index / 26) + 1;
+  return String.fromCharCode(65 + charCode).repeat(repeatCount);
+}
+
+/**
+ * Resolves the 0-based row index for a given row label (A->0, AA->26, AAA->52, etc.)
+ */
+export function getRowIndex(rowLabel: string): number {
+  if (!/^[A-Z]+$/.test(rowLabel)) return -1;
+  const char = rowLabel[0];
+  // Verify all characters are identical (like AA, BBB)
+  for (let i = 1; i < rowLabel.length; i++) {
+    if (rowLabel[i] !== char) return -1;
+  }
+  const charIndex = char.charCodeAt(0) - 65; // 0 to 25
+  const repeatCount = rowLabel.length; // 1, 2, 3...
+  return charIndex + (repeatCount - 1) * 26;
+}
+
+/**
+ * Validates whether a seat ID is valid within the specified bounds
+ */
+export function isSeatValid(seatCode: string, seatsPerRow: number, totalRows: number): boolean {
+  const match = seatCode.match(/^([A-Z]+)([0-9]+)$/);
+  if (!match) return false;
+  const rowLabel = match[1];
+  const seatNum = parseInt(match[2], 10);
+
+  if (seatNum < 1 || seatNum > seatsPerRow) return false;
+
+  const rowIndex = getRowIndex(rowLabel);
+  if (rowIndex === -1 || rowIndex >= totalRows) return false;
+
+  return true;
+}
+
+/**
+ * Dynamically computes rows, seats per row, all seats list, and total seats count based on event config
+ */
+export function getEventSeatLayout(event: { seatsPerRow?: number; totalRows?: number; seats_per_row?: number; total_rows?: number } | null | undefined) {
+  const seatsPerRow = Number(event?.seatsPerRow ?? event?.seats_per_row ?? SEATS_PER_ROW);
+  const totalRows = Number(event?.totalRows ?? event?.total_rows ?? ROWS.length);
+
+  const rows: string[] = [];
+  for (let i = 0; i < totalRows; i++) {
+    rows.push(getRowLabel(i));
+  }
+
+  const allSeats = rows.flatMap((row) =>
+    Array.from({ length: seatsPerRow }, (_, i) => `${row}${i + 1}`)
+  );
+
+  return {
+    rows,
+    seatsPerRow,
+    totalSeats: totalRows * seatsPerRow,
+    allSeats
+  };
+}
+
+/**
  * Parses bulk action input string. Supports comma-separated individual seats and '-' range syntax.
  * Returns an object with:
  * - seats: string[] (valid unique seats generated)
  * - errors: string[] (validation errors for skipped invalid inputs)
  */
-export function parseBulkSeats(input: string): { seats: string[]; errors: string[] } {
+export function parseBulkSeats(
+  input: string,
+  customAllSeats?: string[],
+  customRows?: string[]
+): { seats: string[]; errors: string[] } {
+  const seatsList = customAllSeats || ALL_SEATS;
+  const rowsList = customRows || ROWS;
   const seatsSet = new Set<string>();
   const errors: string[] = [];
 
@@ -28,7 +100,7 @@ export function parseBulkSeats(input: string): { seats: string[]; errors: string
 
   // Helper to validate individual seat
   const isValidSeat = (seat: string): boolean => {
-    return ALL_SEATS.includes(seat);
+    return seatsList.includes(seat);
   };
 
   // Helper to parse a single seat code into row and number
@@ -100,8 +172,8 @@ export function parseBulkSeats(input: string): { seats: string[]; errors: string
         }
       } else if (startNum === endNum) {
         // Same number range across rows (e.g., B3-D3)
-        const startRowIdx = ROWS.indexOf(startRow);
-        const endRowIdx = ROWS.indexOf(endRow);
+        const startRowIdx = rowsList.indexOf(startRow);
+        const endRowIdx = rowsList.indexOf(endRow);
 
         if (startRowIdx === -1 || endRowIdx === -1) {
           errors.push(`Invalid row in range: ${cleanedToken}`);
@@ -112,7 +184,7 @@ export function parseBulkSeats(input: string): { seats: string[]; errors: string
         const maxRowIdx = Math.max(startRowIdx, endRowIdx);
 
         for (let r = minRowIdx; r <= maxRowIdx; r++) {
-          const seatId = `${ROWS[r]}${startNum}`;
+          const seatId = `${rowsList[r]}${startNum}`;
           if (isValidSeat(seatId)) {
             seatsSet.add(seatId);
           } else {
