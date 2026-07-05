@@ -49,6 +49,8 @@ type EventData = {
   seats_per_row?: number;
   total_rows?: number;
   totalSeats?: number;
+  imageUrl?: string | null;
+  image_url?: string | null;
 };
 
 type Props = {
@@ -148,7 +150,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
 
   // Payment configuration and UTR states
-  const [upiConfig, setUpiConfig] = useState({ upiId: '8637684229-3@ybl', upiName: 'david', upiQrUrl: '/upi-qr-code.jpg?v=2' });
+  const [upiConfig, setUpiConfig] = useState({ upiId: '8637684229-3@ybl', upiName: 'david', upiQrUrl: '', fetchTimestamp: 0 });
   const [utrNumber, setUtrNumber] = useState<string>('');
   const [utrError, setUtrError] = useState<string | null>(null);
 
@@ -157,7 +159,8 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const [pollingIntervalRef, setPollingIntervalRef] = useState<NodeJS.Timeout | null>(null);
 
   const eventName = event.title || event.name || 'Success Team Seminar';
-  const pricePerSeat = 1000;
+  const pricePerSeat = Number(event.price) || 1000;
+  const eventBanner = event.imageUrl || event.image_url || "/img.png";
   const basePrice = selectedSeats.length * pricePerSeat;
   const totalPrice = basePrice;
   // Payment scanner image (using uploaded PhonePe QR)
@@ -204,14 +207,14 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
   // Fetch UPI configs
   useEffect(() => {
-    fetch('/api/admin/configs')
+    fetch(`/api/admin/configs?t=${Date.now()}`, { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (data.configs) {
           const upiId = data.configs.find((c: any) => c.key === 'upi_id')?.value || '8637684229-3@ybl';
           const upiName = data.configs.find((c: any) => c.key === 'upi_name')?.value || 'david';
-          const upiQrUrl = data.configs.find((c: any) => c.key === 'upi_qr_url')?.value || '/upi-qr-code.jpg?v=2';
-          setUpiConfig({ upiId, upiName, upiQrUrl });
+          const upiQrUrl = data.configs.find((c: any) => c.key === 'upi_qr_url')?.value || '';
+          setUpiConfig({ upiId, upiName, upiQrUrl, fetchTimestamp: Date.now() });
         }
       })
       .catch((err) => console.error('Failed to load configs:', err));
@@ -219,7 +222,15 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
   // UPI Link payload & Static QR Image (PhonePe)
   const upiPayload = `upi://pay?pa=${upiConfig.upiId}&pn=${encodeURIComponent(upiConfig.upiName)}&am=${totalPrice}&cu=INR`;
-  const qrCodeUrl = '/phonepe.jpeg';
+  
+  const hasCustomQr = upiConfig.upiQrUrl && 
+                      upiConfig.upiQrUrl !== '' && 
+                      upiConfig.upiQrUrl !== '/upi-qr-code.jpg?v=2' && 
+                      upiConfig.upiQrUrl !== '/phonepe.jpeg';
+
+  const paymentQrImage = hasCustomQr 
+    ? `${upiConfig.upiQrUrl}${upiConfig.upiQrUrl.includes('?') ? '&' : '?'}t=${upiConfig.fetchTimestamp}`
+    : `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiPayload)}&qzone=1&format=png`;
 
   // QR code data for ticket validation
   const qrPayload = confirmedData
@@ -864,7 +875,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           <div className="booker-info-container">
             {/* Image header */}
             <div className="booker-img-header">
-              <img src="/img.png" alt="Register to Book" className="booker-header-img" />
+              <img src={eventBanner} alt="Register to Book" className="booker-header-img" />
             </div>
 
             {/* Form body */}
@@ -1151,7 +1162,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
                   <div className="summary-perks" style={{ margin: '1rem 0', padding: '0.85rem', background: '#f0fdf4', borderRadius: '8px', border: '1px dashed #bbf7d0', fontSize: '0.85rem' }}>
                     <div style={{ fontWeight: '900', color: '#166534', marginBottom: '0.5rem', textAlign: 'center', letterSpacing: '0.5px' }}>COMPLETELY FREE EDUCATION</div>
-                    <div style={{ color: '#065f46', marginBottom: '0.4rem', fontWeight: 700 }}>₹1000 REGISTRATION FEE COVERS:</div>
+                    <div style={{ color: '#065f46', marginBottom: '0.4rem', fontWeight: 700 }}>₹{pricePerSeat} REGISTRATION FEE COVERS:</div>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#064e3b', display: 'flex', flexDirection: 'column', gap: '0.3rem', fontWeight: 500 }}>
                       <li>✅ LUNCH</li>
                       <li>✅ 2 TIMES SNACKS</li>
@@ -1396,7 +1407,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
                   <div className="summary-perks" style={{ margin: '1rem 0', padding: '0.85rem', background: '#f0fdf4', borderRadius: '8px', border: '1px dashed #bbf7d0', fontSize: '0.85rem' }}>
                     <div style={{ fontWeight: '900', color: '#166534', marginBottom: '0.5rem', textAlign: 'center', letterSpacing: '0.5px' }}>COMPLETELY FREE EDUCATION</div>
-                    <div style={{ color: '#065f46', marginBottom: '0.4rem', fontWeight: 700 }}>₹1000 REGISTRATION FEE COVERS:</div>
+                    <div style={{ color: '#065f46', marginBottom: '0.4rem', fontWeight: 700 }}>₹{pricePerSeat} REGISTRATION FEE COVERS:</div>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#064e3b', display: 'flex', flexDirection: 'column', gap: '0.3rem', fontWeight: 500 }}>
                       <li>✅ LUNCH</li>
                       <li>✅ 2 TIMES SNACKS</li>
@@ -1459,13 +1470,13 @@ export default function SeatBookingModal({ event, onClose }: Props) {
               <div className="payment-right-panel">
                 {/* Professional event image placement */}
                 {/* <div className="payment-event-img-wrap">
-                  <img src="/image.png" alt="Event" className="payment-event-img" />
+                  <img src={eventBanner} alt="Event" className="payment-event-img" />
                 </div> */}
 
                 <div className="qr-container-box">
                   <div className="qr-image-wrap">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={scannerImage} alt={`UPI QR Code for ₹${basePrice}`} className="payment-qr-img" />
+                    <img src={paymentQrImage} alt={`UPI QR Code for ₹${basePrice}`} className="payment-qr-img" />
                   </div>
                   <div className="qr-pay-caption">Scan the QR code and complete the payment.</div>
                 </div>
@@ -1682,7 +1693,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                   
                   <div style={{ margin: '1rem 0', padding: '0.85rem', background: '#f0fdf4', borderRadius: '8px', border: '1px dashed #bbf7d0', fontSize: '0.85rem' }}>
                     <div style={{ fontWeight: '900', color: '#166534', marginBottom: '0.5rem', textAlign: 'center', letterSpacing: '0.5px' }}>COMPLETELY FREE EDUCATION</div>
-                    <div style={{ color: '#065f46', marginBottom: '0.4rem', fontWeight: 700 }}>₹1000 REGISTRATION FEE COVERS:</div>
+                    <div style={{ color: '#065f46', marginBottom: '0.4rem', fontWeight: 700 }}>₹{pricePerSeat} REGISTRATION FEE COVERS:</div>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#064e3b', display: 'flex', flexDirection: 'column', gap: '0.3rem', fontWeight: 500 }}>
                       <li>✅ LUNCH</li>
                       <li>✅ 2 TIMES SNACKS</li>
@@ -2910,20 +2921,16 @@ export default function SeatBookingModal({ event, onClose }: Props) {
         .payment-qr-img {
           width: 100% !important;
           height: 100% !important;
-          max-width: none !important;
-          max-height: none !important;
-          object-fit: cover !important;
-          object-position: center 50%;
-          transform: scale(1.6);
+          max-width: 100% !important;
+          max-height: 100% !important;
+          object-fit: contain !important;
+          object-position: center;
+          transform: none !important;
           image-rendering: -webkit-optimize-contrast;
           image-rendering: crisp-edges;
           display: block;
           margin: 0 auto;
           flex-shrink: 0;
-          transition: transform 0.3s ease;
-        }
-        .payment-qr-img:hover {
-          transform: scale(1.65);
         }
 
         .qr-pay-caption {

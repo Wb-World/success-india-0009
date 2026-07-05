@@ -85,6 +85,7 @@ export interface DbEvent {
   status: 'active' | 'inactive';
   created_at?: string;
   image_url?: string | null;
+  homepage_visible?: boolean;
 }
 
 export interface DbBooking {

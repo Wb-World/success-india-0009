@@ -38,7 +38,8 @@ export default function EventsPage() {
         const data = await res.json();
         if (res.ok) {
           let list = data.events || [];
-          if (list.length === 0) {
+          const dbTotalEventsCount = data.dbTotalEventsCount ?? 0;
+          if (list.length === 0 && dbTotalEventsCount === 0) {
             let bookedCount = 0;
             try {
               const bookedRes = await fetch(`/api/bookings?eventId=${encodeURIComponent(PRIMARY_EVENT_ID)}`);
@@ -65,8 +66,8 @@ export default function EventsPage() {
               }
             ];
           } else {
-            list = list.map((ev: any, idx: number) => {
-              if (idx === 0) {
+            list = list.map((ev: any) => {
+              if (ev.id === PRIMARY_EVENT_ID || ev.id === 'seminar_101') {
                 return {
                   ...ev,
                   title: PRIMARY_EVENT_TITLE,
@@ -146,7 +147,7 @@ export default function EventsPage() {
                 className="event-card"
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
-                {(event.imageUrl || index === 0) && (
+                {(event.imageUrl || event.id === PRIMARY_EVENT_ID || event.id === 'seminar_101') && (
                   <div className="event-card-image-wrap">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={event.imageUrl || "/img.png"} alt={event.title || event.name} className="event-card-image" />

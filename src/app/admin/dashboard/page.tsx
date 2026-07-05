@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, ArrowLeft, Trash2, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText, Upload, Trophy, Award, Star, Crown, Coffee, Users, Download, Umbrella, Grid, Key } from 'lucide-react';
+import { Shield, DollarSign, Ticket, Clock, Check, X, LogOut, ArrowRight, ArrowLeft, Trash2, Eye, EyeOff, RefreshCw, AlertCircle, CreditCard, Coins, PlusCircle, Settings, User, Copy, MapPin, Calendar, TrendingUp, UserCheck, Activity, FileText, Upload, Trophy, Award, Star, Crown, Coffee, Users, Download, Umbrella, Grid, Key, Pencil } from 'lucide-react';
 import ImageCropperModal from '@/app/components/ImageCropperModal';
 import SeatBlockTab from './SeatBlockTab';
 import ChangePasswordModal from '@/app/components/ChangePasswordModal';
@@ -1035,6 +1035,38 @@ export default function AdminDashboard() {
     });
   };
 
+  const handleToggleVisibility = async (eventId: string, showOnHomepage: boolean) => {
+    try {
+      const stored = localStorage.getItem('user');
+      let adminId = '';
+      if (stored) {
+        try {
+          adminId = JSON.parse(stored).id || '';
+        } catch (e) {}
+      }
+      const res = await fetch('/api/events', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-id': adminId || (adminUser?.id || ''),
+        },
+        body: JSON.stringify({
+          eventId,
+          homepage_visible: showOnHomepage,
+        }),
+      });
+      if (res.ok) {
+        fetchAdminEvents();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to update visibility status');
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'An error occurred while updating visibility status');
+    }
+  };
+
   const handleConfirmDelete = async () => {
     if (!selectedEventId || !adminUser?.id) return;
 
@@ -2051,15 +2083,29 @@ export default function AdminDashboard() {
                           />
                         )}
                         <div>
-                          <strong>{event.title || event.name}</strong>
-                          <span style={{ display: 'block', marginTop: '2px' }}>{event.venue}</span>
-                          <div className="event-row-actions" style={{ marginTop: '6px' }}>
-                            <button onClick={() => handleEditClick(event)} className="btn-edit-event">
-                              Edit
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <strong>{event.title || event.name}</strong>
+                            <span className={`badge-event-status ${event.homepage_visible !== false ? 'badge-event-status-active' : 'badge-event-status-hidden'}`}>
+                              {event.homepage_visible !== false ? 'Active' : 'Hidden'}
+                            </span>
+                          </div>
+                          <span style={{ display: 'block', marginTop: '4px', fontSize: '0.85rem', color: '#64748b' }}>{event.venue}</span>
+                          <div className="event-row-actions" style={{ marginTop: '8px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <button onClick={() => handleEditClick(event)} className="btn-event-action btn-event-action-edit">
+                              <Pencil size={14} /> Edit
                             </button>
-                            <button onClick={() => { setSelectedEventId(event.id); setDeleteEventTitle(event.title || event.name || ''); setDeleteModalOpen(true); }} className="btn-delete-event">
-                              Delete
+                            <button onClick={() => { setSelectedEventId(event.id); setDeleteEventTitle(event.title || event.name || ''); setDeleteModalOpen(true); }} className="btn-event-action btn-event-action-delete">
+                              <Trash2 size={14} /> Delete
                             </button>
+                            {event.homepage_visible !== false ? (
+                              <button onClick={() => handleToggleVisibility(event.id, false)} className="btn-event-action btn-event-action-hide">
+                                <EyeOff size={14} /> Hide from Homepage
+                              </button>
+                            ) : (
+                              <button onClick={() => handleToggleVisibility(event.id, true)} className="btn-event-action btn-event-action-show">
+                                <Eye size={14} /> Show on Homepage
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -3585,6 +3631,101 @@ export default function AdminDashboard() {
       )}
 
       <style>{`
+        /* Premium Action Buttons inside Published Active Events */
+        .btn-event-action {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          height: 34px;
+          padding: 0 14px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          border-radius: 50px;
+          border: none;
+          color: #ffffff !important;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+          text-decoration: none;
+          outline: none;
+        }
+        
+        .btn-event-action-edit {
+          background-color: #3b82f6 !important; /* Soft Blue */
+          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-event-action-edit:hover {
+          background-color: #2563eb !important;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);
+        }
+        .btn-event-action-edit:active {
+          transform: translateY(0);
+        }
+
+        .btn-event-action-delete {
+          background-color: #ef4444 !important; /* Soft Red */
+          box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-event-action-delete:hover {
+          background-color: #dc2626 !important;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 6px rgba(220, 38, 38, 0.25);
+        }
+        .btn-event-action-delete:active {
+          transform: translateY(0);
+        }
+
+        .btn-event-action-hide {
+          background-color: #f59e0b !important; /* Amber/Orange */
+          box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-event-action-hide:hover {
+          background-color: #d97706 !important;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 6px rgba(217, 119, 6, 0.25);
+        }
+        .btn-event-action-hide:active {
+          transform: translateY(0);
+        }
+
+        .btn-event-action-show {
+          background-color: #10b981 !important; /* Emerald Green */
+          box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-event-action-show:hover {
+          background-color: #059669 !important;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 6px rgba(5, 150, 105, 0.25);
+        }
+        .btn-event-action-show:active {
+          transform: translateY(0);
+        }
+
+        /* Status Badge Design */
+        .badge-event-status {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          padding: 0.25rem 0.65rem;
+          border-radius: 50px;
+          color: #ffffff !important;
+          border: none;
+        }
+
+        .badge-event-status-active {
+          background-color: #10b981 !important; /* Emerald Green */
+        }
+
+        .badge-event-status-hidden {
+          background-color: #6b7280 !important; /* Gray */
+        }
+
         .admin-dashboard-page {
           background-color: #f8fafc;
           background-image: radial-gradient(rgba(22, 163, 74, 0.02) 1.5px, transparent 0), radial-gradient(rgba(22, 163, 74, 0.02) 1.5px, transparent 0);

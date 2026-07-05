@@ -84,6 +84,7 @@ function normalizeEvent(event: any, approvedBookedCount: number = 0, blockedCoun
     availableSeats: Math.max(0, totalSeats - approvedBookedCount - blockedCount),
     status: event.status === 'inactive' ? 'Inactive' : DEFAULT_STATUS,
     imageUrl: event.image_url || event.imageUrl || null,
+    homepage_visible: event.homepage_visible !== false,
 
     // Compatibility shape consumed by existing seat selection components.
     name: event.title,
@@ -100,7 +101,7 @@ function normalizeEvent(event: any, approvedBookedCount: number = 0, blockedCoun
  * across ALL possible event-linking fields.
  * Mirrors the admin route approach which uses select('*') reliably.
  */
-async function countApprovedSeats(eventId: string, eventTitle: string): Promise<number> {
+async function countApprovedSeats(eventId: string, eventTitle: string, isLegacy: boolean): Promise<number> {
   try {
     // Same pattern as admin/bookings/route.ts - fetch all approved, filter in JS.
     const { data, error } = await supabaseAdmin
@@ -119,6 +120,13 @@ async function countApprovedSeats(eventId: string, eventTitle: string): Promise<
 
     // Match by ANY field that could link the booking to this event
     const matched = rows.filter((bk: any) => {
+      // For legacy events, we match by both ID and title/destination for backwards compatibility.
+      // For new events, we strictly match by ID only.
+      if (!isLegacy) {
+        const idKeys = [bk.seminar_id, bk.bus_id, bk.event_id, bk.eventId].map(normalizeComparable).filter(Boolean);
+        return idKeys.includes(idKey);
+      }
+
       const candidateValues = [
         bk.seminar_id,
         bk.bus_id,
@@ -145,7 +153,7 @@ async function countApprovedSeats(eventId: string, eventTitle: string): Promise<
     );
 
     console.log(
-      `[countApprovedSeats] eventId=${eventId} title="${eventTitle}" ` +
+      `[countApprovedSeats] eventId=${eventId} title="${eventTitle}" isLegacy=${isLegacy} ` +
       `all_approved=${rows.length} matched=${matched.length} seats_taken=${totalSeatsBooked}`
     );
 
@@ -204,7 +212,9 @@ export async function GET(request: Request) {
         .lt('event_datetime', `${date}T23:59:59`);
     }
 
-    const { data, error } = await query;
+    const res = await query;
+    const rawData = res.data;
+    const error = res.error;
 
     if (error) {
       console.error('Events table fetch error, falling back to local seminars:', error);
@@ -223,17 +233,33 @@ export async function GET(request: Request) {
         }));
 
       const fallbackEvents = localEvents.map((event) => normalizeEvent(event));
-      return NextResponse.json({ events: fallbackEvents });
+      return NextResponse.json({ events: fallbackEvents, totalActiveCount: 0, dbTotalEventsCount: readDb().seminars.length });
     }
 
+    // Count total events in database to check if database is initialized
+    let dbTotalEventsCount = 0;
+    try {
+      const { count } = await supabaseAdmin
+        .from('events')
+        .select('*', { count: 'exact', head: true });
+      dbTotalEventsCount = count || 0;
+    } catch (e) {
+      console.warn('Failed to fetch total events count:', e);
+    }
+
+    const filteredData = (rawData || []).filter((event: any) => {
+      if (isAuthorizedAdmin) return true;
+      return event.homepage_visible !== false;
+    });
+
     const events = await Promise.all(
-      (data || []).map(async (event) => {
+      filteredData.map(async (event) => {
         // Count approved bookings matching this event.
-        // Pass both the DB title AND the frontend displayTitle so all booking variants match.
-        const titlesToTry = [event.title || '', displayTitle].filter(Boolean);
+        const isLegacyEvent = event.id === 'seminar_mega_mass_2026' || event.id === 'seminar_101';
+        const titlesToTry = [event.title || '', isLegacyEvent ? displayTitle : ''].filter(Boolean);
         let approvedCount = 0;
         for (const t of titlesToTry) {
-          const c = await countApprovedSeats(event.id, t);
+          const c = await countApprovedSeats(event.id, t, isLegacyEvent);
           if (c > approvedCount) approvedCount = c;
         }
 
@@ -259,7 +285,7 @@ export async function GET(request: Request) {
       })
     );
 
-    return NextResponse.json({ events });
+    return NextResponse.json({ events, totalActiveCount: (rawData || []).length, dbTotalEventsCount });
   } catch (error: any) {
     console.error('Events GET error:', error);
     return NextResponse.json(
@@ -391,6 +417,33 @@ export async function PATCH(request: Request) {
 
     const body = await request.json();
     const eventId = String(body.eventId || '').trim();
+    if (!eventId) {
+      return NextResponse.json({ error: 'Event ID is required' }, { status: 400 });
+    }
+
+    const homepageVisible = body.homepage_visible;
+    if (homepageVisible !== undefined) {
+      const { error: eventError } = await supabaseAdmin
+        .from('events')
+        .update({ homepage_visible: homepageVisible })
+        .eq('id', eventId);
+
+      if (eventError) {
+        console.error('Update event visibility error:', eventError);
+        const isColumnError = eventError.message.includes('homepage_visible');
+        return NextResponse.json(
+          { 
+            error: isColumnError
+              ? 'Failed to update event visibility. The homepage_visible column does not exist in the database. Please execute the SQL migration in your Supabase SQL Editor.'
+              : eventError.message || 'Failed to update event visibility'
+          },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ success: true, message: 'Event visibility updated successfully' });
+    }
+
     const title = String(body.title || '').trim();
     const venue = String(body.venue || '').trim();
     const eventDateTime = String(body.eventDateTime || '').trim();
@@ -398,10 +451,6 @@ export async function PATCH(request: Request) {
     const seatsPerRow = Number(body.seatsPerRow);
     const totalRows = Number(body.totalRows);
     const imageUrl = body.imageUrl !== undefined ? (body.imageUrl ? String(body.imageUrl).trim() : null) : undefined;
-
-    if (!eventId) {
-      return NextResponse.json({ error: 'Event ID is required' }, { status: 400 });
-    }
 
     if (!title || !venue || !eventDateTime || Number.isNaN(price) || price < 0) {
       return NextResponse.json(

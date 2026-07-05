@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { RefreshCw, Save, Lock, Unlock, ChevronDown, ChevronUp, AlertCircle, CheckCircle } from 'lucide-react';
+import { RefreshCw, Save, Lock, Unlock, ChevronDown, ChevronUp, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
 import { getEventSeatLayout, parseBulkSeats } from '@/lib/seat-config';
 
@@ -18,6 +18,7 @@ type EventData = {
   totalRows?: number;
   seats_per_row?: number;
   total_rows?: number;
+  homepage_visible?: boolean;
 };
 
 type Props = {
@@ -37,6 +38,37 @@ export default function SeatBlockTab({ event, adminUser }: Props) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [bulkInput, setBulkInput] = useState('');
+  
+  const [homepageVisible, setHomepageVisible] = useState(event.homepage_visible !== false);
+
+  useEffect(() => {
+    setHomepageVisible(event.homepage_visible !== false);
+  }, [event.homepage_visible]);
+
+  const handleToggleVisibility = async (showOnHomepage: boolean) => {
+    try {
+      const res = await fetch('/api/events', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-id': adminUser.id,
+        },
+        body: JSON.stringify({
+          eventId: event.id,
+          homepage_visible: showOnHomepage,
+        }),
+      });
+      if (res.ok) {
+        setHomepageVisible(showOnHomepage);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to update visibility status');
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'An error occurred while updating visibility status');
+    }
+  };
 
   // Fetch booked and blocked seats for this event
   const fetchSeatsData = async () => {
@@ -417,10 +449,34 @@ export default function SeatBlockTab({ event, adminUser }: Props) {
       `}</style>
       <div className="event-seatblock-row-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ flex: 1 }}>
-          <h4 style={{ margin: 0, fontSize: '1rem', color: '#0f172a', fontWeight: 'bold' }}>{event.title || event.name}</h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <h4 style={{ margin: 0, fontSize: '1rem', color: '#0f172a', fontWeight: 'bold' }}>{event.title || event.name}</h4>
+            <span className={`badge-event-status ${homepageVisible ? 'badge-event-status-active' : 'badge-event-status-hidden'}`}>
+              {homepageVisible ? 'Active' : 'Hidden'}
+            </span>
+          </div>
           <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'block', marginTop: '0.25rem' }}>{event.venue}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {homepageVisible ? (
+              <button
+                type="button"
+                onClick={() => handleToggleVisibility(false)}
+                className="btn-event-action btn-event-action-hide"
+              >
+                <EyeOff size={14} /> Hide from Homepage
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleToggleVisibility(true)}
+                className="btn-event-action btn-event-action-show"
+              >
+                <Eye size={14} /> Show on Homepage
+              </button>
+            )}
+          </div>
           <div style={{ textAlign: 'right', fontSize: '0.85rem', color: '#475569' }}>
             <div>{event.eventDate || 'Scheduled'} &bull; {event.eventTime || ''}</div>
             <div style={{ marginTop: '0.25rem' }}><strong>₹{event.price}</strong> &bull; {event.totalSeats || 60} seats</div>
