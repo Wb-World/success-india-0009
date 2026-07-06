@@ -320,6 +320,7 @@
                         android:layout_marginBottom="16dp"
                         android:visibility="gone">
 
+                        <!-- Header row: title + summary -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -348,6 +349,47 @@
                                 android:textStyle="bold" />
                         </LinearLayout>
 
+                        <!-- Entered / Unentered toggle buttons -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="12dp"
+                            android:background="@color/gray_divider"
+                            android:padding="3dp">
+
+                            <TextView
+                                android:id="@+id/btnEnteredFilter"
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_weight="1"
+                                android:text="Entered"
+                                android:textColor="@color/white"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:background="@drawable/btn_gradient_bg"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:layout_marginEnd="2dp" />
+
+                            <TextView
+                                android:id="@+id/btnUnenteredFilter"
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_weight="1"
+                                android:text="Unentered"
+                                android:textColor="@color/primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:background="@color/white"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:layout_marginStart="2dp" />
+                        </LinearLayout>
+
+                        <!-- Hint text -->
                         <TextView
                             android:id="@+id/tvAttendeeSectionHint"
                             android:layout_width="match_parent"
@@ -358,11 +400,29 @@
                             android:textSize="12sp"
                             android:lineSpacingExtra="2dp" />
 
+                        <!-- List for Entered attendees (checked-in) -->
+                        <LinearLayout
+                            android:id="@+id/layoutEnteredList"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:visibility="gone" />
+
+                        <!-- List for Unentered attendees (not checked-in) -->
+                        <LinearLayout
+                            android:id="@+id/layoutUnenteredList"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:visibility="gone" />
+
+                        <!-- Kept for compatibility (hidden, replaced by above two) -->
                         <LinearLayout
                             android:id="@+id/layoutAttendeeList"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical" />
+                            android:orientation="vertical"
+                            android:visibility="gone" />
                     </LinearLayout>
 
                     <!-- Error panel (visible for invalid state) -->

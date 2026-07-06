@@ -187,49 +187,85 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Scan Button Container for premium custom press scale effect -->
-    <FrameLayout
-        android:id="@+id/btnStartScanContainer"
+    <!-- Buttons Container -->
+    <LinearLayout
+        android:id="@+id/btnContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
-        android:layout_marginBottom="48dp"
+        android:layout_marginBottom="32dp"
+        android:orientation="vertical"
         app:layout_constraintBottom_toTopOf="@id/tvFooter"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <LinearLayout
-            android:id="@+id/btnStartScan"
+        <!-- Attendee List Button -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/btnViewAttendees"
             android:layout_width="match_parent"
-            android:layout_height="58dp"
-            android:background="@drawable/btn_gradient_bg"
-            android:orientation="horizontal"
-            android:gravity="center"
+            android:layout_height="54dp"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="3dp"
+            app:cardBackgroundColor="@color/white"
             android:clickable="true"
-            android:focusable="true"
-            android:elevation="6dp"
-            android:translationZ="2dp"
-            android:stateListAnimator="@null">
+            android:focusable="true">
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_qr_scan"
-                android:contentDescription="@null"
-                android:layout_marginEnd="14dp"
-                app:tint="@color/white" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Scan QR Code"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:shadowColor="#3F000000" />
-        </LinearLayout>
-    </FrameLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="View Attendee List"
+                    android:textColor="@color/primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Scan Button Container for premium custom press scale effect -->
+        <FrameLayout
+            android:id="@+id/btnStartScanContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/btnStartScan"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:background="@drawable/btn_gradient_bg"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="6dp"
+                android:translationZ="2dp"
+                android:stateListAnimator="@null">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_qr_scan"
+                    android:contentDescription="@null"
+                    android:layout_marginEnd="14dp"
+                    app:tint="@color/white" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Scan QR Code"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:shadowColor="#3F000000" />
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
 
     <!-- Footer copyright -->
     <TextView

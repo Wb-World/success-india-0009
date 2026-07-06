@@ -20,6 +20,10 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import okhttp3.OkHttpClient
 import android.net.Uri
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.content.Context
+import android.content.Intent
 import okhttp3.Request
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -73,8 +77,42 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
             true
         }
         button.setOnClickListener {
-            checkAndStartScanner()
+            if (!isNetworkAvailable()) {
+                showNoInternetDialog()
+            } else {
+                checkAndStartScanner()
+            }
         }
+
+        binding.btnViewAttendees.setOnClickListener {
+            if (!isNetworkAvailable()) {
+                showNoInternetDialog()
+            } else {
+                startActivity(Intent(this, AttendeeListActivity::class.java))
+            }
+        }
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
+    private fun showNoInternetDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("No Internet Connection")
+            .setMessage("An active internet connection is required to fetch details or verify bookings. Please check your network connection and try again.")
+            .setPositiveButton("Retry") { _, _ ->
+                if (isNetworkAvailable()) {
+                    Toast.makeText(this, "Internet connection restored.", Toast.LENGTH_SHORT).show()
+                } else {
+                    showNoInternetDialog()
+                }
+            }
+            .setNegativeButton("Close", null)
+            .show()
     }
 
     private fun checkAndStartScanner() {
@@ -276,6 +314,10 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
 
     // ── QR Scan callback ───────────────────────────────────────────────────────
     override fun onQRScanned(data: String) {
+        if (!isNetworkAvailable()) {
+            showNoInternetDialog()
+            return
+        }
         Log.d(TAG, "New QR Scanned. Clearing previous state.")
         lastScannedQrDetails = null
 
@@ -330,13 +372,6 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                 return
             }
 
-            // Check already-entered for ID-only codes too
-            if (isAlreadyEntered(bookingId)) {
-                Log.d(TAG, "Booking $bookingId (ID-only) is already entered.")
-                showAlreadyEnteredDialog(bookingId, null)
-                return
-            }
-
             showLoading(true)
             verifyBooking(bookingId)
         }
@@ -374,19 +409,22 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
         Log.d(TAG, "Starting verification for Booking ID: $bookingId")
         Thread {
             try {
-                val url = "http://10.0.2.2:3000/api/verify?id=$bookingId"
-                val request = Request.Builder()
-                    .url(url)
-                    .get().build()
-                val response = okHttpClient.newCall(request).execute()
-                val body = response.body?.string() ?: "[]"
-                Log.d(TAG, "Raw API Response for $bookingId: $body")
+                // Fetch booking directly from Supabase
+                val snapshot = SupabaseAttendeeRepository.fetchBooking(bookingId)
                 mainHandler.post {
                     showLoading(false)
-                    parseResultAndShow(body, bookingId)
+                    if (snapshot != null) {
+                        showResultDialog(snapshot)
+                    } else {
+                        showResultDialog(
+                            status = "error", name = "—", seminar = "—", venue = "—",
+                            seats = "—", price = "—",
+                            reason = "Booking ID \"$bookingId\" was not found in the system.\nThe ticket may be expired or fake."
+                        )
+                    }
                 }
-            } catch (e: IOException) {
-                Log.e(TAG, "Network error during verification for $bookingId", e)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error during verification for $bookingId", e)
                 mainHandler.post {
                     showLoading(false)
                     val qrDetails = lastScannedQrDetails
@@ -400,21 +438,6 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                         )
                     }
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Unexpected error during verification for $bookingId", e)
-                mainHandler.post {
-                    showLoading(false)
-                    val qrDetails = lastScannedQrDetails
-                    if (qrDetails != null) {
-                        showLocalQrDetails(qrDetails, "Verification error: showing ticket details")
-                    } else {
-                        showResultDialog(
-                            status = "error", name = "—", seminar = "—", venue = "—",
-                            seats = "—", price = "—",
-                            reason = "An unexpected error occurred: ${e.message}"
-                        )
-                    }
-                }
             }
         }.start()
     }
@@ -423,15 +446,12 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
         Log.d(TAG, "Starting background verification for Booking ID: $bookingId")
         Thread {
             try {
-                val url = "http://10.0.2.2:3000/api/verify?id=$bookingId"
-                val request = Request.Builder()
-                    .url(url)
-                    .get().build()
-                val response = okHttpClient.newCall(request).execute()
-                val body = response.body?.string() ?: "[]"
-                Log.d(TAG, "Raw Background API Response for $bookingId: $body")
+                val snapshot = SupabaseAttendeeRepository.fetchBooking(bookingId)
                 mainHandler.post {
-                    updateDialogWithServerResult(body, bookingId)
+                    if (snapshot != null) {
+                        val dialog = supportFragmentManager.findFragmentByTag("ValidationResultDialog") as? ValidationResultDialogFragment
+                        dialog?.updateTicketData(snapshot)
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Background verification failed for $bookingId", e)

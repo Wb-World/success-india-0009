@@ -70,6 +70,7 @@ class ValidationResultDialogFragment : DialogFragment() {
     private val gson = Gson()
     private var approvalStore: GateApprovalStore? = null
     private val newlySelectedKeys = mutableSetOf<String>()
+    var dismissCallback: (() -> Unit)? = null
 
     private var currentSnapshot: GateTicketSnapshot = GateTicketSnapshot(
         status = "error",
@@ -111,18 +112,57 @@ class ValidationResultDialogFragment : DialogFragment() {
         binding.viewDismissDimResult.setOnClickListener { dismiss() }
         binding.btnDismissResult.setOnClickListener {
             val bookingId = currentSnapshot.bookingId
-            if (bookingId.isNotBlank() && newlySelectedKeys.isNotEmpty()) {
+            val context = context
+            if (bookingId.isNotBlank() && newlySelectedKeys.isNotEmpty() && context != null) {
+                // Resolve the attendee names
+                val names = currentSnapshot.attendees
+                    .filter { newlySelectedKeys.contains(it.key) }
+                    .joinToString(", ") { it.name.ifBlank { "Guest" } }
+                    .ifBlank { "Attendee" }
+
+                // Save locally first
                 val approvalStore = approvalStore
                 if (approvalStore != null) {
                     for (key in newlySelectedKeys) {
                         approvalStore.approveAttendee(bookingId, key)
                     }
                 }
-                android.widget.Toast.makeText(
-                    requireContext(),
-                    "Attendee check-in saved locally.",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
+
+                // If online, patch to Supabase in the background
+                if (isNetworkAvailable(context)) {
+                    val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+                    val keysToSave = newlySelectedKeys.toSet() // snapshot
+                    Thread {
+                        var allSucceeded = true
+                        for (key in keysToSave) {
+                            val ok = SupabaseAttendeeRepository.markCheckedIn(bookingId, key)
+                            if (!ok) allSucceeded = false
+                        }
+                        mainHandler.post {
+                            if (isAdded) {
+                                if (allSucceeded) {
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        "✓ Entry granted: $names",
+                                        android.widget.Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        "Saved $names locally. Failed to sync some check-ins to cloud.",
+                                        android.widget.Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                        }
+                    }.start()
+                } else {
+                    android.widget.Toast.makeText(
+                        context,
+                        "✓ Saved locally (Offline): $names. Will sync when online.",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
             }
             dismiss()
         }
@@ -140,6 +180,13 @@ class ValidationResultDialogFragment : DialogFragment() {
         renderSnapshot(readSnapshotFromArgs())
     }
 
+    private fun isNetworkAvailable(context: Context): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val net = cm.activeNetwork ?: return false
+        val caps = cm.getNetworkCapabilities(net) ?: return false
+        return caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
     fun updateStatus(status: String) {
         currentSnapshot = currentSnapshot.copy(status = status)
         arguments?.putString(ARG_TICKET_JSON, gson.toJson(currentSnapshot))
@@ -150,6 +197,11 @@ class ValidationResultDialogFragment : DialogFragment() {
         currentSnapshot = snapshot
         arguments?.putString(ARG_TICKET_JSON, gson.toJson(snapshot))
         refreshUi()
+    }
+
+    override fun onDismiss(dialog: android.content.DialogInterface) {
+        super.onDismiss(dialog)
+        dismissCallback?.invoke()
     }
 
     private fun readSnapshotFromArgs(): GateTicketSnapshot {
@@ -248,9 +300,13 @@ class ValidationResultDialogFragment : DialogFragment() {
             else -> "This ticket is not in an approvable state, so the attendee list is read only."
         }
 
-        binding.layoutAttendeeList.removeAllViews()
-        attendees.forEachIndexed { index, attendee ->
-            binding.layoutAttendeeList.addView(
+        // Build separate entered and unentered lists
+        val enteredAttendees = attendees.filter { it.checkedIn || newlySelectedKeys.contains(it.key) }
+        val unenteredAttendees = attendees.filterNot { it.checkedIn || newlySelectedKeys.contains(it.key) }
+
+        binding.layoutEnteredList.removeAllViews()
+        enteredAttendees.forEachIndexed { index, attendee ->
+            binding.layoutEnteredList.addView(
                 createAttendeeRow(
                     attendee = attendee,
                     bookingId = bookingId,
@@ -259,6 +315,61 @@ class ValidationResultDialogFragment : DialogFragment() {
                     attendees = attendees
                 )
             )
+        }
+
+        binding.layoutUnenteredList.removeAllViews()
+        unenteredAttendees.forEachIndexed { index, attendee ->
+            binding.layoutUnenteredList.addView(
+                createAttendeeRow(
+                    attendee = attendee,
+                    bookingId = bookingId,
+                    canApprove = canApprove,
+                    position = index + 1,
+                    attendees = attendees
+                )
+            )
+        }
+
+        // Keep legacy list hidden
+        binding.layoutAttendeeList.removeAllViews()
+        binding.layoutAttendeeList.visibility = View.GONE
+
+        // Default: show Unentered panel
+        showEnteredPanel(showEntered = false)
+
+        // Wire toggle buttons
+        binding.btnEnteredFilter.setOnClickListener {
+            showEnteredPanel(showEntered = true)
+        }
+        binding.btnUnenteredFilter.setOnClickListener {
+            showEnteredPanel(showEntered = false)
+        }
+    }
+
+    /**
+     * Switches the visible attendee list between Entered and Unentered,
+     * and updates button visual state accordingly.
+     */
+    private fun showEnteredPanel(showEntered: Boolean) {
+        val context = requireContext()
+        if (showEntered) {
+            binding.layoutEnteredList.visibility = View.VISIBLE
+            binding.layoutUnenteredList.visibility = View.GONE
+            // Active: Entered button
+            binding.btnEnteredFilter.setBackgroundResource(R.drawable.btn_gradient_bg)
+            binding.btnEnteredFilter.setTextColor(ContextCompat.getColor(context, R.color.white))
+            // Inactive: Unentered button
+            binding.btnUnenteredFilter.setBackgroundColor(ContextCompat.getColor(context, R.color.white))
+            binding.btnUnenteredFilter.setTextColor(ContextCompat.getColor(context, R.color.primary))
+        } else {
+            binding.layoutEnteredList.visibility = View.GONE
+            binding.layoutUnenteredList.visibility = View.VISIBLE
+            // Inactive: Entered button
+            binding.btnEnteredFilter.setBackgroundColor(ContextCompat.getColor(context, R.color.white))
+            binding.btnEnteredFilter.setTextColor(ContextCompat.getColor(context, R.color.primary))
+            // Active: Unentered button
+            binding.btnUnenteredFilter.setBackgroundResource(R.drawable.btn_gradient_bg)
+            binding.btnUnenteredFilter.setTextColor(ContextCompat.getColor(context, R.color.white))
         }
     }
 
@@ -382,28 +493,20 @@ class ValidationResultDialogFragment : DialogFragment() {
                 newlySelectedKeys.remove(attendee.key)
             }
 
-            card.setCardBackgroundColor(
-                ContextCompat.getColor(
-                    context,
-                    if (checked) R.color.card_bg else R.color.white
-                )
-            )
-            card.strokeColor = ContextCompat.getColor(
-                context,
-                if (checked) R.color.primary else R.color.gray_divider
-            )
-
             val newTotalApprovedCount = attendees.count { it.checkedIn } + newlySelectedKeys.size
             binding.tvAttendeeSectionSummary.text = when {
                 newTotalApprovedCount == attendees.size -> "All approved"
                 newTotalApprovedCount == 0 -> "${attendees.size} total"
                 else -> "$newTotalApprovedCount approved / ${attendees.size} total"
             }
-            
+
             binding.tvAttendeeSectionHint.text = when {
                 newTotalApprovedCount == attendees.size -> "All attendees have already been approved."
                 else -> "Tick the checkbox on the right for each attendee who has arrived."
             }
+
+            // Re-render split lists so the attendee moves between Entered / Unentered
+            renderAttendeeSection(currentSnapshot)
         }
 
         textColumn.addView(seatText)

@@ -4,6 +4,7 @@ package com.successteam.gateapp
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 
 object TicketSnapshotFactory {
 
@@ -141,12 +142,12 @@ object TicketSnapshotFactory {
         val checkedInCount = attendees.count { it.checkedIn }
 
         val normalizedStatus = if (rawStatus.lowercase() in listOf("approved", "confirmed", "valid", "success", "partially_checked_in", "partial", "completed")) {
-            if (checkedInCount == totalAttendees && totalAttendees > 0) {
-                "completed"
-            } else if (checkedInCount > 0) {
-                "partial"
-            } else {
-                "approved"
+            when {
+                totalAttendees == 0 -> "approved"
+                // Only "completed" if every single attendee has checkedIn=true explicitly
+                checkedInCount == totalAttendees && attendees.all { it.checkedIn } -> "completed"
+                checkedInCount > 0 -> "partial"
+                else -> "approved"
             }
         } else {
             normalizeBookingStatus(rawStatus)
@@ -247,8 +248,34 @@ object TicketSnapshotFactory {
         fallbackQr: Map<String, String>?
     ): List<GateAttendee> {
         val attendees = mutableListOf<GateAttendee>()
+        
+        // 1. Get raw attendee details from attendee_details, or fall back to screenshot column JSON
+        var detailsObj: JsonObject? = null
         val detailsEl = booking.get("attendee_details") ?: booking.get("attendees")
-        val detailsObj = if (detailsEl != null && detailsEl.isJsonObject) detailsEl.asJsonObject else null
+        if (detailsEl != null && !detailsEl.isJsonNull && detailsEl.isJsonObject) {
+            val d = detailsEl.asJsonObject
+            if (d.entrySet().any { !it.key.startsWith("__") }) {
+                detailsObj = d
+            }
+        }
+        
+        if (detailsObj == null || detailsObj.entrySet().isEmpty()) {
+            val screenshotEl = booking.get("screenshot")
+            if (screenshotEl != null && !screenshotEl.isJsonNull) {
+                val screenshotStr = screenshotEl.asString
+                if (screenshotStr.contains("|")) {
+                    try {
+                        val parts = screenshotStr.split("|")
+                        if (parts.size > 1) {
+                            val parsed = JsonParser.parseString(parts[1])
+                            if (parsed.isJsonObject) {
+                                detailsObj = parsed.asJsonObject
+                            }
+                        }
+                    } catch (_: Exception) {}
+                }
+            }
+        }
 
         if (detailsObj != null && detailsObj.entrySet().isNotEmpty()) {
             val seen = mutableSetOf<String>()
@@ -260,7 +287,7 @@ object TicketSnapshotFactory {
                 }
             }
             detailsObj.entrySet().forEach { entry ->
-                if (!seen.contains(entry.key)) {
+                if (!entry.key.startsWith("__") && !seen.contains(entry.key)) {
                     attendees.add(parseAttendeeEntry(entry.key, entry.value, seatsHint))
                 }
             }
