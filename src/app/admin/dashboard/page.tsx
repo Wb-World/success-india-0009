@@ -64,6 +64,14 @@ export default function AdminDashboard() {
   const [selectedMonthFilter, setSelectedMonthFilter] = useState('All');
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
+  // Refresh modal state (Event Request section)
+  const [refreshModalOpen, setRefreshModalOpen] = useState(false);
+  const [refreshConfirmOpen, setRefreshConfirmOpen] = useState(false);
+
+  // Hide/Show data toggles for booking list and food list
+  const [hideBookingListData, setHideBookingListData] = useState(false);
+  const [hideFoodListData, setHideFoodListData] = useState(false);
+
   // Payment configuration settings
   const [upiSettings, setUpiSettings] = useState({ upiId: '', upiName: '', upiQrUrl: '' });
   const [settingsLoading, setSettingsLoading] = useState(false);
@@ -1717,9 +1725,79 @@ export default function AdminDashboard() {
                   <span className="tab-badge">{regStats.deniedCount}</span>
                 </button>
               </div>
-              <button onClick={() => fetchAdminBookings(adminUser.id)} className="btn btn-refresh hover-spin-icon">
-                <RefreshCw size={14} className="refresh-icon-spin" /> <span>Sync Live Logs</span>
+              <button onClick={() => setRefreshModalOpen(true)} className="btn btn-refresh hover-spin-icon">
+                <RefreshCw size={14} className="refresh-icon-spin" /> <span>Refresh</span>
               </button>
+
+              {/* ── Refresh Options Modal ── */}
+              {refreshModalOpen && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }} onClick={() => { setRefreshModalOpen(false); setRefreshConfirmOpen(false); }}>
+                  <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: '20px', padding: '2rem 2.5rem', maxWidth: '440px', width: '92%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalSlideIn 0.25s ease' }}>
+                    {!refreshConfirmOpen ? (
+                      <>
+                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                          <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                            <RefreshCw size={26} style={{ color: '#fff' }} />
+                          </div>
+                          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', margin: 0 }}>Refresh Options</h3>
+                          <p style={{ color: '#6b7280', fontSize: '0.85rem', marginTop: '0.5rem' }}>Choose how you want to refresh the booking data.</p>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          <button onClick={() => { setRefreshModalOpen(false); }} style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', border: '1.5px solid #e5e7eb', background: '#f9fafb', color: '#374151', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                            <X size={16} /> Cancel
+                          </button>
+                          <button onClick={async () => {
+                            setRefreshModalOpen(false);
+                            const res = await fetch('/api/admin/bookings', { headers: { 'x-admin-id': adminUser.id } });
+                            if (res.ok) {
+                              const data = await res.json();
+                              const newBookings = data.bookings || [];
+                              setBookings(prev => {
+                                const existingIds = new Set(prev.map((b: any) => b.id));
+                                const merged = [...prev, ...newBookings.filter((b: any) => !existingIds.has(b.id))];
+                                calculateStats(merged);
+                                return merged;
+                              });
+                              setToastMessage({ type: 'success', text: 'Data updated — new records merged successfully.' });
+                            } else {
+                              setToastMessage({ type: 'error', text: 'Failed to fetch updated data.' });
+                            }
+                          }} style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                            <RefreshCw size={16} /> Update (Add New Data)
+                          </button>
+                          <button onClick={() => setRefreshConfirmOpen(true)} style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', border: '1.5px solid #fca5a5', background: '#fef2f2', color: '#dc2626', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                            <AlertCircle size={16} /> Refresh All (Reset View)
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                          <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #ef4444, #dc2626)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                            <AlertCircle size={26} style={{ color: '#fff' }} />
+                          </div>
+                          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#dc2626', margin: 0 }}>⚠️ Are you sure?</h3>
+                          <p style={{ color: '#6b7280', fontSize: '0.85rem', marginTop: '0.5rem', lineHeight: 1.5 }}>This will <strong>clear all booking data from the current view</strong> and reset all stats to zero. No data will be deleted from the database.</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                          <button onClick={() => { setRefreshConfirmOpen(false); }} style={{ flex: 1, padding: '0.75rem', borderRadius: '12px', border: '1.5px solid #e5e7eb', background: '#f9fafb', color: '#374151', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer' }}>
+                            Go Back
+                          </button>
+                          <button onClick={() => {
+                            setBookings([]);
+                            setStats({ totalRevenue: 0, approvedCount: 0, pendingCount: 0, deniedCount: 0 });
+                            setRefreshConfirmOpen(false);
+                            setRefreshModalOpen(false);
+                            setToastMessage({ type: 'success', text: 'View cleared — all data reset. Backend data is safe.' });
+                          }} style={{ flex: 1, padding: '0.75rem', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: '#fff', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer' }}>
+                            Yes, Reset View
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {filteredBookings.length === 0 ? (
@@ -2871,12 +2949,16 @@ export default function AdminDashboard() {
                 <button onClick={() => exportToCSV(foodExportData, 'food_list.csv')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Download size={14} /> Export Excel
                 </button>
+                <button onClick={() => setHideFoodListData(prev => !prev)} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: hideFoodListData ? '#fef3c7' : undefined, borderColor: hideFoodListData ? '#f59e0b' : undefined, color: hideFoodListData ? '#92400e' : undefined }}>
+                  {hideFoodListData ? <Eye size={14} /> : <EyeOff size={14} />}
+                  {hideFoodListData ? 'Show Data' : 'Hide Data'}
+                </button>
                 <button onClick={() => exportToWord('food-table-export', 'food_list.doc')} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <FileText size={14} /> Export Word
                 </button>
               </div>
             </div>
-            <div className="glass-card" style={{ padding: '0', overflowX: 'auto' }}>
+            {!hideFoodListData && <div className="glass-card" style={{ padding: '0', overflowX: 'auto' }}>
               <table id="food-table-export" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
                 <tbody>
                   {/* VEGETARIAN SECTION */}
@@ -2934,7 +3016,14 @@ export default function AdminDashboard() {
                   )}
                 </tbody>
               </table>
-            </div>
+            </div>}
+            {hideFoodListData && (
+              <div className="glass-card" style={{ padding: '2.5rem', textAlign: 'center', color: '#94a3b8' }}>
+                <EyeOff size={40} style={{ margin: '0 auto 1rem', opacity: 0.4 }} />
+                <p style={{ fontWeight: 600, fontSize: '1rem' }}>Data is hidden</p>
+                <p style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>Click &quot;Show Data&quot; to reveal the food list table.</p>
+              </div>
+            )}
           </div>
         ) : adminSection === 'attendeeList' ? (
           <div className="dashboard-main-area animate-slide-up">
@@ -2955,12 +3044,16 @@ export default function AdminDashboard() {
                 <button onClick={() => exportToCSV(attendeeExportData, 'attendee_list.csv')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Download size={14} /> Export Excel
                 </button>
+                <button onClick={() => setHideBookingListData(prev => !prev)} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: hideBookingListData ? '#fef3c7' : undefined, borderColor: hideBookingListData ? '#f59e0b' : undefined, color: hideBookingListData ? '#92400e' : undefined }}>
+                  {hideBookingListData ? <Eye size={14} /> : <EyeOff size={14} />}
+                  {hideBookingListData ? 'Show Data' : 'Hide Data'}
+                </button>
                 <button onClick={() => exportToWord('attendee-table-export', 'attendee_list.doc')} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <FileText size={14} /> Export Word
                 </button>
               </div>
             </div>
-            <div className="glass-card" style={{ padding: '0', overflowX: 'auto' }}>
+            {!hideBookingListData && <div className="glass-card" style={{ padding: '0', overflowX: 'auto' }}>
               <table id="attendee-table-export" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid #f1f5f9', background: '#f8fafc' }}>
@@ -2989,7 +3082,14 @@ export default function AdminDashboard() {
                   )}
                 </tbody>
               </table>
-            </div>
+            </div>}
+            {hideBookingListData && (
+              <div className="glass-card" style={{ padding: '2.5rem', textAlign: 'center', color: '#94a3b8' }}>
+                <EyeOff size={40} style={{ margin: '0 auto 1rem', opacity: 0.4 }} />
+                <p style={{ fontWeight: 600, fontSize: '1rem' }}>Data is hidden</p>
+                <p style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>Click &quot;Show Data&quot; to reveal the booking list table.</p>
+              </div>
+            )}
           </div>
         ) : adminSection === 'resortBookings' ? (
           <div className="dashboard-main-area animate-slide-up">

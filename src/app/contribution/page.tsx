@@ -17,7 +17,7 @@ export default function ContributionPage() {
   const [vpImage, setVpImage] = useState<File | null>(null);
   const [vpImageUrl, setVpImageUrl] = useState('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [designation, setDesignation] = useState('Chief Executive Director');
+  const [designation, setDesignation] = useState('Vice Presidents');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Payment States
@@ -138,10 +138,8 @@ export default function ContributionPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Price calculations
-  // Chief Executive Director: Base ₹1000
-  // Executive Director: Base ₹500
-  const basePrice = designation === 'Chief Executive Director' ? 1000 : 500;
+  // Price calculations — all designations at ₹1000
+  const basePrice = 1000;
   const gstAmount = 0;
   const totalPrice = basePrice;
 
@@ -606,8 +604,10 @@ export default function ContributionPage() {
                     onChange={(e) => setDesignation(e.target.value)}
                     className="form-control select-control"
                   >
-                    <option value="Chief Executive Director">Star / Chief Executive Director (₹1000)</option>
-                    <option value="Executive Director">Star / Executive Director (₹500)</option>
+                    <option value="Vice Presidents">Vice Presidents (₹1000)</option>
+                    <option value="Chief Executive Directors">Chief Executive Directors (₹1000)</option>
+                    <option value="Executive Directors">Executive Directors (₹1000)</option>
+                    <option value="Distributors">Distributors (₹1000)</option>
                   </select>
                 </div>
 

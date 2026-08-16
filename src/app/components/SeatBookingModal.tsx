@@ -72,7 +72,11 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const [bookingTimestamp, setBookingTimestamp] = useState('');
   const [confirmedData, setConfirmedData] = useState<any>(null);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
-  const [attendeeDetails, setAttendeeDetails] = useState<Record<string, { name: string; whatsapp: string; lunch?: string }>>({});
+  const [attendeeDetails, setAttendeeDetails] = useState<Record<string, { name: string; businessCenter?: string; whatsapp: string; lunch?: string }>>({});
+
+  // Payment screenshot upload state (replaces UTR)
+  const [paymentScreenshotUrl, setPaymentScreenshotUrl] = useState('');
+  const [isUploadingScreenshot, setIsUploadingScreenshot] = useState(false);
   const [currentAttendeeIndex, setCurrentAttendeeIndex] = useState(0);
 
   // Card ref for scroll reset on step transition
@@ -350,8 +354,8 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     }
   };
 
-  // UTR validation: must be exactly 12 digits
-  const validateUTR = (val: string) => /^[0-9]{12}$/.test(val);
+  // Payment proof validation: screenshot must be uploaded
+  const isPaymentProofReady = () => !!paymentScreenshotUrl && !isUploadingScreenshot;
 
   const handleConfirmBooking = async () => {
     setIsSubmitting(true);
@@ -382,11 +386,12 @@ export default function SeatBookingModal({ event, onClose }: Props) {
     const attendeesObj = selectedSeats.reduce((acc, seat) => {
       acc[seat] = {
         name: attendeeDetails[seat]?.name || '',
+        businessCenter: attendeeDetails[seat]?.businessCenter || '',
         whatsapp: attendeeDetails[seat]?.whatsapp || '',
         lunch: attendeeDetails[seat]?.lunch || 'Vegetarian',
       };
       return acc;
-    }, {} as Record<string, { name: string; whatsapp: string; lunch?: string }>);
+    }, {} as Record<string, { name: string; businessCenter?: string; whatsapp: string; lunch?: string }>);
 
     let userId = null;
     let userEmail = null;
@@ -417,13 +422,12 @@ export default function SeatBookingModal({ event, onClose }: Props) {
       time: event.eventTime || '10:00 AM',
       seats: selectedSeats,
       totalPrice,
-      screenshot: `UTR:${utrNumber}|` + JSON.stringify(attendeesObj),
+      screenshot: paymentScreenshotUrl || 'SCREENSHOT_UPLOADED',
       attendeeDetails: attendeesObj,
       bookerName,
       bookerMemberId,
       bookerPhone,
       bookerVpName,
-      utrNumber,
       userId,
       userEmail,
       username,
@@ -1219,10 +1223,15 @@ export default function SeatBookingModal({ event, onClose }: Props) {
             <form onSubmit={(e) => {
               e.preventDefault();
               const currentName = attendeeDetails[selectedSeats[currentAttendeeIndex]]?.name || '';
+              const currentBiz = attendeeDetails[selectedSeats[currentAttendeeIndex]]?.businessCenter || '';
               const currentPhone = attendeeDetails[selectedSeats[currentAttendeeIndex]]?.whatsapp || '';
               const currentLunch = attendeeDetails[selectedSeats[currentAttendeeIndex]]?.lunch || '';
               if (!currentName.trim()) {
                 alert('Please enter the name of the attendee.');
+                return;
+              }
+              if (!currentBiz) {
+                alert('Please select a Business Center option.');
                 return;
               }
               if (!currentLunch) {
@@ -1278,6 +1287,37 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                     autoFocus
                     className="text-input-field"
                   />
+                </div>
+              </div>
+
+              <div className="form-input-group">
+                <label className="input-field-label">Business Center <span style={{ color: '#ef4444' }}>*</span></label>
+                <div className="input-field-wrap">
+                  <span className="input-field-icon">🏢</span>
+                  <select 
+                    value={attendeeDetails[selectedSeats[currentAttendeeIndex]]?.businessCenter || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setAttendeeDetails(prev => ({
+                        ...prev,
+                        [selectedSeats[currentAttendeeIndex]]: {
+                          ...prev[selectedSeats[currentAttendeeIndex]],
+                          businessCenter: val
+                        }
+                      }));
+                    }}
+                    required
+                    className="text-input-field"
+                    style={{ appearance: 'none', backgroundColor: 'transparent', outline: 'none' }}
+                  >
+                    <option value="" disabled>Select Business Center...</option>
+                    <option value="1-id DISTRIBUTER">1-id DISTRIBUTER</option>
+                    <option value="3-id DISTRIBUTOR">3-id DISTRIBUTOR</option>
+                    <option value="7-id BUSINESS PLAN">7-id BUSINESS PLAN</option>
+                    <option value="15-id ELITE BUSINESS PLAN">15-id ELITE BUSINESS PLAN</option>
+                    <option value="31-id PREMIUM BUSINESS PLAN">31-id PREMIUM BUSINESS PLAN</option>
+                    <option value="63-id ULTRA PREMIUM BUSINESS PLAN">63-id ULTRA PREMIUM BUSINESS PLAN</option>
+                  </select>
                 </div>
               </div>
 
@@ -1422,45 +1462,79 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                   </div>
                 </div>
 
-                {/* UTR Input Section */}
+                {/* Payment Screenshot Upload Section */}
                 <div className="utr-section">
                   <label className="utr-header">
-                    {/* <Hash size={16} /> */}
-                    <span>UPI Transaction Reference (UTR) <span className="upload-required-badge">Required</span></span>
+                    <span>Upload Payment Screenshot <span className="upload-required-badge">Required</span></span>
                   </label>
                   <p className="utr-desc">
-                    After completing payment via GPay or any UPI app, enter the <strong>12-digit UTR / Transaction ID</strong> shown in your payment receipt.
+                    After completing payment via GPay or any UPI app, <strong>upload a screenshot</strong> of your payment confirmation for verification.
                   </p>
-                  <div className="utr-input-wrap">
-                    <span className="utr-input-icon">🔢</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Enter 12-digit UTR (e.g. 412345678901)"
-                      value={utrNumber}
-                      maxLength={12}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 12);
-                        setUtrNumber(val);
-                        setUtrError(null);
-                      }}
-                      className="utr-input-field"
-                    />
-                  </div>
-                  {/* UTR pip indicators */}
-                  <div className="utr-pips">
-                    {Array.from({ length: 12 }).map((_, i) => (
-                      <span
-                        key={i}
-                        className={`char-pip ${i < utrNumber.length ? 'char-pip-filled' : ''}`}
+                  {!paymentScreenshotUrl ? (
+                    <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', padding: '1.5rem', border: '2px dashed #a7f3d0', borderRadius: '14px', background: '#f0fdf4', cursor: 'pointer', transition: 'all 0.2s' }}>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        style={{ display: 'none' }}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 5 * 1024 * 1024) {
+                            alert('File size must be under 5MB.');
+                            return;
+                          }
+                          setIsUploadingScreenshot(true);
+                          try {
+                            const formData = new FormData();
+                            formData.append('file', file);
+                            const res = await fetch('/api/bookings/upload-proof', {
+                              method: 'POST',
+                              body: formData,
+                            });
+                            if (!res.ok) {
+                              const errData = await res.json().catch(() => ({}));
+                              throw new Error(errData.error || 'Upload failed');
+                            }
+                            const data = await res.json();
+                            setPaymentScreenshotUrl(data.url);
+                          } catch (err: any) {
+                            alert(`Upload failed: ${err.message || String(err)}`);
+                          } finally {
+                            setIsUploadingScreenshot(false);
+                          }
+                        }}
                       />
-                    ))}
-                    <span className="pips-count">{utrNumber.length}/12</span>
-                  </div>
-                  {utrError && <span className="utr-error-text">⚠️ {utrError}</span>}
-                  {validateUTR(utrNumber) && (
-                    <div className="utr-valid-badge animate-fade-in">
-                      ✓ UTR entered — your booking will go to admin for approval
+                      {isUploadingScreenshot ? (
+                        <>
+                          <div style={{ width: '40px', height: '40px', border: '3px solid #10b981', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                          <span style={{ fontWeight: 700, color: '#047857', fontSize: '0.9rem' }}>Uploading screenshot...</span>
+                        </>
+                      ) : (
+                        <>
+                          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ fontSize: '1.3rem' }}>📸</span>
+                          </div>
+                          <span style={{ fontWeight: 700, color: '#047857', fontSize: '0.95rem' }}>Tap to Upload Payment Screenshot</span>
+                          <span style={{ fontSize: '0.78rem', color: '#6b7280' }}>JPG, PNG, WEBP (Max 5MB)</span>
+                        </>
+                      )}
+                    </label>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', border: '2px solid #10b981', maxWidth: '220px' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={paymentScreenshotUrl} alt="Payment Screenshot" style={{ width: '100%', display: 'block' }} />
+                      </div>
+                      <div className="utr-valid-badge animate-fade-in">
+                        ✓ Screenshot uploaded — your booking will go to admin for verification
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentScreenshotUrl('')}
+                        style={{ fontSize: '0.82rem', color: '#dc2626', background: 'none', border: '1px solid #fca5a5', borderRadius: '8px', padding: '0.35rem 1rem', cursor: 'pointer', fontWeight: 600 }}
+                      >
+                        Remove & Re-upload
+                      </button>
                     </div>
                   )}
                 </div>
@@ -1512,22 +1586,22 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                 <button 
                   className="sbm-confirm-btn" 
                   onClick={() => {
-                    if (!validateUTR(utrNumber)) {
-                      setUtrError('Please enter a valid 12-digit UTR number from your UPI payment receipt.');
+                    if (!isPaymentProofReady()) {
+                      alert('Please upload a payment screenshot before submitting.');
                       return;
                     }
                     handleConfirmBooking();
                   }}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isUploadingScreenshot}
                   style={{ maxWidth: '300px' }}
                 >
                   {isSubmitting ? 'Submitting for Approval...' : 'Submit for Approval →'}
                 </button>
               </div>
               <br />
-              {!validateUTR(utrNumber) && (
+              {!isPaymentProofReady() && (
                 <div className="proof-required-notice">
-                  <span>🔢 Please enter your 12-digit UTR number above to proceed.</span>
+                  <span>📸 Please upload your payment screenshot above to proceed.</span>
                 </div>
               )}
             </div>
@@ -1597,13 +1671,13 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                   </div>
                 </div>
                 <h2 className="success-title" style={{ color: '#b91c1c' }}>Payment Verification Failed</h2>
-                <p className="success-sub" style={{ color: '#991b1b' }}>The payment transaction UTR could not be verified by the admin.</p>
+                <p className="success-sub" style={{ color: '#991b1b' }}>The payment screenshot could not be verified by the admin.</p>
                 <div className="booking-id-display" style={{ borderColor: '#fca5a5', color: '#b91c1c' }}>{bookingId}</div>
                 <div className="approval-failed-badge">
                   <span>❌ Rejected / Action Required</span>
                 </div>
                 <p style={{ fontSize: '0.82rem', color: '#7f1d1d', marginTop: '0.85rem', fontWeight: 600 }}>
-                  Please double-check the UTR Number: <code style={{ background: '#fee2e2', padding: '2px 6px', borderRadius: '4px' }}>{utrNumber}</code> or contact our support team.
+                  Your payment screenshot could not be verified. Please contact our support team for assistance.
                 </p>
               </div>
             )}
@@ -1707,8 +1781,8 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                     <strong className="bsc-total-amount">₹{confirmedData?.totalPrice !== undefined ? confirmedData.totalPrice : totalPrice}</strong>
                   </div>
                   <div className="bsc-info-row" style={{ marginTop: '0.85rem' }}>
-                    <span>UPI Transaction ID (UTR)</span>
-                    <strong style={{ fontFamily: 'monospace', fontSize: '0.9rem', color: '#059669' }}>{utrNumber}</strong>
+                    <span>Payment Proof</span>
+                    <strong style={{ fontSize: '0.85rem', color: '#059669' }}>✅ Screenshot Submitted</strong>
                   </div>
                   <div className="bsc-info-row">
                     <span>Booking Registered At</span>

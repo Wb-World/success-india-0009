@@ -285,8 +285,10 @@ export default function Home() {
     fetchAchievers();
   }, []);
 
-  const chiefDirectors = supporters.filter((s) => s.designation === 'Chief Executive Director');
-  const executiveDirectors = supporters.filter((s) => s.designation === 'Executive Director');
+  const vicePresidents = supporters.filter((s) => s.designation === 'Vice Presidents');
+  const chiefDirectors = supporters.filter((s) => s.designation === 'Chief Executive Directors');
+  const executiveDirectors = supporters.filter((s) => s.designation === 'Executive Directors');
+  const distributors = supporters.filter((s) => s.designation === 'Distributors');
 
   const hasAchievers = !!(
     achieversData?.pv?.ced?.some((a) => a.name?.trim() || a.image) ||
@@ -539,9 +541,28 @@ export default function Home() {
                 </p>
               </div>
 
-              {chiefDirectors.length > 0 && (
+              {vicePresidents.length > 0 && (
                 <div className="designation-group">
-                  <h3 className="designation-title">CHIEF EXECUTIVE DIRECTOR</h3>
+                  <h3 className="designation-title">VICE PRESIDENTS</h3>
+                  <div className="contributors-grid">
+                    {vicePresidents.map((s) => (
+                      <div key={`contrib-vp-${s.id}`} className="contributor-card" title={s.name}>
+                        <div className="contributor-img-wrap">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={s.vpImage} alt={s.name} className="contributor-img" />
+                        </div>
+                        <div className="contributor-info">
+                          <h3 className="contributor-name">{s.name}</h3>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {chiefDirectors.length > 0 && (
+                <div className="designation-group" style={{ marginTop: '3.5rem' }}>
+                  <h3 className="designation-title">CHIEF EXECUTIVE DIRECTORS</h3>
                   <div className="contributors-grid">
                     {chiefDirectors.map((s) => (
                       <div key={`contrib-chief-${s.id}`} className="contributor-card" title={s.name}>
@@ -560,10 +581,29 @@ export default function Home() {
 
               {executiveDirectors.length > 0 && (
                 <div className="designation-group" style={{ marginTop: '3.5rem' }}>
-                  <h3 className="designation-title">EXECUTIVE DIRECTOR</h3>
+                  <h3 className="designation-title">EXECUTIVE DIRECTORS</h3>
                   <div className="contributors-grid">
                     {executiveDirectors.map((s) => (
                       <div key={`contrib-exec-${s.id}`} className="contributor-card" title={s.name}>
+                        <div className="contributor-img-wrap">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={s.vpImage} alt={s.name} className="contributor-img" />
+                        </div>
+                        <div className="contributor-info">
+                          <h3 className="contributor-name">{s.name}</h3>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {distributors.length > 0 && (
+                <div className="designation-group" style={{ marginTop: '3.5rem' }}>
+                  <h3 className="designation-title">DISTRIBUTORS</h3>
+                  <div className="contributors-grid">
+                    {distributors.map((s) => (
+                      <div key={`contrib-dist-${s.id}`} className="contributor-card" title={s.name}>
                         <div className="contributor-img-wrap">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={s.vpImage} alt={s.name} className="contributor-img" />
