@@ -167,6 +167,22 @@ export default function AdminDashboard() {
     };
   }, [deleteModalOpen]);
 
+  // Auto-select the newest event as default filter for food list & booking list
+  useEffect(() => {
+    if (events.length > 0 && selectedEventFilter === 'All') {
+      // Sort by event_datetime descending to find the newest event
+      const sorted = [...events].sort((a, b) => {
+        const dateA = new Date(a.event_datetime || a.created_at || 0).getTime();
+        const dateB = new Date(b.event_datetime || b.created_at || 0).getTime();
+        return dateB - dateA;
+      });
+      const newestTitle = sorted[0]?.title;
+      if (newestTitle) {
+        setSelectedEventFilter(newestTitle);
+      }
+    }
+  }, [events]);
+
   const verifyAdminAuth = () => {
     const stored = localStorage.getItem('user');
     if (!stored) {
