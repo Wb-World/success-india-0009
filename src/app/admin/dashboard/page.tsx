@@ -30,7 +30,9 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'denied'>('pending');
-  const [selectedEventFilter, setSelectedEventFilter] = useState<string>('All');
+  const [selectedFoodEventFilter, setSelectedFoodEventFilter] = useState<string>('');
+  const [selectedAttendeeEventFilter, setSelectedAttendeeEventFilter] = useState<string>('');
+  const [lastActiveEventTitle, setLastActiveEventTitle] = useState<string>('');
   const [contribActiveTab, setContribActiveTab] = useState<'pending' | 'approved' | 'denied'>('pending');
   const [selectedContributionDetail, setSelectedContributionDetail] = useState<any | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -167,17 +169,45 @@ export default function AdminDashboard() {
     };
   }, [deleteModalOpen]);
 
-  // Auto-select the latest event as default filter for food list & booking list
+  // Fetch last active event from backend and default both list filters to it
   useEffect(() => {
-    if (events.length > 0 && selectedEventFilter === 'All') {
-      const sorted = [...events].sort((a, b) => {
-        const dateA = new Date(a.created_at || a.event_datetime || 0).getTime();
-        const dateB = new Date(b.created_at || b.event_datetime || 0).getTime();
-        return dateB - dateA;
-      });
-      if (sorted[0]?.title) {
-        setSelectedEventFilter(sorted[0].title);
+    const fetchLastActiveEvent = async () => {
+      try {
+        const stored = localStorage.getItem('user');
+        let adminId = '';
+        if (stored) {
+          try {
+            adminId = JSON.parse(stored).id || '';
+          } catch (e) {}
+        }
+        const res = await fetch('/api/events?lastActive=true', {
+          headers: adminId ? { 'x-admin-id': adminId } : {},
+          cache: 'no-store',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const title = data.event?.title || '';
+          setLastActiveEventTitle(title);
+          if (title) {
+            setSelectedFoodEventFilter(title);
+            setSelectedAttendeeEventFilter(title);
+          } else {
+            setSelectedFoodEventFilter('All');
+            setSelectedAttendeeEventFilter('All');
+          }
+        } else {
+          setSelectedFoodEventFilter('All');
+          setSelectedAttendeeEventFilter('All');
+        }
+      } catch (err) {
+        console.error('Error fetching last active event:', err);
+        setSelectedFoodEventFilter('All');
+        setSelectedAttendeeEventFilter('All');
       }
+    };
+
+    if (events.length >= 0) {
+      fetchLastActiveEvent();
     }
   }, [events]);
 
@@ -1450,9 +1480,13 @@ export default function AdminDashboard() {
 
   const uniqueEvents = Array.from(new Set(allAttendeesList.map(a => a.event)));
 
-  const eventFilteredAttendees = selectedEventFilter === 'All' 
-    ? allAttendeesList 
-    : allAttendeesList.filter(a => a.event === selectedEventFilter);
+  const currentEventFilter = adminSection === 'foodList' ? selectedFoodEventFilter :
+                             adminSection === 'attendeeList' ? selectedAttendeeEventFilter :
+                             'All';
+
+  const eventFilteredAttendees = currentEventFilter === 'All'
+    ? allAttendeesList
+    : allAttendeesList.filter(a => a.event === currentEventFilter);
 
   const vegAttendees = eventFilteredAttendees.filter(a => a.lunch === 'Vegetarian');
   const nonVegAttendees = eventFilteredAttendees.filter(a => a.lunch === 'Non-Vegetarian');
@@ -2964,8 +2998,8 @@ export default function AdminDashboard() {
               </div>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <select 
-                  value={selectedEventFilter} 
-                  onChange={(e) => setSelectedEventFilter(e.target.value)}
+                  value={selectedFoodEventFilter} 
+                  onChange={(e) => setSelectedFoodEventFilter(e.target.value)}
                   style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
                 >
                   <option value="All">All Events</option>
@@ -3059,8 +3093,8 @@ export default function AdminDashboard() {
               </div>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <select 
-                  value={selectedEventFilter} 
-                  onChange={(e) => setSelectedEventFilter(e.target.value)}
+                  value={selectedAttendeeEventFilter} 
+                  onChange={(e) => setSelectedAttendeeEventFilter(e.target.value)}
                   style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
                 >
                   <option value="All">All Events</option>

@@ -21,8 +21,8 @@ export default function ContributionPage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Payment States
-  const [utrNumber, setUtrNumber] = useState('');
-  const [utrError, setUtrError] = useState<string | null>(null);
+  const [paymentScreenshotUrl, setPaymentScreenshotUrl] = useState('');
+  const [isUploadingPaymentScreenshot, setIsUploadingPaymentScreenshot] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState('');
   const [upiConfig, setUpiConfig] = useState({ 
@@ -138,22 +138,90 @@ export default function ContributionPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Price calculations — all designations at ₹1000
-  const basePrice = 1000;
+  // Price calculations based on designation
+  const getDesignationPrice = (): number => {
+    switch (designation) {
+      case 'Executive Directors':
+        return 500;
+      case 'Distributors':
+        return 50;
+      default:
+        return 1000;
+    }
+  };
+
+  const basePrice = getDesignationPrice();
   const gstAmount = 0;
   const totalPrice = basePrice;
 
   // QR Code
   const qrImageUrl = upiConfig.upiQrUrl || '/UPIs/contribution-qr.jpg';
 
-  const validateUTR = (val: string) => {
-    return /^[0-9]{12}$/.test(val);
+  // Payment proof validation: screenshot must be uploaded
+  const isPaymentProofReady = () => !!paymentScreenshotUrl && !isUploadingPaymentScreenshot;
+
+  // Handle payment screenshot upload
+  const handlePaymentScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setFormErrors((prev) => ({
+        ...prev,
+        paymentScreenshot: 'File size must be under 5MB.',
+      }));
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setFormErrors((prev) => ({
+        ...prev,
+        paymentScreenshot: 'Only JPG, JPEG, PNG, and WEBP image uploads are allowed.',
+      }));
+      return;
+    }
+
+    setIsUploadingPaymentScreenshot(true);
+    setFormErrors((prev) => {
+      const copy = { ...prev };
+      delete copy.paymentScreenshot;
+      return copy;
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/bookings/upload-proof', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to upload image to server');
+      }
+
+      const data = await res.json();
+      setPaymentScreenshotUrl(data.url);
+    } catch (err: any) {
+      setFormErrors((prev) => ({
+        ...prev,
+        paymentScreenshot: err.message || 'Failed to upload image. Please try again.',
+      }));
+    } finally {
+      setIsUploadingPaymentScreenshot(false);
+    }
   };
 
   // Submit payment confirmation
   const handleConfirmContribution = async () => {
-    if (!validateUTR(utrNumber)) {
-      setUtrError('Please enter a valid 12-digit UTR reference ID.');
+    if (!isPaymentProofReady()) {
+      setFormErrors((prev) => ({
+        ...prev,
+        paymentScreenshot: 'Please upload your payment screenshot.',
+      }));
       return;
     }
 
@@ -204,13 +272,12 @@ export default function ContributionPage() {
       time: formattedTime,
       seats: ['SUPPORTER'],
       totalPrice,
-      screenshot: `UTR:${utrNumber}`,
+      screenshot: paymentScreenshotUrl,
       attendeeDetails: attendeesObj,
       bookerName: supporterName,
       bookerMemberId: 'SUPPORTER',
       bookerPhone: userPhone,
       bookerVpName: vpName,
-      utrNumber,
       userId,
       userEmail,
       username,
@@ -247,7 +314,7 @@ export default function ContributionPage() {
         <section className="supporter-payment-section container animate-fade-in">
           <div className="payment-container glass-card" style={{ background: '#ffffff', borderRadius: '24px', border: '1.5px solid #d1fae5' }}>
             <h2 className="payment-title">Complete Supporter Payment</h2>
-            <p className="payment-subtitle">Verify your supporter summary, scan the UPI QR code and submit your payment receipt UTR.</p>
+            <p className="payment-subtitle">Verify your supporter summary, scan the UPI QR code and submit your payment screenshot for verification.</p>
 
             <div className="payment-split">
               {/* Left Panel: Summary & UTR input */}
@@ -301,49 +368,55 @@ export default function ContributionPage() {
                   </div>
                 </div>
 
-                {/* UTR Input Section */}
+                {/* Payment Screenshot Upload Section */}
                 <div className="utr-section">
                   <label className="utr-header">
-                    <span>UPI Transaction Reference (UTR) <span className="upload-required-badge">Required</span></span>
+                    <span>Upload Payment Screenshot <span className="upload-required-badge">Required</span></span>
                   </label>
                   <p className="utr-desc">
-                    After completing payment via GPay, PhonePe, or any UPI app, enter the <strong>12-digit UTR / Transaction ID</strong> shown in your payment receipt.
+                    After completing payment via GPay or any UPI app, <strong>upload a screenshot</strong> of your payment confirmation for verification.
                   </p>
-                  <div className="utr-input-wrap">
-                    <span className="utr-input-icon">🔢</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Enter 12-digit UTR"
-                      value={utrNumber}
-                      maxLength={12}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 12);
-                        setUtrNumber(val);
-                        setUtrError(null);
-                      }}
-                      className="utr-input-field"
-                    />
-                  </div>
-                  
-                  {/* UTR character pip indicators */}
-                  <div className="utr-pips">
-                    {Array.from({ length: 12 }).map((_, i) => (
-                      <span
-                        key={i}
-                        className={`char-pip ${i < utrNumber.length ? 'char-pip-filled' : ''}`}
+                  {!paymentScreenshotUrl ? (
+                    <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', padding: '1.5rem', border: '2px dashed #a7f3d0', borderRadius: '14px', background: '#f0fdf4', cursor: 'pointer', transition: 'all 0.2s' }}>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        style={{ display: 'none' }}
+                        onChange={handlePaymentScreenshotUpload}
                       />
-                    ))}
-                    <span className="pips-count" style={{ fontSize: '0.75rem', marginLeft: 'auto', fontWeight: 'bold', color: '#6b7280' }}>
-                      {utrNumber.length}/12
-                    </span>
-                  </div>
-                  {utrError && <span className="utr-error-text">⚠️ {utrError}</span>}
-                  {validateUTR(utrNumber) && (
-                    <div className="utr-valid-badge animate-fade-in">
-                      ✓ UTR entered — ready to submit for verification
+                      {isUploadingPaymentScreenshot ? (
+                        <>
+                          <div style={{ width: '40px', height: '40px', border: '3px solid #10b981', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                          <span style={{ fontWeight: 700, color: '#047857', fontSize: '0.9rem' }}>Uploading screenshot...</span>
+                        </>
+                      ) : (
+                        <>
+                          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ fontSize: '1.3rem' }}>📸</span>
+                          </div>
+                          <span style={{ fontWeight: 700, color: '#047857', fontSize: '0.95rem' }}>Tap to Upload Payment Screenshot</span>
+                          <span style={{ fontSize: '0.78rem', color: '#6b7280' }}>JPG, PNG, WEBP (Max 5MB)</span>
+                        </>
+                      )}
+                    </label>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', border: '2px solid #10b981', maxWidth: '220px' }}>
+                        <img src={paymentScreenshotUrl} alt="Payment Screenshot" style={{ width: '100%', display: 'block' }} />
+                      </div>
+                      <div className="utr-valid-badge animate-fade-in">
+                        ✓ Screenshot uploaded — ready to submit for verification
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentScreenshotUrl('')}
+                        style={{ fontSize: '0.82rem', color: '#dc2626', background: 'none', border: '1px solid #fca5a5', borderRadius: '8px', padding: '0.35rem 1rem', cursor: 'pointer', fontWeight: 600 }}
+                      >
+                        Remove & Re-upload
+                      </button>
                     </div>
                   )}
+                  {formErrors.paymentScreenshot && <span className="utr-error-text">⚠️ {formErrors.paymentScreenshot}</span>}
                 </div>
               </div>
 
@@ -392,12 +465,12 @@ export default function ContributionPage() {
                 {isSubmitting ? 'Submitting Registration...' : 'Submit for Approval →'}
               </button>
             </div>
-            
-            {!validateUTR(utrNumber) && (
-              <div className="proof-required-notice" style={{ textAlign: 'center', marginTop: '1rem', color: '#b45309', fontSize: '0.82rem', fontWeight: 'bold' }}>
-                ⚠️ Please complete payment and enter the 12-digit UTR above to enable submission.
-              </div>
-            )}
+             
+             {!isPaymentProofReady() && (
+               <div className="proof-required-notice" style={{ textAlign: 'center', marginTop: '1rem', color: '#b45309', fontSize: '0.82rem', fontWeight: 'bold' }}>
+                 ⚠️ Please complete payment and upload the screenshot above to enable submission.
+               </div>
+             )}
           </div>
         </section>
       )}
@@ -606,8 +679,8 @@ export default function ContributionPage() {
                   >
                     <option value="Vice Presidents">Vice Presidents (₹1000)</option>
                     <option value="Chief Executive Directors">Chief Executive Directors (₹1000)</option>
-                    <option value="Executive Directors">Executive Directors (₹1000)</option>
-                    <option value="Distributors">Distributors (₹1000)</option>
+                    <option value="Executive Directors">Executive Directors (₹500)</option>
+                    <option value="Distributors">Distributors (₹50)</option>
                   </select>
                 </div>
 
