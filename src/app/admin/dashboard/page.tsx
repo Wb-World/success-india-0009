@@ -167,34 +167,19 @@ export default function AdminDashboard() {
     };
   }, [deleteModalOpen]);
 
-  // Auto-select the latest active event (that has bookings) as default filter
+  // Auto-select the latest event as default filter for food list & booking list
   useEffect(() => {
-    if (events.length > 0 && bookings.length > 0 && selectedEventFilter === 'All') {
-      // Collect event names that actually exist in bookings
-      const eventNamesWithBookings = new Set(
-        bookings
-          .filter((b) => !b.id.startsWith('SUP-') && !(b.seats && b.seats.includes('SUPPORTER')))
-          .map((b) => b.seminarName || b.eventName)
-          .filter(Boolean)
-      );
-
-      // Sort events by event_datetime descending (newest first), prefer active
+    if (events.length > 0 && selectedEventFilter === 'All') {
       const sorted = [...events].sort((a, b) => {
-        // Active events first
-        if (a.status === 'active' && b.status !== 'active') return -1;
-        if (a.status !== 'active' && b.status === 'active') return 1;
-        const dateA = new Date(a.event_datetime || a.created_at || 0).getTime();
-        const dateB = new Date(b.event_datetime || b.created_at || 0).getTime();
+        const dateA = new Date(a.created_at || a.event_datetime || 0).getTime();
+        const dateB = new Date(b.created_at || b.event_datetime || 0).getTime();
         return dateB - dateA;
       });
-
-      // Pick the newest active event that has bookings
-      const match = sorted.find((ev) => eventNamesWithBookings.has(ev.title));
-      if (match) {
-        setSelectedEventFilter(match.title);
+      if (sorted[0]?.title) {
+        setSelectedEventFilter(sorted[0].title);
       }
     }
-  }, [events, bookings]);
+  }, [events]);
 
   const verifyAdminAuth = () => {
     const stored = localStorage.getItem('user');
