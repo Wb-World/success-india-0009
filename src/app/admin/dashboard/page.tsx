@@ -1899,7 +1899,18 @@ export default function AdminDashboard() {
                         </h4>
                         
                         <div className="utr-display-box">
-                          {b.screenshot && b.screenshot.startsWith('UTR:') ? (
+                          {b.screenshot && !b.screenshot.startsWith('UTR:') && b.screenshot !== 'DIRECT_BOOKING' && b.screenshot !== 'SCREENSHOT_UPLOADED' ? (
+                            <div className="utr-content-wrapper" style={{ flexDirection: 'column', gap: '0.5rem' }}>
+                              <span className="utr-label-admin">Payment Screenshot</span>
+                              <div 
+                                style={{ width: '120px', height: '160px', borderRadius: '8px', border: '1px solid #d1d5db', overflow: 'hidden', cursor: 'pointer' }}
+                                onClick={() => setZoomedImage(b.screenshot)}
+                              >
+                                <img src={b.screenshot} alt="Payment Screenshot" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </div>
+                              <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Tap to view full size</span>
+                            </div>
+                          ) : b.screenshot && b.screenshot.startsWith('UTR:') ? (
                             <div className="utr-content-wrapper">
                               <span className="utr-label-admin">UPI Transaction ID (UTR)</span>
                               <span className="utr-value-admin">
@@ -1908,7 +1919,7 @@ export default function AdminDashboard() {
                             </div>
                           ) : (
                             <div className="utr-missing-badge">
-                              <span>⚠️ UTR ID Missing</span>
+                              <span>⚠️ Payment Proof Missing</span>
                             </div>
                           )}
                         </div>
