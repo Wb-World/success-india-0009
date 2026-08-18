@@ -9,9 +9,10 @@ async function verifyAdminSession(request: Request) {
 
   try {
     const { data, error } = await supabaseAdmin
-      .from('admin')
+      .from('users')
       .select('id, username, name, role')
       .eq('id', adminId)
+      .eq('role', 'admin')
       .maybeSingle();
 
     if (error || !data) return null;

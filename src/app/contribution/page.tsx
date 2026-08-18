@@ -680,7 +680,7 @@ export default function ContributionPage() {
                     <option value="Vice Presidents">Vice Presidents (₹1000)</option>
                     <option value="Chief Executive Directors">Chief Executive Directors (₹1000)</option>
                     <option value="Executive Directors">Executive Directors (₹500)</option>
-                    <option value="Distributors">Distributors (₹50)</option>
+                    <option value="Distributors">Distributors (₹500)</option>
                   </select>
                 </div>
 
