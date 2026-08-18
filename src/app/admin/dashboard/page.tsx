@@ -2766,7 +2766,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
 
-                <div className="event-form-actions span-2" style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+                <div className="event-form-actions span-2">
                   {settingsMessage && (
                     <span
                       className="event-message"
@@ -2781,7 +2781,7 @@ export default function AdminDashboard() {
                       {settingsMessage}
                     </span>
                   )}
-                  <button type="submit" className="btn btn-primary" disabled={settingsLoading} style={{ height: '44px' }}>
+                  <button type="submit" className="btn btn-primary" disabled={settingsLoading} style={{ height: '44px', minWidth: '160px' }}>
                     {settingsLoading ? 'Saving Settings...' : 'Save Event Payment'}
                   </button>
                 </div>
@@ -2855,7 +2855,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <div className="event-form-actions span-2" style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+                <div className="event-form-actions span-2">
                   {contributionSettingsMessage && (
                     <span
                       className="event-message"
@@ -2870,7 +2870,7 @@ export default function AdminDashboard() {
                       {contributionSettingsMessage}
                     </span>
                   )}
-                  <button type="submit" className="btn btn-primary" disabled={contributionSettingsLoading} style={{ height: '44px' }}>
+                  <button type="submit" className="btn btn-primary" disabled={contributionSettingsLoading} style={{ height: '44px', minWidth: '180px' }}>
                     {contributionSettingsLoading ? 'Saving Settings...' : 'Save Contribution Payment'}
                   </button>
                 </div>
@@ -2944,7 +2944,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <div className="event-form-actions span-2" style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+                <div className="event-form-actions span-2">
                   {toolsSettingsMessage && (
                     <span
                       className="event-message"
@@ -2959,7 +2959,7 @@ export default function AdminDashboard() {
                       {toolsSettingsMessage}
                     </span>
                   )}
-                  <button type="submit" className="btn btn-primary" disabled={toolsSettingsLoading} style={{ height: '44px' }}>
+                  <button type="submit" className="btn btn-primary" disabled={toolsSettingsLoading} style={{ height: '44px', minWidth: '160px' }}>
                     {toolsSettingsLoading ? 'Saving Settings...' : 'Save Tools Payment'}
                   </button>
                 </div>
@@ -4920,54 +4920,110 @@ export default function AdminDashboard() {
 
         .event-form-card, .events-list-card {
           background: #ffffff;
-          border: 1px solid rgba(22, 163, 74, 0.06);
-          border-radius: 28px;
-          box-shadow: 0 4px 30px rgba(22, 163, 74, 0.015);
+          border: 1px solid rgba(22, 163, 74, 0.08);
+          border-radius: 24px;
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
           padding: 2.25rem 2rem;
-          margin-bottom: 2.5rem;
+          margin-bottom: 2rem;
         }
 
         .event-manager-header {
           display: flex;
           justify-content: space-between;
-          gap: 1rem;
-          align-items: flex-start;
+          gap: 1.25rem;
+          align-items: center;
           padding-bottom: 1.25rem;
           border-bottom: 1px solid #f1f5f9;
-          margin-bottom: 2rem;
+          margin-bottom: 1.75rem;
+        }
+
+        .manager-kicker {
+          display: inline-block;
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #16a34a;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          margin-bottom: 0.25rem;
         }
 
         .heading-md {
           font-family: var(--font-heading);
-          font-size: 1.4rem;
+          font-size: 1.35rem;
           font-weight: 800;
           color: #0f172a;
           margin: 0;
+          line-height: 1.3;
+        }
+
+        .event-form-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 1.35rem 1.5rem;
+          align-items: start;
+          width: 100%;
+        }
+
+        @media (max-width: 768px) {
+          .event-form-grid {
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+          }
+        }
+
+        .event-form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.45rem;
+          width: 100%;
+        }
+
+        .event-form-group.span-2 {
+          grid-column: 1 / -1;
+        }
+
+        .form-label {
+          font-size: 0.78rem;
+          font-weight: 700;
+          color: #475569;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 0.1rem;
+          display: block;
         }
 
         .form-control {
           background: #f8fafc;
-          border: 1px solid #cbd5e1;
+          border: 1.5px solid #cbd5e1;
           border-radius: 12px;
           padding: 0.75rem 1rem;
           font-size: 0.95rem;
           color: #0f172a;
           transition: all 0.2s ease;
           width: 100%;
+          height: 48px;
+          box-sizing: border-box;
         }
 
         .form-control:focus {
           border-color: #16a34a;
           background: #ffffff;
-          box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+          box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
         }
 
-        .form-label {
-          font-size: 0.8rem;
-          font-weight: 700;
-          color: #475569;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
+        .event-form-actions {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 1rem;
+          margin-top: 0.5rem;
+          padding-top: 1.5rem;
+          border-top: 1px solid #f1f5f9;
+        }
+
+        .event-form-actions.span-2 {
+          grid-column: 1 / -1;
         }
 
         .btn-primary {
