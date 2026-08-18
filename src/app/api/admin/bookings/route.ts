@@ -12,10 +12,16 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });
     }
 
-    // Fetch all bookings directly without joining users (due to lack of foreign key constraint)
-    const { data: rawBookings, error: bookingsError } = await supabaseAdmin
-      .from('bookings')
-      .select('*');
+    const { searchParams } = new URL(request.url);
+    const eventId = searchParams.get('eventId');
+
+    let query = supabaseAdmin.from('bookings').select('*');
+    if (eventId) {
+      query = query.or(`seminar_id.eq.${eventId},bus_id.eq.${eventId}`);
+    }
+
+    // Fetch bookings directly without joining users (due to lack of foreign key constraint)
+    const { data: rawBookings, error: bookingsError } = await query;
 
     if (bookingsError) {
       console.error('Database query error fetching admin bookings:', bookingsError);
@@ -113,6 +119,25 @@ export async function GET(request: Request) {
       };
     });
 
+    // Calculate accurate per-event stats
+    let totalRevenue = 0;
+    let approvedCount = 0;
+    let pendingCount = 0;
+    let deniedCount = 0;
+    let confirmedSeats = 0;
+
+    mappedBookings.forEach((b: any) => {
+      if (b.status === 'approved') {
+        totalRevenue += b.totalPrice || 0;
+        approvedCount++;
+        confirmedSeats += (b.seats || []).length;
+      } else if (b.status === 'pending') {
+        pendingCount++;
+      } else if (b.status === 'denied') {
+        deniedCount++;
+      }
+    });
+
     // Sort bookings: pending first, then newest first
     const sortedBookings = mappedBookings.sort((a: any, b: any) => {
       if (a.status === 'pending' && b.status !== 'pending') return -1;
@@ -120,7 +145,16 @@ export async function GET(request: Request) {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
-    return NextResponse.json({ bookings: sortedBookings });
+    return NextResponse.json({
+      bookings: sortedBookings,
+      stats: {
+        totalRevenue,
+        approvedCount,
+        pendingCount,
+        deniedCount,
+        confirmedSeats,
+      },
+    });
   } catch (error) {
     console.error('Admin bookings GET error:', error);
     return NextResponse.json(

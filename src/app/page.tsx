@@ -490,7 +490,7 @@ export default function Home() {
           <div className="container">
             <div className="section-header" style={{ marginBottom: '3.5rem' }}>
               <span className="section-eyebrow">Honoring Excellence</span>
-              <h2 className="heading-lg">{currentMonthUpper} MONTH SYSTEM SUPPORTERS</h2>
+              <h2 className="heading-lg">{currentMonthUpper} MONTH TOP ACHIEVERS</h2>
               <div
                 style={{
                   textAlign: 'center',

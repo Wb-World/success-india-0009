@@ -16,27 +16,36 @@ export async function POST(request: Request) {
       );
     }
 
-    // Query the dedicated admin table only — never touches the users table
-    const { data: admin, error } = await supabaseAdmin
+    // Query dedicated admin table first, with users table fallback
+    let adminRecord: any = null;
+    const { data: admin1, error: err1 } = await supabaseAdmin
       .from('admin')
       .select('id, username, password, role')
       .ilike('username', username)
       .maybeSingle();
 
-    if (error) {
-      console.error('[Admin Login] Supabase error:', error);
+    if (admin1) {
+      adminRecord = admin1;
+    } else {
+      const { data: admin2, error: err2 } = await supabaseAdmin
+        .from('users')
+        .select('id, username, password, role')
+        .ilike('username', username)
+        .eq('role', 'admin')
+        .maybeSingle();
+      if (admin2) {
+        adminRecord = admin2;
+      }
+    }
+
+    if (!adminRecord) {
       return NextResponse.json(
         { error: 'Invalid username or password' },
         { status: 401 }
       );
     }
 
-    if (!admin) {
-      return NextResponse.json(
-        { error: 'Invalid username or password' },
-        { status: 401 }
-      );
-    }
+    const admin = adminRecord;
 
     if (!verifyPassword(password, admin.password)) {
       return NextResponse.json(

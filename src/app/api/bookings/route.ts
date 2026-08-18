@@ -73,9 +73,10 @@ export async function GET(request: Request) {
     if (adminId) {
       try {
         const { data: adminUser } = await supabaseAdmin
-          .from('admin')
+          .from('users')
           .select('id')
           .eq('id', adminId)
+          .eq('role', 'admin')
           .maybeSingle();
         if (adminUser) {
           isAuthorizedAdmin = true;

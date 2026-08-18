@@ -65,9 +65,10 @@ export async function POST(request: Request) {
 
     // 6. Fetch database record with credentials
     const { data: adminRecord, error: fetchError } = await supabaseAdmin
-      .from('admin')
+      .from('users')
       .select('id, username, password')
       .eq('id', adminUser.id)
+      .eq('role', 'admin')
       .maybeSingle();
 
     if (fetchError || !adminRecord) {
@@ -95,7 +96,7 @@ export async function POST(request: Request) {
 
     // 9. Update DB with hashed password
     const { error: updateError } = await supabaseAdmin
-      .from('admin')
+      .from('users')
       .update({ password: newHash })
       .eq('id', adminUser.id);
 

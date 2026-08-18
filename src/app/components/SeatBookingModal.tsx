@@ -168,7 +168,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   const basePrice = selectedSeats.length * pricePerSeat;
   const totalPrice = basePrice;
   // Payment scanner image (using uploaded PhonePe QR)
-  const scannerImage = '/phonepe.jpeg';
+  const scannerImage = '/orq.jpeg';
 
   // Build booked seats from event data
   useEffect(() => {
@@ -227,14 +227,11 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   // UPI Link payload & Static QR Image (PhonePe)
   const upiPayload = `upi://pay?pa=${upiConfig.upiId}&pn=${encodeURIComponent(upiConfig.upiName)}&am=${totalPrice}&cu=INR`;
   
-  const hasCustomQr = upiConfig.upiQrUrl && 
-                      upiConfig.upiQrUrl !== '' && 
-                      upiConfig.upiQrUrl !== '/upi-qr-code.jpg?v=2' && 
-                      upiConfig.upiQrUrl !== '/phonepe.jpeg';
-
-  const paymentQrImage = hasCustomQr 
-    ? `${upiConfig.upiQrUrl}${upiConfig.upiQrUrl.includes('?') ? '&' : '?'}t=${upiConfig.fetchTimestamp}`
-    : `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiPayload)}&qzone=1&format=png`;
+  const paymentQrImage = upiConfig.upiQrUrl && upiConfig.upiQrUrl !== ''
+    ? (upiConfig.upiQrUrl.startsWith('http')
+        ? `${upiConfig.upiQrUrl}${upiConfig.upiQrUrl.includes('?') ? '&' : '?'}t=${upiConfig.fetchTimestamp}`
+        : upiConfig.upiQrUrl)
+    : '/orq.jpeg';
 
   // QR code data for ticket validation
   const qrPayload = confirmedData

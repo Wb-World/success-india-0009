@@ -1,22 +1,12 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { verifyAdminSession as verifyAuthSession } from '@/lib/auth-server';
 
 export const dynamic = 'force-dynamic';
 
 async function verifyAdminSession(request: Request) {
-  const adminId = request.headers.get('x-admin-id');
-  if (!adminId) return null;
-
   try {
-    const { data, error } = await supabaseAdmin
-      .from('users')
-      .select('id, username, name, role')
-      .eq('id', adminId)
-      .eq('role', 'admin')
-      .maybeSingle();
-
-    if (error || !data) return null;
-    return data;
+    return await verifyAuthSession(request);
   } catch {
     return null;
   }

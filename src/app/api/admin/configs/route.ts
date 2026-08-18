@@ -17,7 +17,7 @@ export async function GET() {
         configs: [
           { key: 'upi_id', value: '8637684229-3@ybl' },
           { key: 'upi_name', value: 'david' },
-          { key: 'upi_qr_url', value: '/upi-qr-code.jpg?v=2' },
+          { key: 'upi_qr_url', value: '/orq.jpeg' },
 
           { key: 'contribution_upi_id', value: '8637684229-3@ybl' },
           { key: 'contribution_upi_name', value: 'david' },
@@ -40,7 +40,7 @@ export async function GET() {
         // Event Payment Settings
         { key: 'upi_id', value: findValue('upi_id', '8637684229-3@ybl') },
         { key: 'upi_name', value: findValue('upi_name', 'david') },
-        { key: 'upi_qr_url', value: findValue('upi_qr_url', '/upi-qr-code.jpg?v=2') },
+        { key: 'upi_qr_url', value: findValue('upi_qr_url', '/orq.jpeg') },
 
         // Contribution Payment Settings
         { key: 'contribution_upi_id', value: findValue('contribution_upi_id', '8637684229-3@ybl') },

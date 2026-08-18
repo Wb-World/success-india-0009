@@ -28,7 +28,7 @@ export default function ContributionPage() {
   const [upiConfig, setUpiConfig] = useState({ 
     upiId: '8637684229-3@ybl', 
     upiName: 'david', 
-    upiQrUrl: '/upi-qr-code.jpg?v=2' 
+    upiQrUrl: '/orq.jpeg' 
   });
 
   // Fetch Live UPI configurations on mount

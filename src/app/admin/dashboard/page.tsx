@@ -321,15 +321,47 @@ export default function AdminDashboard() {
     }
   };
 
+  const getEventScopedBookings = (list: any[], targetEvent?: any) => {
+    if (!targetEvent) return list;
+    const targetId = String(targetEvent.id || '').trim().toLowerCase();
+    const targetTitle = String(targetEvent.title || targetEvent.name || '').trim().toLowerCase();
+
+    return list.filter((b) => {
+      const bSeminarId = String(b.seminarId || '').trim().toLowerCase();
+      const bBusId = String(b.busId || '').trim().toLowerCase();
+      const bEventId = String(b.eventId || '').trim().toLowerCase();
+      const bSeminarName = String(b.seminarName || '').trim().toLowerCase();
+      const bBusName = String(b.busName || '').trim().toLowerCase();
+      const bEventName = String(b.eventName || '').trim().toLowerCase();
+      const bDestination = String(b.destination || '').trim().toLowerCase();
+
+      return (
+        (targetId && (bSeminarId === targetId || bBusId === targetId || bEventId === targetId)) ||
+        (targetTitle && (
+          bSeminarName === targetTitle ||
+          bBusName === targetTitle ||
+          bEventName === targetTitle ||
+          bDestination === targetTitle ||
+          bSeminarId === targetTitle ||
+          bBusId === targetTitle
+        ))
+      );
+    });
+  };
+
   const calculateStats = (list: any[]) => {
+    const activeEv = events.find((e: any) => e.status === 'active' && e.homepage_visible !== false) || events[0];
+    const nonContrib = list.filter((b: any) => !b.id.startsWith('SUP-') && !(b.seats && b.seats.includes('SUPPORTER')));
+    const scopedList = activeEv ? getEventScopedBookings(nonContrib, activeEv) : nonContrib;
+
     let rev = 0;
     let app = 0;
     let pend = 0;
     let den = 0;
 
-    list.forEach((b) => {
+    scopedList.forEach((b: any) => {
       if (b.status === 'approved') {
-        rev += b.totalPrice;
+        rev += b.totalPrice || 0;
         app++;
       } else if (b.status === 'pending') {
         pend++;
@@ -931,7 +963,18 @@ export default function AdminDashboard() {
 
   const handlePublishEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!adminUser?.id) return;
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+    let currentAdminId = adminUser?.id || '';
+    if (!currentAdminId && stored) {
+      try {
+        currentAdminId = JSON.parse(stored).id || '';
+      } catch (e) {}
+    }
+
+    if (!currentAdminId) {
+      setEventMessage('Admin session missing. Please log in again.');
+      return;
+    }
 
     setEventSaving(true);
     setEventMessage('');
@@ -990,7 +1033,7 @@ export default function AdminDashboard() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-id': adminUser.id,
+          'x-admin-id': currentAdminId,
         },
         body: JSON.stringify(bodyPayload),
       });
@@ -1405,7 +1448,9 @@ export default function AdminDashboard() {
     };
   };
 
-  const regStats = getStatsForList(eventBookings);
+  const currentActiveEvent = events.find(e => e.status === 'active' && e.homepage_visible !== false) || events[0];
+  const currentEventBookings = currentActiveEvent ? getEventScopedBookings(eventBookings, currentActiveEvent) : eventBookings;
+  const regStats = getStatsForList(currentEventBookings);
   const contribStats = getStatsForList(contributionBookings);
   const currentStats = adminSection === 'contributions' ? contribStats : regStats;
 
@@ -1584,74 +1629,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="container dashboard-content">
-
-        {/* Metric Cards Row */}
-        <div className="metrics-cards-grid animate-slide-up">
-          <div className="metric-card rev-card">
-            <div className="metric-card-accent"></div>
-            <div className="metric-card-content">
-              <div className="metric-info">
-                <span className="metric-label">{adminSection === 'contributions' ? 'Total Contribution Revenue' : 'Approved Revenue'}</span>
-                <h3 className="metric-value">₹{currentStats.totalRevenue.toLocaleString('en-IN')}</h3>
-              </div>
-              <div className="metric-icon-box rev">
-                <DollarSign size={28} />
-              </div>
-            </div>
-            <div className="metric-card-footer-info">
-              <span className="trend-text text-emerald">Live verified streams</span>
-            </div>
-          </div>
-
-          <div className="metric-card pend-card">
-            <div className="metric-card-accent"></div>
-            <div className="metric-card-content">
-              <div className="metric-info">
-                <span className="metric-label">{adminSection === 'contributions' ? 'Pending Contributions' : 'Pending Registrations'}</span>
-                <h3 className="metric-value text-amber">{currentStats.pendingCount}</h3>
-              </div>
-              <div className="metric-icon-box pend">
-                <Clock size={28} />
-              </div>
-            </div>
-            <div className="metric-card-footer-info">
-              <span className="trend-text text-amber">Awaiting confirmation</span>
-            </div>
-          </div>
-
-          <div className="metric-card app-card">
-            <div className="metric-card-accent"></div>
-            <div className="metric-card-content">
-              <div className="metric-info">
-                <span className="metric-label">{adminSection === 'contributions' ? 'Approved Contributions' : 'Confirmed Seats'}</span>
-                <h3 className="metric-value text-emerald">{currentStats.approvedCount}</h3>
-              </div>
-              <div className="metric-icon-box app">
-                <UserCheck size={28} />
-              </div>
-            </div>
-            <div className="metric-card-footer-info">
-              <span className="trend-text text-emerald">Active registrations</span>
-            </div>
-          </div>
-
-          <div className="metric-card den-card">
-            <div className="metric-card-accent"></div>
-            <div className="metric-card-content">
-              <div className="metric-info">
-                <span className="metric-label">{adminSection === 'contributions' ? 'Rejected Contributions' : 'Rejected Registrations'}</span>
-                <h3 className="metric-value text-red">{currentStats.deniedCount}</h3>
-              </div>
-              <div className="metric-icon-box den">
-                <X size={28} />
-              </div>
-            </div>
-            <div className="metric-card-footer-info">
-              <span className="trend-text text-red">Declined requests</span>
-            </div>
-          </div>
-        </div>
-
+        {/* Metric Cards Row - permanently removed from dashboard UI */}
         <div className="admin-section-tabs-container animate-slide-up">
           <div className="admin-section-tabs">
             <button

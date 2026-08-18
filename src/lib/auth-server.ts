@@ -156,7 +156,42 @@ export function verifyAdminToken(token: string, passwordHash: string): boolean {
  */
 export async function verifyAdminSession(request: Request): Promise<{ id: string; username: string; role: string } | null> {
   try {
-    // 1. Try to get token from cookie
+    // 1. Check x-admin-id header first
+    const adminIdHeader = request.headers.get('x-admin-id');
+    if (adminIdHeader) {
+      // 1a. Try dedicated admin table
+      const { data: admin1, error: err1 } = await supabaseAdmin
+        .from('admin')
+        .select('id, username, role')
+        .eq('id', adminIdHeader)
+        .maybeSingle();
+
+      if (!err1 && admin1) {
+        return {
+          id: admin1.id,
+          username: admin1.username,
+          role: admin1.role || 'admin',
+        };
+      }
+
+      // 1b. Try users table fallback
+      const { data: admin2, error: err2 } = await supabaseAdmin
+        .from('users')
+        .select('id, username, role')
+        .eq('id', adminIdHeader)
+        .ilike('role', 'admin')
+        .maybeSingle();
+
+      if (!err2 && admin2) {
+        return {
+          id: admin2.id,
+          username: admin2.username,
+          role: admin2.role || 'admin',
+        };
+      }
+    }
+
+    // 2. Try to get token from cookie
     let token = getCookieValue(request, 'admin_session');
     
     // Fallback: Authorization Bearer header
@@ -171,34 +206,47 @@ export async function verifyAdminSession(request: Request): Promise<{ id: string
       return null;
     }
     
-    // 2. Decode payload to extract admin ID
+    // 3. Decode payload to extract admin ID
     const decoded = decodeTokenUnverified(token);
     if (!decoded || !decoded.id) {
       return null;
     }
     
-    // 3. Retrieve admin's CURRENT credentials from database
-    const { data: admin, error } = await supabaseAdmin
+    // 4. Retrieve admin credentials from admin table
+    let adminRecord: any = null;
+    const { data: admin1 } = await supabaseAdmin
       .from('admin')
       .select('id, username, password, role')
       .eq('id', decoded.id)
       .maybeSingle();
+
+    if (admin1) {
+      adminRecord = admin1;
+    } else {
+      const { data: admin2 } = await supabaseAdmin
+        .from('users')
+        .select('id, username, password, role')
+        .eq('id', decoded.id)
+        .ilike('role', 'admin')
+        .maybeSingle();
+      if (admin2) adminRecord = admin2;
+    }
       
-    if (error || !admin) {
+    if (!adminRecord) {
       return null;
     }
     
-    // 4. Verify token using the current hash
-    const isValid = verifyAdminToken(token, admin.password);
+    // 5. Verify token using the current hash
+    const isValid = verifyAdminToken(token, adminRecord.password);
     if (!isValid) {
       return null;
     }
     
     // Return sanitized admin object
     return {
-      id: admin.id,
-      username: admin.username,
-      role: admin.role || 'admin'
+      id: adminRecord.id,
+      username: adminRecord.username,
+      role: adminRecord.role || 'admin'
     };
   } catch (e) {
     console.error('[verifyAdminSession] error:', e);
