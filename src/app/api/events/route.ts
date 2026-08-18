@@ -36,19 +36,23 @@ export async function GET(request: Request) {
     const date = searchParams.get('date');
     const eventId = searchParams.get('eventId');
 
-    let query = supabaseAdmin
-      .from('events')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const isAdmin = request.headers.get('x-admin-id') !== null;
 
     if (lastActive) {
-      const { data, error } = await supabaseAdmin
+      let lastActiveQuery = supabaseAdmin
         .from('events')
         .select('*')
-        .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
+
+      if (!isAdmin) {
+        lastActiveQuery = (lastActiveQuery as any)
+          .eq('status', 'active')
+          .or('homepage_visible.is.eq.true,homepage_visible.is.null');
+      }
+
+      const { data, error } = await lastActiveQuery;
 
       if (error) {
         console.error('Error fetching last active event:', error);
@@ -60,6 +64,17 @@ export async function GET(request: Request) {
       }
 
       return NextResponse.json({ event: data });
+    }
+
+    let query = supabaseAdmin
+      .from('events')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!isAdmin) {
+      query = query
+        .eq('status', 'active')
+        .or('homepage_visible.is.eq.true,homepage_visible.is.null');
     }
 
     if (eventId) {

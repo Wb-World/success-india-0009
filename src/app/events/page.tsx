@@ -137,7 +137,7 @@ export default function EventsPage() {
           <div className="events-empty-state">
             <Calendar size={52} className="events-empty-icon" />
             <h3>No Upcoming Events</h3>
-            <p>Check back soon — new events are published regularly.</p>
+            <p>Check back soon new events are published regularly.</p>
           </div>
         ) : (
           <div className="events-cards-grid">
