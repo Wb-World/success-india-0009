@@ -149,6 +149,19 @@ ON CONFLICT (id) DO UPDATE SET
 -- ── 8. DONE ───────────────────────────────────────────────────
 -- Schema setup complete! Your primary tables: users, events, bookings
 -- All API routes will now use the Supabase client in src/lib/supabase.ts
+
+-- ── EVENTS COLUMN MIGRATIONS ──────────────────────────────────
+-- Ensure all required columns exist on public.events
+ALTER TABLE public.events
+  ADD COLUMN IF NOT EXISTS homepage_visible BOOLEAN DEFAULT TRUE,
+  ADD COLUMN IF NOT EXISTS seats_per_row INTEGER DEFAULT 20,
+  ADD COLUMN IF NOT EXISTS total_rows INTEGER DEFAULT 15,
+  ADD COLUMN IF NOT EXISTS image_url TEXT DEFAULT NULL;
+
+-- Set homepage_visible = TRUE for existing events
+UPDATE public.events
+  SET homepage_visible = TRUE
+  WHERE homepage_visible IS NULL;
 -- Migration to update bookings schema for success team Official Event and Leadership Portal
 -- Run this in your Supabase SQL Editor to support detailed attendee details and QR payloads.
 
