@@ -63,7 +63,7 @@ function BookingEngine() {
     const eParam = searchParams.get('eventId');
 
     try {
-      const res = await fetch('/api/events');
+      const res = await fetch(`/api/events?t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       const fetchedEvents = res.ok
         ? (data.events || []).map((event: any) => ({
@@ -189,7 +189,8 @@ function BookingEngine() {
       try {
         const eventParam = eventIdVal ? `&eventId=${encodeURIComponent(eventIdVal)}` : '';
         const res = await fetch(
-          `/api/events?venue=${encodeURIComponent(venueVal)}&seminar=${encodeURIComponent(seminarVal)}&date=${encodeURIComponent(dateVal)}${eventParam}`
+          `/api/events?venue=${encodeURIComponent(venueVal)}&seminar=${encodeURIComponent(seminarVal)}&date=${encodeURIComponent(dateVal)}${eventParam}&t=${Date.now()}`,
+          { cache: 'no-store' }
         );
         const data = await res.json();
         if (res.ok) {
@@ -216,7 +217,11 @@ function BookingEngine() {
       {modalEvent && (
         <SeatBookingModal
           event={modalEvent}
-          onClose={() => setModalEvent(null)}
+          onClose={() => {
+            setModalEvent(null);
+            initializeBookingSearch();
+          }}
+          onBookingSuccess={initializeBookingSearch}
         />
       )}
 

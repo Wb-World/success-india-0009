@@ -1510,10 +1510,12 @@ export default function AdminDashboard() {
       const whatsapp = typeof val === 'object' && val !== null ? val.whatsapp : '';
       const vpName = b.bookerVpName || b.booker_vp_name || (typeof val === 'object' && val !== null ? val.vpName : '') || 'N/A';
       const lunch = typeof val === 'object' && val !== null ? val.lunch : 'Vegetarian';
+      const businessCenter = (typeof val === 'object' && val !== null ? (val.businessCenter || val.business_center) : '') || b.businessCenter || b.business_center || '';
       return {
         bookingId: b.id.toUpperCase(),
         seat,
         name: name || 'N/A',
+        businessCenter: businessCenter || '—',
         phone: phone || 'N/A',
         whatsapp: whatsapp || 'N/A',
         vpName: vpName || 'N/A',
@@ -1547,6 +1549,7 @@ export default function AdminDashboard() {
     'Booking Ref': a.bookingId,
     'Seat No': a.seat,
     'Attendee Name': a.name,
+    'Business Center': a.businessCenter,
     'WhatsApp Number': a.whatsapp,
     'VP Name': a.vpName,
     'Event/Program': a.event
@@ -3094,6 +3097,7 @@ export default function AdminDashboard() {
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Booking Ref</th>
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Seat No</th>
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Attendee Name</th>
+                    <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Business Center</th>
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>WhatsApp Number</th>
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>VP Name</th>
                     <th style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>Event/Program</th>
@@ -3101,13 +3105,14 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {eventFilteredAttendees.length === 0 ? (
-                    <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No attendees found</td></tr>
+                    <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No attendees found</td></tr>
                   ) : (
                     eventFilteredAttendees.map((attendee, idx) => (
                       <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
                         <td style={{ padding: '1rem', fontWeight: 600, border: '1px solid #e2e8f0' }}>{attendee.bookingId}</td>
                         <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.seat}</td>
                         <td style={{ padding: '1rem', fontWeight: 500, border: '1px solid #e2e8f0' }}>{attendee.name}</td>
+                        <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.businessCenter}</td>
                         <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.whatsapp}</td>
                         <td style={{ padding: '1rem', fontStyle: 'italic', color: '#64748b', border: '1px solid #e2e8f0' }}>{attendee.vpName}</td>
                         <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>{attendee.event}</td>

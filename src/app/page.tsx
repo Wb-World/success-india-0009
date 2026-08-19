@@ -226,32 +226,32 @@ export default function Home() {
     );
   };
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const res = await fetch('/api/events');
-        const data = await res.json();
-        if (!res.ok) return;
+  const fetchEvents = async () => {
+    try {
+      const res = await fetch(`/api/events?t=${Date.now()}`, { cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) return;
 
-        const fetchedEvents: SeminarEvent[] = (data.events || []).map((event: any) => ({
-          ...event,
-          legacySource: event.venue,
-          legacyDestination: event.title,
-        }));
-        setEvents(fetchedEvents);
+      const fetchedEvents: SeminarEvent[] = (data.events || []).map((event: any) => ({
+        ...event,
+        legacySource: event.venue,
+        legacyDestination: event.title,
+      }));
+      setEvents(fetchedEvents);
 
-        if (fetchedEvents.length > 0) {
-          const firstEvent = fetchedEvents[0];
-          setSelectedEventId(firstEvent.id);
-          setVenue(firstEvent.venue || firstEvent.legacySource || fallbackLocations[0]);
-          setSeminar(firstEvent.title || firstEvent.name || fallbackEventCategories[0]);
-          if (firstEvent.eventDate) setDate(firstEvent.eventDate);
-        }
-      } catch (error) {
-        console.error('Unable to fetch seminar events:', error);
+      if (fetchedEvents.length > 0) {
+        const firstEvent = fetchedEvents[0];
+        setSelectedEventId(firstEvent.id);
+        setVenue(firstEvent.venue || firstEvent.legacySource || fallbackLocations[0]);
+        setSeminar(firstEvent.title || firstEvent.name || fallbackEventCategories[0]);
+        if (firstEvent.eventDate) setDate(firstEvent.eventDate);
       }
-    };
+    } catch (error) {
+      console.error('Unable to fetch seminar events:', error);
+    }
+  };
 
+  useEffect(() => {
     fetchEvents();
   }, []);
 
@@ -350,7 +350,11 @@ export default function Home() {
       {modalEvent && (
         <SeatBookingModal
           event={modalEvent}
-          onClose={() => setModalEvent(null)}
+          onClose={() => {
+            setModalEvent(null);
+            fetchEvents();
+          }}
+          onBookingSuccess={fetchEvents}
         />
       )}
 

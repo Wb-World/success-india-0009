@@ -29,75 +29,79 @@ export default function EventsPage() {
   const PRIMARY_EVENT_TITLE = "SUCCESS TEAM MEGA MASS EDUCATIONAL TRAINING";
   const PRIMARY_EVENT_ID = "seminar_mega_mass_2026";
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        // Pass the frontend-override title so server-side seat counting can match
-        // bookings that stored destination = this title (even if DB event title differs)
-        const res = await fetch(`/api/events?displayTitle=${encodeURIComponent(PRIMARY_EVENT_TITLE)}`);
-        const data = await res.json();
-        if (res.ok) {
-          let list = data.events || [];
-          const dbTotalEventsCount = data.dbTotalEventsCount ?? 0;
-          if (list.length === 0 && dbTotalEventsCount === 0) {
-            let bookedCount = 0;
-            try {
-              const bookedRes = await fetch(`/api/bookings?eventId=${encodeURIComponent(PRIMARY_EVENT_ID)}`);
-              if (bookedRes.ok) {
-                const bookedData = await bookedRes.json();
-                bookedCount = Array.isArray(bookedData.seats) ? bookedData.seats.length : 0;
-              }
-            } catch {
-              bookedCount = 0;
+  const fetchEvents = async () => {
+    try {
+      // Pass the frontend-override title so server-side seat counting can match
+      // bookings that stored destination = this title (even if DB event title differs)
+      const res = await fetch(`/api/events?displayTitle=${encodeURIComponent(PRIMARY_EVENT_TITLE)}&t=${Date.now()}`, {
+        cache: 'no-store'
+      });
+      const data = await res.json();
+      if (res.ok) {
+        let list = data.events || [];
+        const dbTotalEventsCount = data.dbTotalEventsCount ?? 0;
+        if (list.length === 0 && dbTotalEventsCount === 0) {
+          let bookedCount = 0;
+          try {
+            const bookedRes = await fetch(`/api/bookings?eventId=${encodeURIComponent(PRIMARY_EVENT_ID)}&t=${Date.now()}`, {
+              cache: 'no-store'
+            });
+            if (bookedRes.ok) {
+              const bookedData = await bookedRes.json();
+              bookedCount = Array.isArray(bookedData.seats) ? bookedData.seats.length : 0;
             }
+          } catch {
+            bookedCount = 0;
+          }
 
-            list = [
-              {
-                id: PRIMARY_EVENT_ID,
+          list = [
+            {
+              id: PRIMARY_EVENT_ID,
+              title: PRIMARY_EVENT_TITLE,
+              name: PRIMARY_EVENT_TITLE,
+              venue: "Hotel Chennai Deluxe",
+              eventDate: "2026-06-28",
+              eventTime: "09:00 AM",
+              price: 1000,
+              totalSeats: 300,
+              bookedCount,
+              availableSeats: Math.max(0, 300 - bookedCount),
+            }
+          ];
+        } else {
+          list = list.map((ev: any) => {
+            if (ev.id === PRIMARY_EVENT_ID || ev.id === 'seminar_101') {
+              return {
+                ...ev,
                 title: PRIMARY_EVENT_TITLE,
                 name: PRIMARY_EVENT_TITLE,
                 venue: "Hotel Chennai Deluxe",
                 eventDate: "2026-06-28",
                 eventTime: "09:00 AM",
-                price: 1000,
-                totalSeats: 300,
-                bookedCount,
-                availableSeats: Math.max(0, 300 - bookedCount),
-              }
-            ];
-          } else {
-            list = list.map((ev: any) => {
-              if (ev.id === PRIMARY_EVENT_ID || ev.id === 'seminar_101') {
-                return {
-                  ...ev,
-                  title: PRIMARY_EVENT_TITLE,
-                  name: PRIMARY_EVENT_TITLE,
-                  venue: "Hotel Chennai Deluxe",
-                  eventDate: "2026-06-28",
-                  eventTime: "09:00 AM",
-                  totalSeats: ev.totalSeats || 300,
-                  // bookedCount and availableSeats come from server — preserve them
-                  bookedCount: ev.bookedCount ?? 0,
-                  availableSeats: ev.availableSeats !== undefined ? ev.availableSeats : Math.max(0, (ev.totalSeats || 300) - (ev.bookedCount || 0)),
-                };
-              }
-              return {
-                ...ev,
                 totalSeats: ev.totalSeats || 300,
+                // bookedCount and availableSeats come from server — preserve them
                 bookedCount: ev.bookedCount ?? 0,
                 availableSeats: ev.availableSeats !== undefined ? ev.availableSeats : Math.max(0, (ev.totalSeats || 300) - (ev.bookedCount || 0)),
               };
-            });
-          }
-          setEvents(list);
+            }
+            return {
+              ...ev,
+              totalSeats: ev.totalSeats || 300,
+              bookedCount: ev.bookedCount ?? 0,
+              availableSeats: ev.availableSeats !== undefined ? ev.availableSeats : Math.max(0, (ev.totalSeats || 300) - (ev.bookedCount || 0)),
+            };
+          });
         }
-      } catch (err) {
-        console.error('Failed to fetch events:', err);
-      } finally {
-        setLoading(false);
+        setEvents(list);
       }
-    };
+    } catch (err) {
+      console.error('Failed to fetch events:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchEvents();
     // Poll every 30 seconds to keep seat count live
     const interval = setInterval(fetchEvents, 30000);
@@ -108,7 +112,14 @@ export default function EventsPage() {
     <AuthGuard>
       <div className="events-page">
       {modalEvent && (
-        <SeatBookingModal event={modalEvent} onClose={() => setModalEvent(null)} />
+        <SeatBookingModal
+          event={modalEvent}
+          onClose={() => {
+            setModalEvent(null);
+            fetchEvents();
+          }}
+          onBookingSuccess={fetchEvents}
+        />
       )}
 
       {/* Hero Banner */}
@@ -176,14 +187,13 @@ export default function EventsPage() {
                     </div>
                   )}
                   {event.totalSeats && (() => {
-                    const total = event.totalSeats || 0;
-                    const booked = event.bookedCount || 0;
-                    // availableSeats from API (server-computed) takes priority; fallback to calculation
-                    const available = (event.availableSeats !== undefined && event.availableSeats < total)
-                      ? event.availableSeats
-                      : Math.max(0, total - booked);
+                    const total = Number(event.totalSeats) || 0;
+                    const available = event.availableSeats !== undefined
+                      ? Number(event.availableSeats)
+                      : Math.max(0, total - (Number(event.bookedCount) || 0));
+                    const booked = Math.max(0, total - available);
                     const pct = total > 0 ? Math.min(100, Math.round((booked / total) * 100)) : 0;
-                    const isLow = available <= 30;
+                    const isLow = available <= 30 && available > 0;
                     return (
                       <div className="seat-availability-block">
                         <div className="event-meta-row" style={{ marginBottom: '6px' }}>
@@ -204,7 +214,7 @@ export default function EventsPage() {
                             }}
                           />
                         </div>
-                        {isLow && available > 0 && (
+                        {isLow && (
                           <span className="seats-low-warning">⚡ Only {available} left!</span>
                         )}
                         {available === 0 && (

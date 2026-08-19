@@ -32,11 +32,16 @@ export async function GET(request: Request) {
     let takenSeats: string[] = [];
     let querySucceeded = false;
 
+    const isPrimaryEvent = eventId === 'seminar_101' || eventId === 'seminar_mega_mass_2026';
+    const orFilter = isPrimaryEvent
+      ? `seminar_id.eq.seminar_101,seminar_id.eq.seminar_mega_mass_2026,bus_id.eq.seminar_101,bus_id.eq.seminar_mega_mass_2026`
+      : `seminar_id.eq.${eventId},bus_id.eq.${eventId}`;
+
     try {
       const { data, error } = await supabaseAdmin
         .from('bookings')
         .select('seats')
-        .or(`seminar_id.eq.${eventId},bus_id.eq.${eventId}`)
+        .or(orFilter)
         .in('status', ['approved', 'pending']);
 
       if (!error) {
@@ -52,11 +57,11 @@ export async function GET(request: Request) {
 
     // ── Fallback: bus_id only (older schema) ─────────────────────────────────
     if (!querySucceeded) {
-      const { data, error } = await supabaseAdmin
-        .from('bookings')
-        .select('seats')
-        .eq('bus_id', eventId)
-        .in('status', ['approved', 'pending']);
+      const fbQuery = isPrimaryEvent
+        ? supabaseAdmin.from('bookings').select('seats').in('bus_id', ['seminar_101', 'seminar_mega_mass_2026']).in('status', ['approved', 'pending'])
+        : supabaseAdmin.from('bookings').select('seats').eq('bus_id', eventId).in('status', ['approved', 'pending']);
+
+      const { data, error } = await fbQuery;
 
       if (error) {
         console.error('[bookings GET] fallback query failed:', error);
@@ -88,16 +93,26 @@ export async function GET(request: Request) {
 
     if (!excludeBlocked || !isAuthorizedAdmin) {
       try {
+        const configKeys = isPrimaryEvent
+          ? [`blocked_seats_${eventId}`, `blocked_seats_seminar_mega_mass_2026`, `blocked_seats_seminar_101`]
+          : [`blocked_seats_${eventId}`];
+
         const { data: configData, error: configError } = await supabaseAdmin
           .from('configs')
           .select('value')
-          .eq('key', `blocked_seats_${eventId}`)
-          .maybeSingle();
-        if (!configError && configData?.value) {
-          const parsed = JSON.parse(configData.value);
-          if (Array.isArray(parsed)) {
-            blockedSeats = parsed;
-          }
+          .in('key', configKeys);
+
+        if (!configError && configData && configData.length > 0) {
+          configData.forEach((c: any) => {
+            if (c.value) {
+              try {
+                const parsed = JSON.parse(c.value);
+                if (Array.isArray(parsed)) {
+                  blockedSeats.push(...parsed);
+                }
+              } catch {}
+            }
+          });
         }
       } catch (e) {
         console.warn('[bookings GET] failed to fetch blocked seats:', e);
@@ -105,7 +120,16 @@ export async function GET(request: Request) {
     }
 
     const mergedSeats = Array.from(new Set([...uniqueSeats, ...blockedSeats]));
-    return NextResponse.json({ seats: mergedSeats });
+    return NextResponse.json(
+      { seats: mergedSeats },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      }
+    );
   } catch (err: any) {
     console.error('Error in GET /api/bookings:', err);
     return NextResponse.json({ error: err.message || 'An error occurred' }, { status: 500 });

@@ -56,10 +56,11 @@ type EventData = {
 type Props = {
   event: EventData;
   onClose: () => void;
+  onBookingSuccess?: () => void;
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function SeatBookingModal({ event, onClose }: Props) {
+export default function SeatBookingModal({ event, onClose, onBookingSuccess }: Props) {
   const { rows, seatsPerRow, allSeats, totalSeats } = getEventSeatLayout(event);
   const [quantity, setQuantity] = useState(2);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
@@ -182,7 +183,9 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
     const fetchBookedSeats = async () => {
       try {
-        const res = await fetch(`/api/bookings?eventId=${encodeURIComponent(event.id)}`);
+        const res = await fetch(`/api/bookings?eventId=${encodeURIComponent(event.id)}&t=${Date.now()}`, {
+          cache: 'no-store'
+        });
         if (res.ok) {
           const data = await res.json();
           setAlreadyBookedSeats(data.seats || []);
@@ -357,7 +360,9 @@ export default function SeatBookingModal({ event, onClose }: Props) {
 
     // Dynamic pre-booking validation check
     try {
-      const checkRes = await fetch(`/api/bookings?eventId=${encodeURIComponent(event.id)}`);
+      const checkRes = await fetch(`/api/bookings?eventId=${encodeURIComponent(event.id)}&t=${Date.now()}`, {
+        cache: 'no-store'
+      });
       if (checkRes.ok) {
         const checkData = await checkRes.json();
         const latestBooked = checkData.seats || [];
@@ -442,12 +447,19 @@ export default function SeatBookingModal({ event, onClose }: Props) {
         throw new Error(data.error || 'Server rejected the booking request');
       }
 
+      // Immediately mark newly booked seats as booked in local modal state
+      setAlreadyBookedSeats((prev) => Array.from(new Set([...prev, ...selectedSeats])));
+      setBookedSeats((prev) => Array.from(new Set([...prev, ...selectedSeats])));
+
       setBookingId(newBookingId);
       setBookingTimestamp(ts);
       setConfirmedData({ id: newBookingId, seats: selectedSeats, totalPrice, timestamp: ts, attendees: attendeesObj });
       setBookingStatus('pending');
       setIsSubmitting(false);
       setStep('success');
+
+      // Notify parent component immediately to refresh event seat count / listings
+      onBookingSuccess?.();
 
       // Start polling for admin approval notification
       const pollInterval = setInterval(async () => {

@@ -114,42 +114,114 @@ export async function GET(request: Request) {
       allEvents = allEvents.filter((e: any) => e.homepage_visible !== false);
     }
 
-    // Fetch bookings to compute booked seat counts
-    let bookingsMap: Record<string, number> = {};
+    // Fetch bookings and configs to compute booked seat counts
+    let allBookings: any[] = [];
     try {
-      const { data: bookingsData } = await supabaseAdmin
+      const { data: bookingsData, error: bError } = await supabaseAdmin
         .from('bookings')
-        .select('seminar_id, seminar_name, destination, seats, status')
-        .in('status', ['approved', 'pending']);
+        .select('*');
 
-      if (bookingsData) {
-        bookingsData.forEach((b: any) => {
-          const seatCount = Array.isArray(b.seats) ? b.seats.length : 0;
-          const key1 = b.seminar_id;
-          const key2 = b.seminar_name ? String(b.seminar_name).trim().toLowerCase() : '';
-          const key3 = b.destination ? String(b.destination).trim().toLowerCase() : '';
-
-          if (key1) bookingsMap[key1] = (bookingsMap[key1] || 0) + seatCount;
-          if (key2) bookingsMap[key2] = (bookingsMap[key2] || 0) + seatCount;
-          if (key3 && key3 !== key2) bookingsMap[key3] = (bookingsMap[key3] || 0) + seatCount;
+      if (!bError && bookingsData) {
+        // Filter out cancelled / rejected / denied bookings
+        allBookings = bookingsData.filter((b: any) => {
+          const st = String(b.status || '').toLowerCase().trim();
+          return st !== 'cancelled' && st !== 'rejected' && st !== 'denied';
         });
       }
     } catch (bErr) {
       console.warn('Unable to aggregate booking counts for events:', bErr);
     }
 
+    // Fetch blocked seats configs
+    let configsMap: Record<string, string[]> = {};
+    try {
+      const { data: configRows } = await supabaseAdmin
+        .from('configs')
+        .select('key, value');
+      if (configRows) {
+        configRows.forEach((c: any) => {
+          if (c.key && c.value) {
+            try {
+              const parsed = JSON.parse(c.value);
+              if (Array.isArray(parsed)) {
+                configsMap[c.key] = parsed;
+              }
+            } catch {}
+          }
+        });
+      }
+    } catch (cErr) {
+      console.warn('Unable to load configs for blocked seats:', cErr);
+    }
+
     const formattedEvents = allEvents.map((e: any) => {
-      const idCount = bookingsMap[e.id] || 0;
-      const titleCount = bookingsMap[String(e.title || '').trim().toLowerCase()] || 0;
-      const totalBooked = Math.max(idCount, titleCount);
+      const eId = String(e.id || '').trim().toLowerCase();
+      const eTitle = String(e.title || e.name || '').trim().toLowerCase();
+      const isPrimary = eId === 'seminar_101' || eId === 'seminar_mega_mass_2026';
+      const dispTitleNorm = displayTitle ? String(displayTitle).trim().toLowerCase() : '';
+
+      const seatSet = new Set<string>();
+
+      allBookings.forEach((b: any) => {
+        const bSemId = String(b.seminar_id || '').trim().toLowerCase();
+        const bBusId = String(b.bus_id || '').trim().toLowerCase();
+        const bDest = String(b.destination || '').trim().toLowerCase();
+        const bSemName = String(b.seminar_name || '').trim().toLowerCase();
+        const bBusName = String(b.bus_name || '').trim().toLowerCase();
+
+        let matches = false;
+        if (bSemId && bSemId === eId) matches = true;
+        else if (bBusId && bBusId === eId) matches = true;
+        else if (isPrimary && (bSemId === 'seminar_101' || bSemId === 'seminar_mega_mass_2026' || bBusId === 'seminar_101' || bBusId === 'seminar_mega_mass_2026')) matches = true;
+        else if (eTitle && bDest && bDest === eTitle) matches = true;
+        else if (eTitle && bSemName && bSemName === eTitle) matches = true;
+        else if (eTitle && bBusName && bBusName === eTitle) matches = true;
+        else if (isPrimary && dispTitleNorm && (bDest === dispTitleNorm || bSemName === dispTitleNorm)) matches = true;
+
+        if (matches) {
+          if (Array.isArray(b.seats)) {
+            b.seats.forEach((s: any) => {
+              const str = String(s || '').trim();
+              if (str) seatSet.add(str);
+            });
+          } else if (typeof b.seats === 'string' && b.seats.trim()) {
+            b.seats.split(',').forEach((s: string) => {
+              const str = s.trim();
+              if (str) seatSet.add(str);
+            });
+          }
+        }
+      });
+
+      // Include admin blocked seats if any
+      const blockedKeys = isPrimary
+        ? [`blocked_seats_${e.id}`, `blocked_seats_seminar_mega_mass_2026`, `blocked_seats_seminar_101`]
+        : [`blocked_seats_${e.id}`];
+
+      blockedKeys.forEach(k => {
+        if (configsMap[k]) {
+          configsMap[k].forEach(s => {
+            const str = String(s || '').trim();
+            if (str) seatSet.add(str);
+          });
+        }
+      });
+
+      const totalBooked = seatSet.size;
       return formatEvent(e, totalBooked);
     });
 
+    const responseHeaders = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    };
+
     if (lastActive) {
       if (formattedEvents.length === 0) {
-        return NextResponse.json({ event: null });
+        return NextResponse.json({ event: null }, { headers: responseHeaders });
       }
-      return NextResponse.json({ event: formattedEvents[0] });
+      return NextResponse.json({ event: formattedEvents[0] }, { headers: responseHeaders });
     }
 
     let resultEvents = formattedEvents;
@@ -160,7 +232,10 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.json({ events: resultEvents, dbTotalEventsCount: resultEvents.length });
+    return NextResponse.json(
+      { events: resultEvents, dbTotalEventsCount: formattedEvents.length },
+      { headers: responseHeaders }
+    );
   } catch (err: any) {
     console.error('Events GET error:', err);
     return NextResponse.json({ error: err.message || String(err) }, { status: 500 });
