@@ -1936,13 +1936,6 @@ export default function AdminDashboard() {
                               </div>
                               <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Tap to view full size</span>
                             </div>
-                          ) : b.screenshot && b.screenshot.startsWith('UTR:') ? (
-                            <div className="utr-content-wrapper">
-                              <span className="utr-label-admin">UPI Transaction ID (UTR)</span>
-                              <span className="utr-value-admin">
-                                {b.screenshot.split('|')[0].replace('UTR:', '')}
-                              </span>
-                            </div>
                           ) : (
                             <div className="utr-missing-badge">
                               <span>⚠️ Payment Proof Missing</span>
@@ -2420,10 +2413,6 @@ export default function AdminDashboard() {
                         const totalAmount = b.totalPrice;
                         const gstAmount = totalAmount > baseAmount ? (designation === 'Chief Executive Director' ? 180 : 90) : 0;
 
-                        const utrNumber = b.screenshot && b.screenshot.startsWith('UTR:') 
-                          ? b.screenshot.split('|')[0].replace('UTR:', '') 
-                          : b.utrNumber || 'N/A';
-
                         return (
                           <div key={b.id} className={`stream-item-card glass-card ${b.status} hover-glow-card`}>
                             <div className="item-card-header">
@@ -2487,22 +2476,30 @@ export default function AdminDashboard() {
                                 </div>
                               </div>
 
-                              {/* Pane 3: UTR Verification */}
+                              {/* Pane 3: Payment Verification */}
                               <div className="card-pane payment-pane">
                                 <h4 className="pane-section-title">
                                   <CreditCard size={14} /> Verification Details
                                 </h4>
                                 
-                                <div className="utr-display-box" style={{ marginBottom: '1rem' }}>
-                                  <div className="utr-content-wrapper">
-                                    <span className="utr-label-admin">UPI Transaction ID (UTR)</span>
-                                    <span className="utr-value-admin">{utrNumber}</span>
-                                  </div>
+                                <div className="utr-display-box">
+                                  {b.screenshot && !b.screenshot.startsWith('UTR:') && b.screenshot !== 'DIRECT_BOOKING' && b.screenshot !== 'SCREENSHOT_UPLOADED' ? (
+                                    <div className="utr-content-wrapper" style={{ flexDirection: 'column', gap: '0.5rem' }}>
+                                      <span className="utr-label-admin">Payment Screenshot</span>
+                                      <div 
+                                        style={{ width: '120px', height: '160px', borderRadius: '8px', border: '1px solid #d1d5db', overflow: 'hidden', cursor: 'pointer' }}
+                                        onClick={() => setZoomedImage(b.screenshot)}
+                                      >
+                                        <img src={b.screenshot} alt="Payment Screenshot" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      </div>
+                                      <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Tap to view full size</span>
+                                    </div>
+                                  ) : (
+                                    <div className="utr-missing-badge">
+                                      <span>⚠️ Payment Proof Missing</span>
+                                    </div>
+                                  )}
                                 </div>
-                                
-                                <p className="utr-admin-hint">
-                                  Ensure the UTR matches the bank statements before approving contribution credentials.
-                                </p>
                               </div>
                             </div>
 
@@ -3661,31 +3658,21 @@ export default function AdminDashboard() {
               {/* Payment Verification */}
               <div style={{ background: '#f9fafb', padding: '1rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
                 <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Payment Verification</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.88rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.88rem' }}>
                   <div>
-                    <span style={{ color: '#6b7280' }}>UTR Number: </span>
-                    <strong style={{ 
-                      fontSize: '0.95rem', 
-                      color: '#047857', 
-                      background: '#ecfdf5', 
-                      padding: '2px 8px', 
-                      borderRadius: '4px', 
-                      border: '1px solid #a7f3d0' 
-                    }}>
-                      {selectedContributionDetail.screenshot?.replace('UTR:', '') || selectedContributionDetail.utrNumber || 'N/A'}
-                    </strong>
-                  </div>
-                  <div style={{ marginTop: '0.5rem' }}>
-                    <span style={{ color: '#6b7280', display: 'block', marginBottom: '0.25rem' }}>Payment Screenshot:</span>
+                    <span style={{ color: '#6b7280', display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Payment Screenshot:</span>
                     {selectedContributionDetail.screenshot && !selectedContributionDetail.screenshot.startsWith('UTR:') ? (
-                      <div 
-                        style={{ width: '120px', height: '160px', borderRadius: '8px', border: '1px solid #d1d5db', overflow: 'hidden', cursor: 'pointer' }}
-                        onClick={() => setZoomedImage(selectedContributionDetail.screenshot)}
-                      >
-                        <img src={selectedContributionDetail.screenshot} alt="Payment Screenshot" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <div>
+                        <div 
+                          style={{ width: '140px', height: '180px', borderRadius: '8px', border: '1.5px solid #10b981', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 2px 8px rgba(16,185,129,0.15)' }}
+                          onClick={() => setZoomedImage(selectedContributionDetail.screenshot)}
+                        >
+                          <img src={selectedContributionDetail.screenshot} alt="Payment Screenshot" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '4px', display: 'inline-block' }}>Tap image to view full size</span>
                       </div>
                     ) : (
-                      <span style={{ color: '#6b7280', fontStyle: 'italic' }}>Verified via UTR reference ID (No screenshot uploaded)</span>
+                      <span style={{ color: '#b91c1c', fontStyle: 'italic', fontWeight: 500 }}>No payment screenshot uploaded</span>
                     )}
                   </div>
                 </div>

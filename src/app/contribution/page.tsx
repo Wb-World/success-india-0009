@@ -317,7 +317,7 @@ export default function ContributionPage() {
             <p className="payment-subtitle">Verify your supporter summary, scan the UPI QR code and submit your payment screenshot for verification.</p>
 
             <div className="payment-split">
-              {/* Left Panel: Summary & UTR input */}
+              {/* Left Panel: Summary & Payment Screenshot */}
               <div className="payment-left-panel">
                 <div className="summary-card" style={{ background: '#ffffff', borderColor: '#a7f3d0' }}>
                   <div className="summary-head" style={{ color: '#047857', borderBottomColor: '#ecfdf5' }}>Supporter Receipt Details</div>
@@ -369,11 +369,11 @@ export default function ContributionPage() {
                 </div>
 
                 {/* Payment Screenshot Upload Section */}
-                <div className="utr-section">
-                  <label className="utr-header">
+                <div className="payment-proof-section">
+                  <label className="payment-proof-header">
                     <span>Upload Payment Screenshot <span className="upload-required-badge">Required</span></span>
                   </label>
-                  <p className="utr-desc">
+                  <p className="payment-proof-desc">
                     After completing payment via GPay or any UPI app, <strong>upload a screenshot</strong> of your payment confirmation for verification.
                   </p>
                   {!paymentScreenshotUrl ? (
@@ -404,7 +404,7 @@ export default function ContributionPage() {
                       <div style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', border: '2px solid #10b981', maxWidth: '220px' }}>
                         <img src={paymentScreenshotUrl} alt="Payment Screenshot" style={{ width: '100%', display: 'block' }} />
                       </div>
-                      <div className="utr-valid-badge animate-fade-in">
+                      <div className="payment-proof-valid-badge animate-fade-in">
                         ✓ Screenshot uploaded — ready to submit for verification
                       </div>
                       <button
@@ -416,37 +416,20 @@ export default function ContributionPage() {
                       </button>
                     </div>
                   )}
-                  {formErrors.paymentScreenshot && <span className="utr-error-text">⚠️ {formErrors.paymentScreenshot}</span>}
+                  {formErrors.paymentScreenshot && <span className="payment-proof-error-text">⚠️ {formErrors.paymentScreenshot}</span>}
                 </div>
               </div>
 
-              {/* Right Panel: QR Code and Payee Details */}
-              <div className="payment-right-panel">
-                <div className="qr-container-box">
-                  <div className="qr-image-wrap">
-                    <img src={qrImageUrl} alt={`UPI QR Code for ₹${totalPrice}`} className="payment-qr-img" />
-                  </div>
-                  <div className="qr-pay-caption">Scan this UPI QR code to transfer ₹{totalPrice}</div>
-                </div>
-
-                <div className="upi-details-card">
-                  <h4 className="upi-details-title">Beneficiary Details</h4>
-                  <div className="upi-detail-row">
-                    <span className="upi-label">Merchant Name</span>
-                    <strong className="upi-value">{upiConfig.upiName}</strong>
-                  </div>
-                  <div className="upi-detail-row">
-                    <span className="upi-label">Payee UPI ID</span>
-                    <strong className="upi-value upi-id-value">{upiConfig.upiId}</strong>
-                  </div>
-                  <div className="upi-divider" style={{ borderTop: '1px dashed #e5e7eb', margin: '0.65rem 0' }} />
-                  <div className="upi-detail-row">
-                    <span className="upi-label">Amount Payable</span>
-                    <strong className="upi-value" style={{ color: '#10b981', fontSize: '1.1rem' }}>₹{totalPrice}</strong>
+                {/* Right Panel: QR Code */}
+                <div className="payment-right-panel">
+                  <div className="qr-container-box">
+                    <div className="qr-image-wrap">
+                      <img src={qrImageUrl} alt={`UPI QR Code for ₹${totalPrice}`} className="payment-qr-img" />
+                    </div>
+                    <div className="qr-pay-caption">Scan this UPI QR code to transfer ₹{totalPrice}</div>
                   </div>
                 </div>
               </div>
-            </div>
 
             <div className="confirm-actions" style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem', justifyContent: 'center', width: '100%' }}>
               <button 
@@ -605,8 +588,8 @@ export default function ContributionPage() {
                 <div className="contrib-step">
                   <div className="step-num">3</div>
                   <div>
-                    <h4>Share Your UTR</h4>
-                    <p>Send your 12-digit UTR transaction ID to our team via WhatsApp for confirmation.</p>
+                    <h4>Upload Payment Screenshot</h4>
+                    <p>Upload your payment screenshot after completing the UPI transfer to confirm your registration.</p>
                   </div>
                 </div>
               </div>
@@ -894,7 +877,7 @@ export default function ContributionPage() {
           border: 2px dashed #a7f3d0;
           background: #f0fdf4;
           border-radius: 14px;
-          min-height: 120px;
+          min-height: 180px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -920,33 +903,44 @@ export default function ContributionPage() {
           display: flex;
           flex-direction: column;
           align-items: center;
+          justify-content: center;
           text-align: center;
-          padding: 1.5rem;
+          padding: 2rem 1.5rem;
           cursor: pointer;
+          width: 100%;
+          height: 100%;
         }
 
         .uploader-icon-wrap {
           color: #10b981;
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.75rem;
+          background: #dcfce7;
+          width: 52px;
+          height: 52px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .uploader-title {
-          font-size: 0.88rem;
+          font-size: 0.95rem;
           font-weight: 700;
           color: #065f46;
         }
 
         .uploader-sub {
-          font-size: 0.75rem;
+          font-size: 0.78rem;
           color: #6b7280;
-          margin-top: 2px;
+          margin-top: 4px;
         }
 
         /* Image Preview Overlay */
         .image-preview-container {
           position: relative;
           width: 100%;
-          height: 130px;
+          height: 100%;
+          min-height: 180px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1142,8 +1136,8 @@ export default function ContributionPage() {
           color: #111827;
         }
 
-        /* UTR Input Section */
-        .utr-section {
+        /* Payment Proof Section */
+        .payment-proof-section {
           background: #ffffff;
           border: 1.5px solid #a7f3d0;
           border-radius: 16px;
@@ -1151,7 +1145,7 @@ export default function ContributionPage() {
           box-shadow: 0 2px 12px rgba(16, 185, 129, 0.06);
         }
 
-        .utr-header {
+        .payment-proof-header {
           display: flex;
           align-items: center;
           gap: 8px;
@@ -1177,80 +1171,18 @@ export default function ContributionPage() {
           margin-left: 6px;
         }
 
-        .utr-desc {
+        .payment-proof-desc {
           font-size: 0.82rem;
           color: #6b7280;
           margin-bottom: 1rem;
           line-height: 1.55;
         }
 
-        .utr-desc strong {
+        .payment-proof-desc strong {
           color: #111827;
         }
 
-        .utr-input-wrap {
-          display: flex;
-          align-items: center;
-          border: 2px solid #d1d5db;
-          border-radius: 10px;
-          padding: 0 0.85rem;
-          background: #f9fafb;
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .utr-input-wrap:focus-within {
-          border-color: #10b981;
-          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
-          background: #fff;
-        }
-
-        .utr-input-icon {
-          font-size: 1.1rem;
-          margin-right: 0.5rem;
-          flex-shrink: 0;
-        }
-
-        .utr-input-field {
-          width: 100%;
-          height: 46px;
-          border: none;
-          background: transparent;
-          font-size: 1.05rem;
-          font-weight: 700;
-          color: #111827;
-          outline: none;
-          letter-spacing: 0.08em;
-          font-family: 'Courier New', Courier, monospace;
-        }
-
-        .utr-input-field::placeholder {
-          font-family: inherit;
-          letter-spacing: normal;
-          font-weight: 400;
-          color: #9ca3af;
-          font-size: 0.85rem;
-        }
-
-        .utr-pips {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          margin-top: 0.6rem;
-        }
-
-        .char-pip {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: #e5e7eb;
-          transition: background-color 0.15s;
-        }
-
-        .char-pip-filled {
-          background: #10b981;
-        }
-
-        .utr-error-text {
+        .payment-proof-error-text {
           display: block;
           margin-top: 0.6rem;
           font-size: 0.78rem;
@@ -1258,7 +1190,7 @@ export default function ContributionPage() {
           font-weight: 600;
         }
 
-        .utr-valid-badge {
+        .payment-proof-valid-badge {
           margin-top: 0.65rem;
           background: #ecfdf5;
           border: 1px solid #a7f3d0;

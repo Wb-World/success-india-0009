@@ -153,10 +153,8 @@ export default function SeatBookingModal({ event, onClose }: Props) {
   };
 
 
-  // Payment configuration and UTR states
+  // Payment configuration
   const [upiConfig, setUpiConfig] = useState({ upiId: '8637684229-3@ybl', upiName: 'david', upiQrUrl: '', fetchTimestamp: 0 });
-  const [utrNumber, setUtrNumber] = useState<string>('');
-  const [utrError, setUtrError] = useState<string | null>(null);
 
   // Approval notification state
   const [approvalNotification, setApprovalNotification] = useState<{ show: boolean; status: 'approved' | 'denied' | null; bookingRef: string }>({ show: false, status: null, bookingRef: '' });
@@ -1460,11 +1458,11 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                 </div>
 
                 {/* Payment Screenshot Upload Section */}
-                <div className="utr-section">
-                  <label className="utr-header">
+                <div className="payment-proof-section">
+                  <label className="payment-proof-header">
                     <span>Upload Payment Screenshot <span className="upload-required-badge">Required</span></span>
                   </label>
-                  <p className="utr-desc">
+                  <p className="payment-proof-desc">
                     After completing payment via GPay or any UPI app, <strong>upload a screenshot</strong> of your payment confirmation for verification.
                   </p>
                   {!paymentScreenshotUrl ? (
@@ -1522,7 +1520,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={paymentScreenshotUrl} alt="Payment Screenshot" style={{ width: '100%', display: 'block' }} />
                       </div>
-                      <div className="utr-valid-badge animate-fade-in">
+                      <div className="payment-proof-valid-badge animate-fade-in">
                         ✓ Screenshot uploaded — your booking will go to admin for verification
                       </div>
                       <button
@@ -1537,40 +1535,14 @@ export default function SeatBookingModal({ event, onClose }: Props) {
                 </div>
               </div>
 
-              {/* Right: QR Code and Account Info */}
+              {/* Right: QR Code */}
               <div className="payment-right-panel">
-                {/* Professional event image placement */}
-                {/* <div className="payment-event-img-wrap">
-                  <img src={eventBanner} alt="Event" className="payment-event-img" />
-                </div> */}
-
                 <div className="qr-container-box">
                   <div className="qr-image-wrap">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={paymentQrImage} alt={`UPI QR Code for ₹${basePrice}`} className="payment-qr-img" />
                   </div>
                   <div className="qr-pay-caption">Scan the QR code and complete the payment.</div>
-                </div>
-
-                <div className="upi-details-card">
-                  <h4 className="upi-details-title">Beneficiary Details</h4>
-                  <div className="upi-detail-row">
-                    <span className="upi-label">Merchant Name</span>
-                    <strong className="upi-value">{upiConfig.upiName}</strong>
-                  </div>
-                  <div className="upi-detail-row">
-                    <span className="upi-label">Payee UPI ID</span>
-                    <strong className="upi-value upi-id-value">{upiConfig.upiId}</strong>
-                  </div>
-                  <div className="upi-divider" style={{ borderTop: '1px dashed #e5e7eb', margin: '0.65rem 0' }} />
-                  <div className="upi-detail-row">
-                    <span className="upi-label">Base Amount</span>
-                    <strong className="upi-value">₹{basePrice}</strong>
-                  </div>
-                  <div className="upi-detail-row">
-                    <span className="upi-label">Payable Amount</span>
-                    <strong className="upi-value" style={{ color: '#10b981', fontSize: '1.05rem' }}>₹{totalPrice}</strong>
-                  </div>
                 </div>
               </div>
             </div>
@@ -2812,8 +2784,8 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           gap: 1.25rem;
         }
 
-        /* UTR Input Section */
-        .utr-section {
+        /* Payment Proof Section */
+        .payment-proof-section {
           background: #ffffff;
           border: 1.5px solid #a7f3d0;
           border-radius: 14px;
@@ -2821,7 +2793,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           box-shadow: 0 2px 12px rgba(16, 185, 129, 0.06);
         }
 
-        .utr-header {
+        .payment-proof-header {
           display: flex;
           align-items: center;
           gap: 8px;
@@ -2848,68 +2820,18 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           vertical-align: middle;
         }
 
-        .utr-desc {
+        .payment-proof-desc {
           font-size: 0.82rem;
           color: #6b7280;
           margin-bottom: 1rem;
           line-height: 1.55;
         }
 
-        .utr-desc strong {
+        .payment-proof-desc strong {
           color: #111827;
         }
 
-        .utr-input-wrap {
-          display: flex;
-          align-items: center;
-          border: 2px solid #d1d5db;
-          border-radius: 10px;
-          padding: 0 0.85rem;
-          background: #f9fafb;
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .utr-input-wrap:focus-within {
-          border-color: #10b981;
-          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
-          background: #fff;
-        }
-
-        .utr-input-icon {
-          font-size: 1.2rem;
-          margin-right: 0.5rem;
-          flex-shrink: 0;
-        }
-
-        .utr-input-field {
-          width: 100%;
-          height: 48px;
-          border: none;
-          background: transparent;
-          font-size: 1.05rem;
-          font-weight: 700;
-          color: #111827;
-          outline: none;
-          letter-spacing: 0.08em;
-          font-family: 'Courier New', Courier, monospace;
-        }
-
-        .utr-input-field::placeholder {
-          font-family: inherit;
-          letter-spacing: normal;
-          font-weight: 400;
-          color: #9ca3af;
-          font-size: 0.85rem;
-        }
-
-        .utr-pips {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          margin-top: 0.6rem;
-        }
-
-        .utr-error-text {
+        .payment-proof-error-text {
           display: block;
           margin-top: 0.6rem;
           font-size: 0.78rem;
@@ -2917,7 +2839,7 @@ export default function SeatBookingModal({ event, onClose }: Props) {
           font-weight: 600;
         }
 
-        .utr-valid-badge {
+        .payment-proof-valid-badge {
           margin-top: 0.6rem;
           background: #ecfdf5;
           border: 1px solid #a7f3d0;
