@@ -6,6 +6,7 @@ data class GateAttendee(
     val seatLabel: String = "",
     val whatsapp: String = "",
     val lunch: String = "",
+    val businessCenter: String = "",
     val checkedIn: Boolean = false,
     val checkedInAt: String? = null,
     val checkedInBy: String? = null

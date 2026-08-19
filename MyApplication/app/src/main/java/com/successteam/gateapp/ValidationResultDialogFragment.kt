@@ -446,6 +446,16 @@ class ValidationResultDialogFragment : DialogFragment() {
             setPadding(0, dp(2), 0, 0)
         }
 
+        // Business Center — per-attendee, falls back to "Not specified" for legacy records
+        val bizCenterLabel = attendee.businessCenter.trim().ifBlank { "Not specified" }
+        val bizCenterText = TextView(context).apply {
+            text = "Business Center: $bizCenterLabel"
+            setTextColor(ContextCompat.getColor(context,
+                if (approved) R.color.primary_dark else R.color.muted))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+            setPadding(0, dp(3), 0, 0)
+        }
+
         val metaParts = mutableListOf<String>()
         if (approved) {
             val formattedTime = formatTime(attendee.checkedInAt)
@@ -511,6 +521,7 @@ class ValidationResultDialogFragment : DialogFragment() {
 
         textColumn.addView(seatText)
         textColumn.addView(nameText)
+        textColumn.addView(bizCenterText)
         if (metaParts.isNotEmpty()) {
             textColumn.addView(metaText)
         }

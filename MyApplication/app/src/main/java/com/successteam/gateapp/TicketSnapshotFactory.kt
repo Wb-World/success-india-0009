@@ -314,6 +314,7 @@ object TicketSnapshotFactory {
                 val name = obj.firstStringValue("name", fallback = "Guest")
                 val whatsapp = obj.firstStringValue("whatsapp", fallback = "")
                 val lunch = obj.firstStringValue("lunch", fallback = "")
+                val businessCenter = obj.firstStringValue("businessCenter", "business_center", fallback = "")
                 val checkedIn = if (obj.has("checkedIn")) obj.get("checkedIn").asBoolean else false
                 val checkedInAt = if (obj.has("checkedInAt") && !obj.get("checkedInAt").isJsonNull) obj.get("checkedInAt").asString else null
                 val checkedInBy = if (obj.has("checkedInBy") && !obj.get("checkedInBy").isJsonNull) obj.get("checkedInBy").asString else null
@@ -323,6 +324,7 @@ object TicketSnapshotFactory {
                     seatLabel = label,
                     whatsapp = whatsapp,
                     lunch = lunch,
+                    businessCenter = businessCenter,
                     checkedIn = checkedIn,
                     checkedInAt = checkedInAt,
                     checkedInBy = checkedInBy

@@ -522,7 +522,7 @@ export default function SeatBookingModal({ event, onClose, onBookingSuccess }: P
     const INFO_ROWS  = 5;   // Event, Venue, Date, Time, Seats
     const INFO_ROW_H = 42;
     const ATTENDEE_HEADER_H = 30;
-    const ATTENDEE_ROW_H = 36;
+    const ATTENDEE_ROW_H = 52;  // 2-line rows: name/phone on line1, business center on line2
     const PRICE_ROWS = 4;
     const PRICE_ROW_H = 40;
     const TOTAL_H    = 60;
@@ -681,24 +681,39 @@ export default function SeatBookingModal({ event, onClose, onBookingSuccess }: P
       const info = currentAttendees[s];
       const nameText  = typeof info === 'object' && info !== null ? info.name : (info || 'N/A');
       const phoneText = typeof info === 'object' && info !== null ? (info.whatsapp || info.phone || bookerPhone || '') : '';
+      const bizCenter = typeof info === 'object' && info !== null
+        ? (info.businessCenter || info.business_center || '').trim()
+        : '';
+      const bizLabel = bizCenter || 'Not specified';
 
+      // ── Line 1: Seat pill | Name | Phone ──
       // Seat pill
-      roundRect(PAD + 4, curY + 8, 66, 20, 10);
+      roundRect(PAD + 4, curY + 6, 66, 20, 10);
       ctx.fillStyle = '#10b981';
       ctx.fill();
       ctx.font = `700 11px ${FONT}`;
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
-      fillText(`Seat ${s}`, PAD + 37, curY + 22);
+      fillText(`Seat ${s}`, PAD + 37, curY + 20);
 
       ctx.font = `600 12px ${FONT}`;
       ctx.fillStyle = '#111827';
       ctx.textAlign = 'left';
-      fillText(nameText,  PAD + 90,    curY + 22, W - PAD * 2 - 220);
+      fillText(nameText, PAD + 90, curY + 20, W - PAD * 2 - 220);
 
       ctx.fillStyle = '#4b5563';
       ctx.textAlign = 'right';
-      fillText(phoneText || '—', W - PAD - 8, curY + 22);
+      fillText(phoneText || '—', W - PAD - 8, curY + 20);
+
+      // ── Line 2: Business Center (spans from name column to right edge) ──
+      ctx.font = `400 10px ${FONT}`;
+      ctx.fillStyle = '#059669';
+      ctx.textAlign = 'left';
+      fillText('Business Center: ', PAD + 90, curY + 36);
+      const bcLabelWidth = ctx.measureText('Business Center: ').width;
+      ctx.font = `600 10px ${FONT}`;
+      ctx.fillStyle = '#065f46';
+      fillText(bizLabel, PAD + 90 + bcLabelWidth, curY + 36, W - PAD - 90 - bcLabelWidth - 8);
 
       divider(curY + ATTENDEE_ROW_H, 0.07);
       curY += ATTENDEE_ROW_H;

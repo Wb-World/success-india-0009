@@ -90,24 +90,26 @@ export async function GET(request: Request) {
       if (seat.startsWith('__')) continue;
       if (typeof val === 'object' && val !== null) {
         cleanAttendees[seat] = {
-          name: val.name || '',
-          phone: val.phone || val.whatsapp || '',
-          vpName: val.vpName || '',
-          vpImage: val.vpImage || '',
-          designation: val.designation || '',
-          checkedIn: val.checkedIn === true || val.checkedIn === 'true',
-          checkedInAt: val.checkedInAt || null,
-          checkedInBy: val.checkedInBy || null,
-          lunch: val.lunch || 'Vegetarian'
+          name:           val.name || '',
+          phone:          val.phone || val.whatsapp || '',
+          businessCenter: val.businessCenter || val.business_center || '',
+          vpName:         val.vpName || '',
+          vpImage:        val.vpImage || '',
+          designation:    val.designation || '',
+          checkedIn:      val.checkedIn === true || val.checkedIn === 'true',
+          checkedInAt:    val.checkedInAt || null,
+          checkedInBy:    val.checkedInBy || null,
+          lunch:          val.lunch || 'Vegetarian'
         };
       } else if (typeof val === 'string') {
         cleanAttendees[seat] = {
-          name: val,
-          phone: '',
-          checkedIn: false,
-          checkedInAt: null,
-          checkedInBy: null,
-          lunch: 'Vegetarian'
+          name:           val,
+          phone:          '',
+          businessCenter: '',
+          checkedIn:      false,
+          checkedInAt:    null,
+          checkedInBy:    null,
+          lunch:          'Vegetarian'
         };
       }
     }

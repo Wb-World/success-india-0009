@@ -337,22 +337,36 @@ function BookingDetailsContent() {
                         <div className="tp-att-col tp-col-phone">Phone</div>
                       </div>
                       <div className="tp-att-body">
-                        {attendeeEntries.map(([seat, info], i) => (
-                          <div key={seat} className={`tp-att-item-row ${i % 2 === 0 ? 'tp-att-even' : ''}`}>
-                            <div className="tp-att-col tp-col-seat">
-                              <span className="tp-att-seat-badge">{seat}</span>
+                        {attendeeEntries.map(([seat, info], i) => {
+                          const bizCenter = (typeof info === 'object' && info !== null
+                            ? (info.businessCenter || info.business_center || '').trim()
+                            : '');
+                          const bizLabel = bizCenter || 'Not specified';
+                          return (
+                            <div key={seat} className={`tp-att-item-row ${i % 2 === 0 ? 'tp-att-even' : ''}`}>
+                              {/* Top sub-row: Seat | Name | Phone */}
+                              <div className="tp-att-top-row">
+                                <div className="tp-att-col tp-col-seat">
+                                  <span className="tp-att-seat-badge">{seat}</span>
+                                </div>
+                                <div className="tp-att-col tp-col-name tp-att-name">{info.name || '—'}</div>
+                                <div className="tp-att-col tp-col-phone tp-att-phone">
+                                  <span style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+                                    <Phone size={11} />
+                                  </span>
+                                  <span style={{ display: 'inline-block', verticalAlign: 'middle', lineHeight: '1' }}>
+                                    {info.phone || (ticket.bookerPhone && ticket.bookerPhone !== '—' ? ticket.bookerPhone : '') || '—'}
+                                  </span>
+                                </div>
+                              </div>
+                              {/* Bottom sub-row: Business Center */}
+                              <div className="tp-att-biz">
+                                <span className="tp-att-biz-label">Business Center: </span>
+                                <span className="tp-att-biz-value">{bizLabel}</span>
+                              </div>
                             </div>
-                            <div className="tp-att-col tp-col-name tp-att-name">{info.name || '—'}</div>
-                            <div className="tp-att-col tp-col-phone tp-att-phone">
-                              <span style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
-                                <Phone size={11} />
-                              </span>
-                              <span style={{ display: 'inline-block', verticalAlign: 'middle', lineHeight: '1' }}>
-                                {info.phone || (ticket.bookerPhone && ticket.bookerPhone !== '—' ? ticket.bookerPhone : '') || '—'}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -652,9 +666,14 @@ function BookingDetailsContent() {
         }
         .tp-att-item-row {
           display: flex;
+          flex-direction: column;
           padding: 8px 12px;
-          align-items: center;
           border-bottom: 1px solid #f1f5f9;
+        }
+        .tp-att-top-row {
+          display: flex;
+          align-items: center;
+          width: 100%;
         }
         .tp-att-item-row:last-child {
           border-bottom: none;
@@ -704,6 +723,20 @@ function BookingDetailsContent() {
         .tp-att-phone {
           font-size: 0.78rem;
           color: #4b5563;
+        }
+        .tp-att-biz {
+          padding-top: 4px;
+          padding-left: 70px;  /* align under Name column (seat col is 70px) */
+          font-size: 0.72rem;
+          line-height: 1.3;
+        }
+        .tp-att-biz-label {
+          color: #059669;
+          font-weight: 600;
+        }
+        .tp-att-biz-value {
+          color: #065f46;
+          font-weight: 700;
         }
 
         /* QR column */
