@@ -44,6 +44,27 @@
         app:layout_constraintTop_toTopOf="@id/attendeeHeaderBg"
         app:layout_constraintBottom_toBottomOf="@id/attendeeHeaderBg" />
 
+    <!-- Filter button (top-right of header) -->
+    <TextView
+        android:id="@+id/btnFilterToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:text="⊞ Filter"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:background="@drawable/circle_white_10_alpha"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/attendeeHeaderBg"
+        app:layout_constraintBottom_toBottomOf="@id/attendeeHeaderBg" />
+
     <!-- Count chips row (Hidden) -->
     <LinearLayout
         android:id="@+id/layoutCountChips"
@@ -150,6 +171,144 @@
             android:layout_marginStart="2dp" />
     </LinearLayout>
 
+    <!-- ═══════════════════════════════════════════════════════════════
+         Filter Panel — shown/hidden by the Filter button
+         ═══════════════════════════════════════════════════════════════ -->
+    <LinearLayout
+        android:id="@+id/layoutFilterPanel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="6dp"
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:elevation="4dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/layoutFilterToggle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Event filter row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="6dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Event"
+                android:textColor="#111827"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvFilterEventLabel"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="2"
+                android:text="All Events"
+                android:textColor="@color/primary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:gravity="center_vertical|end"
+                android:paddingEnd="8dp"
+                android:paddingStart="8dp"
+                android:background="@color/primary_light"
+                android:clickable="true"
+                android:focusable="true"
+                android:ellipsize="end"
+                android:maxLines="1" />
+        </LinearLayout>
+
+        <!-- Thin divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:background="@color/gray_divider" />
+
+        <!-- Time filter row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="10dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Time"
+                android:textColor="#111827"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvFilterTimeLabel"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="2"
+                android:text="All Time"
+                android:textColor="@color/primary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:gravity="center_vertical|end"
+                android:paddingEnd="8dp"
+                android:paddingStart="8dp"
+                android:background="@color/primary_light"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+
+        <!-- Reset / active filter indicator row -->
+        <LinearLayout
+            android:id="@+id/layoutFilterActiveRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="10dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tvActiveFilterInfo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text=""
+                android:textColor="@color/muted"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/btnResetFilters"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✕ Reset"
+                android:textColor="@color/danger"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="8dp"
+                android:paddingEnd="4dp" />
+        </LinearLayout>
+    </LinearLayout>
+
     <!-- Loading spinner -->
     <ProgressBar
         android:id="@+id/pbLoading"
@@ -157,7 +316,7 @@
         android:layout_height="48dp"
         android:indeterminateTint="@color/primary"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/layoutFilterToggle"
+        app:layout_constraintTop_toBottomOf="@id/layoutFilterPanel"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/btnScanFab" />
@@ -169,7 +328,7 @@
         android:layout_height="0dp"
         android:overScrollMode="never"
         android:fillViewport="true"
-        app:layout_constraintTop_toBottomOf="@id/layoutFilterToggle"
+        app:layout_constraintTop_toBottomOf="@id/layoutFilterPanel"
         app:layout_constraintBottom_toTopOf="@id/btnScanFab"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">

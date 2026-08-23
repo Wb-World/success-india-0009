@@ -15,6 +15,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -31,6 +32,7 @@ import com.google.android.material.card.MaterialCardView
  *  3. Hosts the QR scanner; on a successful scan, finds the matching
  *     attendee, marks them as entered in Supabase, moves them to the
  *     Entered list, and shows the standard result dialog.
+ *  4. Provides Event + Time filters that work together with the tab state.
  */
 class AttendeeListActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListener {
 
@@ -41,6 +43,15 @@ class AttendeeListActivity : AppCompatActivity(), QRScannerDialogFragment.QRScan
     // All attendees loaded from Supabase (mutable, updated on scan)
     private val allAttendees = mutableListOf<GlobalAttendee>()
     private var showEntered = false   // current tab state
+
+    // ── Filter state ──────────────────────────────────────────────────────────
+    // null means "All Events"
+    private var selectedEventFilter: String? = null
+    // -1 means "All Time"; otherwise number of hours to look back
+    private var selectedTimeFilterHours: Int = -1
+
+    // Whether the filter panel is currently expanded
+    private var filterPanelOpen = false
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -56,6 +67,18 @@ class AttendeeListActivity : AppCompatActivity(), QRScannerDialogFragment.QRScan
 
         binding.btnScanFab.setOnClickListener { checkCameraAndScan() }
         binding.btnRetryInternet.setOnClickListener { checkInternetAndLoad() }
+
+        // Filter panel toggle
+        binding.btnFilterToggle.setOnClickListener { toggleFilterPanel() }
+
+        // Event filter picker
+        binding.tvFilterEventLabel.setOnClickListener { showEventFilterMenu(it) }
+
+        // Time filter picker
+        binding.tvFilterTimeLabel.setOnClickListener { showTimeFilterMenu(it) }
+
+        // Reset filters
+        binding.btnResetFilters.setOnClickListener { resetFilters() }
 
         checkInternetAndLoad()
     }
@@ -133,16 +156,206 @@ class AttendeeListActivity : AppCompatActivity(), QRScannerDialogFragment.QRScan
     }
 
     private fun renderCurrentTab() {
-        val list = if (showEntered) {
+        // Step 1: filter by entry status (existing tab logic)
+        var list = if (showEntered) {
             allAttendees.filter { it.checkedIn }
         } else {
             allAttendees.filter { !it.checkedIn }
         }
+
+        // Step 2: apply event filter
+        val eventFilter = selectedEventFilter
+        if (!eventFilter.isNullOrBlank()) {
+            list = list.filter { it.eventName.equals(eventFilter, ignoreCase = true) }
+        }
+
+        // Step 3: apply time filter
+        if (selectedTimeFilterHours > 0) {
+            val cutoffMs = System.currentTimeMillis() - selectedTimeFilterHours.toLong() * 60 * 60 * 1000
+            list = list.filter { attendee ->
+                // For entered attendees prefer checkedInAt timestamp; for unentered we have no
+                // per-seat creation timestamp so we leave them unfiltered by time when not entered.
+                val ts = attendee.checkedInAt
+                if (!ts.isNullOrBlank()) {
+                    parseTimestampMillis(ts) >= cutoffMs
+                } else {
+                    // No timestamp available — exclude from time-filtered results only if a
+                    // time filter is active, to stay conservative (don't show unknowns)
+                    false
+                }
+            }
+        }
+
+        updateTabCounts()
         renderAttendeeCards(list)
     }
 
     private fun updateCounts() {
         // Counts box is hidden (layoutCountChips is GONE)
+    }
+
+    /**
+     * Computes how many attendees are entered / unentered after applying the
+     * current event and time filters (same logic as renderCurrentTab), then
+     * updates both tab button labels so the counts always match the list.
+     * Called every time renderCurrentTab() runs.
+     */
+    private fun updateTabCounts() {
+        // Apply event + time filters to the full list (no tab/entry-status filter)
+        var filtered = allAttendees.toList()
+
+        val eventFilter = selectedEventFilter
+        if (!eventFilter.isNullOrBlank()) {
+            filtered = filtered.filter { it.eventName.equals(eventFilter, ignoreCase = true) }
+        }
+
+        if (selectedTimeFilterHours > 0) {
+            val cutoffMs = System.currentTimeMillis() - selectedTimeFilterHours.toLong() * 60 * 60 * 1000
+            filtered = filtered.filter { attendee ->
+                val ts = attendee.checkedInAt
+                if (!ts.isNullOrBlank()) parseTimestampMillis(ts) >= cutoffMs else false
+            }
+        }
+
+        val enteredCount   = filtered.count { it.checkedIn }
+        val unenteredCount = filtered.count { !it.checkedIn }
+
+        binding.btnTabUnentered.text = "Unentried ($unenteredCount)"
+        binding.btnTabEntered.text   = "Entried ($enteredCount)"
+    }
+
+    // ── Filter panel ──────────────────────────────────────────────────────────
+
+    private fun toggleFilterPanel() {
+        filterPanelOpen = !filterPanelOpen
+        binding.layoutFilterPanel.visibility = if (filterPanelOpen) View.VISIBLE else View.GONE
+        binding.btnFilterToggle.text = if (filterPanelOpen) "✕ Close" else "⊞ Filter"
+        updateFilterLabels()
+    }
+
+    /** Build event list dynamically from loaded attendee data, show popup. */
+    private fun showEventFilterMenu(anchor: View) {
+        val events = allAttendees
+            .map { it.eventName.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .sorted()
+
+        val popup = PopupMenu(this, anchor)
+        popup.menu.add(0, 0, 0, "All Events")
+        events.forEachIndexed { index, name ->
+            popup.menu.add(0, index + 1, index + 1, name)
+        }
+
+        popup.setOnMenuItemClickListener { item ->
+            selectedEventFilter = if (item.itemId == 0) null else item.title?.toString()
+            updateFilterLabels()
+            renderCurrentTab()
+            true
+        }
+        popup.show()
+    }
+
+    private fun showTimeFilterMenu(anchor: View) {
+        data class TimeOption(val label: String, val hours: Int)
+        val options = listOf(
+            TimeOption("All Time",      -1),
+            TimeOption("Last 1 Hour",    1),
+            TimeOption("Last 2 Hours",   2),
+            TimeOption("Last 3 Hours",   3),
+            TimeOption("Last 6 Hours",   6),
+            TimeOption("Last 12 Hours", 12),
+            TimeOption("Last 24 Hours", 24)
+        )
+
+        val popup = PopupMenu(this, anchor)
+        options.forEachIndexed { index, opt ->
+            popup.menu.add(0, index, index, opt.label)
+        }
+
+        popup.setOnMenuItemClickListener { item ->
+            selectedTimeFilterHours = options[item.itemId].hours
+            updateFilterLabels()
+            renderCurrentTab()
+            true
+        }
+        popup.show()
+    }
+
+    private fun resetFilters() {
+        selectedEventFilter = null
+        selectedTimeFilterHours = -1
+        updateFilterLabels()
+        renderCurrentTab()
+    }
+
+    private fun updateFilterLabels() {
+        // Event label
+        binding.tvFilterEventLabel.text = selectedEventFilter ?: "All Events"
+
+        // Time label
+        binding.tvFilterTimeLabel.text = when (selectedTimeFilterHours) {
+            -1   -> "All Time"
+            1    -> "Last 1 Hour"
+            2    -> "Last 2 Hours"
+            3    -> "Last 3 Hours"
+            6    -> "Last 6 Hours"
+            12   -> "Last 12 Hours"
+            24   -> "Last 24 Hours"
+            else -> "All Time"
+        }
+
+        // Show/hide the active filter indicator row
+        val hasActiveFilter = selectedEventFilter != null || selectedTimeFilterHours > 0
+        binding.layoutFilterActiveRow.visibility = if (hasActiveFilter) View.VISIBLE else View.GONE
+
+        if (hasActiveFilter) {
+            val parts = mutableListOf<String>()
+            if (selectedEventFilter != null) parts.add(selectedEventFilter!!)
+            if (selectedTimeFilterHours > 0) parts.add(binding.tvFilterTimeLabel.text.toString())
+            binding.tvActiveFilterInfo.text = "Active: ${parts.joinToString(" · ")}"
+        }
+
+        // Update the header filter button to show a dot when filters are active
+        if (!filterPanelOpen) {
+            binding.btnFilterToggle.text = if (hasActiveFilter) "⊞ Filter ●" else "⊞ Filter"
+        }
+    }
+
+    // ── Parse ISO-8601 timestamp to epoch millis ──────────────────────────────
+
+    /**
+     * Parses timestamps stored by Supabase/the gate app.
+     * Handles formats like:
+     *   2024-12-05T10:30:00Z
+     *   2024-12-05T10:30:00+05:30
+     * Returns 0 if parsing fails (which will exclude the attendee from
+     * time-filtered results — safe conservative behaviour).
+     */
+    private fun parseTimestampMillis(ts: String): Long {
+        return try {
+            // Normalise to a format Java SimpleDateFormat can handle
+            val normalised = ts.trim()
+                .replace("Z", "+00:00")       // UTC marker → offset form
+
+            // Try offset-aware parse first: yyyy-MM-dd'T'HH:mm:ssXXX
+            val sdfOffset = java.text.SimpleDateFormat(
+                "yyyy-MM-dd'T'HH:mm:ssXXX", java.util.Locale.US
+            )
+            sdfOffset.parse(normalised)?.time ?: 0L
+        } catch (_: Exception) {
+            try {
+                // Fallback: strip offset and treat as UTC
+                val plain = ts.trim()
+                    .substringBefore("+")
+                    .substringBefore("Z")
+                    .substringBefore("z")
+                val sdfUtc = java.text.SimpleDateFormat(
+                    "yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US
+                ).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
+                sdfUtc.parse(plain)?.time ?: 0L
+            } catch (_: Exception) { 0L }
+        }
     }
 
     // ── Render attendee cards ─────────────────────────────────────────────────

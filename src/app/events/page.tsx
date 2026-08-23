@@ -40,7 +40,11 @@ export default function EventsPage() {
       if (res.ok) {
         let list = data.events || [];
         const dbTotalEventsCount = data.dbTotalEventsCount ?? 0;
-        if (list.length === 0 && dbTotalEventsCount === 0) {
+        // dbTotalRawCount = all events in DB before visibility filter.
+        // Only show the hardcoded fallback when the DB is completely empty (no events at all).
+        // If events exist but are all hidden, show the empty state instead.
+        const dbTotalRawCount = data.dbTotalRawCount ?? dbTotalEventsCount;
+        if (list.length === 0 && dbTotalRawCount === 0) {
           let bookedCount = 0;
           try {
             const bookedRes = await fetch(`/api/bookings?eventId=${encodeURIComponent(PRIMARY_EVENT_ID)}&t=${Date.now()}`, {

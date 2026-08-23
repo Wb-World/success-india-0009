@@ -55,8 +55,8 @@ function formatEvent(e: any, bookedCount = 0) {
     imageUrl: e.image_url || e.imageUrl || '',
     image_url: e.image_url || e.imageUrl || '',
     status: e.status || 'active',
-    homepage_visible: e.homepage_visible !== false,
-    homepageVisible: e.homepage_visible !== false,
+    homepage_visible: e.homepage_visible === true,
+    homepageVisible: e.homepage_visible === true,
     bookedCount,
     availableSeats: available,
   };
@@ -109,9 +109,11 @@ export async function GET(request: Request) {
 
     let allEvents = rawEvents || [];
 
-    // Filter for homepage visibility when not in admin mode
+    // Filter for homepage visibility when not in admin mode.
+    // Only show events where homepage_visible is explicitly TRUE.
+    // Events with null, undefined, or false are hidden from the public.
     if (!isAdmin) {
-      allEvents = allEvents.filter((e: any) => e.homepage_visible !== false);
+      allEvents = allEvents.filter((e: any) => e.homepage_visible === true);
     }
 
     // Fetch bookings and configs to compute booked seat counts
@@ -233,7 +235,13 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(
-      { events: resultEvents, dbTotalEventsCount: formattedEvents.length },
+      {
+        events: resultEvents,
+        dbTotalEventsCount: formattedEvents.length,
+        // Total count of ALL events in DB (before visibility filter).
+        // Use this to distinguish "DB is truly empty" vs "events exist but all are hidden".
+        dbTotalRawCount: (rawEvents || []).length,
+      },
       { headers: responseHeaders }
     );
   } catch (err: any) {
