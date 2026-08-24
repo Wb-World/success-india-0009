@@ -114,10 +114,10 @@ export default function EventsPage() {
                 className="event-card"
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
-                {(event.imageUrl || event.id === PRIMARY_EVENT_ID || event.id === 'seminar_101') && (
+                {(event.imageUrl) && (
                   <div className="event-card-image-wrap">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={event.imageUrl || "/img.png"} alt={event.title || event.name} className="event-card-image" />
+                    <img src={event.imageUrl} alt={event.title || event.name} className="event-card-image" />
                   </div>
                 )}
                 <div className="event-card-badge">
