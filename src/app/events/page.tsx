@@ -25,77 +25,28 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [modalEvent, setModalEvent] = useState<SeminarEvent | null>(null);
 
-  // The displayed title for the primary event (overridden from backend title)
-  const PRIMARY_EVENT_TITLE = "SUCCESS TEAM MEGA MASS EDUCATIONAL TRAINING";
-  const PRIMARY_EVENT_ID = "seminar_mega_mass_2026";
-
   const fetchEvents = async () => {
     try {
-      // Pass the frontend-override title so server-side seat counting can match
-      // bookings that stored destination = this title (even if DB event title differs)
-      const res = await fetch(`/api/events?displayTitle=${encodeURIComponent(PRIMARY_EVENT_TITLE)}&t=${Date.now()}`, {
+      const res = await fetch(`/api/events?t=${Date.now()}`, {
         cache: 'no-store'
       });
-      const data = await res.json();
-      if (res.ok) {
-        let list = data.events || [];
-        const dbTotalEventsCount = data.dbTotalEventsCount ?? 0;
-        // dbTotalRawCount = all events in DB before visibility filter.
-        // Only show the hardcoded fallback when the DB is completely empty (no events at all).
-        // If events exist but are all hidden, show the empty state instead.
-        const dbTotalRawCount = data.dbTotalRawCount ?? dbTotalEventsCount;
-        if (list.length === 0 && dbTotalRawCount === 0) {
-          let bookedCount = 0;
-          try {
-            const bookedRes = await fetch(`/api/bookings?eventId=${encodeURIComponent(PRIMARY_EVENT_ID)}&t=${Date.now()}`, {
-              cache: 'no-store'
-            });
-            if (bookedRes.ok) {
-              const bookedData = await bookedRes.json();
-              bookedCount = Array.isArray(bookedData.seats) ? bookedData.seats.length : 0;
-            }
-          } catch {
-            bookedCount = 0;
-          }
 
-          list = [
-            {
-              id: PRIMARY_EVENT_ID,
-              title: PRIMARY_EVENT_TITLE,
-              name: PRIMARY_EVENT_TITLE,
-              venue: "Hotel Chennai Deluxe",
-              eventDate: "2026-06-28",
-              eventTime: "09:00 AM",
-              price: 1000,
-              totalSeats: 300,
-              bookedCount,
-              availableSeats: Math.max(0, 300 - bookedCount),
-            }
-          ];
-        } else {
-          list = list.map((ev: any) => {
-            if (ev.id === PRIMARY_EVENT_ID || ev.id === 'seminar_101') {
-              return {
-                ...ev,
-                title: PRIMARY_EVENT_TITLE,
-                name: PRIMARY_EVENT_TITLE,
-                venue: "Hotel Chennai Deluxe",
-                eventDate: "2026-06-28",
-                eventTime: "09:00 AM",
-                totalSeats: ev.totalSeats || 300,
-                // bookedCount and availableSeats come from server — preserve them
-                bookedCount: ev.bookedCount ?? 0,
-                availableSeats: ev.availableSeats !== undefined ? ev.availableSeats : Math.max(0, (ev.totalSeats || 300) - (ev.bookedCount || 0)),
-              };
-            }
-            return {
-              ...ev,
-              totalSeats: ev.totalSeats || 300,
-              bookedCount: ev.bookedCount ?? 0,
-              availableSeats: ev.availableSeats !== undefined ? ev.availableSeats : Math.max(0, (ev.totalSeats || 300) - (ev.bookedCount || 0)),
-            };
-          });
-        }
+      const data = await res.json();
+
+      if (res.ok) {
+        const list = (data.events || []).map((ev: any) => ({
+          ...ev,
+          totalSeats: ev.totalSeats || 300,
+          bookedCount: ev.bookedCount ?? 0,
+          availableSeats:
+            ev.availableSeats !== undefined
+              ? ev.availableSeats
+              : Math.max(
+                  0,
+                  (ev.totalSeats || 300) - (ev.bookedCount || 0)
+                ),
+        }));
+
         setEvents(list);
       }
     } catch (err) {
@@ -104,6 +55,7 @@ export default function EventsPage() {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchEvents();
