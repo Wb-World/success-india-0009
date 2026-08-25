@@ -16,19 +16,14 @@ export default function AdminLogin() {
 
   useEffect(() => {
     setMounted(true);
-    // Redirect to dashboard if already logged in as admin
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      try {
-        const u = JSON.parse(stored);
-        if (u.role === 'admin') {
-          router.push('/admin/dashboard');
-        }
-      } catch (e) {
-        console.error(e);
-      }
+    // TASK 2: Auto-login removed. Admin must always log in manually.
+    // Clear any persisted localStorage session if sessionStorage has no active flag
+    // (i.e., browser was closed and reopened).
+    const sessionActive = sessionStorage.getItem('session_active');
+    if (!sessionActive) {
+      localStorage.removeItem('user');
     }
-  }, [router]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +41,8 @@ export default function AdminLogin() {
 
       if (res.ok) {
         localStorage.setItem('user', JSON.stringify(data.user));
+        // Mark session as active so it clears on browser close
+        sessionStorage.setItem('session_active', '1');
         window.dispatchEvent(new Event('auth-change'));
         router.push('/admin/dashboard');
       } else {

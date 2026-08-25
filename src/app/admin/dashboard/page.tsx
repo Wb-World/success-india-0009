@@ -2706,7 +2706,7 @@ export default function AdminDashboard() {
               </div>
 
               <form onSubmit={handleSaveEventSettings} className="event-form-grid">
-                <div className="event-form-group">
+                {/* <div className="event-form-group">
                   <label className="form-label">UPI ID Address</label>
                   <input
                     type="text"
@@ -2716,9 +2716,9 @@ export default function AdminDashboard() {
                     placeholder="successteam@upi"
                     required
                   />
-                </div>
+                </div> */}
 
-                <div className="event-form-group">
+                {/* <div className="event-form-group">
                   <label className="form-label">Account Beneficiary Name</label>
                   <input
                     type="text"
@@ -2728,7 +2728,7 @@ export default function AdminDashboard() {
                     placeholder="david"
                     required
                   />
-                </div>
+                </div> */}
 
                 <div className="event-form-group span-2">
                   <label className="form-label">Custom QR Code Image (Optional)</label>
@@ -2761,9 +2761,6 @@ export default function AdminDashboard() {
                       </div>
                     )}
                   </div>
-                  <p style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: '0.5rem', lineHeight: '1.4' }}>
-                    If no custom QR code image is uploaded, the booking portal will automatically generate a dynamic UPI scan-and-pay QR code for the customer&apos;s total fee amount!
-                  </p>
                 </div>
 
                 <div className="event-form-actions span-2">
@@ -5261,6 +5258,235 @@ export default function AdminDashboard() {
           font-size: 0.85rem;
           color: #64748b;
           font-weight: 500;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           TASK 3 — ADMIN DASHBOARD MOBILE RESPONSIVE ADDITIONS
+           All rules below are additive only; desktop layout untouched
+           ═══════════════════════════════════════════════════════ */
+
+        /* ── Header bar ── */
+        @media (max-width: 640px) {
+          .admin-header-bar {
+            padding: 1rem 0;
+          }
+          .header-flex {
+            flex-direction: column;
+            gap: 0.85rem;
+            align-items: flex-start;
+            padding: 0 1rem;
+          }
+          .admin-workspace-title {
+            font-size: 1.1rem;
+            flex-wrap: wrap;
+          }
+          .workspace-suffix {
+            font-size: 0.85rem;
+          }
+          .brand-logo-img {
+            width: 36px;
+            height: 36px;
+          }
+          .header-right-actions {
+            width: 100%;
+            gap: 0.5rem;
+          }
+          .btn-admin-logout,
+          .btn-admin-change-pwd {
+            flex: 1;
+            justify-content: center;
+            font-size: 0.78rem;
+            padding: 0.5rem 0.75rem;
+          }
+          .dashboard-content {
+            margin-top: 1.5rem;
+            padding: 0 0.85rem;
+          }
+        }
+
+        /* ── Section tabs ── */
+        @media (max-width: 639px) {
+          .admin-section-tabs-container {
+            padding: 0.3rem;
+            border-radius: 14px;
+            margin-bottom: 1.75rem;
+          }
+          .admin-section-tabs {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.2rem;
+          }
+          .section-tab {
+            font-size: 0.74rem;
+            padding: 0.65rem 0.4rem;
+            gap: 0.3rem;
+            border-radius: 10px;
+          }
+          .section-tab svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+          }
+          .section-tab span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
+
+        /* ── Booking stream cards ── */
+        @media (max-width: 640px) {
+          .item-card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+            padding: 1rem 1.25rem;
+          }
+          .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+          }
+          .item-created-at {
+            margin-left: 0;
+          }
+          .item-card-body-grid {
+            padding: 1.25rem 1rem;
+          }
+          .item-card-footer {
+            padding: 1rem 1.25rem;
+            flex-wrap: wrap;
+          }
+          .btn-approve-action,
+          .btn-deny-action {
+            flex: 1;
+            justify-content: center;
+          }
+          .stream-item-card {
+            border-radius: 18px;
+          }
+          .bookings-stream-list {
+            gap: 1.5rem;
+          }
+        }
+
+        /* ── Tab buttons (pending/approved/denied) ── */
+        @media (max-width: 480px) {
+          .tab-buttons {
+            gap: 0.35rem;
+          }
+          .tab-btn {
+            font-size: 0.75rem;
+            padding: 0.5rem 0.65rem;
+          }
+          .tab-badge {
+            display: none;
+          }
+        }
+
+        /* ── Event Manager header ── */
+        @media (max-width: 600px) {
+          .event-manager-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+          }
+          .event-form-card,
+          .events-list-card {
+            padding: 1.5rem 1rem;
+            border-radius: 18px;
+          }
+          .heading-md {
+            font-size: 1.1rem;
+          }
+          .event-form-actions {
+            flex-direction: column;
+          }
+          .event-form-actions button {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+
+        /* ── Contribution cards ── */
+        @media (max-width: 640px) {
+          .info-table-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.1rem;
+          }
+          .info-value {
+            font-size: 0.82rem;
+          }
+        }
+
+        /* ── Food list / attendee list tables ── make scrollable ── */
+        @media (max-width: 768px) {
+          .food-table-wrap,
+          .attendee-table-wrap,
+          [id="food-list-table-wrap"],
+          [id="attendee-list-table-wrap"] {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+          table {
+            min-width: 560px;
+          }
+        }
+
+        /* ── List controls bar ── */
+        @media (max-width: 480px) {
+          .list-controls-bar {
+            gap: 0.75rem;
+          }
+          .btn-refresh span {
+            display: none;
+          }
+        }
+
+        /* ── Empty stream card ── */
+        @media (max-width: 480px) {
+          .empty-stream-card {
+            padding: 3.5rem 1.5rem;
+            border-radius: 18px;
+          }
+        }
+
+        /* ── Payment settings & resort settings ── */
+        @media (max-width: 600px) {
+          .resort-images-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+          }
+        }
+
+        /* ── Admin toast ── */
+        @media (max-width: 480px) {
+          .admin-toast {
+            bottom: 16px;
+            right: 16px;
+            left: 16px;
+            max-width: none;
+            font-size: 0.82rem;
+            padding: 0.85rem 1rem;
+          }
+        }
+
+        /* ── Contribution detail cards (contribution section) ── */
+        @media (max-width: 640px) {
+          .contribution-detail-card,
+          .contribution-list-card {
+            border-radius: 16px;
+          }
+        }
+
+        /* ── Seat block tab ── */
+        @media (max-width: 640px) {
+          .seat-block-row {
+            flex-wrap: wrap;
+          }
+          .seat-block-actions {
+            width: 100%;
+          }
         }
       `}</style>
     </div>
