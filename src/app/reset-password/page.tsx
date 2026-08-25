@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, Eye, EyeOff, ShieldCheck, ShieldAlert, CheckCircle2 } from 'lucide-react';
 
@@ -11,7 +11,7 @@ function validatePassword(pwd: string): string | null {
   return null;
 }
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [token, setToken] = useState(searchParams?.get('token') || '');
@@ -345,5 +345,13 @@ export default function ResetPasswordPage() {
         .animate-fade-in { animation: fadeIn 0.4s ease forwards; }
       `}</style>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

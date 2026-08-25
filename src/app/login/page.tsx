@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { User, Lock, ShieldAlert, ArrowRight, Key, Mail, X, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-export default function Login() {
+function LoginContent() {
   const router = useRouter();
   const searchParamsObj = useSearchParams();
   const [username, setUsername] = useState('');
@@ -821,5 +821,13 @@ export default function Login() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
   );
 }
