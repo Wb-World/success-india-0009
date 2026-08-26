@@ -49,12 +49,12 @@ function LoginContent() {
   const [resetSuccess, setResetSuccess] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const sessionActive = sessionStorage.getItem('session_active');
     if (!sessionActive) localStorage.removeItem('user');
-    if (searchParamsObj?.get('reset') === 'success') setResetSuccess(true);
-    if (searchParamsObj?.get('forgot') === '1') {
-      setShowForgotModal(true);
-    }
+    const params = searchParamsObj;
+    if (params?.get('reset') === 'success') setResetSuccess(true);
+    if (params?.get('forgot') === '1') setShowForgotModal(true);
   }, [searchParamsObj]);
 
   useEffect(() => {
@@ -105,10 +105,14 @@ function LoginContent() {
         }
         localStorage.setItem('user', JSON.stringify(data.user));
         sessionStorage.setItem('session_active', '1');
-        window.dispatchEvent(new Event('auth-change'));
-        const cbParams = new URLSearchParams(window.location.search);
-        const cb = cbParams.get('callbackUrl') || '';
-        router.push(cb && cb.startsWith('/') && !cb.startsWith('//') ? cb : '/');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('auth-change'));
+          const cbParams = new URLSearchParams(window.location.search);
+          const cb = cbParams.get('callbackUrl') || '';
+          router.push(cb && cb.startsWith('/') && !cb.startsWith('//') ? cb : '/');
+        } else {
+          router.push('/');
+        }
       } else {
         setError(data.error || 'Invalid username/phone or password');
       }
