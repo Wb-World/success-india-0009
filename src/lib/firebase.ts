@@ -14,5 +14,9 @@ const firebaseConfig = {
 // Initialize Firebase client app (singleton)
 export function getFirebaseAuth() {
   const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-  return getAuth(app);
+  const auth = getAuth(app);
+  if (typeof window !== 'undefined') {
+    auth.useDeviceLanguage();
+  }
+  return auth;
 }
