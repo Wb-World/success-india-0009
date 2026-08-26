@@ -74,7 +74,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('[Admin Login] Unexpected error:', error);
     return NextResponse.json(
-      { error: error?.message || 'An error occurred during login' },
+      { error: 'An error occurred during login. Please try again.' },
       { status: 500 }
     );
   }

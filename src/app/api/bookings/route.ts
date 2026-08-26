@@ -65,7 +65,7 @@ export async function GET(request: Request) {
 
       if (error) {
         console.error('[bookings GET] fallback query failed:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 });
       }
       takenSeats = (data || []).flatMap((bk: any) => bk.seats || []);
     }
@@ -132,7 +132,7 @@ export async function GET(request: Request) {
     );
   } catch (err: any) {
     console.error('Error in GET /api/bookings:', err);
-    return NextResponse.json({ error: err.message || 'An error occurred' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 });
   }
 }
 
@@ -456,7 +456,7 @@ export async function POST(request: Request) {
     } catch (dbErr: any) {
       console.error("BOOKING_INSERTION_FAILED:", dbErr);
       return NextResponse.json(
-        { error: dbErr.message || 'Database write operation failed' },
+        { error: 'Failed to complete booking. Please try again.' },
         { status: 500 }
       );
     }
@@ -485,7 +485,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('Booking submission error:', error);
     return NextResponse.json(
-      { error: error?.message || 'An error occurred submitting the booking' },
+      { error: 'An error occurred while submitting the booking.' },
       { status: 500 }
     );
   }

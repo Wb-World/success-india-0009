@@ -69,12 +69,12 @@ export async function POST(request: Request) {
 
     if (upsertError) {
       console.error("RESORT_IMAGES_SAVE_FAILED:", upsertError);
-      return NextResponse.json({ error: `Failed to save resort settings to database: ${upsertError.message} (code: ${upsertError.code})` }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to save resort images. Please try again.' }, { status: 500 });
     }
 
     return NextResponse.json({ message: 'Resort images saved successfully' });
   } catch (err: any) {
     console.error('Resort images POST error:', err);
-    return NextResponse.json({ error: `Failed to save resort images: ${err.message || String(err)}` }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to save resort images' }, { status: 500 });
   }
 }

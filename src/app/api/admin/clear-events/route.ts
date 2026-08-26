@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { verifyAdminSession } from '@/lib/auth-server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    const adminUser = await verifyAdminSession(request);
+    if (!adminUser) {
+      return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const confirm = searchParams.get('confirm') === 'true';
 
@@ -20,16 +26,14 @@ export async function GET(request: Request) {
     if (fetchEventsErr || fetchBusesErr) {
       console.error('Fetch errors:', { fetchEventsErr, fetchBusesErr });
       return NextResponse.json({
-        error: 'Failed to fetch events from Supabase',
-        eventsError: fetchEventsErr?.message,
-        busesError: fetchBusesErr?.message,
+        error: 'Failed to fetch events',
       }, { status: 500 });
     }
 
     // If confirm is not set, return listing as a safety checkpoint
     if (!confirm) {
       return NextResponse.json({
-        message: 'To permanently delete all events and legacy bus mappings in your Supabase database, please visit this URL with "?confirm=true".',
+        message: 'To permanently delete all events and legacy bus mappings, please append "?confirm=true".',
         counts: {
           eventsTable: events?.length || 0,
           busesTable: buses?.length || 0,
@@ -53,15 +57,13 @@ export async function GET(request: Request) {
     if (deleteEventsErr || deleteBusesErr) {
       console.error('Deletion errors:', { deleteEventsErr, deleteBusesErr });
       return NextResponse.json({
-        error: 'Failed to delete events from Supabase',
-        eventsError: deleteEventsErr?.message,
-        busesError: deleteBusesErr?.message,
+        error: 'Failed to delete events',
       }, { status: 500 });
     }
 
     return NextResponse.json({
       success: true,
-      message: 'All dummy events and legacy bus mapping entries have been deleted successfully from Supabase!',
+      message: 'All events and legacy bus mapping entries have been deleted successfully.',
       clearedCounts: {
         eventsTable: events?.length || 0,
         busesTable: buses?.length || 0,
@@ -69,6 +71,6 @@ export async function GET(request: Request) {
     });
   } catch (error: any) {
     console.error('Clear events endpoint error:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

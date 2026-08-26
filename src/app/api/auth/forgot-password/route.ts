@@ -16,11 +16,7 @@ function getAppUrl(): string {
 
 async function sendResetEmail(to: string, resetLink: string, username: string) {
   const resend = getResendClient();
-  const fromEmail = process.env.RESEND_FROM_EMAIL;
-
-  if (!fromEmail) {
-    throw new Error('RESEND_FROM_EMAIL is not configured');
-  }
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'Success Team <onboarding@resend.dev>';
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1f2937;">
@@ -212,13 +208,7 @@ export async function POST(request: Request) {
       const errMsg = (mailErr?.message || '').toLowerCase();
 
       let userMessage = 'Failed to send reset email. Please try again later.';
-      if (errMsg.includes('api key') || errMsg.includes('invalid') || errMsg.includes('401')) {
-        userMessage = 'Email service authentication failed. Please contact support.';
-      } else if (errMsg.includes('domain') || errMsg.includes('verified')) {
-        userMessage = 'Email service is not fully configured. Please verify your domain in Resend or contact support.';
-      } else if (errMsg.includes('from') || errMsg.includes('sender')) {
-        userMessage = 'Email sender address is not authorized. Please check RESEND_FROM_EMAIL configuration.';
-      } else if (errMsg.includes('security purposes') || errMsg.includes('not request this after')) {
+      if (errMsg.includes('security purposes') || errMsg.includes('not request this after')) {
         userMessage = 'Too many reset requests. Please wait before trying again.';
       }
 
@@ -235,7 +225,7 @@ export async function POST(request: Request) {
   } catch (err: any) {
     console.error('[forgot-password] API error:', err);
     return NextResponse.json(
-      { error: err?.message || 'An unexpected error occurred' },
+      { error: 'An unexpected error occurred. Please try again.' },
       { status: 500 }
     );
   }

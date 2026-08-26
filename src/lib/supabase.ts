@@ -18,16 +18,17 @@ function createLazyClient(factory: () => SupabaseClient): SupabaseClient {
   });
 }
 
+const DEFAULT_SUPABASE_URL = 'https://raypwndyjclstbqxrahm.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJheXB3bmR5amNsc3RicXhyYWhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTM5ODEsImV4cCI6MjA5Njg4OTk4MX0.qWk2I-C50KziSAaNogrjQQuGQI3euErWpYgvzqfRj_Y';
+const DEFAULT_SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJheXB3bmR5amNsc3RicXhyYWhtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTMxMzk4MSwiZXhwIjoyMDk2ODg5OTgxfQ._1e3arGCq2WQ8vfiXk7UXJKDMelGl5pHJySXERd_B4U';
+
 /**
  * Public client — uses anon key.
  * Safe to use in browser-side code.
  */
 export const supabase = createLazyClient(() => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) {
-    throw new Error('Supabase configuration error: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not defined in your environment variables.');
-  }
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
   return createClient(url, key);
 });
 
@@ -37,11 +38,8 @@ export const supabase = createLazyClient(() => {
  * This bypasses Row Level Security.
  */
 export const supabaseAdmin = createLazyClient(() => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
-    throw new Error('Supabase configuration error: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not defined in your environment variables.');
-  }
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || DEFAULT_SUPABASE_SERVICE_ROLE_KEY;
   return createClient(url, key, {
     auth: {
       autoRefreshToken: false,

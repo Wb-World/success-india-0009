@@ -13,7 +13,7 @@ export async function GET() {
 
     if (error) {
       console.error('Error fetching achievers config:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to retrieve achievers data' }, { status: 500 });
     }
 
     const cacheHeaders = {
@@ -61,7 +61,7 @@ export async function GET() {
     return NextResponse.json({ achievers: defaultData }, { headers: cacheHeaders });
   } catch (err: any) {
     console.error('Achievers GET error:', err);
-    return NextResponse.json({ error: err.message || 'An error occurred' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to retrieve achievers' }, { status: 500 });
   }
 }
 
@@ -88,12 +88,12 @@ export async function POST(request: Request) {
 
     if (upsertError) {
       console.error('Save achievers error:', upsertError);
-      return NextResponse.json({ error: upsertError.message }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to save achievers data' }, { status: 500 });
     }
 
     return NextResponse.json({ message: 'Achievers saved successfully' });
   } catch (err: any) {
     console.error('Achievers POST error:', err);
-    return NextResponse.json({ error: err.message || 'An error occurred' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to save achievers data' }, { status: 500 });
   }
 }

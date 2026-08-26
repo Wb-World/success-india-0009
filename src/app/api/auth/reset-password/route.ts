@@ -93,7 +93,7 @@ export async function POST(request: Request) {
   } catch (err: any) {
     console.error('[reset-password] API error:', err);
     return NextResponse.json(
-      { error: err?.message || 'An unexpected error occurred' },
+      { error: 'An unexpected error occurred. Please try again.' },
       { status: 500 }
     );
   }

@@ -42,10 +42,8 @@ export async function POST(request: Request) {
       });
 
     if (uploadError) {
-      console.error('Supabase storage upload error details:', uploadError);
-      const causeMsg = (uploadError as any).cause ? ` | Cause: ${(uploadError as any).cause.message || String((uploadError as any).cause)}` : '';
-      const stringified = JSON.stringify(uploadError);
-      throw new Error(`Supabase Storage upload failed: ${uploadError.message}${causeMsg} | Details: ${stringified}`);
+      console.error('Storage upload error:', uploadError);
+      return NextResponse.json({ error: 'Failed to upload payment proof. Please try again.' }, { status: 500 });
     }
 
     // Generate Public URL for the uploaded file
@@ -55,20 +53,14 @@ export async function POST(request: Request) {
       .getPublicUrl(fileName);
 
     if (!urlData || !urlData.publicUrl) {
-      throw new Error('Failed to generate public URL for the uploaded file.');
+      return NextResponse.json({ error: 'Failed to retrieve uploaded file URL.' }, { status: 500 });
     }
 
-    console.log('Successfully uploaded image. Public URL:', urlData.publicUrl);
     return NextResponse.json({ url: urlData.publicUrl }, { status: 201 });
   } catch (err: any) {
-    console.error('Backend File upload error details:', err);
-    if (err.cause) {
-      console.error('Backend File upload error cause details:', err.cause);
-    }
-    const causeMsg = err.cause ? ` | Cause: ${err.cause.message || String(err.cause)}` : '';
-    const errorStack = err.stack ? ` | Stack: ${err.stack}` : '';
+    console.error('File upload error:', err);
     return NextResponse.json({ 
-      error: `Failed to process and upload image proof. Error: ${err.message || String(err)}${causeMsg}${errorStack}` 
+      error: 'Failed to process and upload image proof. Please try again.' 
     }, { status: 500 });
   }
 }

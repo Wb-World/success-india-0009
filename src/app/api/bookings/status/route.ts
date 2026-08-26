@@ -25,6 +25,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ status: booking.status });
   } catch (err: any) {
     console.error('Error in GET /api/bookings/status:', err);
-    return NextResponse.json({ error: err.message || 'An error occurred' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to retrieve booking status' }, { status: 500 });
   }
 }

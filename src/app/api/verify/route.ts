@@ -44,14 +44,12 @@ export async function GET(request: Request) {
 
     // Actual database / network error
     if (dbError) {
-      console.error('[verify] Supabase DB error for id=%s:', sanitised, dbError);
+      console.error('[verify] Database error for id=%s:', sanitised, dbError);
       return NextResponse.json(
         {
           valid: false,
           reason: 'server_error',
           error: 'A server error occurred while verifying your ticket. Please try again.',
-          // debug field — only logged server-side, not shown to user in UI
-          _debug: process.env.NODE_ENV === 'development' ? dbError.message : undefined,
         },
         { status: 500 }
       );

@@ -102,7 +102,7 @@ export async function POST(request: Request) {
 
     if (updateError) {
       console.error('[Change Password] Database update error:', updateError);
-      return NextResponse.json({ error: 'Failed to update database with new keys.' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to update password. Please try again.' }, { status: 500 });
     }
 
     // 10. Success: reset rate limit and clear secure cookie to terminate session
@@ -125,7 +125,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('[Change Password] Unexpected error:', error);
     return NextResponse.json(
-      { error: error?.message || 'An unexpected error occurred.' },
+      { error: 'An unexpected error occurred.' },
       { status: 500 }
     );
   }

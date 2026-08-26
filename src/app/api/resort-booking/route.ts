@@ -58,13 +58,13 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error('Error inserting resort booking:', error);
-      return NextResponse.json({ error: `Failed to save booking: ${error.message} (${error.code})` }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to save booking. Please try again later.' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, bookingId: data.id }, { status: 200 });
 
   } catch (error: any) {
     console.error('API Error /resort-booking:', error);
-    return NextResponse.json({ error: `Internal server error: ${error.message || String(error)}` }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred while processing your booking.' }, { status: 500 });
   }
 }

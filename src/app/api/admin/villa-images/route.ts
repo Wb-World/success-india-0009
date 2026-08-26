@@ -65,12 +65,12 @@ export async function POST(request: Request) {
 
     if (upsertError) {
       console.error("VILLA_IMAGES_SAVE_FAILED:", upsertError);
-      return NextResponse.json({ error: `Failed to save villa settings to database: ${upsertError.message} (code: ${upsertError.code})` }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to save villa images. Please try again.' }, { status: 500 });
     }
 
     return NextResponse.json({ message: 'Villa images saved successfully' });
   } catch (err: any) {
     console.error('Villa images POST error:', err);
-    return NextResponse.json({ error: `Failed to save villa images: ${err.message || String(err)}` }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to save villa images' }, { status: 500 });
   }
 }

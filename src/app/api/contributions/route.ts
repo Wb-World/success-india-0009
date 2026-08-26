@@ -31,7 +31,7 @@ export async function GET() {
 
     if (error) {
       console.error('Error fetching approved contributions:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to fetch contributions' }, { status: 500 });
     }
 
     // Filter and map only supporter registrations (starting with SUP-) and homepage_visible = true
@@ -63,7 +63,7 @@ export async function GET() {
     return NextResponse.json({ supporters });
   } catch (err: any) {
     console.error('Error in GET /api/contributions:', err);
-    return NextResponse.json({ error: err.message || 'An error occurred' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch contributions' }, { status: 500 });
   }
 }
 

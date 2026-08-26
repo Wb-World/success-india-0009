@@ -55,7 +55,7 @@ export async function GET() {
     });
   } catch (err: any) {
     console.error('Configs GET error details:', err);
-    return NextResponse.json({ error: `Failed to retrieve configurations: ${err.message || String(err)}` }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to retrieve configurations' }, { status: 500 });
   }
 }
 
@@ -140,16 +140,16 @@ export async function POST(request: Request) {
 
       if (upsertError) {
         console.error(`PAYMENT_CONFIG_SAVE_FAILED (${type}) details:`, upsertError);
-        return NextResponse.json({ error: `Failed to save settings: ${upsertError.message || JSON.stringify(upsertError)}` }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to save settings. Please try again.' }, { status: 500 });
       }
     } catch (dbErr: any) {
       console.error(`PAYMENT_CONFIG_SAVE_FAILED (${type}) db error details:`, dbErr);
-      return NextResponse.json({ error: dbErr.message || 'Database write operation failed' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to save settings. Please try again.' }, { status: 500 });
     }
 
     return NextResponse.json({ message: 'Configurations saved successfully' });
   } catch (err: any) {
     console.error('Configs POST error details:', err);
-    return NextResponse.json({ error: `Failed to save configurations: ${err.message || String(err)}` }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to save configurations' }, { status: 500 });
   }
 }

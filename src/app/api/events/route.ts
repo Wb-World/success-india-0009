@@ -246,7 +246,7 @@ export async function GET(request: Request) {
     );
   } catch (err: any) {
     console.error('Events GET error:', err);
-    return NextResponse.json({ error: err.message || String(err) }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 });
   }
 }
 
@@ -308,7 +308,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ event: formatEvent(data) }, { status: 201 });
   } catch (err: any) {
     console.error('Events POST error:', err);
-    return NextResponse.json({ error: err.message || String(err) }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create event. Please check input data.' }, { status: 500 });
   }
 }
 
@@ -368,7 +368,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ event: formatEvent(data) });
   } catch (err: any) {
     console.error('Events PATCH error:', err);
-    return NextResponse.json({ error: err.message || String(err) }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update event' }, { status: 500 });
   }
 }
 
@@ -399,7 +399,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error('Events DELETE error:', err);
-    return NextResponse.json({ error: err.message || String(err) }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to delete event' }, { status: 500 });
   }
 }
 

@@ -30,6 +30,6 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Notifications PUT error:', error);
-    return NextResponse.json({ error: error.message || 'An error occurred' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update notifications' }, { status: 500 });
   }
 }

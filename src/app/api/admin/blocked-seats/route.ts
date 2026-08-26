@@ -44,7 +44,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ blockedSeats });
   } catch (err: any) {
     console.error('[Blocked Seats GET] error:', err);
-    return NextResponse.json({ error: err.message || 'An error occurred' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to retrieve blocked seats' }, { status: 500 });
   }
 }
 
@@ -81,6 +81,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, message: 'Blocked seats saved successfully' });
   } catch (err: any) {
     console.error('[Blocked Seats POST] error:', err);
-    return NextResponse.json({ error: err.message || 'An error occurred' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to save blocked seats' }, { status: 500 });
   }
 }

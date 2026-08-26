@@ -57,8 +57,8 @@ export async function POST(request: Request) {
       });
 
     if (uploadError) {
-      console.error('Supabase storage upload error details:', uploadError);
-      throw new Error(`Supabase Storage upload failed: ${uploadError.message}`);
+      console.error('Banner upload error:', uploadError);
+      return NextResponse.json({ error: 'Failed to upload event banner. Please try again.' }, { status: 500 });
     }
 
     // Generate Public URL for the uploaded file
@@ -68,15 +68,14 @@ export async function POST(request: Request) {
       .getPublicUrl(fileName);
 
     if (!urlData || !urlData.publicUrl) {
-      throw new Error('Failed to generate public URL for the uploaded file.');
+      return NextResponse.json({ error: 'Failed to retrieve banner URL.' }, { status: 500 });
     }
 
-    console.log('Successfully uploaded banner image. Public URL:', urlData.publicUrl);
     return NextResponse.json({ url: urlData.publicUrl }, { status: 201 });
   } catch (err: any) {
-    console.error('Backend File upload error details:', err);
+    console.error('Banner upload error:', err);
     return NextResponse.json({ 
-      error: `Failed to process and upload event banner. Error: ${err.message || String(err)}` 
+      error: 'Failed to process and upload event banner. Please try again.' 
     }, { status: 500 });
   }
 }
@@ -101,11 +100,13 @@ export async function DELETE(request: Request) {
       .remove([fileName]);
 
     if (deleteError) {
-      return NextResponse.json({ error: deleteError.message }, { status: 500 });
+      console.error('Delete banner error:', deleteError);
+      return NextResponse.json({ error: 'Failed to delete banner file.' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, message: 'File deleted successfully' });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message || String(err) }, { status: 500 });
+    console.error('Delete banner exception:', err);
+    return NextResponse.json({ error: 'Failed to delete file. Please try again.' }, { status: 500 });
   }
 }
