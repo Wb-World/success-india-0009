@@ -1,34 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { sendTwoFactorOtp } from '@/lib/twofactor';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * Normalizes phone numbers to standard 10-digit suffix for comparison
- */
 function getPhoneDigitsOnly(phone: string): string {
   return (phone || '').replace(/\D/g, '').slice(-10);
 }
 
-/**
- * Formats a phone number into international E.164 format (e.g. +919876543210)
- */
-function formatE164(phone: string): string {
-  const cleaned = (phone || '').trim().replace(/[^\d+]/g, '');
-  if (cleaned.startsWith('+')) {
-    return cleaned;
-  }
-  const digits = cleaned.replace(/\D/g, '');
-  if (digits.length === 10) {
-    return `+91${digits}`;
-  }
-  if (digits.length === 12 && digits.startsWith('91')) {
-    return `+${digits}`;
-  }
-  return `+${digits}`;
-}
-
-/** Mask phone number: show only last 4 digits */
 function maskPhone(phone: string): string {
   if (!phone || phone.length < 4) return '****';
   return `****${phone.slice(-4)}`;
@@ -93,14 +72,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Return the formatted E.164 phone number for Firebase Phone Auth
-    const e164Phone = formatE164(cleanPhone);
+    // Send OTP via 2Factor.in SMS Gateway (No DB storage of OTP)
+    const smsResult = await sendTwoFactorOtp(phoneDigits);
+
+    if (!smsResult.success || !smsResult.sessionId) {
+      return NextResponse.json(
+        { error: smsResult.error || 'Failed to dispatch SMS OTP. Please try again.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      phoneNumber: e164Phone,
+      sessionId: smsResult.sessionId,
       maskedPhone: maskPhone(dbUser.phone),
-      message: 'Account verified. Sending OTP via Firebase...',
+      message: `OTP sent successfully to your mobile number ending in ${maskPhone(dbUser.phone)}.`,
     });
   } catch (err: any) {
     console.error('[forgot-password] Error:', err);

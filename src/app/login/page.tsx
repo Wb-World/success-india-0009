@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense, useRef } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -18,15 +18,6 @@ import {
   ShieldCheck,
   RefreshCw,
 } from 'lucide-react';
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
-import { getFirebaseAuth } from '@/lib/firebase';
-
-declare global {
-  interface Window {
-    recaptchaVerifier?: RecaptchaVerifier;
-    confirmationResult?: ConfirmationResult;
-  }
-}
 
 type FpStep = 'credentials' | 'otp' | 'newPassword';
 
@@ -44,9 +35,9 @@ function LoginContent() {
   const [fpUsername, setFpUsername] = useState('');
   const [fpPhone, setFpPhone] = useState('');
   const [fpMaskedPhone, setFpMaskedPhone] = useState('');
-  const [fpE164Phone, setFpE164Phone] = useState('');
+  const [fpSessionId, setFpSessionId] = useState('');
   const [fpOtp, setFpOtp] = useState('');
-  const [firebaseIdToken, setFirebaseIdToken] = useState('');
+  const [fpResetToken, setFpResetToken] = useState('');
   const [fpNewPassword, setFpNewPassword] = useState('');
   const [fpConfirmPassword, setFpConfirmPassword] = useState('');
   const [fpShowPwd, setFpShowPwd] = useState(false);
@@ -56,8 +47,6 @@ function LoginContent() {
   const [fpSuccess, setFpSuccess] = useState(false);
   const [fpCooldown, setFpCooldown] = useState(0);
   const [resetSuccess, setResetSuccess] = useState(false);
-
-  const confirmationResultRef = useRef<ConfirmationResult | null>(null);
 
   useEffect(() => {
     const sessionActive = sessionStorage.getItem('session_active');
@@ -74,49 +63,14 @@ function LoginContent() {
     return () => clearInterval(timer);
   }, [fpCooldown]);
 
-  const cleanupRecaptcha = () => {
-    if (typeof window !== 'undefined') {
-      if (window.recaptchaVerifier) {
-        try {
-          window.recaptchaVerifier.clear();
-        } catch {}
-        window.recaptchaVerifier = undefined;
-      }
-      const container = document.getElementById('firebase-recaptcha-container');
-      if (container) {
-        container.innerHTML = '';
-      }
-    }
-  };
-
-  const getOrCreateRecaptchaVerifier = (auth: any): RecaptchaVerifier => {
-    if (typeof window !== 'undefined' && window.recaptchaVerifier) {
-      return window.recaptchaVerifier;
-    }
-    const container = document.getElementById('firebase-recaptcha-container');
-    if (container) {
-      container.innerHTML = '';
-    }
-    const verifier = new RecaptchaVerifier(auth, 'firebase-recaptcha-container', {
-      size: 'invisible',
-      callback: () => {},
-    });
-    if (typeof window !== 'undefined') {
-      window.recaptchaVerifier = verifier;
-    }
-    return verifier;
-  };
-
   const resetForgotModal = () => {
-    cleanupRecaptcha();
-    confirmationResultRef.current = null;
     setFpStep('credentials');
     setFpUsername('');
     setFpPhone('');
     setFpMaskedPhone('');
-    setFpE164Phone('');
+    setFpSessionId('');
     setFpOtp('');
-    setFirebaseIdToken('');
+    setFpResetToken('');
     setFpNewPassword('');
     setFpConfirmPassword('');
     setFpShowPwd(false);
@@ -165,7 +119,7 @@ function LoginContent() {
     }
   };
 
-  // Step 1: Send OTP via Firebase after validating username & phone against account
+  // Step 1: Send OTP via 2Factor.in
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setFpError('');
@@ -183,7 +137,6 @@ function LoginContent() {
     setFpLoading(true);
 
     try {
-      // 1. Verify username and phone match in DB
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -194,138 +147,100 @@ function LoginContent() {
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        setFpError(data.error || 'Account validation failed. Please check your username and phone number.');
-        setFpLoading(false);
-        return;
-      }
-
-      setFpMaskedPhone(data.maskedPhone || '');
-      setFpE164Phone(data.phoneNumber || '');
-
-      // 2. Initialize Firebase reCAPTCHA and trigger phone auth
-      const auth = getFirebaseAuth();
-      let verifier: RecaptchaVerifier;
-
-      try {
-        verifier = getOrCreateRecaptchaVerifier(auth);
-      } catch {
-        cleanupRecaptcha();
-        verifier = getOrCreateRecaptchaVerifier(auth);
-      }
-
-      console.log('[Firebase Phone Auth] Sending OTP to:', data.phoneNumber);
-      const confirmation = await signInWithPhoneNumber(auth, data.phoneNumber, verifier);
-      console.log('[Firebase Phone Auth] Confirmation received successfully');
-      
-      confirmationResultRef.current = confirmation;
-      if (typeof window !== 'undefined') {
-        window.confirmationResult = confirmation;
-      }
-
-      setFpStep('otp');
-      setFpCooldown(60);
-      setFpError('');
-    } catch (err: any) {
-      console.error('[Firebase Phone Auth Error]', err);
-      cleanupRecaptcha();
-      if (err.code === 'auth/invalid-phone-number') {
-        setFpError('Invalid phone number format for SMS delivery.');
-      } else if (err.code === 'auth/too-many-requests') {
-        setFpError('Too many attempts. Please try again after a few minutes.');
-      } else if (err.code === 'auth/quota-exceeded') {
-        setFpError('Firebase SMS daily quota exceeded. Please use a test phone number on localhost.');
-      } else if (err.code === 'auth/unauthorized-domain') {
-        setFpError('This domain is not authorized in Firebase Console (Authentication > Settings > Authorized domains).');
-      } else if (err.code === 'auth/captcha-check-failed') {
-        setFpError('reCAPTCHA verification failed. Please try again.');
+      if (res.ok && data.success) {
+        setFpMaskedPhone(data.maskedPhone || '');
+        setFpSessionId(data.sessionId || '');
+        setFpStep('otp');
+        setFpCooldown(60);
+        setFpError('');
       } else {
-        setFpError(err.message || 'Failed to send OTP. Please check browser console for details.');
+        setFpError(data.error || 'Failed to dispatch SMS OTP. Please try again.');
       }
+    } catch (err: any) {
+      console.error('[Forgot Password Error]', err);
+      setFpError('Network error. Please check your internet connection.');
     } finally {
       setFpLoading(false);
     }
   };
 
-  // Resend OTP via Firebase
+  // Resend OTP via 2Factor.in
   const handleResendOtp = async () => {
-    if (fpCooldown > 0 || !fpE164Phone) return;
+    if (fpCooldown > 0 || !fpPhone.trim()) return;
     setFpError('');
     setFpLoading(true);
 
     try {
-      const auth = getFirebaseAuth();
-      let verifier: RecaptchaVerifier;
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: fpUsername.trim(),
+          phone: fpPhone.trim(),
+        }),
+      });
 
-      try {
-        verifier = getOrCreateRecaptchaVerifier(auth);
-      } catch {
-        cleanupRecaptcha();
-        verifier = getOrCreateRecaptchaVerifier(auth);
-      }
-
-      const confirmation = await signInWithPhoneNumber(auth, fpE164Phone, verifier);
-      confirmationResultRef.current = confirmation;
-      if (typeof window !== 'undefined') {
-        window.confirmationResult = confirmation;
-      }
-
-      setFpCooldown(60);
-      setFpOtp('');
-      setFpError('');
-    } catch (err: any) {
-      console.error('[Firebase Resend Error]', err);
-      cleanupRecaptcha();
-      if (err.code === 'auth/too-many-requests') {
-        setFpError('Too many attempts. Please wait before requesting another OTP.');
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setFpSessionId(data.sessionId || '');
+        setFpCooldown(60);
+        setFpOtp('');
+        setFpError('');
       } else {
-        setFpError(err.message || 'Failed to resend OTP.');
+        setFpError(data.error || 'Failed to resend OTP.');
       }
+    } catch {
+      setFpError('Failed to resend OTP. Please try again.');
     } finally {
       setFpLoading(false);
     }
   };
 
-  // Step 2: Verify OTP directly with Firebase
+  // Step 2: Verify OTP via 2Factor.in
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setFpError('');
 
-    if (fpOtp.trim().length !== 6) {
-      setFpError('Please enter the complete 6-digit OTP.');
+    if (!fpOtp.trim()) {
+      setFpError('Please enter the OTP received on your mobile.');
       return;
     }
 
-    const confirmation = confirmationResultRef.current || (typeof window !== 'undefined' ? window.confirmationResult : null);
-    if (!confirmation) {
-      setFpError('Verification session expired. Please send OTP again.');
+    if (!fpSessionId) {
+      setFpError('Verification session expired. Please request OTP again.');
       setFpStep('credentials');
       return;
     }
 
     setFpLoading(true);
     try {
-      const userCredential = await confirmation.confirm(fpOtp.trim());
-      const token = await userCredential.user.getIdToken();
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: fpSessionId,
+          otp: fpOtp.trim(),
+          username: fpUsername.trim(),
+        }),
+      });
 
-      setFirebaseIdToken(token);
-      setFpStep('newPassword');
-      setFpError('');
-    } catch (err: any) {
-      console.error('[Firebase OTP Confirm Error]', err);
-      if (err.code === 'auth/invalid-verification-code') {
-        setFpError('Incorrect OTP. Please enter the valid 6-digit code sent to your phone.');
-      } else if (err.code === 'auth/code-expired') {
-        setFpError('The OTP has expired. Please click "Resend OTP" to receive a new code.');
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setFpResetToken(data.resetToken);
+        setFpStep('newPassword');
+        setFpError('');
       } else {
-        setFpError(err.message || 'OTP verification failed. Please try again.');
+        setFpError(data.error || 'Incorrect OTP code. Please check and try again.');
       }
+    } catch (err: any) {
+      console.error('[OTP Verify Error]', err);
+      setFpError('An unexpected error occurred during OTP verification.');
     } finally {
       setFpLoading(false);
     }
   };
 
-  // Step 3: Update Password with verified Firebase token
+  // Step 3: Update Password
   const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setFpError('');
@@ -355,7 +270,7 @@ function LoginContent() {
         body: JSON.stringify({
           username: fpUsername.trim(),
           newPassword: fpNewPassword,
-          idToken: firebaseIdToken,
+          token: fpResetToken,
         }),
       });
 
@@ -382,9 +297,6 @@ function LoginContent() {
       <div className="blur-circle circle-1"></div>
       <div className="blur-circle circle-2"></div>
       <div className="blur-circle circle-3"></div>
-
-      {/* Persistent recaptcha container */}
-      <div id="firebase-recaptcha-container"></div>
 
       <div className="login-wrapper">
         <div className="login-card glass-card animate-scale-in">
@@ -524,7 +436,7 @@ function LoginContent() {
                   </div>
                   <h2 className="fp-title">Forgot Password?</h2>
                   <p className="fp-desc">
-                    Enter your username and registered mobile number to receive an SMS OTP.
+                    Enter your username and registered 10-digit mobile number to receive an instant SMS OTP.
                   </p>
                 </div>
                 <form onSubmit={handleSendOtp} className="fp-form">
@@ -564,7 +476,7 @@ function LoginContent() {
                         type="tel"
                         value={fpPhone}
                         onChange={(e) => setFpPhone(e.target.value)}
-                        placeholder="10-digit mobile number (e.g. 9876543210)"
+                        placeholder="10-digit mobile number (e.g. 9944994778)"
                         className="fp-input"
                         required
                         id="fp-phone-input"
@@ -578,7 +490,7 @@ function LoginContent() {
                     disabled={fpLoading}
                     id="fp-send-otp-btn"
                   >
-                    {fpLoading ? 'Sending OTP…' : 'Send OTP'}
+                    {fpLoading ? 'Sending SMS OTP…' : 'Send OTP'}
                   </button>
                 </form>
               </>
@@ -593,7 +505,7 @@ function LoginContent() {
                   </div>
                   <h2 className="fp-title">Enter OTP</h2>
                   <p className="fp-desc">
-                    A 6-digit verification code has been sent via SMS to your mobile ending in{' '}
+                    An SMS verification code has been dispatched to your mobile ending in{' '}
                     <strong>{fpMaskedPhone}</strong>.
                   </p>
                 </div>
@@ -605,14 +517,13 @@ function LoginContent() {
                     </div>
                   )}
                   <div className="fp-form-group">
-                    <label className="fp-label">6-Digit SMS Code</label>
+                    <label className="fp-label">Enter SMS OTP</label>
                     <input
                       type="text"
                       inputMode="numeric"
-                      pattern="[0-9]{6}"
-                      maxLength={6}
+                      maxLength={8}
                       value={fpOtp}
-                      onChange={(e) => setFpOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      onChange={(e) => setFpOtp(e.target.value.replace(/\D/g, '').slice(0, 8))}
                       placeholder="• • • • • •"
                       className="fp-otp-input"
                       required
@@ -624,7 +535,7 @@ function LoginContent() {
                   <button
                     type="submit"
                     className="fp-submit-btn"
-                    disabled={fpLoading || fpOtp.length !== 6}
+                    disabled={fpLoading || fpOtp.length < 4}
                     id="fp-verify-otp-btn"
                   >
                     {fpLoading ? 'Verifying OTP…' : 'Verify OTP'}
@@ -655,7 +566,7 @@ function LoginContent() {
                   </div>
                   <h2 className="fp-title">Set New Password</h2>
                   <p className="fp-desc">
-                    Phone verified successfully! Enter a strong new password for your account.
+                    OTP verified successfully! Enter a strong new password for your account.
                   </p>
                 </div>
                 <form onSubmit={handleSetPassword} className="fp-form">

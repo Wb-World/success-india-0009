@@ -1,31 +1,44 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
 import { hashPassword } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-function getPhoneDigitsOnly(phone: string): string {
-  return (phone || '').replace(/\D/g, '').slice(-10);
-}
+const RESET_SECRET = process.env.JWT_SECRET || 'success_team_secret_2026_jwt_token_salt';
 
 /**
- * Parses and verifies basic claims of a Firebase ID Token payload
+ * Validates the reset token signature and expiration
  */
-function parseJwtPayload(token: string): any | null {
+function verifyResetToken(token: string, expectedUsername: string): boolean {
   try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const jsonStr = Buffer.from(base64, 'base64').toString('utf8');
-    return JSON.parse(jsonStr);
+    const raw = Buffer.from(token, 'base64url').toString('utf8');
+    const parts = raw.split(':');
+    if (parts.length !== 3) return false;
+
+    const [tokenUsername, expiresAtStr, tokenHmac] = parts;
+    const expiresAt = parseInt(expiresAtStr, 10);
+
+    if (isNaN(expiresAt) || Date.now() > expiresAt) {
+      return false;
+    }
+
+    if (tokenUsername.toLowerCase() !== expectedUsername.trim().toLowerCase()) {
+      return false;
+    }
+
+    const payload = `${tokenUsername}:${expiresAtStr}`;
+    const expectedHmac = crypto.createHmac('sha256', RESET_SECRET).update(payload).digest('hex');
+
+    return crypto.timingSafeEqual(Buffer.from(tokenHmac), Buffer.from(expectedHmac));
   } catch {
-    return null;
+    return false;
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const { username, newPassword, idToken } = await request.json();
+    const { username, newPassword, token } = await request.json();
 
     if (!username || !username.trim()) {
       return NextResponse.json(
@@ -55,29 +68,20 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!idToken || typeof idToken !== 'string') {
+    if (!token || typeof token !== 'string') {
       return NextResponse.json(
-        { error: 'Invalid or missing Firebase authentication token. Please verify OTP first.' },
+        { error: 'Invalid or missing verification session. Please verify OTP again.' },
         { status: 401 }
       );
     }
 
     const cleanUsername = username.trim();
 
-    // Verify Firebase token payload
-    const payload = parseJwtPayload(idToken);
-    if (!payload || !payload.phone_number) {
+    // Verify token signature
+    const isValidToken = verifyResetToken(token, cleanUsername);
+    if (!isValidToken) {
       return NextResponse.json(
-        { error: 'Invalid authentication session. Please verify OTP again.' },
-        { status: 401 }
-      );
-    }
-
-    // Check token expiration
-    const now = Math.floor(Date.now() / 1000);
-    if (payload.exp && payload.exp < now) {
-      return NextResponse.json(
-        { error: 'Your OTP verification session has expired. Please verify OTP again.' },
+        { error: 'Verification session has expired or is invalid. Please verify OTP again.' },
         { status: 401 }
       );
     }
@@ -85,7 +89,7 @@ export async function POST(request: Request) {
     // Find user in database
     const { data: dbUser, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, username, phone')
+      .select('id, username')
       .ilike('username', cleanUsername)
       .maybeSingle();
 
@@ -93,17 +97,6 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Account not found.' },
         { status: 404 }
-      );
-    }
-
-    // Ensure phone number in token matches user's registered phone number
-    const tokenPhoneDigits = getPhoneDigitsOnly(payload.phone_number);
-    const dbPhoneDigits = getPhoneDigitsOnly(dbUser.phone);
-
-    if (tokenPhoneDigits !== dbPhoneDigits) {
-      return NextResponse.json(
-        { error: 'Verified phone number does not match this user account.' },
-        { status: 403 }
       );
     }
 
