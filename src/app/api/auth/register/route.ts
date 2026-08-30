@@ -6,71 +6,81 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const { username, password, name, phone } = await request.json();
+    const body = await request.json();
+    const memberId = (body.memberId || body.username || '').trim();
+    const cleanPhone = (body.phone || '').trim();
+    const password = body.password || '';
 
-    if (!username || !password || !name || !phone) {
+    if (!memberId || !password || !cleanPhone) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: 'All fields (Member ID, Phone Number, Password) are required.' },
         { status: 400 }
       );
     }
 
     if (password.length < 8) {
       return NextResponse.json(
-        { error: 'Password must be at least 8 characters' },
+        { error: 'Password must be at least 8 characters long.' },
         { status: 400 }
       );
     }
 
-    // Check if username already exists
-    const { data: existingUsername } = await supabaseAdmin
+    // Check if Member ID already exists in member_id column
+    const { data: existingUser } = await supabaseAdmin
       .from('users')
       .select('id')
-      .ilike('username', username)
+      .ilike('member_id', memberId)
       .maybeSingle();
 
-    if (existingUsername) {
+    if (existingUser) {
       return NextResponse.json(
-        { error: 'Username already exists' },
+        { error: 'Member ID already exists.' },
         { status: 400 }
       );
     }
 
-    // Check if phone already exists
+    // Check if phone number already exists
     const { data: existingPhone } = await supabaseAdmin
       .from('users')
       .select('id')
-      .eq('phone', phone)
+      .eq('phone', cleanPhone)
       .maybeSingle();
 
     if (existingPhone) {
       return NextResponse.json(
-        { error: 'Phone number already registered' },
+        { error: 'Phone number is already registered.' },
         { status: 400 }
       );
     }
 
-    // Create new user
+    // Create new user with member_id column
     const newId = `usr_${Date.now()}`;
     const hashedPassword = hashPassword(password);
-    
+    const isEmail = memberId.includes('@');
+
+    const insertPayload: any = {
+      id: newId,
+      member_id: memberId,
+      password: hashedPassword,
+      name: memberId,
+      phone: cleanPhone,
+      role: 'user',
+    };
+
+    if (isEmail) {
+      insertPayload.email = memberId;
+    }
+
     const { data: newUser, error } = await supabaseAdmin
       .from('users')
-      .insert({
-        id: newId,
-        username,
-        password: hashedPassword,
-        name,
-        phone,
-        role: 'user',
-      })
-      .select('id, username, name, phone, role')
+      .insert(insertPayload)
+      .select('id, member_id, name, phone, role, email')
       .single();
 
     if (error || !newUser) {
       console.error('Register insert error:', error);
       return NextResponse.json(
-        { error: 'Failed to create account' },
+        { error: 'Failed to create account. Please try again.' },
         { status: 500 }
       );
     }

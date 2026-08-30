@@ -3,17 +3,19 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Phone, Lock, CheckCircle2, ShieldAlert, ArrowRight, UserPlus } from 'lucide-react';
+import { User, Phone, Lock, CheckCircle2, ShieldAlert, ArrowRight, UserPlus, Eye, EyeOff } from 'lucide-react';
 
 export default function Signup() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    username: '',
+    memberId: '',
     phone: '',
     password: '',
     confirmPassword: '',
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,21 +25,28 @@ export default function Signup() {
     setError('');
     setSuccess('');
 
-    const { username, phone, password, confirmPassword } = formData;
+    const { memberId, phone, password, confirmPassword } = formData;
+    const cleanMemberId = memberId.trim();
+    const cleanPhone = phone.trim();
 
     // Front-end validations
-    if (!username || !phone || !password || !confirmPassword) {
-      setError('All fields are required');
+    if (!cleanMemberId || !cleanPhone || !password || !confirmPassword) {
+      setError('All fields are required.');
+      return;
+    }
+
+    if (cleanPhone.replace(/\D/g, '').length < 10) {
+      setError('Please enter a valid 10-digit phone number.');
       return;
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError('Password must be at least 8 characters long.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('Passwords do not match.');
       return;
     }
 
@@ -48,9 +57,8 @@ export default function Signup() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: username.trim(),
-          username: username.trim(),
-          phone: phone.trim(),
+          username: cleanMemberId,
+          phone: cleanPhone,
           password,
         }),
       });
@@ -58,12 +66,14 @@ export default function Signup() {
       const data = await res.json();
 
       if (res.ok) {
-        setSuccess('Account created successfully');
+        setSuccess('Account registered successfully!');
         
         // Save user session in localStorage to auto-login
-        localStorage.setItem('user', JSON.stringify(data.user));
-        // Dispatch custom auth-change event to update navbar/UI
-        window.dispatchEvent(new Event('auth-change'));
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+          sessionStorage.setItem('session_active', '1');
+          window.dispatchEvent(new Event('auth-change'));
+        }
 
         setTimeout(() => {
           const searchParams = new URLSearchParams(window.location.search);
@@ -75,10 +85,10 @@ export default function Signup() {
           }
         }, 1500);
       } else {
-        setError(data.error || 'Failed to create account');
+        setError(data.error || 'Failed to create account. Please try again.');
       }
     } catch (err) {
-      setError('A network error occurred. Please try again.');
+      setError('A network error occurred. Please check your internet connection.');
     } finally {
       setLoading(false);
     }
@@ -94,14 +104,14 @@ export default function Signup() {
       <div className="login-wrapper">
         <div className="login-card glass-card animate-scale-in">
           <div className="card-header">
-            <h1 className="admin-title">Create Account</h1>
-            <p className="card-subtitle">Sign in with a new account to book seats and access your profile history.</p>
+            <h1 className="admin-title">Member Registration</h1>
+            <p className="card-subtitle">Create your account with your Member ID to book seats and access events.</p>
           </div>
 
           {success ? (
             <div className="success-content animate-scale-in">
               <CheckCircle2 size={56} className="success-icon" />
-              <h3 className="success-heading">Registration Success</h3>
+              <h3 className="success-heading">Registration Successful</h3>
               <p className="success-message">{success}</p>
               <p className="redirect-text">Redirecting you to the portal...</p>
             </div>
@@ -113,20 +123,22 @@ export default function Signup() {
                 </div>
               )}
 
-              {/* Username */}
+              {/* Member ID (Username mapped to membership_id in DB) */}
               <div className="form-group">
-                <label className="form-label font-label-custom">Username</label>
+                <label className="form-label font-label-custom">Member ID</label>
                 <div className="input-with-icon">
                   <div className="icon-badge">
                     <User size={15} className="input-field-icon" />
                   </div>
                   <input
                     type="text"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    placeholder="Choose a unique username"
+                    value={formData.memberId}
+                    onChange={(e) => setFormData({ ...formData, memberId: e.target.value })}
+                    placeholder="Enter your Member ID"
                     className="form-control padded-input custom-input-style"
                     required
+                    id="signup-member-id"
+                    autoFocus
                   />
                 </div>
               </div>
@@ -142,9 +154,10 @@ export default function Signup() {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="Enter your phone number"
+                    placeholder="10-digit mobile number"
                     className="form-control padded-input custom-input-style"
                     required
+                    id="signup-phone"
                   />
                 </div>
               </div>
@@ -157,13 +170,22 @@ export default function Signup() {
                     <Lock size={15} className="input-field-icon" />
                   </div>
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder="Minimum 8 characters"
-                    className="form-control padded-input custom-input-style"
+                    className="form-control padded-input custom-input-style pwd-input-style"
                     required
+                    id="signup-password"
                   />
+                  <button
+                    type="button"
+                    className="eye-toggle-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label="Toggle Password Visibility"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
               </div>
 
@@ -175,21 +197,30 @@ export default function Signup() {
                     <Lock size={15} className="input-field-icon" />
                   </div>
                   <input
-                    type="password"
+                    type={showConfirmPassword ? 'text' : 'password'}
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    placeholder="Repeat your password"
-                    className="form-control padded-input custom-input-style"
+                    placeholder="Re-enter your password"
+                    className="form-control padded-input custom-input-style pwd-input-style"
                     required
+                    id="signup-confirm-password"
                   />
+                  <button
+                    type="button"
+                    className="eye-toggle-btn"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label="Toggle Confirm Password Visibility"
+                  >
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
               </div>
 
-              <button type="submit" className="btn btn-primary login-btn hover-glow" disabled={loading}>
+              <button type="submit" className="btn btn-primary login-btn hover-glow" disabled={loading} id="signup-submit-btn">
                 <span className="btn-icon-badge">
                   <UserPlus size={14} />
                 </span>
-                <span>{loading ? 'Registering...' : 'Sign In'}</span>
+                <span>{loading ? 'Creating Account...' : 'Sign Up'}</span>
               </button>
 
               <div className="auth-footer">
@@ -264,10 +295,10 @@ export default function Signup() {
         .login-card {
           width: 100%;
           box-sizing: border-box;
-          background: rgba(255, 255, 255, 0.85);
-          border-radius: var(--radius-2xl);
+          background: rgba(255, 255, 255, 0.88);
+          border-radius: var(--radius-2xl, 24px);
           border: 1px solid rgba(22, 163, 74, 0.25);
-          box-shadow: 0 20px 40px -10px rgba(22, 163, 74, 0.1);
+          box-shadow: 0 20px 40px -10px rgba(22, 163, 74, 0.12);
           backdrop-filter: blur(25px);
           -webkit-backdrop-filter: blur(25px);
           padding: 3rem 2.5rem;
@@ -285,7 +316,7 @@ export default function Signup() {
         }
 
         .admin-title {
-          font-family: var(--font-heading);
+          font-family: var(--font-heading), sans-serif;
           color: #1f2937;
           font-weight: 800;
           font-size: 1.85rem;
@@ -348,7 +379,7 @@ export default function Signup() {
         }
 
         .input-field-icon {
-          color: var(--primary);
+          color: #16a34a;
           opacity: 0.9;
         }
 
@@ -361,9 +392,34 @@ export default function Signup() {
           height: 50px;
           font-size: 0.95rem;
           font-weight: 500;
-          border-radius: var(--radius-lg);
+          border-radius: 12px;
           transition: all 0.25s ease;
           margin: 0;
+        }
+
+        .pwd-input-style {
+          padding-right: 2.75rem;
+        }
+
+        .eye-toggle-btn {
+          position: absolute;
+          right: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
+          color: #6b7280;
+          padding: 4px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          border-radius: 6px;
+          transition: color 0.2s, background-color 0.2s;
+        }
+
+        .eye-toggle-btn:hover {
+          color: #16a34a;
+          background-color: rgba(22, 163, 74, 0.08);
         }
 
         .custom-input-style::placeholder {
@@ -373,14 +429,9 @@ export default function Signup() {
 
         .custom-input-style:focus {
           outline: none;
-          border-color: var(--primary);
+          border-color: #16a34a;
           background: #ffffff;
           box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
-        }
-        
-        .custom-input-style:focus ~ .icon-badge {
-          background: linear-gradient(160deg, rgba(22, 163, 74, 0.22), rgba(22, 163, 74, 0.1));
-          border-color: rgba(22, 163, 74, 0.32);
         }
 
         .padded-input {
@@ -392,12 +443,12 @@ export default function Signup() {
           box-sizing: border-box;
           padding: 0.9rem 1.25rem;
           font-size: 1.02rem;
-          margin-top: 1.25rem;
+          margin-top: 1rem;
           font-weight: 700;
-          background: var(--primary);
+          background: #16a34a;
           border: none;
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-primary);
+          border-radius: 12px;
+          box-shadow: 0 4px 15px rgba(22, 163, 74, 0.25);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -408,6 +459,7 @@ export default function Signup() {
         }
 
         .login-btn:hover:not(:disabled) {
+          background: #15803d;
           transform: translateY(-2px);
           box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
         }
@@ -434,7 +486,7 @@ export default function Signup() {
           border: 1px solid rgba(239, 68, 68, 0.3);
           color: #b91c1c;
           padding: 0.875rem 1rem;
-          border-radius: var(--radius-lg);
+          border-radius: 12px;
           font-size: 0.875rem;
           font-weight: 500;
           line-height: 1.4;
@@ -459,39 +511,39 @@ export default function Signup() {
         }
 
         .success-icon {
-          color: var(--primary);
+          color: #16a34a;
         }
 
         .success-heading {
           font-family: var(--font-heading), sans-serif;
           font-weight: 800;
-          color: var(--primary-dark);
+          color: #15803d;
           font-size: 1.35rem;
           margin: 0;
         }
 
         .success-message {
           font-size: 0.95rem;
-          color: var(--muted);
+          color: #4b5563;
           line-height: 1.5;
         }
 
         .redirect-text {
           font-size: 0.85rem;
-          color: var(--muted-light);
+          color: #6b7280;
         }
 
         .auth-footer {
           text-align: center;
           margin-top: 1.75rem;
           font-size: 0.9rem;
-          color: var(--muted);
+          color: #6b7280;
           border-top: 1px solid rgba(22, 163, 74, 0.15);
           padding-top: 1.25rem;
         }
 
         .auth-link {
-          color: var(--primary);
+          color: #16a34a;
           font-weight: 600;
           display: inline-flex;
           align-items: center;
@@ -501,7 +553,7 @@ export default function Signup() {
         }
 
         .auth-link:hover {
-          color: var(--primary-hover);
+          color: #15803d;
           text-decoration: underline;
         }
 

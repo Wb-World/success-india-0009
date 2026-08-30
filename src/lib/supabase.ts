@@ -51,10 +51,11 @@ export const supabaseAdmin = createLazyClient(() => {
 // ── TypeScript Types matching the Supabase schema ─────────────
 export interface DbUser {
   id: string;
-  username: string;
+  member_id: string;
   password?: string;
   name: string;
   phone: string;
+  email?: string;
   role: 'user' | 'admin';
   created_at?: string;
 }

@@ -5,12 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   User,
-  Phone,
   Lock,
   ShieldAlert,
   ArrowRight,
   Key,
-  Smartphone,
+  Mail,
   X,
   CheckCircle2,
   Eye,
@@ -32,9 +31,9 @@ function LoginContent() {
   // Forgot password modal state
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [fpStep, setFpStep] = useState<FpStep>('credentials');
-  const [fpUsername, setFpUsername] = useState('');
-  const [fpPhone, setFpPhone] = useState('');
-  const [fpMaskedPhone, setFpMaskedPhone] = useState('');
+  const [fpMemberId, setFpMemberId] = useState('');
+  const [fpEmail, setFpEmail] = useState('');
+  const [fpMaskedEmail, setFpMaskedEmail] = useState('');
   const [fpSessionId, setFpSessionId] = useState('');
   const [fpOtp, setFpOtp] = useState('');
   const [fpResetToken, setFpResetToken] = useState('');
@@ -65,9 +64,9 @@ function LoginContent() {
 
   const resetForgotModal = () => {
     setFpStep('credentials');
-    setFpUsername('');
-    setFpPhone('');
-    setFpMaskedPhone('');
+    setFpMemberId('');
+    setFpEmail('');
+    setFpMaskedEmail('');
     setFpSessionId('');
     setFpOtp('');
     setFpResetToken('');
@@ -85,7 +84,8 @@ function LoginContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!username || !password) {
+    const cleanUsername = username.trim();
+    if (!cleanUsername || !password) {
       setError('Please fill in all fields');
       return;
     }
@@ -94,7 +94,7 @@ function LoginContent() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim(), password }),
+        body: JSON.stringify({ username: cleanUsername, password }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -114,7 +114,7 @@ function LoginContent() {
           router.push('/');
         }
       } else {
-        setError(data.error || 'Invalid username/phone or password');
+        setError(data.error || 'Invalid Member ID/Phone or Password');
       }
     } catch {
       setError('A connection error occurred. Please try again.');
@@ -123,17 +123,21 @@ function LoginContent() {
     }
   };
 
-  // Step 1: Send OTP via 2Factor.in
+  // Step 1: Send Gmail OTP by Member ID & Mail ID
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setFpError('');
 
-    if (!fpUsername.trim()) {
-      setFpError('Please enter your Username.');
+    const cleanMemberId = fpMemberId.trim();
+    const cleanEmail = fpEmail.trim();
+
+    if (!cleanMemberId) {
+      setFpError('Please enter your Member ID.');
       return;
     }
-    if (!fpPhone.trim()) {
-      setFpError('Please enter your registered Mobile Number.');
+
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setFpError('Please enter your registered Mail ID (Gmail).');
       return;
     }
 
@@ -145,20 +149,24 @@ function LoginContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: fpUsername.trim(),
-          phone: fpPhone.trim(),
+          membershipId: cleanMemberId,
+          email: cleanEmail,
         }),
       });
 
       const data = await res.json();
       if (res.ok && data.success) {
-        setFpMaskedPhone(data.maskedPhone || '');
+        setFpMaskedEmail(data.maskedEmail || cleanEmail);
         setFpSessionId(data.sessionId || '');
         setFpStep('otp');
         setFpCooldown(60);
         setFpError('');
+        // Dev/demo mode: pre-fill OTP if email delivery not configured
+        if (data.simulated && data.debugOtp) {
+          setFpOtp(data.debugOtp);
+        }
       } else {
-        setFpError(data.error || 'Failed to dispatch SMS OTP. Please try again.');
+        setFpError(data.error || 'Failed to dispatch Gmail OTP. Please check your Member ID & Mail ID.');
       }
     } catch (err: any) {
       console.error('[Forgot Password Error]', err);
@@ -168,9 +176,9 @@ function LoginContent() {
     }
   };
 
-  // Resend OTP via 2Factor.in
+  // Resend Gmail OTP
   const handleResendOtp = async () => {
-    if (fpCooldown > 0 || !fpPhone.trim()) return;
+    if (fpCooldown > 0 || !fpMemberId.trim() || !fpEmail.trim()) return;
     setFpError('');
     setFpLoading(true);
 
@@ -179,8 +187,8 @@ function LoginContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: fpUsername.trim(),
-          phone: fpPhone.trim(),
+          membershipId: fpMemberId.trim(),
+          email: fpEmail.trim(),
         }),
       });
 
@@ -200,13 +208,13 @@ function LoginContent() {
     }
   };
 
-  // Step 2: Verify OTP via 2Factor.in
+  // Step 2: Verify Gmail OTP
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setFpError('');
 
     if (!fpOtp.trim()) {
-      setFpError('Please enter the OTP received on your mobile.');
+      setFpError('Please enter the 6-digit OTP received on your Gmail.');
       return;
     }
 
@@ -224,7 +232,7 @@ function LoginContent() {
         body: JSON.stringify({
           sessionId: fpSessionId,
           otp: fpOtp.trim(),
-          username: fpUsername.trim(),
+          membershipId: fpMemberId.trim(),
         }),
       });
 
@@ -234,7 +242,7 @@ function LoginContent() {
         setFpStep('newPassword');
         setFpError('');
       } else {
-        setFpError(data.error || 'Incorrect OTP code. Please check and try again.');
+        setFpError(data.error || 'Incorrect OTP code. Please check your Gmail and try again.');
       }
     } catch (err: any) {
       console.error('[OTP Verify Error]', err);
@@ -250,15 +258,7 @@ function LoginContent() {
     setFpError('');
 
     if (fpNewPassword.length < 8) {
-      setFpError('Password must be at least 8 characters.');
-      return;
-    }
-    if (!/\d/.test(fpNewPassword)) {
-      setFpError('Password must contain at least one number.');
-      return;
-    }
-    if (!/[^a-zA-Z0-9]/.test(fpNewPassword)) {
-      setFpError('Password must contain at least one special character.');
+      setFpError('Password must be at least 8 characters long.');
       return;
     }
     if (fpNewPassword !== fpConfirmPassword) {
@@ -272,7 +272,7 @@ function LoginContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: fpUsername.trim(),
+          membershipId: fpMemberId.trim(),
           newPassword: fpNewPassword,
           token: fpResetToken,
         }),
@@ -281,11 +281,12 @@ function LoginContent() {
       const data = await res.json();
       if (res.ok && data.success) {
         setFpSuccess(true);
+        setUsername(fpMemberId.trim()); // Pre-fill login username field with Member ID
         setTimeout(() => {
           setShowForgotModal(false);
           resetForgotModal();
           setResetSuccess(true);
-        }, 2000);
+        }, 2200);
       } else {
         setFpError(data.error || 'Failed to update password. Please try again.');
       }
@@ -306,7 +307,7 @@ function LoginContent() {
         <div className="login-card glass-card animate-scale-in">
           <div className="card-header">
             <h1 className="admin-title">Member Login</h1>
-            <p className="card-subtitle">Sign in to book event tickets and access your profile history.</p>
+            <p className="card-subtitle">Sign in with your Member ID to book tickets and access your profile.</p>
           </div>
 
           {resetSuccess && (
@@ -330,7 +331,7 @@ function LoginContent() {
               </div>
             )}
             <div className="form-group">
-              <label className="form-label font-label-custom">Username</label>
+              <label className="form-label font-label-custom">Member ID / Phone</label>
               <div className="input-with-icon">
                 <div className="icon-badge">
                   <User size={15} className="input-field-icon" />
@@ -339,9 +340,10 @@ function LoginContent() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter Username or Phone Number"
+                  placeholder="Enter Member ID or Phone Number"
                   className="form-control padded-input custom-input-style"
                   required
+                  id="login-member-id"
                 />
               </div>
             </div>
@@ -358,6 +360,7 @@ function LoginContent() {
                   placeholder="Enter your password"
                   className="form-control padded-input custom-input-style"
                   required
+                  id="login-password"
                 />
               </div>
             </div>
@@ -378,6 +381,7 @@ function LoginContent() {
               type="submit"
               className="btn btn-primary login-btn hover-glow"
               disabled={loading}
+              id="login-submit-btn"
             >
               <span className="btn-icon-badge">
                 <Key size={14} />
@@ -387,7 +391,7 @@ function LoginContent() {
             <div className="auth-footer">
               Don&apos;t have an account?{' '}
               <Link href="/signup" className="auth-link">
-                Sign In <ArrowRight size={14} />
+                Sign Up <ArrowRight size={14} />
               </Link>
             </div>
           </form>
@@ -431,16 +435,16 @@ function LoginContent() {
               <div className={`fp-step-dot ${fpStep === 'newPassword' ? 'active' : ''}`}>3</div>
             </div>
 
-            {/* Step 1: Ask for Username and Phone Number */}
+            {/* Step 1: Ask for Member ID & Mail ID */}
             {fpStep === 'credentials' && (
               <>
                 <div className="fp-header">
                   <div className="fp-icon-ring">
-                    <Smartphone size={22} className="fp-phone-icon" />
+                    <Mail size={22} className="fp-phone-icon" />
                   </div>
                   <h2 className="fp-title">Forgot Password?</h2>
                   <p className="fp-desc">
-                    Enter your username and registered 10-digit mobile number to receive an instant SMS OTP.
+                    Enter your Member ID and Mail ID to receive a 6-digit verification OTP on your Gmail.
                   </p>
                 </div>
                 <form onSubmit={handleSendOtp} className="fp-form">
@@ -452,38 +456,38 @@ function LoginContent() {
                   )}
 
                   <div className="fp-form-group">
-                    <label className="fp-label">Username</label>
+                    <label className="fp-label">Member ID</label>
                     <div className="fp-input-wrap">
                       <div className="fp-icon-badge">
                         <User size={14} className="fp-input-icon" />
                       </div>
                       <input
                         type="text"
-                        value={fpUsername}
-                        onChange={(e) => setFpUsername(e.target.value)}
-                        placeholder="Enter your username"
+                        value={fpMemberId}
+                        onChange={(e) => setFpMemberId(e.target.value)}
+                        placeholder="Enter your Member ID"
                         className="fp-input"
                         required
-                        id="fp-username-input"
+                        id="fp-membership-id-input"
                         autoFocus
                       />
                     </div>
                   </div>
 
                   <div className="fp-form-group">
-                    <label className="fp-label">Phone Number</label>
+                    <label className="fp-label">Registered Mail ID (Gmail)</label>
                     <div className="fp-input-wrap">
                       <div className="fp-icon-badge">
-                        <Phone size={14} className="fp-input-icon" />
+                        <Mail size={14} className="fp-input-icon" />
                       </div>
                       <input
-                        type="tel"
-                        value={fpPhone}
-                        onChange={(e) => setFpPhone(e.target.value)}
-                        placeholder="10-digit mobile number (e.g. 9944994778)"
+                        type="email"
+                        value={fpEmail}
+                        onChange={(e) => setFpEmail(e.target.value)}
+                        placeholder="Enter your Gmail address"
                         className="fp-input"
                         required
-                        id="fp-phone-input"
+                        id="fp-email-input"
                       />
                     </div>
                   </div>
@@ -494,23 +498,23 @@ function LoginContent() {
                     disabled={fpLoading}
                     id="fp-send-otp-btn"
                   >
-                    {fpLoading ? 'Sending SMS OTP…' : 'Send OTP'}
+                    {fpLoading ? 'Sending Gmail OTP…' : 'Send OTP to Gmail'}
                   </button>
                 </form>
               </>
             )}
 
-            {/* Step 2: Ask for OTP */}
+            {/* Step 2: Ask for 6-Digit Gmail OTP */}
             {fpStep === 'otp' && (
               <>
                 <div className="fp-header">
                   <div className="fp-icon-ring fp-icon-ring-otp">
-                    <Smartphone size={22} className="fp-phone-icon-blue" />
+                    <Mail size={22} className="fp-phone-icon-blue" />
                   </div>
-                  <h2 className="fp-title">Enter OTP</h2>
+                  <h2 className="fp-title">Enter Gmail OTP</h2>
                   <p className="fp-desc">
-                    An SMS verification code has been dispatched to your mobile ending in{' '}
-                    <strong>{fpMaskedPhone}</strong>.
+                    A 6-digit OTP code has been dispatched to your Gmail ending in{' '}
+                    <strong style={{ color: '#16a34a' }}>{fpMaskedEmail}</strong>.
                   </p>
                 </div>
                 <form onSubmit={handleVerifyOtp} className="fp-form">
@@ -521,13 +525,13 @@ function LoginContent() {
                     </div>
                   )}
                   <div className="fp-form-group">
-                    <label className="fp-label">Enter SMS OTP</label>
+                    <label className="fp-label">Enter 6-Digit OTP Code</label>
                     <input
                       type="text"
                       inputMode="numeric"
-                      maxLength={8}
+                      maxLength={6}
                       value={fpOtp}
-                      onChange={(e) => setFpOtp(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                      onChange={(e) => setFpOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       placeholder="• • • • • •"
                       className="fp-otp-input"
                       required
@@ -539,13 +543,13 @@ function LoginContent() {
                   <button
                     type="submit"
                     className="fp-submit-btn"
-                    disabled={fpLoading || fpOtp.length < 4}
+                    disabled={fpLoading || fpOtp.length < 6}
                     id="fp-verify-otp-btn"
                   >
                     {fpLoading ? 'Verifying OTP…' : 'Verify OTP'}
                   </button>
                   <div className="fp-resend-row">
-                    <span className="fp-resend-label">Didn&apos;t receive it?</span>
+                    <span className="fp-resend-label">Didn&apos;t receive email?</span>
                     <button
                       type="button"
                       className={`fp-resend-btn${fpCooldown > 0 ? ' disabled' : ''}`}
@@ -568,9 +572,9 @@ function LoginContent() {
                   <div className="fp-icon-ring fp-icon-ring-pwd">
                     <ShieldCheck size={22} className="fp-shield-icon" />
                   </div>
-                  <h2 className="fp-title">Set New Password</h2>
+                  <h2 className="fp-title">Reset Password</h2>
                   <p className="fp-desc">
-                    OTP verified successfully! Enter a strong new password for your account.
+                    Gmail OTP verified! Enter a new password for Membership ID: <strong>{fpMemberId}</strong>.
                   </p>
                 </div>
                 <form onSubmit={handleSetPassword} className="fp-form">
@@ -590,7 +594,7 @@ function LoginContent() {
                         type={fpShowPwd ? 'text' : 'password'}
                         value={fpNewPassword}
                         onChange={(e) => setFpNewPassword(e.target.value)}
-                        placeholder="Min 8 chars, 1 number, 1 special"
+                        placeholder="Minimum 8 characters"
                         className="fp-input fp-pwd-input"
                         required
                         id="fp-new-password-input"
@@ -601,7 +605,7 @@ function LoginContent() {
                         type="button"
                         className="fp-eye-btn"
                         onClick={() => setFpShowPwd((v) => !v)}
-                        aria-label="Toggle"
+                        aria-label="Toggle password view"
                       >
                         {fpShowPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
@@ -609,16 +613,6 @@ function LoginContent() {
                     <div className="fp-pwd-hints">
                       <span className={`fp-pwd-hint${fpNewPassword.length >= 8 ? ' ok' : ''}`}>
                         <CheckCircle2 size={11} /> 8+ chars
-                      </span>
-                      <span className={`fp-pwd-hint${/\d/.test(fpNewPassword) ? ' ok' : ''}`}>
-                        <CheckCircle2 size={11} /> 1 number
-                      </span>
-                      <span
-                        className={`fp-pwd-hint${
-                          /[^a-zA-Z0-9]/.test(fpNewPassword) ? ' ok' : ''
-                        }`}
-                      >
-                        <CheckCircle2 size={11} /> 1 special
                       </span>
                     </div>
                   </div>
@@ -642,7 +636,7 @@ function LoginContent() {
                         type="button"
                         className="fp-eye-btn"
                         onClick={() => setFpShowConfirm((v) => !v)}
-                        aria-label="Toggle"
+                        aria-label="Toggle confirm password view"
                       >
                         {fpShowConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
@@ -657,23 +651,25 @@ function LoginContent() {
                     disabled={fpLoading}
                     id="fp-set-password-btn"
                   >
-                    {fpLoading ? 'Updating…' : 'Update Password'}
+                    {fpLoading ? 'Updating Password…' : 'Reset Password'}
                   </button>
                 </form>
               </>
             )}
 
-            {/* Success state */}
+            {/* Success state with animation */}
             {fpSuccess && (
-              <div className="fp-success-container">
-                <div className="fp-success-icon-wrap">
-                  <ShieldCheck size={36} className="fp-success-shield" />
+              <div className="fp-success-container animate-scale-in">
+                <div className="success-pulse-ring">
+                  <div className="fp-success-icon-wrap">
+                    <CheckCircle2 size={46} className="fp-success-shield" />
+                  </div>
                 </div>
-                <h2 className="fp-title" style={{ textAlign: 'center' }}>
-                  Password Updated!
+                <h2 className="fp-title success-anim-title" style={{ textAlign: 'center', color: '#15803d' }}>
+                  Password Reset Successfully!
                 </h2>
-                <p className="fp-desc" style={{ textAlign: 'center' }}>
-                  Your password has been changed successfully. You can now log in.
+                <p className="fp-desc" style={{ textAlign: 'center', fontSize: '0.9rem' }}>
+                  Your password has been changed. Pre-filling your Membership ID for login...
                 </p>
               </div>
             )}
@@ -689,30 +685,30 @@ function LoginContent() {
         .circle-3 { width: 300px; height: 300px; background: #bbf7d0; top: 40%; left: 60%; animation-delay: -7s; }
         @keyframes float { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(30px) scale(1.1); } }
         .login-wrapper { max-width: 460px; width: 100%; position: relative; z-index: 2; }
-        .login-card { width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.85); border-radius: var(--radius-2xl); border: 1px solid rgba(22,163,74,0.25); box-shadow: 0 20px 40px -10px rgba(22,163,74,0.1); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 3.5rem 2.5rem; transition: border-color 0.3s, box-shadow 0.3s; }
+        .login-card { width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.85); border-radius: var(--radius-2xl, 24px); border: 1px solid rgba(22,163,74,0.25); box-shadow: 0 20px 40px -10px rgba(22,163,74,0.1); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 3.5rem 2.5rem; transition: border-color 0.3s, box-shadow 0.3s; }
         .login-card:hover { border-color: rgba(22,163,74,0.4); box-shadow: 0 25px 50px -12px rgba(22,163,74,0.2); }
         .card-header { text-align: center; margin-bottom: 2.5rem; }
-        .admin-title { font-family: var(--font-heading); color: #1f2937; font-weight: 800; font-size: 1.85rem; letter-spacing: -0.5px; margin: 0 0 0.5rem 0; line-height: 1.2; }
+        .admin-title { font-family: var(--font-heading), sans-serif; color: #1f2937; font-weight: 800; font-size: 1.85rem; letter-spacing: -0.5px; margin: 0 0 0.5rem 0; line-height: 1.2; }
         .card-subtitle { font-size: 0.875rem; color: #4b5563; line-height: 1.6; opacity: 0.9; margin: 0; }
         .login-form { display: flex; flex-direction: column; gap: 1.4rem; }
         .form-group { display: flex; flex-direction: column; gap: 0.55rem; width: 100%; }
         .font-label-custom { color: #374151; font-weight: 650; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
         .input-with-icon { position: relative; display: flex; align-items: center; width: 100%; }
         .icon-badge { position: absolute; left: 7px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 9px; background: linear-gradient(160deg, rgba(22,163,74,0.14), rgba(22,163,74,0.05)); border: 1px solid rgba(22,163,74,0.18); pointer-events: none; transition: background 0.25s ease, border-color 0.25s ease; }
-        .input-field-icon { color: var(--primary); opacity: 0.9; }
-        .custom-input-style { width: 100%; box-sizing: border-box; background: #ffffff; border: 1.5px solid rgba(22,163,74,0.22); color: #1f2937; height: 50px; font-size: 0.95rem; font-weight: 500; border-radius: var(--radius-lg); transition: all 0.25s ease; margin: 0; }
+        .input-field-icon { color: #16a34a; opacity: 0.9; }
+        .custom-input-style { width: 100%; box-sizing: border-box; background: #ffffff; border: 1.5px solid rgba(22,163,74,0.22); color: #1f2937; height: 50px; font-size: 0.95rem; font-weight: 500; border-radius: 12px; transition: all 0.25s ease; margin: 0; }
         .custom-input-style::placeholder { color: #9ca3af; font-weight: 400; }
-        .custom-input-style:focus { outline: none; border-color: var(--primary); background: #ffffff; box-shadow: 0 0 0 3px rgba(22,163,74,0.15); }
+        .custom-input-style:focus { outline: none; border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,0.15); }
         .padded-input { padding-left: 3.1rem; }
-        .login-btn { width: 100%; box-sizing: border-box; padding: 0.9rem 1.25rem; font-size: 1.02rem; margin-top: 1.25rem; font-weight: 700; background: var(--primary); border: none; border-radius: var(--radius-lg); box-shadow: var(--shadow-primary); display: flex; align-items: center; justify-content: center; gap: 0.65rem; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); color: white; }
-        .login-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(16,185,129,0.4); }
+        .login-btn { width: 100%; box-sizing: border-box; padding: 0.9rem 1.25rem; font-size: 1.02rem; margin-top: 1.25rem; font-weight: 700; background: #16a34a; border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(22,163,74,0.25); display: flex; align-items: center; justify-content: center; gap: 0.65rem; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); color: white; }
+        .login-btn:hover:not(:disabled) { background: #15803d; transform: translateY(-2px); box-shadow: 0 10px 25px rgba(16,185,129,0.4); }
         .login-btn:disabled { opacity: 0.75; cursor: not-allowed; transform: none; }
         .btn-icon-badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 7px; background: rgba(255,255,255,0.18); flex-shrink: 0; }
-        .error-alert { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #b91c1c; padding: 0.875rem 1rem; border-radius: var(--radius-lg); font-size: 0.875rem; font-weight: 500; line-height: 1.4; margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 0.6rem; }
+        .error-alert { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #b91c1c; padding: 0.875rem 1rem; border-radius: 12px; font-size: 0.875rem; font-weight: 500; line-height: 1.4; margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 0.6rem; }
         .error-alert svg { flex-shrink: 0; margin-top: 1px; }
-        .auth-footer { text-align: center; margin-top: 1.75rem; font-size: 0.9rem; color: var(--muted); border-top: 1px solid rgba(22,163,74,0.15); padding-top: 1.25rem; }
-        .auth-link { color: var(--primary); font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; margin-left: 0.25rem; transition: color 0.2s ease; }
-        .auth-link:hover { color: var(--primary-hover); text-decoration: underline; }
+        .auth-footer { text-align: center; margin-top: 1.75rem; font-size: 0.9rem; color: #6b7280; border-top: 1px solid rgba(22,163,74,0.15); padding-top: 1.25rem; }
+        .auth-link { color: #16a34a; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; margin-left: 0.25rem; transition: color 0.2s ease; }
+        .auth-link:hover { color: #15803d; text-decoration: underline; }
         .forgot-pwd-row { display: flex; justify-content: center; margin-top: -0.5rem; }
         .forgot-pwd-link { background: none; border: none; padding: 0; font-size: 0.82rem; font-weight: 600; color: #16a34a; cursor: pointer; transition: color 0.2s ease; text-decoration: none; }
         .forgot-pwd-link:hover { color: #15803d; text-decoration: underline; }
@@ -750,7 +746,7 @@ function LoginContent() {
         .fp-input::placeholder { color: #9ca3af; font-weight: 400; }
         .fp-input:focus { outline: none; border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,0.15); }
         .fp-pwd-input { padding-right: 2.5rem; }
-        .fp-otp-input { width: 100%; box-sizing: border-box; background: #f8fafc; border: 2px solid rgba(22,163,74,0.3); color: #1f2937; height: 64px; font-size: 2rem; font-weight: 700; border-radius: 14px; text-align: center; letter-spacing: 0.5rem; transition: all 0.25s ease; }
+        .fp-otp-input { width: 100%; box-sizing: border-box; background: #f8fafc; border: 2px solid rgba(22,163,74,0.3); color: #1f2937; height: 64px; font-size: 2.2rem; font-weight: 800; border-radius: 14px; text-align: center; letter-spacing: 0.6rem; transition: all 0.25s ease; }
         .fp-otp-input::placeholder { color: #d1d5db; font-weight: 400; letter-spacing: 0.4rem; font-size: 1.4rem; }
         .fp-otp-input:focus { outline: none; border-color: #16a34a; box-shadow: 0 0 0 4px rgba(22,163,74,0.15); background: #fff; }
         .fp-eye-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #6b7280; background: none; border: none; padding: 4px; cursor: pointer; display: flex; align-items: center; border-radius: 6px; transition: all 0.2s; }
@@ -767,10 +763,15 @@ function LoginContent() {
         .fp-submit-btn { width: 100%; padding: 0.85rem; font-size: 0.98rem; font-weight: 700; background: #16a34a; color: white; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(22,163,74,0.25); transition: all 0.25s ease; margin-top: 0.25rem; }
         .fp-submit-btn:hover:not(:disabled) { background: #15803d; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(22,163,74,0.35); }
         .fp-submit-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
-        .fp-success-container { display: flex; flex-direction: column; align-items: center; gap: 0.85rem; padding: 1rem 0 0.5rem; }
-        .fp-success-icon-wrap { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, rgba(22,163,74,0.15), rgba(22,163,74,0.05)); border: 2px solid rgba(22,163,74,0.25); display: flex; align-items: center; justify-content: center; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        .fp-success-shield { color: #16a34a; }
-        @keyframes popIn { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .fp-success-container { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 1.5rem 0 1rem; }
+        .success-pulse-ring { position: relative; display: flex; align-items: center; justify-content: center; width: 84px; height: 84px; border-radius: 50%; background: rgba(22, 163, 74, 0.1); animation: pulseGlow 1.8s infinite ease-in-out; }
+        .fp-success-icon-wrap { width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, #22c55e, #15803d); display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(22, 163, 74, 0.35); animation: popScale 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .fp-success-shield { color: #ffffff; }
+        .success-anim-title { animation: fadeIn 0.4s ease forwards; }
+
+        @keyframes popScale { 0% { transform: scale(0.4); opacity: 0; } 80% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.3); } 70% { box-shadow: 0 0 0 18px rgba(22, 163, 74, 0); } 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); } }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
         .animate-shake { animation: shake 0.4s ease; }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }

@@ -188,7 +188,7 @@ export default function Navbar() {
                   <div className="profile-dropdown-menu glass-card animate-slide-down">
                     <div className="dropdown-user-info">
                       {/* <p className="dropdown-user-greeting">Hello 👋</p> */}
-                      <p className="dropdown-username">{user.username || user.name || 'User'}</p>
+                      <p className="dropdown-username">{user.member_id || user.name || 'Member'}</p>
                     </div>
                     <hr className="dropdown-divider" />
                     <Link

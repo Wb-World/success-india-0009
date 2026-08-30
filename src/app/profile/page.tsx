@@ -392,13 +392,13 @@ function ProfileDashboard() {
             {authError && (<div className="auth-error animate-shake"><ShieldAlert size={16} /> <span>{authError}</span></div>)}
             {isLoginTab ? (
               <form onSubmit={handleLoginSubmit}>
-                <div className="form-group"><label className="form-label">Username</label><input type="text" value={loginForm.username} onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })} placeholder="Enter your username" className="form-control" required /></div>
+                <div className="form-group"><label className="form-label">Member ID / Phone</label><input type="text" value={loginForm.username} onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })} placeholder="Enter Member ID or Phone" className="form-control" required /></div>
                 <div className="form-group"><label className="form-label">Password</label><input type="password" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} placeholder="Enter your password" className="form-control" required /></div>
                 <button type="submit" className="btn btn-primary auth-submit-btn" disabled={authLoading}>{authLoading ? 'Signing In...' : 'Access My Account'}</button>
               </form>
             ) : (
               <form onSubmit={handleRegisterSubmit}>
-                <div className="form-group"><label className="form-label">Username</label><input type="text" value={registerForm.username} onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })} placeholder="Select a username" className="form-control" required /></div>
+                <div className="form-group"><label className="form-label">Member ID</label><input type="text" value={registerForm.username} onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })} placeholder="Enter Member ID" className="form-control" required /></div>
                 <div className="form-group"><label className="form-label">Password</label><input type="password" value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} placeholder="Choose a strong password" className="form-control" required /></div>
                 <div className="form-group"><label className="form-label">Full Name</label><input type="text" value={registerForm.name} onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })} placeholder="John Doe" className="form-control" required /></div>
                 <div className="form-group"><label className="form-label">Phone Number</label><input type="text" value={registerForm.phone} onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })} placeholder="+91 98765 43210" className="form-control" required /></div>
@@ -453,6 +453,10 @@ function ProfileDashboard() {
             <hr className="card-divider" />
 
             <div className="profile-details">
+              <div className="detail-row">
+                <User size={18} className="detail-icon" />
+                <div><span className="detail-label">Member ID</span><p className="detail-val">{currentUser.member_id || currentUser.id}</p></div>
+              </div>
               <div className="detail-row">
                 <Phone size={18} className="detail-icon" />
                 <div><span className="detail-label">Phone Number</span><p className="detail-val">{currentUser.phone}</p></div>

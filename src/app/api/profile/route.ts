@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     // Fetch user
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, username, name, phone, role')
+      .select('id, member_id, name, phone, role, email')
       .eq('id', userId)
       .single();
 
@@ -139,7 +139,7 @@ export async function PUT(request: Request) {
       .from('users')
       .update({ name, phone })
       .eq('id', userId)
-      .select('id, username, name, phone, role')
+      .select('id, member_id, name, phone, role, email')
       .single();
 
     if (updateError || !updatedUser) {

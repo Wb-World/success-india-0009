@@ -6,11 +6,13 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const { username, password } = await request.json();
+    const body = await request.json();
+    const loginId = (body.memberId || body.username || '').trim();
+    const password = body.password || '';
 
-    if (!username || !password) {
+    if (!loginId || !password) {
       return NextResponse.json(
-        { error: 'Username/phone and password are required' },
+        { error: 'Member ID / Phone number and password are required' },
         { status: 400 }
       );
     }
@@ -18,21 +20,23 @@ export async function POST(request: Request) {
     let user = null;
     let error = null;
 
-    const usernameQuery = await supabaseAdmin
+    // Search by member_id
+    const userQuery = await supabaseAdmin
       .from('users')
-      .select('id, username, name, phone, role, password')
-      .ilike('username', username)
+      .select('id, member_id, name, phone, role, password, email')
+      .ilike('member_id', loginId)
       .maybeSingle();
 
-    if (usernameQuery.error) {
-      error = usernameQuery.error;
-    } else if (usernameQuery.data) {
-      user = usernameQuery.data;
+    if (userQuery.error) {
+      error = userQuery.error;
+    } else if (userQuery.data) {
+      user = userQuery.data;
     } else {
+      // Search by phone number
       const phoneQuery = await supabaseAdmin
         .from('users')
-        .select('id, username, name, phone, role, password')
-        .eq('phone', username)
+        .select('id, member_id, name, phone, role, password, email')
+        .eq('phone', loginId)
         .maybeSingle();
       
       if (phoneQuery.error) {
@@ -42,20 +46,20 @@ export async function POST(request: Request) {
       }
     }
 
-    // If default admin is requested but not found in the database, seed it on-the-fly
-    if ((!user || error) && username.toLowerCase() === 'admin' && password === 'admin123') {
+    // If default admin is requested but not found in DB, seed on-the-fly
+    if ((!user || error) && loginId.toLowerCase() === 'admin' && password === 'admin123') {
       console.log('[Auth Login] Default admin not found in Supabase. Programmatically seeding default admin...');
       const { data: newAdmin, error: insertError } = await supabaseAdmin
         .from('users')
         .insert({
           id: 'adm_1',
-          username: 'admin',
+          member_id: 'admin',
           password: hashPassword('admin123'),
           name: 'Super Admin',
           phone: '+91 9999988888',
           role: 'admin',
         })
-        .select('id, username, name, phone, role, password')
+        .select('id, member_id, name, phone, role, password, email')
         .single();
 
       if (!insertError && newAdmin) {
@@ -68,14 +72,14 @@ export async function POST(request: Request) {
 
     if (error || !user) {
       return NextResponse.json(
-        { error: 'Invalid username/phone or password' },
+        { error: 'Invalid Member ID/Phone or Password' },
         { status: 401 }
       );
     }
 
     if (!verifyPassword(password, user.password)) {
       return NextResponse.json(
-        { error: 'Invalid username/phone or password' },
+        { error: 'Invalid Member ID/Phone or Password' },
         { status: 401 }
       );
     }

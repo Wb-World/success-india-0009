@@ -177,7 +177,7 @@ export async function verifyAdminSession(request: Request): Promise<{ id: string
       // 1b. Try users table fallback
       const { data: admin2, error: err2 } = await supabaseAdmin
         .from('users')
-        .select('id, username, role')
+        .select('id, member_id, role')
         .eq('id', adminIdHeader)
         .ilike('role', 'admin')
         .maybeSingle();
@@ -185,7 +185,7 @@ export async function verifyAdminSession(request: Request): Promise<{ id: string
       if (!err2 && admin2) {
         return {
           id: admin2.id,
-          username: admin2.username,
+          username: admin2.member_id,
           role: admin2.role || 'admin',
         };
       }
@@ -212,7 +212,7 @@ export async function verifyAdminSession(request: Request): Promise<{ id: string
       return null;
     }
     
-    // 4. Retrieve admin credentials from admin table
+    // 4. Retrieve admin credentials from admin table or users table
     let adminRecord: any = null;
     const { data: admin1 } = await supabaseAdmin
       .from('admin')
@@ -225,11 +225,16 @@ export async function verifyAdminSession(request: Request): Promise<{ id: string
     } else {
       const { data: admin2 } = await supabaseAdmin
         .from('users')
-        .select('id, username, password, role')
+        .select('id, member_id, password, role')
         .eq('id', decoded.id)
         .ilike('role', 'admin')
         .maybeSingle();
-      if (admin2) adminRecord = admin2;
+      if (admin2) {
+        adminRecord = {
+          ...admin2,
+          username: admin2.member_id,
+        };
+      }
     }
       
     if (!adminRecord) {
@@ -245,7 +250,7 @@ export async function verifyAdminSession(request: Request): Promise<{ id: string
     // Return sanitized admin object
     return {
       id: adminRecord.id,
-      username: adminRecord.username,
+      username: adminRecord.member_id || adminRecord.username,
       role: adminRecord.role || 'admin'
     };
   } catch (e) {

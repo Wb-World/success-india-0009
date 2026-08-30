@@ -12,10 +12,10 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Users table
 CREATE TABLE IF NOT EXISTS public.users (
   id          TEXT        PRIMARY KEY DEFAULT 'usr_' || gen_random_uuid()::text,
-  username    TEXT        NOT NULL UNIQUE,
+  member_id   TEXT        NOT NULL UNIQUE,
   password    TEXT        NOT NULL,
   name        TEXT        NOT NULL,
-  email       TEXT        NOT NULL UNIQUE,
+  email       TEXT,
   phone       TEXT        NOT NULL UNIQUE,
   role        TEXT        NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
