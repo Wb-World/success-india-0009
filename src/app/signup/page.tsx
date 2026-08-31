@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Phone, Lock, CheckCircle2, ShieldAlert, ArrowRight, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Phone, Lock, CheckCircle2, ShieldAlert, ArrowRight, UserPlus, Eye, EyeOff } from 'lucide-react';
 
 export default function Signup() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     memberId: '',
+    email: '',
     phone: '',
     password: '',
     confirmPassword: '',
@@ -25,13 +26,20 @@ export default function Signup() {
     setError('');
     setSuccess('');
 
-    const { memberId, phone, password, confirmPassword } = formData;
+    const { memberId, email, phone, password, confirmPassword } = formData;
     const cleanMemberId = memberId.trim();
+    const cleanEmail = email.trim().toLowerCase();
     const cleanPhone = phone.trim();
 
     // Front-end validations
-    if (!cleanMemberId || !cleanPhone || !password || !confirmPassword) {
+    if (!cleanMemberId || !cleanEmail || !cleanPhone || !password || !confirmPassword) {
       setError('All fields are required.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      setError('Please enter a valid email address.');
       return;
     }
 
@@ -57,7 +65,8 @@ export default function Signup() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: cleanMemberId,
+          memberId: cleanMemberId,
+          email: cleanEmail,
           phone: cleanPhone,
           password,
         }),
@@ -139,6 +148,25 @@ export default function Signup() {
                     required
                     id="signup-member-id"
                     autoFocus
+                  />
+                </div>
+              </div>
+
+              {/* Email ID */}
+              <div className="form-group">
+                <label className="form-label font-label-custom">Email ID</label>
+                <div className="input-with-icon">
+                  <div className="icon-badge">
+                    <Mail size={15} className="input-field-icon" />
+                  </div>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="Enter your Email ID (e.g. name@gmail.com)"
+                    className="form-control padded-input custom-input-style"
+                    required
+                    id="signup-email"
                   />
                 </div>
               </div>

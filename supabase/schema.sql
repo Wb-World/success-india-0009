@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   member_id   TEXT        NOT NULL UNIQUE,
   password    TEXT        NOT NULL,
   name        TEXT        NOT NULL,
-  email       TEXT,
+  email       TEXT        NOT NULL UNIQUE,
   phone       TEXT        NOT NULL UNIQUE,
   role        TEXT        NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()

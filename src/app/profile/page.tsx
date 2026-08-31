@@ -196,7 +196,7 @@ function ProfileDashboard() {
   // Login/Register states
   const [isLoginTab, setIsLoginTab] = useState(true);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
-  const [registerForm, setRegisterForm] = useState({ username: '', password: '', name: '', phone: '' });
+  const [registerForm, setRegisterForm] = useState({ memberId: '', email: '', phone: '', password: '' });
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
@@ -293,7 +293,16 @@ function ProfileDashboard() {
     setAuthError('');
     setAuthLoading(true);
     try {
-      const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(registerForm) });
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId: registerForm.memberId,
+          email: registerForm.email,
+          phone: registerForm.phone,
+          password: registerForm.password,
+        }),
+      });
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -398,10 +407,10 @@ function ProfileDashboard() {
               </form>
             ) : (
               <form onSubmit={handleRegisterSubmit}>
-                <div className="form-group"><label className="form-label">Member ID</label><input type="text" value={registerForm.username} onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })} placeholder="Enter Member ID" className="form-control" required /></div>
+                <div className="form-group"><label className="form-label">Member ID</label><input type="text" value={registerForm.memberId} onChange={(e) => setRegisterForm({ ...registerForm, memberId: e.target.value })} placeholder="Enter Member ID" className="form-control" required /></div>
+                <div className="form-group"><label className="form-label">Email ID</label><input type="email" value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} placeholder="name@gmail.com" className="form-control" required /></div>
+                <div className="form-group"><label className="form-label">Phone Number</label><input type="tel" value={registerForm.phone} onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })} placeholder="10-digit mobile number" className="form-control" required /></div>
                 <div className="form-group"><label className="form-label">Password</label><input type="password" value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} placeholder="Choose a strong password" className="form-control" required /></div>
-                <div className="form-group"><label className="form-label">Full Name</label><input type="text" value={registerForm.name} onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })} placeholder="John Doe" className="form-control" required /></div>
-                <div className="form-group"><label className="form-label">Phone Number</label><input type="text" value={registerForm.phone} onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })} placeholder="+91 98765 43210" className="form-control" required /></div>
                 <button type="submit" className="btn btn-primary auth-submit-btn" disabled={authLoading}>{authLoading ? 'Creating Account...' : 'Register Profile'}</button>
               </form>
             )}

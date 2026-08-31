@@ -8,12 +8,21 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const memberId = (body.memberId || body.username || '').trim();
+    const cleanEmail = (body.email || body.mailId || body.emailId || '').trim().toLowerCase();
     const cleanPhone = (body.phone || '').trim();
     const password = body.password || '';
 
-    if (!memberId || !password || !cleanPhone) {
+    if (!memberId || !cleanEmail || !cleanPhone || !password) {
       return NextResponse.json(
-        { error: 'All fields (Member ID, Phone Number, Password) are required.' },
+        { error: 'All fields (Member ID, Email ID, Phone Number, Password) are required.' },
+        { status: 400 }
+      );
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      return NextResponse.json(
+        { error: 'Please enter a valid email address.' },
         { status: 400 }
       );
     }
@@ -39,6 +48,20 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if Email ID already exists
+    const { data: existingEmail } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .ilike('email', cleanEmail)
+      .maybeSingle();
+
+    if (existingEmail) {
+      return NextResponse.json(
+        { error: 'Email ID is already registered.' },
+        { status: 400 }
+      );
+    }
+
     // Check if phone number already exists
     const { data: existingPhone } = await supabaseAdmin
       .from('users')
@@ -56,25 +79,21 @@ export async function POST(request: Request) {
     // Create new user with member_id column
     const newId = `usr_${Date.now()}`;
     const hashedPassword = hashPassword(password);
-    const isEmail = memberId.includes('@');
 
-    const insertPayload: any = {
+    const insertPayload = {
       id: newId,
       member_id: memberId,
+      email: cleanEmail,
       password: hashedPassword,
       name: memberId,
       phone: cleanPhone,
       role: 'user',
     };
 
-    if (isEmail) {
-      insertPayload.email = memberId;
-    }
-
     const { data: newUser, error } = await supabaseAdmin
       .from('users')
       .insert(insertPayload)
-      .select('id, member_id, name, phone, role, email')
+      .select('id, member_id, email, name, phone, role')
       .single();
 
     if (error || !newUser) {
