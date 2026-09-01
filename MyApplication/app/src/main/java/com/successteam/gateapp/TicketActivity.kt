@@ -43,7 +43,9 @@ class TicketActivity : AppCompatActivity() {
     }
 
     private fun createBitmapFromView(view: View): Bitmap {
-        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        val width = if (view.width > 0) view.width else 1080
+        val height = if (view.height > 0) view.height else 1920
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         view.draw(canvas)
         return bitmap

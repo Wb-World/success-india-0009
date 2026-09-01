@@ -113,6 +113,7 @@ class AttendeeListActivity : AppCompatActivity(), QRScannerDialogFragment.QRScan
             try {
                 val fetched = SupabaseAttendeeRepository.fetchAllAttendees()
                 mainHandler.post {
+                    if (isFinishing || isDestroyed) return@post
                     allAttendees.clear()
                     allAttendees.addAll(fetched)
                     binding.pbLoading.visibility = View.GONE
@@ -122,6 +123,7 @@ class AttendeeListActivity : AppCompatActivity(), QRScannerDialogFragment.QRScan
                 }
             } catch (e: Exception) {
                 mainHandler.post {
+                    if (isFinishing || isDestroyed) return@post
                     binding.pbLoading.visibility = View.GONE
                     binding.scrollAttendees.visibility = View.GONE
                     binding.layoutNoInternet.visibility = View.VISIBLE
@@ -334,8 +336,9 @@ class AttendeeListActivity : AppCompatActivity(), QRScannerDialogFragment.QRScan
      */
     private fun parseTimestampMillis(ts: String): Long {
         return try {
-            // Normalise to a format Java SimpleDateFormat can handle
+            // Normalise to a format Java SimpleDateFormat can handle (strip fractional seconds like .123 or .123456)
             val normalised = ts.trim()
+                .replace(Regex("\\.\\d+"), "")
                 .replace("Z", "+00:00")       // UTC marker → offset form
 
             // Try offset-aware parse first: yyyy-MM-dd'T'HH:mm:ssXXX
@@ -347,6 +350,7 @@ class AttendeeListActivity : AppCompatActivity(), QRScannerDialogFragment.QRScan
             try {
                 // Fallback: strip offset and treat as UTC
                 val plain = ts.trim()
+                    .replace(Regex("\\.\\d+"), "")
                     .substringBefore("+")
                     .substringBefore("Z")
                     .substringBefore("z")
@@ -551,6 +555,7 @@ class AttendeeListActivity : AppCompatActivity(), QRScannerDialogFragment.QRScan
         Thread {
             val snapshot = SupabaseAttendeeRepository.fetchBooking(bookingId)
             mainHandler.post {
+                if (isFinishing || isDestroyed) return@post
                 binding.pbLoading.visibility = View.GONE
                 if (snapshot != null) {
                     showValidationDialog(snapshot)

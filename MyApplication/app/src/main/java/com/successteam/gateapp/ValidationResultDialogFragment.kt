@@ -129,7 +129,8 @@ class ValidationResultDialogFragment : DialogFragment() {
                 }
 
                 // If online, patch to Supabase in the background
-                if (isNetworkAvailable(context)) {
+                val appContext = context.applicationContext
+                if (isNetworkAvailable(appContext)) {
                     val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
                     val keysToSave = newlySelectedKeys.toSet() // snapshot
                     Thread {
@@ -139,26 +140,24 @@ class ValidationResultDialogFragment : DialogFragment() {
                             if (!ok) allSucceeded = false
                         }
                         mainHandler.post {
-                            if (isAdded) {
-                                if (allSucceeded) {
-                                    android.widget.Toast.makeText(
-                                        context,
-                                        "✓ Entry granted: $names",
-                                        android.widget.Toast.LENGTH_SHORT
-                                    ).show()
-                                } else {
-                                    android.widget.Toast.makeText(
-                                        context,
-                                        "Saved $names locally. Failed to sync some check-ins to cloud.",
-                                        android.widget.Toast.LENGTH_LONG
-                                    ).show()
-                                }
+                            if (allSucceeded) {
+                                android.widget.Toast.makeText(
+                                    appContext,
+                                    "✓ Entry granted: $names",
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                android.widget.Toast.makeText(
+                                    appContext,
+                                    "Saved $names locally. Failed to sync some check-ins to cloud.",
+                                    android.widget.Toast.LENGTH_LONG
+                                ).show()
                             }
                         }
                     }.start()
                 } else {
                     android.widget.Toast.makeText(
-                        context,
+                        appContext,
                         "✓ Saved locally (Offline): $names. Will sync when online.",
                         android.widget.Toast.LENGTH_LONG
                     ).show()
@@ -515,8 +514,12 @@ class ValidationResultDialogFragment : DialogFragment() {
                 else -> "Tick the checkbox on the right for each attendee who has arrived."
             }
 
-            // Re-render split lists so the attendee moves between Entered / Unentered
-            renderAttendeeSection(currentSnapshot)
+            // Re-render split lists so the attendee moves between Entered / Unentered on next UI pass
+            binding.root.post {
+                if (_binding != null) {
+                    renderAttendeeSection(currentSnapshot)
+                }
+            }
         }
 
         textColumn.addView(seatText)

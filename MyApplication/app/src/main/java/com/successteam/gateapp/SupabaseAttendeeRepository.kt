@@ -34,12 +34,12 @@ data class GlobalAttendee(
  */
 object SupabaseAttendeeRepository {
 
-    private const val SUPABASE_URL = "https://raypwndyjclstbqxrahm.supabase.co"
+    private const val SUPABASE_URL = "https://nqbexwqgslqvbornyuhk.supabase.co"
 
     // Service role key is required to bypass Row Level Security on the bookings table.
     // This key must only be used in this internal gate staff application.
     private const val SUPABASE_SERVICE_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJheXB3bmR5amNsc3RicXhyYWhtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTMxMzk4MSwiZXhwIjoyMDk2ODg5OTgxfQ._1e3arGCq2WQ8vfiXk7UXJKDMelGl5pHJySXERd_B4U"
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xYmV4d3Fnc2xxdmJvcm55dWhrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODE4ODM5MiwiZXhwIjoyMTAzNzY0MzkyfQ.VCg9L1JEbldI74M4IejlstDBt5wxLJNFrDB9AKG9bBU"
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -64,7 +64,7 @@ object SupabaseAttendeeRepository {
     fun fetchBooking(bookingId: String): GateTicketSnapshot? {
         return try {
             val url = "$SUPABASE_URL/rest/v1/bookings" +
-                    "?select=id,status,attendee_details,screenshot,seats,bus_name,source,destination,total_price" +
+                    "?select=id,status,attendee_details,screenshot,seats,bus_name,seminar_name,source,destination,total_price,date,time,booker_name,booker_phone" +
                     "&id=eq.$bookingId"
 
             val request = Request.Builder()
@@ -73,16 +73,16 @@ object SupabaseAttendeeRepository {
                 .get()
                 .build()
 
-            val response = client.newCall(request).execute()
-            val body = response.body?.string() ?: "[]"
+            client.newCall(request).execute().use { response ->
+                val body = response.body?.string() ?: "[]"
+                if (!response.isSuccessful) return null
 
-            if (!response.isSuccessful) return null
+                val array = JsonParser.parseString(body).asJsonArray
+                if (array.size() == 0) return null
 
-            val array = JsonParser.parseString(body).asJsonArray
-            if (array.size() == 0) return null
-
-            val booking = array[0].asJsonObject
-            TicketSnapshotFactory.fromBooking(booking, bookingId)
+                val booking = array[0].asJsonObject
+                TicketSnapshotFactory.fromBooking(booking, bookingId)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -97,9 +97,8 @@ object SupabaseAttendeeRepository {
      */
     @Throws(Exception::class)
     fun fetchAllAttendees(): List<GlobalAttendee> {
-        // Select only the columns we need for the attendee list
         val url = "$SUPABASE_URL/rest/v1/bookings" +
-                "?select=id,status,attendee_details,screenshot,seats,bus_name,source,destination" +
+                "?select=id,status,attendee_details,screenshot,seats,bus_name,seminar_name,source,destination,date,time,booker_name" +
                 "&status=eq.approved" +
                 "&order=id.asc"
 
@@ -109,11 +108,12 @@ object SupabaseAttendeeRepository {
             .get()
             .build()
 
-        val response = client.newCall(request).execute()
-        val body = response.body?.string() ?: "[]"
-
-        if (!response.isSuccessful) {
-            throw Exception("Supabase error ${response.code}: $body")
+        val body = client.newCall(request).execute().use { response ->
+            val b = response.body?.string() ?: "[]"
+            if (!response.isSuccessful) {
+                throw Exception("Supabase error ${response.code}: $b")
+            }
+            b
         }
 
         val array: JsonArray = JsonParser.parseString(body).asJsonArray
@@ -297,9 +297,10 @@ object SupabaseAttendeeRepository {
                 .get()
                 .build()
 
-            val fetchResp = client.newCall(fetchReq).execute()
-            val fetchBody = fetchResp.body?.string() ?: "[]"
-            if (!fetchResp.isSuccessful) return false
+            val fetchBody = client.newCall(fetchReq).execute().use { fetchResp ->
+                if (!fetchResp.isSuccessful) return false
+                fetchResp.body?.string() ?: "[]"
+            }
 
             val arr = JsonParser.parseString(fetchBody).asJsonArray
             if (arr.size() == 0) return false
@@ -345,8 +346,9 @@ object SupabaseAttendeeRepository {
                 .patch(gson.toJson(patchBody).toRequestBody(JSON_MEDIA))
                 .build()
 
-            val patchResp = client.newCall(patchReq).execute()
-            patchResp.isSuccessful
+            client.newCall(patchReq).execute().use { patchResp ->
+                patchResp.isSuccessful
+            }
         } catch (e: Exception) {
             false
         }

@@ -11,6 +11,7 @@ import com.successteam.gateapp.databinding.ActivitySplashBinding
 class SplashActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySplashBinding
+    private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,13 +51,19 @@ class SplashActivity : AppCompatActivity() {
             }
             .start()
 
-        // Navigate to MainActivity after 2.5 seconds
-        Handler(Looper.getMainLooper()).postDelayed({
+        // Navigate to MainActivity after 2.7 seconds
+        handler.postDelayed({
+            if (isFinishing || isDestroyed) return@postDelayed
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
             @Suppress("DEPRECATION")
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             finish()
         }, 2700)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacksAndMessages(null)
     }
 }

@@ -38,9 +38,9 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
     private val CAMERA_PERMISSION_CODE = 101
 
     // Supabase configuration
-    private val SUPABASE_URL = "https://raypwndyjclstbqxrahm.supabase.co"
+    private val SUPABASE_URL = "https://nqbexwqgslqvbornyuhk.supabase.co"
     private val SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJheXB3bmR5amNsc3RicXhyYWhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTM5ODEsImV4cCI6MjA5Njg4OTk4MX0.qWk2I-C50KziSAaNogrjQQuGQI3euErWpYgvzqfRj_Y"
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xYmV4d3Fnc2xxdmJvcm55dWhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxODgzOTIsImV4cCI6MjEwMzc2NDM5Mn0.bSGrg2_HXDCTWVQZxzeWd8dgxfeOIWt8vETnvSrarOk"
 
     // Reduced timeouts for quicker scan response
     private val okHttpClient = OkHttpClient.Builder()
@@ -412,6 +412,7 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
                 // Fetch booking directly from Supabase
                 val snapshot = SupabaseAttendeeRepository.fetchBooking(bookingId)
                 mainHandler.post {
+                    if (isFinishing || isDestroyed) return@post
                     showLoading(false)
                     if (snapshot != null) {
                         showResultDialog(snapshot)
@@ -426,6 +427,7 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
             } catch (e: Exception) {
                 Log.e(TAG, "Error during verification for $bookingId", e)
                 mainHandler.post {
+                    if (isFinishing || isDestroyed) return@post
                     showLoading(false)
                     val qrDetails = lastScannedQrDetails
                     if (qrDetails != null) {
@@ -448,6 +450,7 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
             try {
                 val snapshot = SupabaseAttendeeRepository.fetchBooking(bookingId)
                 mainHandler.post {
+                    if (isFinishing || isDestroyed || supportFragmentManager.isStateSaved) return@post
                     if (snapshot != null) {
                         val dialog = supportFragmentManager.findFragmentByTag("ValidationResultDialog") as? ValidationResultDialogFragment
                         dialog?.updateTicketData(snapshot)

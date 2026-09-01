@@ -72,6 +72,7 @@ class ScannerActivity : AppCompatActivity() {
     }
 
     private fun showInvalidDataDialog() {
+        if (isFinishing || isDestroyed) return
         AlertDialog.Builder(this)
             .setTitle("Validation Failed")
             .setMessage("This QR code is not recognized as a valid Success Team resource.")
@@ -86,6 +87,7 @@ class ScannerActivity : AppCompatActivity() {
     }
 
     private fun showResultDialog(data: String) {
+        if (isFinishing || isDestroyed) return
         AlertDialog.Builder(this)
             .setTitle("Success Team Verified")
             .setMessage("Information Extracted:\n$data")

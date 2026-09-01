@@ -28,6 +28,13 @@ class QRScannerDialogFragment : DialogFragment() {
         this.listener = listener
     }
 
+    override fun onAttach(context: android.content.Context) {
+        super.onAttach(context)
+        if (listener == null) {
+            listener = context as? QRScannerListener ?: parentFragment as? QRScannerListener
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Set dialog style to translucent full screen to cover status bar nicely
@@ -76,14 +83,15 @@ class QRScannerDialogFragment : DialogFragment() {
 
     private fun startLaserAnimation() {
         binding.viewScannerLaser.post {
-            val totalTravelDistance = binding.cardScannerContainer.height - binding.viewScannerLaser.height
+            val b = _binding ?: return@post
+            val totalTravelDistance = b.cardScannerContainer.height - b.viewScannerLaser.height
             if (totalTravelDistance > 0) {
                 laserAnimator = ValueAnimator.ofFloat(0f, totalTravelDistance.toFloat()).apply {
                     duration = 2000
                     repeatMode = ValueAnimator.REVERSE
                     repeatCount = ValueAnimator.INFINITE
                     addUpdateListener { animation ->
-                        binding.viewScannerLaser.translationY = animation.animatedValue as Float
+                        _binding?.viewScannerLaser?.translationY = animation.animatedValue as Float
                     }
                     start()
                 }

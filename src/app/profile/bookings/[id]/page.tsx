@@ -85,17 +85,8 @@ function BookingDetailsContent() {
       .then(data => {
         if (data?.ticket) {
           setTicket(data.ticket);
-          const isSupporter =
-            data.ticket.seats?.includes('SUPPORTER') ||
-            data.ticket.seminarName?.toLowerCase().includes('supporter') ||
-            data.ticket.eventName?.toLowerCase().includes('supporter');
-          if (!isSupporter) {
-            // Use structured key-value QR payload from server (includes SIGNATURE)
-            const qrPayload = data.ticket.qrCodePayload;
-            if (qrPayload) {
-              generateQR(qrPayload).then(setQrUrl);
-            }
-          }
+          const qrPayload = data.ticket.qrCodePayload || `BOOKING_ID:${data.ticket.bookingId}|TYPE:SUPPORTER`;
+          generateQR(qrPayload).then(setQrUrl);
         } else {
           setError('Failed to load booking details.');
         }
@@ -114,6 +105,7 @@ function BookingDetailsContent() {
       if (!el) return;
 
       const isSupp = el.classList.contains('tp-supporter-ticket') ||
+                     el.querySelector('.tp-cert-container') !== null ||
                      ticket.seats?.includes('SUPPORTER') ||
                      ticket.eventName?.toLowerCase().includes('supporter');
 
@@ -121,7 +113,7 @@ function BookingDetailsContent() {
       clone.classList.add('tp-desktop');
       clone.style.cssText = `
         position:absolute;left:-9999px;top:-9999px;
-        width:${isSupp ? '600px' : '780px'};border-radius:20px;
+        width:780px;border-radius:20px;
         background:#ffffff;
       `;
       document.body.appendChild(clone);
@@ -156,7 +148,7 @@ function BookingDetailsContent() {
       document.body.removeChild(clone);
 
       const link = document.createElement('a');
-      link.download = `Ticket-${bookingId.toUpperCase()}.png`;
+      link.download = isSupp ? `Certificate-SUPPORTER-${bookingId.toUpperCase()}.png` : `Ticket-${bookingId.toUpperCase()}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     } catch (err) {
@@ -205,61 +197,118 @@ function BookingDetailsContent() {
         <ArrowLeft size={15} /> Back to Dashboard
       </button>
 
-      {/* Printable Ticket */}
+      {/* Printable Ticket / Certificate */}
       <div id="printable-ticket" className={`tp-ticket status-${ticket.status} ${isSupporter ? 'tp-supporter-ticket' : ''}`}>
 
         {/* Top accent */}
-        <div className="tp-accent" />
+        {!isSupporter && <div className="tp-accent" />}
 
         {isSupporter ? (
-          /* Redesigned Supporter / Contribution Ticket */
-          <div className="tp-supporter-body">
-            <div className="tp-supporter-header">
-              <div className="tp-brand-center">
-                <img src="/success-india-logo.jpeg" alt="Success Team" className="tp-logo-center" />
-                <h1 className="tp-supporter-brand-title">SUCCESS TEAM</h1>
-                <p className="tp-supporter-brand-sub">System Supporter Delegate Pass</p>
-              </div>
-            </div>
+          /* Modern Luxury Certificate of Recognition & Delegate Pass */
+          <div className="tp-cert-container">
+            <div className="tp-cert-frame">
+              {/* Corner Ornate Accents */}
+              <div className="tp-cert-corner tp-cert-corner-tl" />
+              <div className="tp-cert-corner tp-cert-corner-tr" />
+              <div className="tp-cert-corner tp-cert-corner-bl" />
+              <div className="tp-cert-corner tp-cert-corner-br" />
 
-            <div className="tp-supporter-content">
-              <div className="tp-supporter-badge-wrap">
-                <StatusBadge status={ticket.status} />
-              </div>
-
-              {vpImageUrl && (
-                <div className="tp-supporter-avatar-wrap">
-                  <img src={vpImageUrl} alt={ticket.attendeeName} className="tp-supporter-avatar" />
+              {/* Certificate Header */}
+              <div className="tp-cert-header">
+                <div className="tp-cert-logo-ring">
+                  <img src="/success-india-logo.jpeg" alt="Success Team" className="tp-cert-logo" />
                 </div>
-              )}
-
-              <h2 className="tp-supporter-name">{ticket.attendeeName}</h2>
-              <p className="tp-supporter-designation">{designationVal}</p>
-
-              <div className="tp-supporter-divider" />
-
-              <div className="tp-supporter-details-table">
-                <div className="tp-supporter-row">
-                  <span className="tp-supporter-cell-label">Contribution Ref</span>
-                  <strong className="tp-supporter-cell-value font-mono">#{ticket.bookingId?.toUpperCase()}</strong>
-                </div>
-                <div className="tp-supporter-row">
-                  <span className="tp-supporter-cell-label">VP Name</span>
-                  <strong className="tp-supporter-cell-value">{vpNameVal}</strong>
-                </div>
-                <div className="tp-supporter-row">
-                  <span className="tp-supporter-cell-label">Date &amp; Time</span>
-                  <strong className="tp-supporter-cell-value">{ticket.date} at {ticket.time}</strong>
-                </div>
-                <div className="tp-supporter-row">
-                  <span className="tp-supporter-cell-label">Contribution Amount</span>
-                  <strong className="tp-supporter-cell-value tp-sup-amount">{ticket.amountPaid}</strong>
+                <p className="tp-cert-org">SUCCESS TEAM ECOSYSTEM</p>
+                <h1 className="tp-cert-title">CERTIFICATE OF RECOGNITION</h1>
+                <div className="tp-cert-subtitle-badge">
+                  <span>OFFICIAL SYSTEM SUPPORTER DELEGATE PASS</span>
                 </div>
               </div>
-            </div>
 
-            <div className="tp-supporter-footer">
-              <span>Thank you for supporting the Success Team mission</span>
+              {/* Recipient Body */}
+              <div className="tp-cert-body">
+                <div className="tp-cert-award-ribbon">
+                  <StatusBadge status={ticket.status} />
+                </div>
+
+                {vpImageUrl && (
+                  <div className="tp-cert-avatar-ring">
+                    <img src={vpImageUrl} alt={ticket.attendeeName} className="tp-cert-avatar" />
+                  </div>
+                )}
+
+                <p className="tp-cert-presented-to">THIS CERTIFICATE IS PROUDLY PRESENTED TO</p>
+                <h2 className="tp-cert-recipient-name">{ticket.attendeeName}</h2>
+                
+                <div className="tp-cert-designation-pill">
+                  <span className="tp-cert-desig-title">{designationVal}</span>
+                  {vpNameVal !== '—' && <span className="tp-cert-desig-vp">• VP: {vpNameVal}</span>}
+                </div>
+
+                <p className="tp-cert-citation">
+                  In recognition of distinguished commitment, financial leadership, and dedication as an official System Supporter driving growth, empowerment, and leadership development across the Success Team network.
+                </p>
+
+                {/* Certificate Data Grid */}
+                <div className="tp-cert-grid">
+                  <div className="tp-cert-card">
+                    <span className="tp-cert-card-label">Certificate Ref</span>
+                    <strong className="tp-cert-card-val font-mono">#{ticket.bookingId?.toUpperCase()}</strong>
+                  </div>
+                  <div className="tp-cert-card">
+                    <span className="tp-cert-card-label">Vice President</span>
+                    <strong className="tp-cert-card-val">{vpNameVal}</strong>
+                  </div>
+                  <div className="tp-cert-card">
+                    <span className="tp-cert-card-label">Issued Date &amp; Time</span>
+                    <strong className="tp-cert-card-val">{ticket.date} at {ticket.time}</strong>
+                  </div>
+                  <div className="tp-cert-card">
+                    <span className="tp-cert-card-label">Contribution Amount</span>
+                    <strong className="tp-cert-card-val tp-cert-gold">{ticket.amountPaid}</strong>
+                  </div>
+                </div>
+
+                {/* Certificate Signatures & QR Seal Section */}
+                <div className="tp-cert-signatures-row">
+                  {/* Executive Signature */}
+                  <div className="tp-cert-sig-box">
+                    <div className="tp-cert-sig-line">
+                      <span className="tp-cert-handwritten">{vpNameVal !== '—' ? vpNameVal : 'Success Team'}</span>
+                    </div>
+                    <p className="tp-cert-sig-title">AUTHORIZED VP SIGNATURE</p>
+                    <p className="tp-cert-sig-sub">{vpNameVal}</p>
+                  </div>
+
+                  {/* Verification QR */}
+                  <div className="tp-cert-qr-box">
+                    {qrUrl ? (
+                      <img src={qrUrl} alt="Digital Pass Verification QR" className="tp-cert-qr-img" />
+                    ) : (
+                      <div className="tp-cert-qr-placeholder">
+                        <Loader2 size={24} className="tp-spin" />
+                      </div>
+                    )}
+                    <span className="tp-cert-qr-text">Digital Pass Verification</span>
+                  </div>
+
+                  {/* Official Gold Seal */}
+                  <div className="tp-cert-seal-box">
+                    <div className="tp-cert-gold-seal">
+                      <div className="tp-cert-seal-inner">
+                        <span className="tp-cert-seal-star">★ ★ ★</span>
+                        <span className="tp-cert-seal-text">VERIFIED SUPPORTER</span>
+                        <span className="tp-cert-seal-org">SUCCESS TEAM</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Certificate Bottom Banner */}
+              <div className="tp-cert-footer">
+                <span>VERIFIED SYSTEM SUPPORTER CREDENTIAL • ISSUED BY SUCCESS TEAM INDIA</span>
+              </div>
             </div>
           </div>
         ) : (
@@ -409,19 +458,17 @@ function BookingDetailsContent() {
         )}
       </div>
 
-      {/* Download */}
-      {!isSupporter && (
-        <div className="tp-dl-wrap">
-          <button
-            className="tp-dl-btn"
-            onClick={handleDownload}
-            disabled={downloading || (!isSupporter && !qrUrl)}
-          >
-            <Download size={17} />
-            {downloading ? 'Generating...' : 'Download Ticket'}
-          </button>
-        </div>
-      )}
+      {/* Download Button */}
+      <div className="tp-dl-wrap">
+        <button
+          className="tp-dl-btn"
+          onClick={handleDownload}
+          disabled={downloading || !ticket}
+        >
+          <Download size={17} />
+          {downloading ? 'Generating...' : isSupporter ? 'Download Certificate' : 'Download Ticket'}
+        </button>
+      </div>
 
       {/* ── Styles ── */}
       <style>{`
@@ -493,7 +540,10 @@ function BookingDetailsContent() {
           margin: 0 auto;
         }
         .tp-supporter-ticket {
-          max-width: 600px !important;
+          max-width: 780px !important;
+          border: none !important;
+          box-shadow: none !important;
+          background: transparent !important;
         }
 
         /* Accent bar */
@@ -726,7 +776,7 @@ function BookingDetailsContent() {
         }
         .tp-att-biz {
           padding-top: 4px;
-          padding-left: 70px;  /* align under Name column (seat col is 70px) */
+          padding-left: 70px;
           font-size: 0.72rem;
           line-height: 1.3;
         }
@@ -856,156 +906,382 @@ function BookingDetailsContent() {
           align-items: center;
           gap: 8px;
           padding: 0.8rem 2rem;
-          background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+          background: linear-gradient(135deg, #064e3b 0%, #047857 100%);
           color: white;
           border: none;
           border-radius: 12px;
           font-size: 0.92rem;
           font-weight: 700;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(15,23,42,0.15);
+          box-shadow: 0 4px 14px rgba(4,120,87,0.25);
           transition: transform 0.12s ease, opacity 0.15s ease;
           font-family: inherit;
         }
         .tp-dl-btn:hover   { transform: translateY(-2px); opacity: 0.94; }
         .tp-dl-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
-        /* ── SUPPORTER TICKET ── */
-        .tp-supporter-ticket {
+        /* ── MODERN SYSTEM SUPPORTER CERTIFICATE ── */
+        .tp-cert-container {
           background: #ffffff;
           border-radius: 20px;
           overflow: hidden;
+          box-shadow: 0 20px 50px rgba(6, 78, 59, 0.12), 0 4px 20px rgba(15, 23, 42, 0.06);
           border: 1px solid #e2e8f0;
-          box-shadow: 0 16px 48px rgba(15,23,42,0.09);
-          max-width: 600px;
+          max-width: 780px;
           margin: 0 auto;
           box-sizing: border-box;
+          position: relative;
+          font-family: var(--font-body, system-ui, sans-serif);
         }
-        .tp-supporter-body {
-          padding: 2.5rem 2.5rem 2.5rem;
-          background: #ffffff;
+
+        .tp-cert-frame {
+          padding: 2.25rem;
+          background: radial-gradient(circle at 50% 0%, #f0fdf4 0%, #ffffff 70%);
+          border: 4px double #d97706;
+          margin: 12px;
+          border-radius: 14px;
+          position: relative;
+          box-sizing: border-box;
         }
-        .tp-supporter-header {
+
+        /* Corner Ornate Accents */
+        .tp-cert-corner {
+          position: absolute;
+          width: 20px;
+          height: 20px;
+          border-color: #d97706;
+          border-style: solid;
+          pointer-events: none;
+        }
+        .tp-cert-corner-tl { top: 6px; left: 6px; border-width: 3px 0 0 3px; }
+        .tp-cert-corner-tr { top: 6px; right: 6px; border-width: 3px 3px 0 0; }
+        .tp-cert-corner-bl { bottom: 6px; left: 6px; border-width: 0 0 3px 3px; }
+        .tp-cert-corner-br { bottom: 6px; right: 6px; border-width: 0 3px 3px 0; }
+
+        .tp-cert-header {
           text-align: center;
-          margin-bottom: 2rem;
-        }
-        .tp-logo-center {
-          width: 65px;
-          height: 65px;
-          border-radius: 50%;
-          border: 2px solid #10b981;
-          object-fit: cover;
-          margin: 0 auto 0.75rem;
-          display: block;
-        }
-        .tp-supporter-brand-title {
-          font-size: 1.35rem;
-          font-weight: 900;
-          color: #0f172a;
-          margin: 0;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-        }
-        .tp-supporter-brand-sub {
-          font-size: 0.75rem;
-          color: #10b981;
-          font-weight: 800;
-          margin: 0.2rem 0 0;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-        .tp-supporter-content {
-          text-align: center;
-        }
-        .tp-supporter-badge-wrap {
           margin-bottom: 1.5rem;
+        }
+        .tp-cert-logo-ring {
+          width: 70px;
+          height: 70px;
+          border-radius: 50%;
+          border: 3px solid #d97706;
+          box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25);
+          margin: 0 auto 0.75rem;
+          overflow: hidden;
+          background: #ffffff;
           display: flex;
+          align-items: center;
           justify-content: center;
         }
-        .tp-supporter-avatar-wrap {
-          width: 120px;
-          height: 120px;
+        .tp-cert-logo {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .tp-cert-org {
+          font-size: 0.78rem;
+          font-weight: 900;
+          letter-spacing: 0.2em;
+          color: #047857;
+          text-transform: uppercase;
+          margin: 0 0 0.3rem;
+        }
+        .tp-cert-title {
+          font-size: 1.65rem;
+          font-weight: 900;
+          color: #0f172a;
+          margin: 0 0 0.5rem;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          font-family: var(--font-heading, serif, system-ui);
+        }
+        .tp-cert-subtitle-badge {
+          display: inline-block;
+          background: linear-gradient(135deg, #064e3b 0%, #047857 100%);
+          color: #fef08a;
+          padding: 4px 18px;
+          border-radius: 9999px;
+          font-size: 0.72rem;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          box-shadow: 0 2px 8px rgba(4, 120, 87, 0.2);
+        }
+
+        .tp-cert-body {
+          text-align: center;
+        }
+        .tp-cert-award-ribbon {
+          display: flex;
+          justify-content: center;
+          margin-bottom: 1.25rem;
+        }
+        .tp-cert-avatar-ring {
+          width: 110px;
+          height: 110px;
           border-radius: 50%;
           overflow: hidden;
           margin: 0 auto 1.25rem;
-          border: 4px solid #10b981;
-          box-shadow: 0 8px 24px rgba(16, 185, 129, 0.16);
+          border: 4px solid #d97706;
+          box-shadow: 0 8px 20px rgba(217, 119, 6, 0.2);
           background: #f8fafc;
         }
-        .tp-supporter-avatar {
+        .tp-cert-avatar {
           width: 100%;
           height: 100%;
           object-fit: cover;
           object-position: center top;
-          display: block;
         }
-        .tp-supporter-name {
-          font-size: 1.65rem;
-          font-weight: 900;
-          color: #0f172a;
-          margin: 0 0 0.25rem;
-        }
-        .tp-supporter-designation {
-          font-size: 0.85rem;
+
+        .tp-cert-presented-to {
+          font-size: 0.72rem;
           font-weight: 800;
-          color: #4b5563;
-          margin: 0;
+          letter-spacing: 0.18em;
+          color: #64748b;
+          text-transform: uppercase;
+          margin: 0 0 0.5rem;
+        }
+        .tp-cert-recipient-name {
+          font-size: 2.1rem;
+          font-weight: 900;
+          color: #064e3b;
+          margin: 0 0 0.4rem;
+          line-height: 1.2;
+          word-break: break-word;
+          letter-spacing: 0.02em;
+        }
+        .tp-cert-designation-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: #ecfdf5;
+          border: 1px solid #a7f3d0;
+          padding: 4px 14px;
+          border-radius: 9999px;
+          font-size: 0.8rem;
+          font-weight: 800;
+          color: #047857;
+          margin-bottom: 1.25rem;
+        }
+        .tp-cert-desig-title { text-transform: uppercase; letter-spacing: 0.04em; }
+        .tp-cert-desig-vp { color: #059669; font-weight: 700; }
+
+        .tp-cert-citation {
+          font-size: 0.88rem;
+          line-height: 1.6;
+          color: #334155;
+          max-width: 580px;
+          margin: 0 auto 1.75rem;
+          font-weight: 500;
+        }
+
+        .tp-cert-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 10px;
+          margin-bottom: 2rem;
+          width: 100%;
+        }
+        .tp-cert-card {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          padding: 10px 8px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 3px;
+        }
+        .tp-cert-card-label {
+          font-size: 0.65rem;
+          font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.05em;
-        }
-        .tp-supporter-divider {
-          height: 1px;
-          background: linear-gradient(90deg, transparent, #cbd5e1 50%, transparent);
-          margin: 2rem 0;
-        }
-        .tp-supporter-details-table {
-          display: table;
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 2rem;
-        }
-        .tp-supporter-row {
-          display: table-row;
-        }
-        .tp-supporter-cell-label {
-          display: table-cell;
-          padding: 0.75rem 0;
-          font-size: 0.8rem;
           color: #64748b;
+        }
+        .tp-cert-card-val {
+          font-size: 0.85rem;
+          font-weight: 800;
+          color: #0f172a;
+        }
+        .tp-cert-gold {
+          color: #d97706 !important;
+          font-size: 0.95rem !important;
+        }
+
+        .tp-cert-signatures-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-top: 1rem;
+          border-top: 1px dashed #cbd5e1;
+          gap: 1rem;
+        }
+        .tp-cert-sig-box {
+          flex: 1;
+          text-align: left;
+        }
+        .tp-cert-sig-line {
+          border-bottom: 2px solid #0f172a;
+          padding-bottom: 2px;
+          margin-bottom: 4px;
+          min-width: 130px;
+          display: inline-block;
+        }
+        .tp-cert-handwritten {
+          font-family: 'Brush Script MT', cursive, sans-serif;
+          font-size: 1.3rem;
+          color: #047857;
+          font-weight: bold;
+        }
+        .tp-cert-sig-title {
+          font-size: 0.65rem;
           font-weight: 800;
           text-transform: uppercase;
-          letter-spacing: 0.04em;
-          text-align: left;
-          border-bottom: 1px solid #f1f5f9;
+          letter-spacing: 0.05em;
+          color: #64748b;
+          margin: 0;
         }
-        .tp-supporter-cell-value {
-          display: table-cell;
-          padding: 0.75rem 0;
-          font-size: 0.95rem;
-          color: #1e293b;
+        .tp-cert-sig-sub {
+          font-size: 0.75rem;
           font-weight: 700;
-          text-align: right;
-          border-bottom: 1px solid #f1f5f9;
+          color: #0f172a;
+          margin: 0;
         }
-        .tp-supporter-row:last-child .tp-supporter-cell-label,
-        .tp-supporter-row:last-child .tp-supporter-cell-value {
-          border-bottom: none;
+
+        .tp-cert-qr-box {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
         }
-        .tp-sup-amount {
-          color: #10b981 !important;
-          font-size: 1.15rem !important;
-          font-weight: 800 !important;
+        .tp-cert-qr-img {
+          width: 75px;
+          height: 75px;
+          border-radius: 6px;
+          border: 1px solid #cbd5e1;
+          background: #ffffff;
+          padding: 2px;
         }
-        .tp-supporter-footer {
-          background: #0f172a;
-          padding: 1.15rem 2rem;
-          text-align: center;
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 0.78rem;
-          font-weight: 600;
-          letter-spacing: 0.04em;
+        .tp-cert-qr-placeholder {
+          width: 75px;
+          height: 75px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 6px;
+          border: 1px dashed #cbd5e1;
+        }
+        .tp-cert-qr-text {
+          font-size: 0.62rem;
+          font-weight: 700;
+          color: #64748b;
           text-transform: uppercase;
         }
+
+        .tp-cert-seal-box {
+          flex: 1;
+          display: flex;
+          justify-content: flex-end;
+        }
+        .tp-cert-gold-seal {
+          width: 85px;
+          height: 85px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+          padding: 4px;
+          box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .tp-cert-seal-inner {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          border: 1.5px dashed #fef08a;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          color: #ffffff;
+          text-align: center;
+          padding: 2px;
+          box-sizing: border-box;
+        }
+        .tp-cert-seal-star { font-size: 0.65rem; color: #fef08a; letter-spacing: 2px; }
+        .tp-cert-seal-text { font-size: 0.52rem; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; line-height: 1.1; }
+        .tp-cert-seal-org { font-size: 0.48rem; font-weight: 800; color: #fef08a; letter-spacing: 0.05em; margin-top: 2px; }
+
+        .tp-cert-footer {
+          background: #064e3b;
+          color: #a7f3d0;
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          text-align: center;
+          padding: 0.65rem 1rem;
+          margin: 1.5rem -2.25rem -2.25rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+          .tp-cert-frame { padding: 1.25rem; margin: 6px; }
+          .tp-cert-grid { grid-template-columns: repeat(2, 1fr); }
+          .tp-cert-signatures-row { flex-direction: column; gap: 1.25rem; text-align: center; }
+          .tp-cert-sig-box { text-align: center; }
+          .tp-cert-seal-box { justify-content: center; }
+          .tp-cert-recipient-name { font-size: 1.6rem; }
+          .tp-cert-footer { margin: 1.25rem -1.25rem -1.25rem; }
+        }
+
+        @media (max-width: 720px) {
+          .tp-ticket:not(.tp-desktop):not(.tp-supporter-ticket) .tp-header {
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+          }
+          .tp-ticket:not(.tp-desktop):not(.tp-supporter-ticket) .tp-header-left {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.5rem;
+          }
+          .tp-ticket:not(.tp-desktop):not(.tp-supporter-ticket) .tp-brand-text {
+            text-align: center;
+          }
+          .tp-ticket:not(.tp-desktop):not(.tp-supporter-ticket) .tp-status-cell {
+            justify-content: center;
+            width: 100%;
+          }
+          .tp-ticket:not(.tp-desktop):not(.tp-supporter-ticket) .tp-body {
+            flex-direction: column;
+            padding: 1.5rem;
+            gap: 1.5rem;
+          }
+          .tp-ticket:not(.tp-desktop):not(.tp-supporter-ticket) .tp-details {
+            padding-right: 0;
+          }
+          .tp-ticket:not(.tp-desktop):not(.tp-supporter-ticket) .tp-qr-col {
+            border-left: none;
+            border-top: 2px dashed #e2e8f0;
+            padding-left: 0;
+            padding-top: 1.5rem;
+            width: 100%;
+          }
+          .tp-ticket:not(.tp-desktop):not(.tp-supporter-ticket) .tp-details-grid-item {
+            width: 100%;
+            padding: 0;
+          }
+          .tp-ticket:not(.tp-desktop):not(.tp-supporter-ticket) .tp-footer-bar {
+            padding: 0.65rem 1.5rem;
+          }
+        }
+      `}</style>
 
         /* Responsive */
         @media (max-width: 720px) {
