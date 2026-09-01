@@ -1281,51 +1281,6 @@ function BookingDetailsContent() {
             padding: 0.65rem 1.5rem;
           }
         }
-      `}</style>
-
-        /* Responsive */
-        @media (max-width: 720px) {
-          .tp-ticket:not(.tp-desktop) .tp-header {
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-            padding: 1.25rem 1.5rem;
-          }
-          .tp-ticket:not(.tp-desktop) .tp-header-left {
-            flex-direction: column;
-            text-align: center;
-            gap: 0.5rem;
-          }
-          .tp-ticket:not(.tp-desktop) .tp-brand-text {
-            text-align: center;
-          }
-          .tp-ticket:not(.tp-desktop) .tp-status-cell {
-            justify-content: center;
-            width: 100%;
-          }
-          .tp-ticket:not(.tp-desktop) .tp-body {
-            flex-direction: column;
-            padding: 1.5rem;
-            gap: 1.5rem;
-          }
-          .tp-ticket:not(.tp-desktop) .tp-details {
-            padding-right: 0;
-          }
-          .tp-ticket:not(.tp-desktop) .tp-qr-col {
-            border-left: none;
-            border-top: 2px dashed #e2e8f0;
-            padding-left: 0;
-            padding-top: 1.5rem;
-            width: 100%;
-          }
-          .tp-ticket:not(.tp-desktop) .tp-details-grid-item {
-            width: 100%;
-            padding: 0;
-          }
-          .tp-ticket:not(.tp-desktop) .tp-footer-bar {
-            padding: 0.65rem 1.5rem;
-          }
-        }
 
         @media (max-width: 480px) {
           .tp-ticket:not(.tp-desktop) .tp-event-name {
