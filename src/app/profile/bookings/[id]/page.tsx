@@ -1162,16 +1162,9 @@ function BookingDetailsContent() {
           display: inline-block;
         }
         .tp-cert-handwritten {
-          font-family: 'Brush Script MT', 'Segoe Script', 'Lucida Handwriting', 'Snell Roundhand', cursive;
-          font-size: 1.7rem;
-          color: #047857;
+          font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+          font-size: 2.5rem;
           font-weight: normal;
-          font-style: italic;
-          letter-spacing: 0.03em;
-          line-height: 1;
-          display: inline-block;
-          padding: 0 10px;
-          text-shadow: 0.5px 0.5px 0px rgba(4, 120, 87, 0.15);
         }
         .tp-cert-sig-title {
           font-size: 0.65rem;
