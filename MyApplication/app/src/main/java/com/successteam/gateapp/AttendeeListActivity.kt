@@ -89,7 +89,9 @@ class AttendeeListActivity : AppCompatActivity(), QRScannerDialogFragment.QRScan
         val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = cm.activeNetwork ?: return false
         val caps = cm.getNetworkCapabilities(network) ?: return false
+        // NET_CAPABILITY_VALIDATED = OS confirmed real internet (avoids false "no internet" on cellular/VPN)
         return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
     private fun checkInternetAndLoad() {

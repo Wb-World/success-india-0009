@@ -42,8 +42,8 @@ object SupabaseAttendeeRepository {
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xYmV4d3Fnc2xxdmJvcm55dWhrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODE4ODM5MiwiZXhwIjoyMTAzNzY0MzkyfQ.VCg9L1JEbldI74M4IejlstDBt5wxLJNFrDB9AKG9bBU"
 
     private val client = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
         .build()
 
     private val gson = Gson()

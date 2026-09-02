@@ -42,10 +42,10 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
     private val SUPABASE_ANON_KEY =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xYmV4d3Fnc2xxdmJvcm55dWhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxODgzOTIsImV4cCI6MjEwMzc2NDM5Mn0.bSGrg2_HXDCTWVQZxzeWd8dgxfeOIWt8vETnvSrarOk"
 
-    // Reduced timeouts for quicker scan response
+    // Timeouts — generous enough for slow mobile connections
     private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(8, TimeUnit.SECONDS)
-        .readTimeout(8, TimeUnit.SECONDS)
+        .connectTimeout(20, TimeUnit.SECONDS)
+        .readTimeout(20, TimeUnit.SECONDS)
         .build()
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -97,7 +97,10 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
+        // NET_CAPABILITY_VALIDATED = system has confirmed real internet access (not just layer-2 link).
+        // NET_CAPABILITY_INTERNET alone is unreliable on cellular/VPN and causes false "no internet" errors.
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
     private fun showNoInternetDialog() {

@@ -246,7 +246,7 @@ function BookingDetailsContent() {
                 </div> */}
 
                 <p className="tp-cert-citation">
-                  In recognition of distinguished commitment, financial leadership, and dedication as an official System Supporter driving growth, empowerment, and leadership development across the Success Team network.
+                  TOGETHER, WE RISE. TOGETHER, WE SUCCEED. Your support strengthens our mission,your contribution fuels our journey,and your commitment inspires our entire team.
                 </p>
 
                 {/* Certificate Data Grid */}
@@ -965,7 +965,7 @@ function BookingDetailsContent() {
         .tp-cert-logo-ring {
           width: 70px;
           height: 70px;
-          border-radius: 50%;
+          border-radius: 10px;
           border: 3px solid #d97706;
           box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25);
           margin: 0 auto 0.75rem;
