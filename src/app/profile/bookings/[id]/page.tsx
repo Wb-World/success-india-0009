@@ -240,10 +240,10 @@ function BookingDetailsContent() {
                 <p className="tp-cert-presented-to">THIS CERTIFICATE IS PROUDLY PRESENTED TO</p>
                 <h2 className="tp-cert-recipient-name">{ticket.attendeeName}</h2>
                 
-                <div className="tp-cert-designation-pill">
+                {/* <div className="tp-cert-designation-pill">
                   <span className="tp-cert-desig-title">{designationVal}</span>
                   {vpNameVal !== '—' && <span className="tp-cert-desig-vp">• VP: {vpNameVal}</span>}
-                </div>
+                </div> */}
 
                 <p className="tp-cert-citation">
                   In recognition of distinguished commitment, financial leadership, and dedication as an official System Supporter driving growth, empowerment, and leadership development across the Success Team network.
@@ -263,22 +263,22 @@ function BookingDetailsContent() {
                     <span className="tp-cert-card-label">Issued Date &amp; Time</span>
                     <strong className="tp-cert-card-val">{ticket.date} at {ticket.time}</strong>
                   </div>
-                  <div className="tp-cert-card">
+                  {/* <div className="tp-cert-card">
                     <span className="tp-cert-card-label">Contribution Amount</span>
                     <strong className="tp-cert-card-val tp-cert-gold">{ticket.amountPaid}</strong>
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Certificate Signatures & QR Seal Section */}
                 <div className="tp-cert-signatures-row">
                   {/* Executive Signature */}
-                  <div className="tp-cert-sig-box">
+                  {/* <div className="tp-cert-sig-box">
                     <div className="tp-cert-sig-line">
                       <span className="tp-cert-handwritten">{vpNameVal !== '—' ? vpNameVal : 'Success Team'}</span>
                     </div>
                     <p className="tp-cert-sig-title">AUTHORIZED VP SIGNATURE</p>
                     <p className="tp-cert-sig-sub">{vpNameVal}</p>
-                  </div>
+                  </div> */}
 
                   {/* Verification QR */}
                   <div className="tp-cert-qr-box">
@@ -307,7 +307,7 @@ function BookingDetailsContent() {
 
               {/* Certificate Bottom Banner */}
               <div className="tp-cert-footer">
-                <span>VERIFIED SYSTEM SUPPORTER CREDENTIAL • ISSUED BY SUCCESS TEAM INDIA</span>
+                <span>VERIFIED SYSTEM SUPPORTER CREDENTIAL • ISSUED BY SUCCESS TEAM</span>
               </div>
             </div>
           </div>
@@ -1079,7 +1079,7 @@ function BookingDetailsContent() {
 
         .tp-cert-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(3, 1fr);
           gap: 10px;
           margin-bottom: 2rem;
           width: 100%;
