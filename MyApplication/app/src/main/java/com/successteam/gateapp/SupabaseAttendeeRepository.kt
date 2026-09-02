@@ -64,7 +64,7 @@ object SupabaseAttendeeRepository {
     fun fetchBooking(bookingId: String): GateTicketSnapshot? {
         return try {
             val url = "$SUPABASE_URL/rest/v1/bookings" +
-                    "?select=id,status,attendee_details,screenshot,seats,bus_name,seminar_name,source,destination,total_price,date,time,booker_name,booker_phone" +
+                    "?select=id,status,attendee_details,screenshot,seats,bus_name,source,destination,total_price,date,time,booker_name,booker_phone" +
                     "&id=eq.$bookingId"
 
             val request = Request.Builder()
@@ -98,7 +98,7 @@ object SupabaseAttendeeRepository {
     @Throws(Exception::class)
     fun fetchAllAttendees(): List<GlobalAttendee> {
         val url = "$SUPABASE_URL/rest/v1/bookings" +
-                "?select=id,status,attendee_details,screenshot,seats,bus_name,seminar_name,source,destination,date,time,booker_name" +
+                "?select=id,status,attendee_details,screenshot,seats,bus_name,source,destination,date,time,booker_name" +
                 "&status=eq.approved" +
                 "&order=id.asc"
 
@@ -126,8 +126,7 @@ object SupabaseAttendeeRepository {
 
             val bookingStatus = booking.strOrBlank("status").ifBlank { "pending" }
 
-            val eventName = booking.strOrBlank("seminar_name")
-                .ifBlank { booking.strOrBlank("bus_name") }
+            val eventName = booking.strOrBlank("bus_name")
                 .ifBlank { booking.strOrBlank("destination") }
                 .ifBlank { "Event" }
 
