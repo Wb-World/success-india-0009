@@ -8,8 +8,36 @@ import {
 } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────
-   Helpers
+    Helpers
 ───────────────────────────────────────────────────────── */
+function formatDateWithMonthName(dateStr: string): string {
+  if (!dateStr) return '';
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  // Handle formats like "DD/MM/YYYY", "YYYY-MM-DD", "DD-MM-YYYY"
+  const dateMatch = dateStr.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/) || dateStr.match(/(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (dateMatch) {
+    let year: string, month: string, day: string;
+    if (dateMatch[1].length === 4) {
+      year = dateMatch[1]; month = dateMatch[2]; day = dateMatch[3];
+    } else {
+      day = dateMatch[1]; month = dateMatch[2]; year = dateMatch[3];
+    }
+    const monthName = months[parseInt(month, 10) - 1] || month;
+    return `${parseInt(day, 10)} ${monthName} ${year}`;
+  }
+  // Handle "Mon DD, YYYY" or "DD Mon YYYY" natural format
+  const parts = dateStr.split(/[\s,/]+/);
+  if (parts.length >= 3) {
+    for (let i = 0; i < parts.length; i++) {
+      const mIdx = months.findIndex(m => m.toLowerCase().startsWith(parts[i].toLowerCase().substring(0, 3)));
+      if (mIdx !== -1 && parts[i].length <= 2) {
+        return `${parts[i]} ${months[mIdx]} ${parts.find(p => p.length === 4 && /^\d{4}$/.test(p)) || ''}`.trim();
+      }
+    }
+  }
+  return dateStr;
+}
+
 function StatusBadge({ status }: { status: string }) {
   const cfg: Record<string, { label: string; color: string; bg: string; border: string; iconChar: string }> = {
     approved: { label: 'Confirmed',        color: '#059669', bg: '#d1fae5', border: '#6ee7b7', iconChar: '✓' },
@@ -240,13 +268,16 @@ function BookingDetailsContent() {
                 <p className="tp-cert-presented-to">THIS CERTIFICATE IS PROUDLY PRESENTED TO</p>
                 <h2 className="tp-cert-recipient-name">{ticket.attendeeName}</h2>
                 
-                {/* <div className="tp-cert-designation-pill">
+                <div className="tp-cert-designation-pill">
                   <span className="tp-cert-desig-title">{designationVal}</span>
-                  {vpNameVal !== '—' && <span className="tp-cert-desig-vp">• VP: {vpNameVal}</span>}
-                </div> */}
+                  {/* {vpNameVal !== '—' && <span className="tp-cert-desig-vp">• VP: {vpNameVal}</span>} */}
+                </div>
 
                 <p className="tp-cert-citation">
-                  TOGETHER, WE RISE. TOGETHER, WE SUCCEED. Your support strengthens our mission,your contribution fuels our journey,and your commitment inspires our entire team.
+                  TOGETHER, WE RISE. TOGETHER, WE SUCCEED.
+                </p>
+                <p className="tp-cert-citation">
+                  Your support strengthens our mission,your contribution fuels our journey,and your commitment inspires our entire team.
                 </p>
 
                 {/* Certificate Data Grid */}
@@ -261,7 +292,7 @@ function BookingDetailsContent() {
                   </div>
                   <div className="tp-cert-card">
                     <span className="tp-cert-card-label">Issued Date &amp; Time</span>
-                    <strong className="tp-cert-card-val">{ticket.date} at {ticket.time}</strong>
+                    <strong className="tp-cert-card-val">{formatDateWithMonthName(ticket.date)} at {ticket.time}</strong>
                   </div>
                   {/* <div className="tp-cert-card">
                     <span className="tp-cert-card-label">Contribution Amount</span>
@@ -271,14 +302,13 @@ function BookingDetailsContent() {
 
                 {/* Certificate Signatures & QR Seal Section */}
                 <div className="tp-cert-signatures-row">
-                  {/* Executive Signature */}
-                  {/* <div className="tp-cert-sig-box">
+                  <div className="tp-cert-sig-box">
                     <div className="tp-cert-sig-line">
                       <span className="tp-cert-handwritten">{vpNameVal !== '—' ? vpNameVal : 'Success Team'}</span>
                     </div>
-                    <p className="tp-cert-sig-title">AUTHORIZED VP SIGNATURE</p>
+                    <p className="tp-cert-sig-title">AUTHORIZED SIGNATURE</p>
                     <p className="tp-cert-sig-sub">{vpNameVal}</p>
-                  </div> */}
+                  </div>
 
                   {/* Verification QR */}
                   <div className="tp-cert-qr-box">
@@ -1132,10 +1162,16 @@ function BookingDetailsContent() {
           display: inline-block;
         }
         .tp-cert-handwritten {
-          font-family: 'Brush Script MT', cursive, sans-serif;
-          font-size: 1.3rem;
+          font-family: 'Brush Script MT', 'Segoe Script', 'Lucida Handwriting', 'Snell Roundhand', cursive;
+          font-size: 1.7rem;
           color: #047857;
-          font-weight: bold;
+          font-weight: normal;
+          font-style: italic;
+          letter-spacing: 0.03em;
+          line-height: 1;
+          display: inline-block;
+          padding: 0 10px;
+          text-shadow: 0.5px 0.5px 0px rgba(4, 120, 87, 0.15);
         }
         .tp-cert-sig-title {
           font-size: 0.65rem;
