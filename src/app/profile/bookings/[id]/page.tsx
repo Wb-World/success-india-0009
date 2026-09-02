@@ -307,7 +307,7 @@ function BookingDetailsContent() {
                       <span className="tp-cert-handwritten">{vpNameVal !== '—' ? vpNameVal : 'Success Team'}</span>
                     </div>
                     <p className="tp-cert-sig-title">AUTHORIZED SIGNATURE</p>
-                    <p className="tp-cert-sig-sub">{vpNameVal}</p>
+                    {/* <p className="tp-cert-sig-sub">{vpNameVal}</p> */}
                   </div>
 
                   {/* Verification QR */}
@@ -502,6 +502,8 @@ function BookingDetailsContent() {
 
       {/* ── Styles ── */}
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Allura&display=swap');
+
         /* Page shell */
         .tp-page {
           max-width: 900px;
@@ -1154,17 +1156,35 @@ function BookingDetailsContent() {
           flex: 1;
           text-align: left;
         }
+        // .tp-cert-sig-line {
+        //   border-bottom: 2px solid #0f172a;
+        //   padding-bottom: 2px;
+        //   margin-bottom: 4px;
+        //   min-width: 130px;
+        //   display: inline-block;
+        // }
+        // .tp-cert-handwritten {
+        //   font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+        //   font-size: 2.5rem;
+        //   font-weight: normal;
+        // }
         .tp-cert-sig-line {
-          border-bottom: 2px solid #0f172a;
-          padding-bottom: 2px;
-          margin-bottom: 4px;
-          min-width: 130px;
-          display: inline-block;
-        }
+  border-bottom: 2px solid #0f172a;
+  padding-bottom: 2px;
+  margin-bottom: 4px;
+  min-width: 130px;
+  display: inline-block;
+}
+
         .tp-cert-handwritten {
-          font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
-          font-size: 2.5rem;
-          font-weight: normal;
+          font-family: 'Great Vibes', 'Allura', 'Dancing Script', cursive;
+          font-size: 1.6rem;
+          font-weight: 400;
+          font-style: normal;
+          line-height: 1;
+          white-space: nowrap;
+          color: #45475e;
+          letter-spacing: 0.01em;
         }
         .tp-cert-sig-title {
           font-size: 0.65rem;
