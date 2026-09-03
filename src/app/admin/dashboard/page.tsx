@@ -37,7 +37,8 @@ export default function AdminDashboard() {
   const [selectedContributionDetail, setSelectedContributionDetail] = useState<any | null>(null);
   const [mounted, setMounted] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions' | 'achievers' | 'foodList' | 'attendeeList' | 'resortBookings' | 'resortSettings' | 'seatBlock'>('registrations');
+  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions' | 'achievers' | 'foodList' | 'attendeeList' | 'resortBookings' | 'resortSettings' | 'seatBlock' | 'contributorsData'>('registrations');
+  const [selectedContribDataMonth, setSelectedContribDataMonth] = useState<string>('All');
   const [resortBookings, setResortBookings] = useState<any[]>([]);
   const [resortLoading, setResortLoading] = useState(false);
   const [events, setEvents] = useState<any[]>([]);
@@ -1685,6 +1686,13 @@ export default function AdminDashboard() {
               <span>Total Booking List</span>
             </button>
             <button
+              onClick={() => setAdminSection('contributorsData')}
+              className={`section-tab ${adminSection === 'contributorsData' ? 'active' : ''}`}
+            >
+              <FileText size={16} />
+              <span>Contributors Data</span>
+            </button>
+            <button
               onClick={() => setAdminSection('resortBookings')}
               className={`section-tab ${adminSection === 'resortBookings' ? 'active' : ''}`}
             >
@@ -3059,6 +3067,117 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
+        ) : adminSection === 'contributorsData' ? (
+          (() => {
+            // Build all contribution entries
+            const allContribData = contributionBookings.map((b: any) => {
+              const supporter = b.attendees?.SUPPORTER || {};
+              const supporterName = supporter.name || b.bookerName || 'Unknown';
+              const vpName = supporter.vpName || b.bookerVpName || 'N/A';
+              const designation = supporter.designation || 'System Supporter';
+              const monthLabel = getMonthLabel(b) || 'Unknown';
+              return {
+                bookingId: b.id.toUpperCase(),
+                name: supporterName,
+                designation,
+                vpName,
+                amount: b.totalPrice || 0,
+                status: b.status,
+                month: monthLabel,
+                date: b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
+              };
+            });
+
+            // Unique months for dropdown (sorted newest first)
+            const contribDataMonths = Array.from(
+              new Set(allContribData.map((r: any) => r.month).filter((m: string) => m !== 'Unknown'))
+            ).sort((a: any, b: any) => new Date(b).getTime() - new Date(a).getTime());
+
+            const filteredContribData = selectedContribDataMonth === 'All'
+              ? allContribData
+              : allContribData.filter((r: any) => r.month === selectedContribDataMonth);
+
+            const contribExportData = filteredContribData.map((r: any) => ({
+              'Booking Ref': r.bookingId,
+              'Contributor Name': r.name,
+              'Designation': r.designation,
+              'VP Name': r.vpName,
+              'Amount (₹)': r.amount,
+              'Status': r.status === 'approved' ? 'Confirmed' : r.status === 'denied' ? 'Rejected' : 'Pending',
+              'Month': r.month,
+              'Date': r.date,
+            }));
+
+            return (
+              <div className="dashboard-main-area animate-slide-up">
+                <div className="event-manager-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div>
+                    <h2 className="heading-md">Contributors Data</h2>
+                    <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Total Contributors: <strong>{filteredContribData.length}</strong></p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <select
+                      value={selectedContribDataMonth}
+                      onChange={(e) => setSelectedContribDataMonth(e.target.value)}
+                      style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.9rem', background: '#fff', color: '#1e293b', fontWeight: 500 }}
+                    >
+                      <option value="All">All Months</option>
+                      {(contribDataMonths as string[]).map((m: string) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => exportToCSV(contribExportData, `contributors_data${selectedContribDataMonth !== 'All' ? '_' + selectedContribDataMonth.replace(/\s/g, '_') : ''}.csv`)}
+                      className="btn btn-secondary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                      <Download size={14} /> Download Excel
+                    </button>
+                  </div>
+                </div>
+                <div className="glass-card" style={{ padding: '0', overflowX: 'auto' }}>
+                  <table id="contributors-data-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid #f1f5f9', background: '#f8fafc' }}>
+                        <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>#</th>
+                        <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>Booking Ref</th>
+                        <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>Contributor Name</th>
+                        <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>Designation</th>
+                        <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>VP Name</th>
+                        <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>Amount</th>
+                        <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>Status</th>
+                        <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>Month</th>
+                        <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredContribData.length === 0 ? (
+                        <tr><td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No contributors found for the selected month.</td></tr>
+                      ) : (
+                        filteredContribData.map((row: any, idx: number) => (
+                          <tr key={row.bookingId} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
+                            <td style={{ padding: '1rem', border: '1px solid #e2e8f0', color: '#94a3b8', fontWeight: 500 }}>{idx + 1}</td>
+                            <td style={{ padding: '1rem', fontWeight: 700, border: '1px solid #e2e8f0', fontFamily: 'monospace', fontSize: '0.82rem', color: '#16a34a' }}>{row.bookingId}</td>
+                            <td style={{ padding: '1rem', fontWeight: 600, border: '1px solid #e2e8f0' }}>{row.name}</td>
+                            <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontSize: '0.85rem', color: '#475569' }}>{row.designation}</td>
+                            <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontStyle: 'italic', color: '#64748b' }}>{row.vpName}</td>
+                            <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontWeight: 700, color: '#0f172a' }}>₹{Number(row.amount).toLocaleString('en-IN')}</td>
+                            <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>
+                              <span className={`badge ${row.status === 'approved' ? 'badge-approved' : row.status === 'denied' ? 'badge-denied' : 'badge-pending'}`}>
+                                {row.status === 'approved' ? 'Confirmed' : row.status === 'denied' ? 'Rejected' : 'Pending'}
+                              </span>
+                            </td>
+                            <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontSize: '0.85rem', color: '#64748b' }}>{row.month}</td>
+                            <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontSize: '0.85rem', color: '#64748b' }}>{row.date}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })()
         ) : adminSection === 'attendeeList' ? (
           <div className="dashboard-main-area animate-slide-up">
             <div className="event-manager-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
@@ -5419,17 +5538,31 @@ export default function AdminDashboard() {
           }
         }
 
-        /* ── Food list / attendee list tables ── make scrollable ── */
+        /* ── Food list / attendee list / contributors tables ── make scrollable ── */
         @media (max-width: 768px) {
           .food-table-wrap,
           .attendee-table-wrap,
           [id="food-list-table-wrap"],
-          [id="attendee-list-table-wrap"] {
+          [id="attendee-list-table-wrap"],
+          [id="contributors-data-table"] {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
           }
           table {
             min-width: 560px;
+          }
+        }
+
+        /* ── Contributors Data section ── */
+        #contributors-data-table th,
+        #contributors-data-table td {
+          white-space: nowrap;
+        }
+        @media (max-width: 640px) {
+          #contributors-data-table th,
+          #contributors-data-table td {
+            padding: 0.65rem 0.6rem;
+            font-size: 0.8rem;
           }
         }
 

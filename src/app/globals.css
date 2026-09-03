@@ -53,10 +53,13 @@
   margin: 0;
 }
 
-html,
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   max-width: 100vw;
-  /* overflow-x: hidden; */
+  overflow-x: hidden;
   font-family: var(--font-sans);
   background: var(--background);
   color: var(--foreground);
@@ -64,7 +67,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
   /* user-select: none; */
 }
 
@@ -723,3 +726,234 @@ textarea {
   word-break: break-word;
 }
 
+
+/* ═══════════════════════════════════════════════════════════
+   GLOBAL RESPONSIVE STYLES — All devices (iPhone · Android · Tablet · Desktop)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Prevent horizontal scroll everywhere ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ── Tables: always scrollable on small screens ── */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── General Modals: full-width on mobile (no position override to keep scroll intact) ── */
+@media (max-width: 640px) {
+  [class*="modal-inner"],
+  [class*="ModalInner"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 16px 16px 0 0 !important;
+  }
+}
+
+/* ── Booking Cards: stack on mobile ── */
+@media (max-width: 640px) {
+  .bk-horizontal-card {
+    flex-direction: column;
+  }
+  .bk-card-info-wrap {
+    padding: 1.25rem 1rem;
+  }
+  .bk-card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .bk-card-details-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Detail label row: stack on mobile ── */
+@media (max-width: 480px) {
+  .bk-card-detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
+  }
+  .bk-detail-lbl {
+    min-width: unset;
+    font-size: 0.78rem;
+  }
+  .bk-detail-val {
+    font-size: 0.9rem;
+  }
+}
+
+/* ── Section/page hero areas ── */
+@media (max-width: 768px) {
+  .page-hero,
+  .hero-section,
+  .section-hero {
+    padding: 3rem 1rem 2rem;
+    text-align: center;
+  }
+}
+
+/* ── Grid layouts: collapse on small screens ── */
+@media (max-width: 640px) {
+  .events-grid,
+  .cards-grid,
+  .features-grid,
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+  }
+}
+@media (min-width: 641px) and (max-width: 1023px) {
+  .events-grid,
+  .cards-grid,
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ── Flex rows that need to wrap ── */
+@media (max-width: 640px) {
+  .flex-row-mobile-col {
+    flex-direction: column !important;
+  }
+}
+
+/* ── Buttons: full-width on very small phones ── */
+@media (max-width: 360px) {
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Form controls: ensure usable size ── */
+@media (max-width: 480px) {
+  .form-control,
+  input,
+  select,
+  textarea {
+    font-size: 16px !important; /* prevents iOS zoom */
+    padding: 0.7rem 0.875rem;
+  }
+}
+
+/* ── Container padding on tiny phones ── */
+@media (max-width: 360px) {
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* ── Seat map: horizontal scroll on mobile ── */
+@media (max-width: 768px) {
+  .seat-map-container,
+  .seat-grid,
+  [class*="seatGrid"],
+  [class*="seat-grid"] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── Profile tabs: scrollable row ── */
+@media (max-width: 640px) {
+  .profile-tabs,
+  [class*="profileTabs"],
+  [class*="profile-tabs"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+    gap: 0.5rem;
+  }
+}
+
+/* ── Admin section tabs: horizontal scroll on mobile ── */
+@media (max-width: 768px) {
+  .admin-section-tabs-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-section-tabs {
+    flex-wrap: nowrap;
+    min-width: max-content;
+    padding-bottom: 4px;
+  }
+  .section-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    padding: 0.55rem 0.9rem;
+  }
+  .section-tab span {
+    display: inline !important;
+  }
+}
+
+/* ── Contribution page: stack on mobile ── */
+@media (max-width: 640px) {
+  .contribution-hero,
+  [class*="contribution-grid"] {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem;
+  }
+}
+
+/* ── Event cards: responsive image aspect ratio ── */
+@media (max-width: 480px) {
+  [class*="event-card"] img,
+  [class*="eventCard"] img {
+    height: 160px;
+    object-fit: cover;
+  }
+}
+
+/* ── Headings: clamp on mobile for long text ── */
+@media (max-width: 480px) {
+  .heading-xl {
+    font-size: 1.55rem;
+  }
+  .heading-lg {
+    font-size: 1.3rem;
+  }
+  .heading-md {
+    font-size: 1.05rem;
+  }
+}
+
+/* ── Footer: stack columns on mobile ── */
+@media (max-width: 640px) {
+  footer [class*="footer-grid"],
+  footer [class*="footerGrid"] {
+    grid-template-columns: 1fr !important;
+    gap: 2rem;
+  }
+}
+
+/* ── Toast / Notification snackbar ── */
+@media (max-width: 480px) {
+  [class*="toast"],
+  [class*="Toast"],
+  [class*="snackbar"],
+  [class*="Snackbar"] {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 16px !important;
+    max-width: none !important;
+  }
+}
+
+/* ── QR / Payment screenshot images ── */
+@media (max-width: 480px) {
+  [class*="qr-img"],
+  [class*="qrImg"],
+  [class*="payment-qr"] {
+    max-width: 200px;
+    margin: 0 auto;
+  }
+}
