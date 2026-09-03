@@ -304,7 +304,7 @@ function BookingDetailsContent() {
                 <div className="tp-cert-signatures-row">
                   <div className="tp-cert-sig-box">
                     <div className="tp-cert-sig-line">
-                      <span className="tp-cert-handwritten">{vpNameVal !== '—' ? vpNameVal : 'Success Team'}</span>
+                      <img src="/sign1.png" alt="Authorized Signature" className="tp-cert-sig-img" />
                     </div>
                     <p className="tp-cert-sig-title">AUTHORIZED SIGNATURE</p>
                     {/* <p className="tp-cert-sig-sub">{vpNameVal}</p> */}
@@ -1146,7 +1146,7 @@ function BookingDetailsContent() {
 
         .tp-cert-signatures-row {
           display: flex;
-          align-items: center;
+          align-items: flex-end;
           justify-content: space-between;
           padding-top: 1rem;
           border-top: 1px dashed #cbd5e1;
@@ -1155,36 +1155,25 @@ function BookingDetailsContent() {
         .tp-cert-sig-box {
           flex: 1;
           text-align: left;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
         }
-        // .tp-cert-sig-line {
-        //   border-bottom: 2px solid #0f172a;
-        //   padding-bottom: 2px;
-        //   margin-bottom: 4px;
-        //   min-width: 130px;
-        //   display: inline-block;
-        // }
-        // .tp-cert-handwritten {
-        //   font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
-        //   font-size: 2.5rem;
-        //   font-weight: normal;
-        // }
         .tp-cert-sig-line {
-  border-bottom: 2px solid #0f172a;
-  padding-bottom: 2px;
-  margin-bottom: 4px;
-  min-width: 130px;
-  display: inline-block;
-}
-
-        .tp-cert-handwritten {
-          font-family: 'Great Vibes', 'Allura', 'Dancing Script', cursive;
-          font-size: 1.6rem;
-          font-weight: 400;
-          font-style: normal;
-          line-height: 1;
-          white-space: nowrap;
-          color: #45475e;
-          letter-spacing: 0.01em;
+          border-bottom: 2px solid #0f172a;
+          padding-bottom: 2px;
+          margin-bottom: 4px;
+          min-width: 170px;
+          display: inline-flex;
+          align-items: flex-end;
+          justify-content: center;
+        }
+        .tp-cert-sig-img {
+          height: 100px;
+          max-width: 300px;
+          object-fit: contain;
+          display: block;
+          mix-blend-mode: multiply;
         }
         .tp-cert-sig-title {
           font-size: 0.65rem;

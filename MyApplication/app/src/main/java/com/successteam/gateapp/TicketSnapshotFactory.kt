@@ -74,7 +74,11 @@ object TicketSnapshotFactory {
             }
             else -> {
                 val normalized = normalizeQrStatus(statusRaw, note)
-                normalized.first to normalized.second
+                if (normalized.first == "completed" && checkedInCount < totalAttendees) {
+                    "partial" to ""
+                } else {
+                    normalized.first to normalized.second
+                }
             }
         }
 
@@ -145,12 +149,13 @@ object TicketSnapshotFactory {
             when {
                 totalAttendees == 0 -> "approved"
                 // Only "completed" if every single attendee has checkedIn=true explicitly
-                checkedInCount == totalAttendees && attendees.all { it.checkedIn } -> "completed"
+                checkedInCount == totalAttendees && totalAttendees > 0 && attendees.all { it.checkedIn } -> "completed"
                 checkedInCount > 0 -> "partial"
                 else -> "approved"
             }
         } else {
-            normalizeBookingStatus(rawStatus)
+            val norm = normalizeBookingStatus(rawStatus)
+            if (norm == "completed" && checkedInCount < totalAttendees) "partial" else norm
         }
 
         val reason = if (normalizedStatus == "completed") {
@@ -277,8 +282,8 @@ object TicketSnapshotFactory {
             }
         }
 
+        val seen = mutableSetOf<String>()
         if (detailsObj != null && detailsObj.entrySet().isNotEmpty()) {
-            val seen = mutableSetOf<String>()
             for (seat in seatsHint) {
                 val entry = detailsObj.get(seat)
                 if (entry != null && !entry.isJsonNull) {
@@ -289,7 +294,28 @@ object TicketSnapshotFactory {
             detailsObj.entrySet().forEach { entry ->
                 if (!entry.key.startsWith("__") && !seen.contains(entry.key)) {
                     attendees.add(parseAttendeeEntry(entry.key, entry.value, seatsHint))
+                    seen.add(entry.key)
                 }
+            }
+        }
+
+        // Ensure every seat in seatsHint is present in attendees
+        for (seat in seatsHint) {
+            if (!seen.contains(seat)) {
+                val fallbackName = if (seatsHint.size == 1) {
+                    resolveFallbackName(booking, fallbackQr).ifBlank { "Guest ($seat)" }
+                } else {
+                    "Guest ($seat)"
+                }
+                attendees.add(
+                    GateAttendee(
+                        key = seat,
+                        name = fallbackName,
+                        seatLabel = seat,
+                        checkedIn = false
+                    )
+                )
+                seen.add(seat)
             }
         }
 
@@ -349,37 +375,61 @@ object TicketSnapshotFactory {
     private fun parseAttendeesFromQr(qrDetails: Map<String, String>, seatsHint: List<String>): List<GateAttendee> {
         val attendeesRaw = qrDetails["ATTENDEES"].orEmpty().trim()
         val directAttendee = qrDetails["ATTENDEE"].orEmpty().trim()
-        if (attendeesRaw.isBlank() && directAttendee.isBlank()) return emptyList()
+        if (attendeesRaw.isBlank() && directAttendee.isBlank() && seatsHint.isEmpty()) return emptyList()
 
-        val seatHint = seatsHint.firstOrNull().orEmpty()
         val items = when {
             attendeesRaw.isNotBlank() -> attendeesRaw.split(",")
             directAttendee.isNotBlank() -> listOf("Name=$directAttendee")
             else -> emptyList()
         }
 
-        return items.mapIndexedNotNull { index, item ->
-            val cleaned = item.trim()
-            if (cleaned.isBlank()) return@mapIndexedNotNull null
+        val attendees = mutableListOf<GateAttendee>()
+        val seenKeys = mutableSetOf<String>()
 
-            val parts = cleaned.split("=", limit = 2)
-            val key = if (parts.size == 2) parts[0].trim() else "attendee-${index + 1}"
-            val name = if (parts.size == 2) parts[1].trim() else cleaned
-            val normalizedKey = when {
-                key.isBlank() -> seatHint.ifBlank { "attendee-${index + 1}" }
-                key.equals("name", ignoreCase = true) && seatHint.isNotBlank() -> seatHint
-                key.equals("attendee", ignoreCase = true) && seatHint.isNotBlank() -> seatHint
-                else -> key
+        items.forEachIndexed { index, item ->
+            val cleaned = item.trim()
+            if (cleaned.isNotBlank()) {
+                val parts = cleaned.split("=", limit = 2)
+                val seatHint = seatsHint.getOrNull(index) ?: seatsHint.firstOrNull().orEmpty()
+                val key = if (parts.size == 2) parts[0].trim() else seatHint.ifBlank { "attendee-${index + 1}" }
+                val name = if (parts.size == 2) parts[1].trim() else cleaned
+
+                val normalizedKey = when {
+                    key.isBlank() -> seatHint.ifBlank { "attendee-${index + 1}" }
+                    (key.equals("name", ignoreCase = true) || key.equals("attendee", ignoreCase = true)) && seatHint.isNotBlank() -> seatHint
+                    else -> key
+                }
+                val seatLabel = if (seatHint.isNotBlank() && (normalizedKey == seatHint || items.size == 1)) seatHint else normalizedKey
+
+                attendees.add(
+                    GateAttendee(
+                        key = normalizedKey,
+                        name = name.ifBlank { "Guest" },
+                        seatLabel = seatLabel,
+                        whatsapp = "",
+                        lunch = ""
+                    )
+                )
+                seenKeys.add(normalizedKey)
             }
-            val seatLabel = if (seatHint.isNotBlank() && items.size == 1 && normalizedKey == seatHint) seatHint else normalizedKey
-            GateAttendee(
-                key = normalizedKey,
-                name = name.ifBlank { "Guest" },
-                seatLabel = seatLabel,
-                whatsapp = "",
-                lunch = ""
-            )
         }
+
+        // Ensure all seats in seatsHint are represented in attendees list
+        for (seat in seatsHint) {
+            if (!seenKeys.contains(seat)) {
+                attendees.add(
+                    GateAttendee(
+                        key = seat,
+                        name = "Guest ($seat)",
+                        seatLabel = seat,
+                        checkedIn = false
+                    )
+                )
+                seenKeys.add(seat)
+            }
+        }
+
+        return attendees
     }
 
     private fun parseSeatsFromJson(element: JsonElement?): List<String> {

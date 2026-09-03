@@ -264,19 +264,28 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
 
     private fun isBookingFullyCheckedInOffline(bookingId: String, qrDetails: Map<String, String>): Boolean {
         if (bookingId.isBlank()) return false
+        val seatsRaw = qrDetails["SEATS"] ?: qrDetails["SEAT"] ?: ""
+        val seatsList = seatsRaw.split(",").map { it.trim() }.filter { it.isNotBlank() }
+
         val attendeesRaw = qrDetails["ATTENDEES"].orEmpty().trim()
         val directAttendee = qrDetails["ATTENDEE"].orEmpty().trim()
-        if (attendeesRaw.isBlank() && directAttendee.isBlank()) return false
+        val items = if (attendeesRaw.isNotBlank()) attendeesRaw.split(",") else if (directAttendee.isNotBlank()) listOf("Name=$directAttendee") else emptyList()
 
-        val items = if (attendeesRaw.isNotBlank()) attendeesRaw.split(",") else listOf("Name=$directAttendee")
-        val attendeeKeys = items.mapNotNull { item ->
+        if (seatsList.isEmpty() && items.isEmpty()) return false
+
+        val requiredKeys = mutableSetOf<String>()
+        requiredKeys.addAll(seatsList)
+        items.forEachIndexed { index, item ->
             val cleaned = item.trim()
-            if (cleaned.isBlank()) return@mapNotNull null
-            val parts = cleaned.split("=", limit = 2)
-            if (parts.size == 2) parts[0].trim() else "attendee-${items.indexOf(item) + 1}"
+            if (cleaned.isNotBlank()) {
+                val parts = cleaned.split("=", limit = 2)
+                val seatHint = seatsList.getOrNull(index) ?: seatsList.firstOrNull().orEmpty()
+                val key = if (parts.size == 2) parts[0].trim() else seatHint.ifBlank { "attendee-${index + 1}" }
+                if (key.isNotBlank()) requiredKeys.add(key)
+            }
         }
 
-        if (attendeeKeys.isEmpty()) return false
+        if (requiredKeys.isEmpty()) return false
 
         val prefs = getSharedPreferences("gate_attendee_approvals", MODE_PRIVATE)
         val raw = prefs.getString("approved_attendee_keys", "").orEmpty().trim()
@@ -286,7 +295,7 @@ class MainActivity : AppCompatActivity(), QRScannerDialogFragment.QRScannerListe
             val approvedSet = json.getAsJsonArray(bookingId)
             if (approvedSet != null) {
                 val approvedList = approvedSet.map { it.asString }
-                attendeeKeys.all { approvedList.contains(it) }
+                requiredKeys.all { approvedList.contains(it) }
             } else {
                 false
             }
