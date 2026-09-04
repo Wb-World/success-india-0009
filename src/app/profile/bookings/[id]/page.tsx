@@ -1176,7 +1176,9 @@ function BookingDetailsContent() {
           border-bottom: 2px solid #0f172a;
           padding-bottom: 2px;
           margin-bottom: 4px;
-          min-width: 170px;
+          min-width: 0;
+          width: 100%;
+          max-width: 170px;
           display: inline-flex;
           align-items: flex-end;
           justify-content: center;
@@ -1279,15 +1281,36 @@ function BookingDetailsContent() {
           margin: 1.5rem -2.25rem -2.25rem;
         }
 
-        /* Responsive */
+        /* Responsive - Force identical PC alignment & layout on all breakpoints */
         @media (max-width: 640px) {
-          .tp-cert-frame { padding: 1.25rem; margin: 6px; }
-          .tp-cert-grid { grid-template-columns: repeat(2, 1fr); }
-          .tp-cert-signatures-row { flex-direction: column; gap: 1.25rem; text-align: center; }
-          .tp-cert-sig-box { text-align: center; }
-          .tp-cert-seal-box { justify-content: center; }
-          .tp-cert-recipient-name { font-size: 1.6rem; }
-          .tp-cert-footer { margin: 1.25rem -1.25rem -1.25rem; }
+          .tp-cert-frame { padding: 1rem 0.65rem; margin: 4px; }
+          .tp-cert-title { font-size: 1.25rem; }
+          .tp-cert-org { font-size: 0.65rem; }
+          .tp-cert-subtitle-badge { font-size: 0.6rem; padding: 3px 12px; }
+          .tp-cert-avatar-ring { width: 85px; height: 85px; margin-bottom: 0.85rem; }
+          .tp-cert-presented-to { font-size: 0.62rem; margin-bottom: 0.3rem; }
+          .tp-cert-recipient-name { font-size: 1.45rem; margin-bottom: 0.3rem; }
+          .tp-cert-designation-pill { font-size: 0.7rem; padding: 4px 12px; margin-bottom: 0.85rem; }
+          .tp-cert-citation { font-size: 0.72rem; margin-bottom: 1rem; }
+          .tp-cert-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 4px !important; margin-bottom: 1.25rem; }
+          .tp-cert-card { padding: 6px 3px; gap: 2px; }
+          .tp-cert-card-label { font-size: 0.52rem; letter-spacing: 0.02em; }
+          .tp-cert-card-val { font-size: 0.68rem; }
+          .tp-cert-signatures-row { flex-direction: row !important; justify-content: space-between !important; align-items: flex-end !important; gap: 0.4rem !important; padding-top: 0.75rem; }
+          .tp-cert-sig-box { text-align: left !important; align-items: flex-start !important; flex: 1; min-width: 0; }
+          .tp-cert-sig-line { min-width: 0 !important; width: 100%; max-width: 120px; margin-bottom: 2px; }
+          .tp-cert-sig-img { height: 48px; max-width: 100%; }
+          .tp-cert-sig-title { font-size: 0.5rem; }
+          .tp-cert-qr-box { flex-shrink: 0; gap: 2px; }
+          .tp-cert-qr-img, .tp-cert-qr-placeholder { width: 50px; height: 50px; }
+          .tp-cert-qr-text { font-size: 0.48rem; }
+          .tp-cert-seal-box { justify-content: flex-end !important; flex: 1; min-width: 0; }
+          .tp-cert-gold-seal { width: 58px; height: 58px; }
+          .tp-cert-seal-inner { padding: 1px; }
+          .tp-cert-seal-star { font-size: 0.45rem; letter-spacing: 1px; }
+          .tp-cert-seal-text { font-size: 0.38rem; line-height: 1; }
+          .tp-cert-seal-org { font-size: 0.35rem; margin-top: 1px; }
+          .tp-cert-footer { margin: 1rem -0.65rem -1rem; padding: 0.5rem 0.4rem; font-size: 0.55rem; letter-spacing: 0.04em; }
         }
 
         @media (max-width: 720px) {
