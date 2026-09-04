@@ -214,9 +214,14 @@ function BookingDetailsContent() {
     ticket.attendees ? Object.entries(ticket.attendees) : [];
 
   const supporterInfo = attendeeEntries[0]?.[1];
-  const vpImageUrl = supporterInfo?.vpImage || '';
-  const vpNameVal = supporterInfo?.vpName || ticket.bookerVpName || '—';
-  const designationVal = supporterInfo?.designation || ticket.eventName.replace("Success Team System Supporter - ", "") || 'System Supporter';
+  const vpImageUrl = supporterInfo?.vpImage || supporterInfo?.vp_image || ticket.vpImage || '';
+  const vpNameVal = supporterInfo?.vpName || supporterInfo?.vp_name || ticket.bookerVpName || ticket.vpName || '—';
+
+  const rawDesignation = supporterInfo?.designation || ticket.designation || '';
+  const cleanEventDesignation = ticket.eventName
+    ? ticket.eventName.replace(/^Success Team System Supporter\s*[-–]?\s*/i, '').trim()
+    : '';
+  const designationVal = rawDesignation || cleanEventDesignation || 'System Supporter';
 
   return (
     <div className="tp-page">
@@ -270,7 +275,9 @@ function BookingDetailsContent() {
                 
                 <div className="tp-cert-designation-pill">
                   <span className="tp-cert-desig-title">{designationVal}</span>
-                  {/* {vpNameVal !== '—' && <span className="tp-cert-desig-vp">• VP: {vpNameVal}</span>} */}
+                  {vpNameVal && vpNameVal !== '—' && vpNameVal !== 'N/A' && (
+                    <span className="tp-cert-desig-vp"></span>
+                  )}
                 </div>
 
                 <p className="tp-cert-citation">
@@ -1087,18 +1094,24 @@ function BookingDetailsContent() {
         .tp-cert-designation-pill {
           display: inline-flex;
           align-items: center;
+          justify-content: center;
+          flex-wrap: wrap;
           gap: 6px;
           background: #ecfdf5;
-          border: 1px solid #a7f3d0;
-          padding: 4px 14px;
+          border: 1.5px solid #a7f3d0;
+          padding: 6px 16px;
           border-radius: 9999px;
-          font-size: 0.8rem;
+          font-size: 0.82rem;
           font-weight: 800;
           color: #047857;
           margin-bottom: 1.25rem;
+          max-width: 92%;
+          box-sizing: border-box;
+          word-break: break-word;
+          line-height: 1.3;
         }
         .tp-cert-desig-title { text-transform: uppercase; letter-spacing: 0.04em; }
-        .tp-cert-desig-vp { color: #059669; font-weight: 700; }
+        .tp-cert-desig-vp { color: #059669; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
 
         .tp-cert-citation {
           font-size: 0.88rem;
