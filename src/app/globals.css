@@ -55,6 +55,8 @@
 
 html {
   scroll-behavior: smooth;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 body {
@@ -69,6 +71,30 @@ body {
   text-size-adjust: 100%;
   overscroll-behavior-x: none;
   /* user-select: none; */
+}
+
+/* Keep application shells within the visual viewport.  Individual pages can
+   still use their own desktop max-widths, while narrow Android/iOS viewports
+   never gain a horizontal page scroll from a long label or flex item. */
+main,
+section,
+article,
+header,
+footer,
+.container,
+.dashboard-content,
+.dashboard-main-area,
+.contribution-page,
+.tp-page {
+  min-width: 0;
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
 }
 
 a {

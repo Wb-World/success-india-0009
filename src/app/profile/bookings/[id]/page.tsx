@@ -215,9 +215,9 @@ function BookingDetailsContent() {
 
   const supporterInfo = attendeeEntries[0]?.[1];
   const vpImageUrl = supporterInfo?.vpImage || supporterInfo?.vp_image || ticket.vpImage || '';
-  const vpNameVal = supporterInfo?.vpName || supporterInfo?.vp_name || ticket.bookerVpName || ticket.vpName || '—';
+  const vpNameVal = String(supporterInfo?.vpName || supporterInfo?.vp_name || ticket.bookerVpName || ticket.vpName || '').trim() || '—';
 
-  const rawDesignation = supporterInfo?.designation || ticket.designation || '';
+  const rawDesignation = String(supporterInfo?.designation || ticket.designation || '').trim();
   const cleanEventDesignation = ticket.eventName
     ? ticket.eventName.replace(/^Success Team System Supporter\s*[-–]?\s*/i, '').trim()
     : '';
@@ -276,7 +276,7 @@ function BookingDetailsContent() {
                 <div className="tp-cert-designation-pill">
                   <span className="tp-cert-desig-title">{designationVal}</span>
                   {vpNameVal && vpNameVal !== '—' && vpNameVal !== 'N/A' && (
-                    <span className="tp-cert-desig-vp"></span>
+                    <span className="tp-cert-desig-vp">Vice President: {vpNameVal}</span>
                   )}
                 </div>
 
@@ -967,6 +967,7 @@ function BookingDetailsContent() {
           box-shadow: 0 20px 50px rgba(6, 78, 59, 0.12), 0 4px 20px rgba(15, 23, 42, 0.06);
           border: 1px solid #e2e8f0;
           max-width: 780px;
+          width: 100%;
           margin: 0 auto;
           box-sizing: border-box;
           position: relative;
@@ -1051,6 +1052,7 @@ function BookingDetailsContent() {
 
         .tp-cert-body {
           text-align: center;
+          min-width: 0;
         }
         .tp-cert-award-ribbon {
           display: flex;
@@ -1139,6 +1141,7 @@ function BookingDetailsContent() {
           align-items: center;
           justify-content: center;
           gap: 3px;
+          min-width: 0;
         }
         .tp-cert-card-label {
           font-size: 0.65rem;
@@ -1146,11 +1149,14 @@ function BookingDetailsContent() {
           text-transform: uppercase;
           letter-spacing: 0.05em;
           color: #64748b;
+          overflow-wrap: anywhere;
         }
         .tp-cert-card-val {
           font-size: 0.85rem;
           font-weight: 800;
           color: #0f172a;
+          overflow-wrap: anywhere;
+          text-align: center;
         }
         .tp-cert-gold {
           color: #d97706 !important;
@@ -1164,6 +1170,7 @@ function BookingDetailsContent() {
           padding-top: 1rem;
           border-top: 1px dashed #cbd5e1;
           gap: 1rem;
+          min-width: 0;
         }
         .tp-cert-sig-box {
           flex: 1;
@@ -1233,6 +1240,7 @@ function BookingDetailsContent() {
           font-weight: 700;
           color: #64748b;
           text-transform: uppercase;
+          text-align: center;
         }
 
         .tp-cert-seal-box {
@@ -1283,6 +1291,8 @@ function BookingDetailsContent() {
 
         /* Responsive - Force identical PC alignment & layout on all breakpoints */
         @media (max-width: 640px) {
+          .tp-page { padding: 1.25rem 0.5rem 3rem; }
+          .tp-ticket, .tp-cert-container { border-radius: 12px; }
           .tp-cert-frame { padding: 1rem 0.65rem; margin: 4px; }
           .tp-cert-title { font-size: 1.25rem; }
           .tp-cert-org { font-size: 0.65rem; }
@@ -1311,6 +1321,17 @@ function BookingDetailsContent() {
           .tp-cert-seal-text { font-size: 0.38rem; line-height: 1; }
           .tp-cert-seal-org { font-size: 0.35rem; margin-top: 1px; }
           .tp-cert-footer { margin: 1rem -0.65rem -1rem; padding: 0.5rem 0.4rem; font-size: 0.55rem; letter-spacing: 0.04em; }
+        }
+
+        @media (max-width: 380px) {
+          .tp-cert-frame { padding-left: 0.45rem; padding-right: 0.45rem; }
+          .tp-cert-grid { gap: 3px !important; }
+          .tp-cert-card { padding-left: 2px; padding-right: 2px; }
+          .tp-cert-card-label { font-size: 0.48rem; }
+          .tp-cert-card-val { font-size: 0.62rem; }
+          .tp-cert-signatures-row { gap: 0.25rem !important; }
+          .tp-cert-gold-seal { width: 52px; height: 52px; }
+          .tp-cert-qr-img, .tp-cert-qr-placeholder { width: 46px; height: 46px; }
         }
 
         @media (max-width: 720px) {

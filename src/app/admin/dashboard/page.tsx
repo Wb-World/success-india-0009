@@ -3097,7 +3097,11 @@ export default function AdminDashboard() {
               ? allContribData
               : allContribData.filter((r: any) => r.month === selectedContribDataMonth);
 
-            const contribExportData = filteredContribData.map((r: any) => ({
+            // The spreadsheet is an official confirmed-contributor list. Keep
+            // pending and rejected requests visible in the dashboard, but never
+            // include them in the downloadable file.
+            const confirmedContribData = filteredContribData.filter((r: any) => r.status === 'approved');
+            const contribExportData = confirmedContribData.map((r: any) => ({
               'Booking Ref': r.bookingId,
               'Contributor Name': r.name,
               'Designation': r.designation,
@@ -3127,7 +3131,7 @@ export default function AdminDashboard() {
                       ))}
                     </select>
                     <button
-                      onClick={() => exportToCSV(contribExportData, `contributors_data${selectedContribDataMonth !== 'All' ? '_' + selectedContribDataMonth.replace(/\s/g, '_') : ''}.csv`)}
+                      onClick={() => exportToCSV(contribExportData, `confirmed_contributors${selectedContribDataMonth !== 'All' ? '_' + selectedContribDataMonth.replace(/\s/g, '_') : ''}.csv`)}
                       className="btn btn-secondary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                     >
