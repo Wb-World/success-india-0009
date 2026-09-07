@@ -188,6 +188,9 @@ function BookingDetailsContent() {
       await document.fonts.ready;
       await new Promise(r => setTimeout(r, 150));
 
+      clone.querySelectorAll('[style*="fit-content"], .tp-cert-presented-to, .tp-cert-recipient-name, .tp-cert-subtitle-badge, .tp-cert-designation-pill')
+        .forEach(el => { (el as HTMLElement).style.textAlign = 'center'; });
+
       // Safety re-measure: give the clone one layout frame to settle its
       // auto-height after the desktop width + margin-based spacing is applied,
       // before the canvas capture locks in dimensions.
@@ -276,8 +279,10 @@ function BookingDetailsContent() {
                 </div>
                 <p className="tp-cert-org">SUCCESS TEAM ECOSYSTEM</p>
                 <h1 className="tp-cert-title">CERTIFICATE OF RECOGNITION</h1>
-                <div className="tp-cert-subtitle-badge">
-                  <span>OFFICIAL SYSTEM SUPPORTER DELEGATE PASS</span>
+                <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                  <div className="tp-cert-subtitle-badge">
+                    <span>OFFICIAL SYSTEM SUPPORTER DELEGATE PASS</span>
+                  </div>
                 </div>
               </div>
 
@@ -296,11 +301,10 @@ function BookingDetailsContent() {
                 <p className="tp-cert-presented-to">THIS CERTIFICATE IS PROUDLY PRESENTED TO</p>
                 <h2 className="tp-cert-recipient-name">{ticket.attendeeName}</h2>
                 
-                <div className="tp-cert-designation-pill">
-                  <span className="tp-cert-desig-title">{designationVal}</span>
-                  {/* {vpNameVal && vpNameVal !== '—' && vpNameVal !== 'N/A' && (
-                    <span className="tp-cert-desig-vp">Vice President: {vpNameVal}</span>
-                  )} */}
+                <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                  <div className="tp-cert-designation-pill">
+                    <span className="tp-cert-desig-title">{designationVal}</span>
+                  </div>
                 </div>
 
                 <p className="tp-cert-citation">
@@ -1105,6 +1109,9 @@ function BookingDetailsContent() {
           letter-spacing: 0.18em;
           color: #64748b;
           text-transform: uppercase;
+          text-align: center;
+          display: block;
+          width: 100%;
           margin: 0 0 0.5rem;
         }
         .tp-cert-recipient-name {
@@ -1115,21 +1122,22 @@ function BookingDetailsContent() {
           line-height: 1.2;
           word-break: break-word;
           letter-spacing: 0.02em;
+          text-align: center;
+          display: block;
+          width: 100%;
         }
         .tp-cert-designation-pill {
-          display: block;
+          display: inline-block;
           text-align: center;
           background: #ecfdf5;
           border: 1.5px solid #a7f3d0;
-          padding: 6px 16px;
+          padding: 3px 16px;
           border-radius: 9999px;
           font-size: 0.82rem;
           font-weight: 800;
           color: #047857;
-          margin-bottom: 1.25rem;
-          max-width: 92%;
-          margin-left: auto;
-          margin-right: auto;
+          margin: 0 auto 1.25rem;
+          max-width: 100%;
           box-sizing: border-box;
           word-break: break-word;
           line-height: 1.3;
@@ -1141,14 +1149,20 @@ function BookingDetailsContent() {
           font-size: 0.88rem;
           line-height: 1.6;
           color: #334155;
-          max-width: 580px;
+          max-width: 560px;
           margin: 0 auto 1.75rem;
           font-weight: 500;
+          text-align: center;
+          display: block;
+          word-break: break-word;
+          overflow-wrap: anywhere;
         }
 
         .tp-cert-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
+          justify-items: center;
+          align-items: center;
           margin-bottom: 2rem;
           width: 100%;
         }
@@ -1189,17 +1203,17 @@ function BookingDetailsContent() {
         .tp-cert-signatures-row {
           display: flex;
           align-items: flex-end;
-          justify-content: space-between;
+          justify-content: space-evenly;
           padding-top: 1rem;
           border-top: 1px dashed #cbd5e1;
           min-width: 0;
         }
         .tp-cert-sig-box {
           flex: 1;
-          text-align: left;
+          text-align: center;
           display: flex;
           flex-direction: column;
-          align-items: flex-start;
+          align-items: center;
           margin-right: 1rem;
         }
         .tp-cert-sig-line {
