@@ -13,6 +13,7 @@ export default function ContributionPage() {
 
   // Form Field States
   const [supporterName, setSupporterName] = useState('');
+  const [supporterMobile, setSupporterMobile] = useState('');
   const [vpName, setVpName] = useState('');
   const [vpImage, setVpImage] = useState<File | null>(null);
   const [vpImageUrl, setVpImageUrl] = useState('');
@@ -120,13 +121,18 @@ export default function ContributionPage() {
     if (!supporterName.trim()) {
       errors.supporterName = 'Supporter Name is required.';
     }
+    if (!supporterMobile.trim()) {
+      errors.supporterMobile = 'Supporter Mobile No. is required.';
+    } else if (!/^[0-9]{10}$/.test(supporterMobile.trim())) {
+      errors.supporterMobile = 'Enter a valid 10-digit mobile number.';
+    }
     if (!vpName.trim()) {
       errors.vpName = 'VP Name is required.';
     }
     if (!vpImageUrl) {
-      errors.vpImage = 'Your Image is required.';
+      errors.vpImage = 'Supporters Image is required.';
     } else if (isUploadingImage) {
-      errors.vpImage = 'Your Image is still uploading. Please wait.';
+      errors.vpImage = 'Supporters Image is still uploading. Please wait.';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -253,6 +259,7 @@ export default function ContributionPage() {
     const attendeesObj = {
       "SUPPORTER": {
         name: supporterName,
+        mobile: supporterMobile,
         whatsapp: userPhone,
         vpName: vpName,
         vpImage: vpImageUrl,
@@ -630,6 +637,31 @@ export default function ContributionPage() {
                   {formErrors.supporterName && <span className="error-text">⚠️ {formErrors.supporterName}</span>}
                 </div>
 
+                {/* Supporter Mobile No. */}
+                <div className="form-group form-group-mobile">
+                  <label className="form-label">Supporters mobile.no: <span className="req">*</span></label>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="Enter 10-digit mobile number"
+                    value={supporterMobile}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
+                      setSupporterMobile(val);
+                      if (val.length === 10) {
+                        setFormErrors((prev) => {
+                          const copy = { ...prev };
+                          delete copy.supporterMobile;
+                          return copy;
+                        });
+                      }
+                    }}
+                    className={`form-control ${formErrors.supporterMobile ? 'is-invalid' : ''}`}
+                  />
+                  {formErrors.supporterMobile && <span className="error-text">⚠️ {formErrors.supporterMobile}</span>}
+                </div>
+
                 {/* VP Name */}
                 <div className="form-group form-group-vp">
                   <label className="form-label">VP Name <span className="req">*</span></label>
@@ -654,7 +686,7 @@ export default function ContributionPage() {
 
                 {/* Designation */}
                 <div className="form-group form-group-designation">
-                  <label className="form-label">Designation <span className="req">*</span></label>
+                  <label className="form-label">Choose Your Designation <span className="req">*</span></label>
                   <select
                     value={designation}
                     onChange={(e) => setDesignation(e.target.value)}
@@ -667,9 +699,9 @@ export default function ContributionPage() {
                   </select>
                 </div>
 
-                {/* VP Image Upload */}
+                {/* Supporters Image Upload */}
                 <div className="form-group form-group-image">
-                  <label className="form-label">Your Image <span className="req">*</span></label>
+                  <label className="form-label">Supporters Image <span className="req">*</span></label>
                   <div className="file-uploader-box">
                     {vpImageUrl ? (
                       <div className="image-preview-container">
@@ -778,23 +810,27 @@ export default function ContributionPage() {
         @media (min-width: 600px) {
           .supporter-form-grid {
             grid-template-columns: 1.2fr 1fr;
-            grid-template-rows: auto auto auto;
+            grid-template-rows: auto auto auto auto;
             gap: 1.5rem;
           }
           .form-group-name {
             grid-row: 1;
             grid-column: 1;
           }
-          .form-group-vp {
+          .form-group-mobile {
             grid-row: 2;
             grid-column: 1;
           }
-          .form-group-designation {
+          .form-group-vp {
             grid-row: 3;
             grid-column: 1;
           }
+          .form-group-designation {
+            grid-row: 4;
+            grid-column: 1;
+          }
           .form-group-image {
-            grid-row: 1 / span 3;
+            grid-row: 1 / span 4;
             grid-column: 2;
             display: flex;
             flex-direction: column;
