@@ -190,7 +190,7 @@ export default function Home() {
       <div className="achiever-panel">
         <div className="panel-header">
           <h3 className="panel-designation">{designation}</h3>
-          <h4 className={`panel-category ${categoryClass}`}>{categoryLabel}</h4>
+          <h4 className={`panel-category ${categoryClass}`} style={{ color: 'red', fontWeight: 'bold' }}>{categoryLabel}</h4>
         </div>
 
         {!hasData ? (
@@ -523,10 +523,10 @@ export default function Home() {
               </div>
             ) : (
               <div className="achievers-grid">
-                {renderAchieverPanel(achieversData.pv.ced, "STAR OF CHIEF EXECUTIVE DIRECTOR", "TOP 3 PV ACHIEVERS", "pv-color")}
-                {renderAchieverPanel(achieversData.income.ced, "STAR OF CHIEF EXECUTIVE DIRECTOR", "TOP 3 INCOME ACHIEVERS", "income-color")}
-                {renderAchieverPanel(achieversData.pv.ed, "STAR OF EXECUTIVE DIRECTOR", "TOP 3 PV ACHIEVERS", "pv-color")}
-                {renderAchieverPanel(achieversData.income.ed, "STAR OF EXECUTIVE DIRECTOR", "TOP 3 INCOME ACHIEVERS", "income-color")}
+                {renderAchieverPanel(achieversData.pv.ced, "NORTH TEAM CHIEF EXECUTIVE DIRECTOR", "TOP 3 ACHIEVERS", "pv-color")}
+                {renderAchieverPanel(achieversData.income.ced, "SOUTH TEAM CHIEF EXECUTIVE DIRECTOR", "TOP 3 ACHIEVERS", "income-color")}
+                {renderAchieverPanel(achieversData.pv.ed, "NORTH TEAM EXECUTIVE DIRECTOR", "TOP 3 ACHIEVERS", "pv-color")}
+                {renderAchieverPanel(achieversData.income.ed, "SOUTH TEAM EXECUTIVE DIRECTOR", "TOP 3 ACHIEVERS", "income-color")}
                 <div className="achievers-center-badge">🏆</div>
               </div>
             )}
