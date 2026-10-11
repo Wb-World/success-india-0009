@@ -2416,6 +2416,7 @@ export default function AdminDashboard() {
                       {monthItems.map((b) => {
                         const supporter = b.attendees?.SUPPORTER || {};
                         const supporterName = supporter.name || b.bookerName || 'Unknown';
+                        const supporterMobile = supporter.mobile || b.bookerPhone || '';
                         const vpName = supporter.vpName || b.bookerVpName || 'N/A';
                         const vpImage = supporter.vpImage || '';
                         const designation = supporter.designation || 'System Supporter';
@@ -2453,6 +2454,14 @@ export default function AdminDashboard() {
                                     <span className="info-label">VP Name</span>
                                     <span className="info-value">{vpName}</span>
                                   </div>
+                                   {supporterMobile && (
+                                     <div className="info-table-row">
+                                       <span className="info-label">Mobile No.</span>
+                                       <span className="info-value" style={{ fontWeight: 700, color: '#0369a1' }}>
+                                         &#128222; {supporterMobile}
+                                       </span>
+                                     </div>
+                                   )}
                                   {vpImage && (
                                     <div className="info-table-row image-preview-row">
                                       <span className="info-label">VP Upload</span>
@@ -3758,6 +3767,15 @@ export default function AdminDashboard() {
                     <div><span style={{ color: '#6b7280' }}>Supporter Name: </span><strong>{selectedContributionDetail.attendees?.SUPPORTER?.name || selectedContributionDetail.bookerName || 'Unknown'}</strong></div>
                     <div><span style={{ color: '#6b7280' }}>Designation: </span><strong>{selectedContributionDetail.attendees?.SUPPORTER?.designation || 'System Supporter'}</strong></div>
                     <div><span style={{ color: '#6b7280' }}>VP Name: </span><strong>{selectedContributionDetail.attendees?.SUPPORTER?.vpName || 'N/A'}</strong></div>
+                                    {(selectedContributionDetail.attendees?.SUPPORTER?.mobile || selectedContributionDetail.bookerPhone) && (
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                                        <span style={{ color: '#6b7280' }}>Mobile No.: </span>
+                                        <strong style={{ color: '#0369a1', letterSpacing: '0.02em' }}>
+                                          &#128222; {selectedContributionDetail.attendees?.SUPPORTER?.mobile || selectedContributionDetail.bookerPhone}
+                                        </strong>
+                                        <a href={'tel:' + (selectedContributionDetail.attendees?.SUPPORTER?.mobile || selectedContributionDetail.bookerPhone)} style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 700, textDecoration: 'none', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '6px', padding: '2px 8px' }}>Call</a>
+                                      </div>
+                                    )}
                     <div><span style={{ color: '#6b7280' }}>Submitted Date & Time: </span><strong>{new Date(selectedContributionDetail.createdAt).toLocaleString()}</strong></div>
                     <div><span style={{ color: '#6b7280' }}>Status: </span>
                       <strong style={{
