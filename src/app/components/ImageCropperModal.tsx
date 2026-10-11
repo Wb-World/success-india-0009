@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { ZoomIn, ZoomOut, Check, X, RefreshCw } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { ZoomIn, ZoomOut, Check, X, RefreshCw, Move } from 'lucide-react';
 
 interface ImageCropperModalProps {
   isOpen: boolean;
@@ -24,25 +24,34 @@ export default function ImageCropperModal({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [faceCenteringActive, setFaceCenteringActive] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const scaleRef = useRef(scale);
+  const positionRef = useRef(position);
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef({ x: 0, y: 0 });
+
+  // Keep refs in sync so event listeners always have current values
+  useEffect(() => { scaleRef.current = scale; }, [scale]);
+  useEffect(() => { positionRef.current = position; }, [position]);
 
   // Viewport and Crop Box size configuration (in displayed px)
   const viewWidth = 360;
   const viewHeight = 360;
-  
+
   // Calculate crop box size based on aspect ratio
   let cropWidth = 280;
   let cropHeight = 280;
   if (aspectRatio < 1) {
-    // e.g. 4:5 -> 0.8
     cropHeight = 300;
-    cropWidth = cropHeight * aspectRatio; // 240
+    cropWidth = Math.round(cropHeight * aspectRatio);
   } else if (aspectRatio > 1) {
     cropWidth = 300;
-    cropHeight = cropWidth / aspectRatio;
+    cropHeight = Math.round(cropWidth / aspectRatio);
   }
 
   // Reset states when a new image URL is loaded
@@ -51,153 +60,188 @@ export default function ImageCropperModal({
       setScale(1);
       setPosition({ x: 0, y: 0 });
       setLoading(true);
+      setLoadError(false);
       setFaceCenteringActive(false);
+      setIsSaving(false);
     }
   }, [isOpen, imageUrl]);
 
-  if (!isOpen) return null;
+  // Attach non-passive wheel listener so preventDefault works
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const zoomIntensity = 0.12;
+      const factor = e.deltaY < 0 ? 1 + zoomIntensity : 1 - zoomIntensity;
+      const newScale = Math.min(Math.max(scaleRef.current * factor, 0.1), 10);
+      setScale(newScale);
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [isOpen]);
 
-  const handleImageLoad = async (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.currentTarget;
+  const applyImageLoad = useCallback((img: HTMLImageElement) => {
     const w = img.naturalWidth;
     const h = img.naturalHeight;
+    if (!w || !h) return;
     setNaturalSize({ width: w, height: h });
-    setLoading(false);
-
-    // Initial scale to cover the crop box area
     const scaleX = cropWidth / w;
     const scaleY = cropHeight / h;
-    const initialScale = Math.max(scaleX, scaleY) * 1.1; // scale slightly larger to allow comfortable cropping
+    const initialScale = Math.max(scaleX, scaleY) * 1.1;
     setScale(initialScale);
+    setPosition({ x: 0, y: 0 });
+    setLoading(false);
 
-    // Run progressive face detection using native FaceDetector if supported
+    // Optional face detection
     if ('FaceDetector' in window) {
-      try {
-        const detector = new (window as any).FaceDetector({ maxDetectedFaces: 1 });
-        const faces = await detector.detect(img);
-        if (faces && faces.length > 0) {
-          const face = faces[0].boundingBox;
-          const faceCenterX = face.x + face.width / 2;
-          const faceCenterY = face.y + face.height / 2;
-
-          // Center crop box on the detected face
-          // offset of face center from image center (in original pixels)
-          const dxOrig = w / 2 - faceCenterX;
-          const dyOrig = h / 2 - faceCenterY;
-
-          // set position in displayed pixels
-          setPosition({
-            x: dxOrig * initialScale,
-            y: dyOrig * initialScale,
-          });
-          setFaceCenteringActive(true);
+      (async () => {
+        try {
+          const detector = new (window as any).FaceDetector({ maxDetectedFaces: 1 });
+          const faces = await detector.detect(img);
+          if (faces && faces.length > 0) {
+            const face = faces[0].boundingBox;
+            const dxOrig = w / 2 - (face.x + face.width / 2);
+            const dyOrig = h / 2 - (face.y + face.height / 2);
+            setPosition({ x: dxOrig * initialScale, y: dyOrig * initialScale });
+            setFaceCenteringActive(true);
+          }
+        } catch (err) {
+          console.warn('Face detection failed:', err);
         }
-      } catch (err) {
-        console.warn('Browser face detection failed:', err);
-      }
+      })();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cropWidth, cropHeight]);
+
+  // If the img element already has the image decoded (complete=true) before onLoad fires
+  useEffect(() => {
+    if (!isOpen || !imageUrl) return;
+    // Small delay to let the img element mount and set its src
+    const timer = setTimeout(() => {
+      const el = imageRef.current;
+      if (el && el.complete && el.naturalWidth > 0) {
+        applyImageLoad(el);
+      }
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [isOpen, imageUrl, applyImageLoad]);
+
+  if (!isOpen) return null;
+
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    applyImageLoad(e.currentTarget);
   };
 
+  const handleImageError = () => {
+    setLoading(false);
+    setLoadError(true);
+  };
+
+  // ─── Mouse drag ───────────────────────────────────────────────────────────────
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
+    isDraggingRef.current = true;
     setIsDragging(true);
-    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+    dragStartRef.current = {
+      x: e.clientX - positionRef.current.x,
+      y: e.clientY - positionRef.current.y,
+    };
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
+    if (!isDraggingRef.current) return;
     setPosition({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y,
+      x: e.clientX - dragStartRef.current.x,
+      y: e.clientY - dragStartRef.current.y,
     });
   };
 
   const handleMouseUp = () => {
+    isDraggingRef.current = false;
     setIsDragging(false);
   };
 
+  // ─── Touch drag ───────────────────────────────────────────────────────────────
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length !== 1) return;
     const touch = e.touches[0];
+    isDraggingRef.current = true;
     setIsDragging(true);
-    setDragStart({ x: touch.clientX - position.x, y: touch.clientY - position.y });
+    dragStartRef.current = {
+      x: touch.clientX - positionRef.current.x,
+      y: touch.clientY - positionRef.current.y,
+    };
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || e.touches.length !== 1) return;
+    if (!isDraggingRef.current || e.touches.length !== 1) return;
     const touch = e.touches[0];
     setPosition({
-      x: touch.clientX - dragStart.x,
-      y: touch.clientY - dragStart.y,
+      x: touch.clientX - dragStartRef.current.x,
+      y: touch.clientY - dragStartRef.current.y,
     });
   };
 
   const handleTouchEnd = () => {
+    isDraggingRef.current = false;
     setIsDragging(false);
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const zoomIntensity = 0.1;
-    const factor = e.deltaY < 0 ? 1 + zoomIntensity : 1 - zoomIntensity;
-    const newScale = Math.min(Math.max(scale * factor, 0.1), 10);
-    setScale(newScale);
-  };
+  // ─── Zoom buttons ─────────────────────────────────────────────────────────────
+  const zoomIn = () => setScale(s => Math.min(s * 1.15, 10));
+  const zoomOut = () => setScale(s => Math.max(s / 1.15, 0.1));
 
+  // ─── Save / crop ──────────────────────────────────────────────────────────────
   const handleSave = () => {
     const img = imageRef.current;
     if (!img || naturalSize.width === 0) return;
+    setIsSaving(true);
 
-    // Create canvas with high-res target crop output
+    // High-res output canvas
+    const outputWidth = aspectRatio === 1 ? 500 : Math.round(500 * aspectRatio);
+    const outputHeight = Math.round(outputWidth / aspectRatio);
+
     const canvas = document.createElement('canvas');
-    // Save cropped image in high resolution matching ratio
-    const outputWidth = aspectRatio === 1 ? 500 : 400;
-    const outputHeight = Math.round(outputWidth / aspectRatio); // 500 or 500 for 4:5 -> 400:500
-
     canvas.width = outputWidth;
     canvas.height = outputHeight;
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) { setIsSaving(false); return; }
 
-    // Calculate source coords based on display properties
     const S = scale;
-    const dispWidth = naturalSize.width * S;
-    const dispHeight = naturalSize.height * S;
+    // How many display-px the full scaled image occupies
+    const dispW = naturalSize.width * S;
+    const dispH = naturalSize.height * S;
 
-    // Center offset relative to crop box
-    // leftDisp/topDisp are cropBox top-left coords relative to image top-left
-    const leftDisp = dispWidth / 2 - position.x - cropWidth / 2;
-    const topDisp = dispHeight / 2 - position.y - cropHeight / 2;
+    // Top-left of the scaled image in the viewport's coordinate system
+    // (viewport center is at viewWidth/2, viewHeight/2)
+    const imgLeft = viewWidth  / 2 - dispW  / 2 + position.x;
+    const imgTop  = viewHeight / 2 - dispH  / 2 + position.y;
 
-    // Translate coordinates back to original image
-    const sourceX = leftDisp / S;
-    const sourceY = topDisp / S;
-    const sourceW = cropWidth / S;
+    // Crop box top-left in viewport coordinates
+    const cropLeft = (viewWidth  - cropWidth)  / 2;
+    const cropTop  = (viewHeight - cropHeight) / 2;
+
+    // Offset of the crop box relative to the scaled image's top-left
+    const relLeft = cropLeft - imgLeft;
+    const relTop  = cropTop  - imgTop;
+
+    // Back-project to original image pixels
+    const sourceX = relLeft / S;
+    const sourceY = relTop  / S;
+    const sourceW = cropWidth  / S;
     const sourceH = cropHeight / S;
 
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    // Draw slice of image onto output canvas
-    ctx.drawImage(
-      img,
-      sourceX,
-      sourceY,
-      sourceW,
-      sourceH,
-      0,
-      0,
-      outputWidth,
-      outputHeight
-    );
+    ctx.drawImage(img, sourceX, sourceY, sourceW, sourceH, 0, 0, outputWidth, outputHeight);
 
-    // Convert canvas image to Blob
     canvas.toBlob(
       (blob) => {
-        if (blob) {
-          onSave(blob);
-        }
+        setIsSaving(false);
+        if (blob) onSave(blob);
       },
       'image/jpeg',
       0.92
@@ -205,8 +249,9 @@ export default function ImageCropperModal({
   };
 
   return (
-    <div className="cropper-modal-overlay">
-      <div className="cropper-modal-card animate-scale-in">
+    <div className="cropper-modal-overlay" onClick={onClose}>
+      <div className="cropper-modal-card animate-scale-in" onClick={e => e.stopPropagation()}>
+        {/* Header */}
         <div className="cropper-modal-header">
           <h3 className="cropper-title">Adjust Profile Photo</h3>
           <button className="cropper-close-btn" type="button" onClick={onClose}>
@@ -216,9 +261,11 @@ export default function ImageCropperModal({
 
         <div className="cropper-modal-body">
           <p className="cropper-hint">
-            Drag to reposition. Use the slider or mouse wheel to zoom.
+            <Move size={12} style={{ display: 'inline', marginRight: 4 }} />
+            Drag or double-click &amp; hold to move · Scroll or use buttons to zoom
           </p>
 
+          {/* Viewport */}
           <div
             ref={containerRef}
             className="cropper-viewport-container"
@@ -230,8 +277,8 @@ export default function ImageCropperModal({
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            onWheel={handleWheel}
           >
+            {/* Loading overlay */}
             {loading && (
               <div className="cropper-loading-overlay">
                 <RefreshCw size={24} className="spin-icon" />
@@ -239,74 +286,47 @@ export default function ImageCropperModal({
               </div>
             )}
 
-            {/* Source Image */}
+            {/* Error overlay */}
+            {loadError && (
+              <div className="cropper-loading-overlay">
+                <X size={24} color="#ef4444" />
+                <span style={{ color: '#ef4444' }}>Failed to load image</span>
+              </div>
+            )}
+
+            {/* Source Image — no crossOrigin so data: URLs work fine */}
             <img
               ref={imageRef}
               src={imageUrl}
               alt="Source"
-              crossOrigin="anonymous"
               onLoad={handleImageLoad}
+              onError={handleImageError}
               style={{
                 transform: `translate3d(${position.x}px, ${position.y}px, 0) scale(${scale})`,
                 transformOrigin: 'center center',
                 position: 'absolute',
-                display: loading ? 'none' : 'block',
+                display: loading || loadError ? 'none' : 'block',
                 cursor: isDragging ? 'grabbing' : 'grab',
-                pointerEvents: 'none', // disable native drag so handleMouseDown works perfectly
+                pointerEvents: 'none',
                 userSelect: 'none',
+                maxWidth: 'none',
               }}
             />
 
-            {/* Visual Crop Overlay Mask */}
-            <div className="cropper-overlay-mask" style={{ pointerEvents: 'none' }}>
-              {/* Top border mask */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: `${(viewHeight - cropHeight) / 2}px`,
-                  background: 'rgba(15, 23, 42, 0.75)',
-                }}
-              />
-              {/* Bottom border mask */}
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: `${(viewHeight - cropHeight) / 2}px`,
-                  background: 'rgba(15, 23, 42, 0.75)',
-                }}
-              />
-              {/* Left border mask */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: `${(viewHeight - cropHeight) / 2}px`,
-                  left: 0,
-                  width: `${(viewWidth - cropWidth) / 2}px`,
-                  height: `${cropHeight}px`,
-                  background: 'rgba(15, 23, 42, 0.75)',
-                }}
-              />
-              {/* Right border mask */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: `${(viewHeight - cropHeight) / 2}px`,
-                  right: 0,
-                  width: `${(viewWidth - cropWidth) / 2}px`,
-                  height: `${cropHeight}px`,
-                  background: 'rgba(15, 23, 42, 0.75)',
-                }}
-              />
+            {/* Dark overlay mask — 4 pieces around the crop box */}
+            {!loading && !loadError && (
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+                {/* Top */}
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: `${(viewHeight - cropHeight) / 2}px`, background: 'rgba(15,23,42,0.72)' }} />
+                {/* Bottom */}
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${(viewHeight - cropHeight) / 2}px`, background: 'rgba(15,23,42,0.72)' }} />
+                {/* Left */}
+                <div style={{ position: 'absolute', top: `${(viewHeight - cropHeight) / 2}px`, left: 0, width: `${(viewWidth - cropWidth) / 2}px`, height: `${cropHeight}px`, background: 'rgba(15,23,42,0.72)' }} />
+                {/* Right */}
+                <div style={{ position: 'absolute', top: `${(viewHeight - cropHeight) / 2}px`, right: 0, width: `${(viewWidth - cropWidth) / 2}px`, height: `${cropHeight}px`, background: 'rgba(15,23,42,0.72)' }} />
 
-              {/* Crop box border/outline */}
-              <div
-                style={{
+                {/* Crop frame */}
+                <div style={{
                   position: 'absolute',
                   top: `${(viewHeight - cropHeight) / 2}px`,
                   left: `${(viewWidth - cropWidth) / 2}px`,
@@ -314,48 +334,90 @@ export default function ImageCropperModal({
                   height: `${cropHeight}px`,
                   border: '2px solid #10b981',
                   boxSizing: 'border-box',
-                  borderRadius: aspectRatio === 1 ? '50%' : '12px', // Circular crop for 1:1, rounded rectangular for 4:5
-                  boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.2)',
-                }}
-              >
-                {/* Guide Lines */}
-                <div style={{ position: 'absolute', top: '33.33%', left: 0, right: 0, borderTop: '1px dashed rgba(16, 185, 129, 0.35)' }} />
-                <div style={{ position: 'absolute', top: '66.66%', left: 0, right: 0, borderTop: '1px dashed rgba(16, 185, 129, 0.35)' }} />
-                <div style={{ position: 'absolute', left: '33.33%', top: 0, bottom: 0, borderLeft: '1px dashed rgba(16, 185, 129, 0.35)' }} />
-                <div style={{ position: 'absolute', left: '66.66%', top: 0, bottom: 0, borderLeft: '1px dashed rgba(16, 185, 129, 0.35)' }} />
+                  borderRadius: aspectRatio === 1 ? '50%' : '12px',
+                }}>
+                  {/* Rule-of-thirds guides */}
+                  <div style={{ position: 'absolute', top: '33.33%', left: 0, right: 0, borderTop: '1px dashed rgba(16,185,129,0.4)' }} />
+                  <div style={{ position: 'absolute', top: '66.66%', left: 0, right: 0, borderTop: '1px dashed rgba(16,185,129,0.4)' }} />
+                  <div style={{ position: 'absolute', left: '33.33%', top: 0, bottom: 0, borderLeft: '1px dashed rgba(16,185,129,0.4)' }} />
+                  <div style={{ position: 'absolute', left: '66.66%', top: 0, bottom: 0, borderLeft: '1px dashed rgba(16,185,129,0.4)' }} />
+                  {/* Corner handles */}
+                  {[
+                    { top: -3, left: -3 },
+                    { top: -3, right: -3 },
+                    { bottom: -3, left: -3 },
+                    { bottom: -3, right: -3 },
+                  ].map((pos, i) => (
+                    <div key={i} style={{ position: 'absolute', width: 10, height: 10, background: '#10b981', borderRadius: 2, ...pos }} />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Face detection badge indicator */}
+          {/* Face badge */}
           {faceCenteringActive && (
             <div className="face-centering-indicator">
               <span>✨ Auto Face Centered</span>
             </div>
           )}
 
-          {/* Zoom Slider Panel */}
-          <div className="cropper-slider-panel">
-            <ZoomOut size={16} color="#64748b" />
+          {/* Zoom Controls */}
+          <div className="cropper-zoom-controls">
+            <button
+              type="button"
+              className="zoom-btn"
+              onClick={zoomOut}
+              title="Zoom Out"
+              aria-label="Zoom out"
+            >
+              <ZoomOut size={16} />
+            </button>
+
             <input
               type="range"
               min="0.1"
-              max="4"
+              max="10"
               step="0.01"
               value={scale}
               onChange={(e) => setScale(parseFloat(e.target.value))}
               className="cropper-zoom-range"
+              aria-label="Zoom level"
             />
-            <ZoomIn size={16} color="#64748b" />
+
+            <button
+              type="button"
+              className="zoom-btn"
+              onClick={zoomIn}
+              title="Zoom In"
+              aria-label="Zoom in"
+            >
+              <ZoomIn size={16} />
+            </button>
+          </div>
+
+          {/* Zoom level display */}
+          <div className="zoom-level-display">
+            {Math.round(scale * 100)}%
           </div>
         </div>
 
+        {/* Footer */}
         <div className="cropper-modal-footer">
-          <button type="button" className="btn-crop-cancel" onClick={onClose}>
+          <button type="button" className="btn-crop-cancel" onClick={onClose} disabled={isSaving}>
             Cancel
           </button>
-          <button type="button" className="btn-crop-save" onClick={handleSave}>
-            <Check size={16} style={{ marginRight: '4px' }} /> Done Crop
+          <button type="button" className="btn-crop-save" onClick={handleSave} disabled={isSaving || loading || loadError}>
+            {isSaving ? (
+              <>
+                <RefreshCw size={14} className="spin-icon" style={{ marginRight: 6 }} />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Check size={16} style={{ marginRight: 4 }} /> Done Crop
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -374,27 +436,35 @@ export default function ImageCropperModal({
         }
 
         .cropper-modal-card {
-          background: rgba(255, 255, 255, 0.95);
+          background: rgba(255, 255, 255, 0.97);
           backdrop-filter: blur(20px);
           border: 1px solid rgba(226, 232, 240, 0.8);
           border-radius: 20px;
           width: 100%;
-          max-width: 420px;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+          max-width: 430px;
+          box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.25);
           overflow: hidden;
           box-sizing: border-box;
+        }
+
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.92); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+        .animate-scale-in {
+          animation: scaleIn 0.2s ease-out;
         }
 
         .cropper-modal-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 1.25rem 1.5rem;
+          padding: 1.1rem 1.5rem;
           border-bottom: 1px solid #e2e8f0;
         }
 
         .cropper-title {
-          font-size: 1.1rem;
+          font-size: 1.05rem;
           font-weight: 800;
           color: #0f172a;
           margin: 0;
@@ -412,25 +482,25 @@ export default function ImageCropperModal({
           border-radius: 50%;
           transition: background 0.2s;
         }
-
-        .cropper-close-btn:hover {
-          background: #f1f5f9;
-          color: #0f172a;
-        }
+        .cropper-close-btn:hover { background: #f1f5f9; color: #0f172a; }
 
         .cropper-modal-body {
-          padding: 1.5rem;
+          padding: 1.25rem 1.5rem;
           display: flex;
           flex-direction: column;
           align-items: center;
         }
 
         .cropper-hint {
-          font-size: 0.85rem;
+          font-size: 0.8rem;
           color: #64748b;
           text-align: center;
-          margin: 0 0 1.25rem;
-          line-height: 1.4;
+          margin: 0 0 1rem;
+          line-height: 1.5;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
         }
 
         .cropper-viewport-container {
@@ -442,6 +512,7 @@ export default function ImageCropperModal({
           display: flex;
           align-items: center;
           justify-content: center;
+          touch-action: none;
         }
 
         .cropper-loading-overlay {
@@ -459,55 +530,104 @@ export default function ImageCropperModal({
         }
 
         .spin-icon {
-          animation: spin 1s linear infinite;
+          animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
         }
 
         .face-centering-indicator {
-          margin-top: 0.75rem;
+          margin-top: 0.6rem;
           background: #ecfdf5;
           color: #047857;
           border: 1px solid #a7f3d0;
-          font-size: 0.75rem;
+          font-size: 0.74rem;
           font-weight: 700;
-          padding: 4px 10px;
+          padding: 3px 10px;
           border-radius: 9999px;
           display: flex;
           align-items: center;
           gap: 4px;
-          box-shadow: 0 2px 4px rgba(4, 120, 87, 0.05);
         }
 
-        .cropper-slider-panel {
+        /* ── Zoom Controls ──────────────────────────────────── */
+        .cropper-zoom-controls {
           width: 100%;
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          margin-top: 1.25rem;
-          padding: 0 0.5rem;
+          gap: 0.6rem;
+          margin-top: 1rem;
+          padding: 0 0.25rem;
           box-sizing: border-box;
+        }
+
+        .zoom-btn {
+          flex-shrink: 0;
+          width: 34px;
+          height: 34px;
+          border-radius: 8px;
+          border: 1.5px solid #e2e8f0;
+          background: #f8fafc;
+          color: #334155;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.18s;
+          padding: 0;
+        }
+        .zoom-btn:hover {
+          background: #10b981;
+          border-color: #10b981;
+          color: #fff;
+          box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
+        }
+        .zoom-btn:active {
+          transform: scale(0.93);
         }
 
         .cropper-zoom-range {
           flex: 1;
           height: 5px;
           border-radius: 9999px;
-          background: #cbd5e1;
+          background: linear-gradient(to right, #10b981 0%, #10b981 calc(var(--val, 50%)), #cbd5e1 calc(var(--val, 50%)), #cbd5e1 100%);
           outline: none;
           cursor: pointer;
           accent-color: #10b981;
           -webkit-appearance: none;
         }
-
+        .cropper-zoom-range::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #10b981;
+          border: 2px solid white;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+          cursor: pointer;
+        }
         .cropper-zoom-range::-webkit-slider-runnable-track {
           height: 5px;
+          border-radius: 9999px;
         }
 
+        .zoom-level-display {
+          margin-top: 0.35rem;
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #64748b;
+          letter-spacing: 0.04em;
+        }
+
+        /* ── Footer ─────────────────────────────────────────── */
         .cropper-modal-footer {
           display: flex;
           align-items: center;
           justify-content: flex-end;
           gap: 0.75rem;
-          padding: 1.25rem 1.5rem;
+          padding: 1rem 1.5rem;
           border-top: 1px solid #e2e8f0;
           background: #f8fafc;
         }
@@ -521,16 +641,13 @@ export default function ImageCropperModal({
           color: #334155;
           border: 1px solid #cbd5e1;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.18s;
         }
-
-        .btn-crop-cancel:hover {
-          background: #f8fafc;
-          border-color: #94a3b8;
-        }
+        .btn-crop-cancel:hover:not(:disabled) { background: #f8fafc; border-color: #94a3b8; }
+        .btn-crop-cancel:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .btn-crop-save {
-          padding: 0.55rem 1.25rem;
+          padding: 0.55rem 1.4rem;
           border-radius: 10px;
           font-size: 0.88rem;
           font-weight: 700;
@@ -541,20 +658,15 @@ export default function ImageCropperModal({
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: all 0.2s;
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+          transition: all 0.18s;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
         }
-
-        .btn-crop-save:hover {
+        .btn-crop-save:hover:not(:disabled) {
           background: #059669;
           border-color: #059669;
-          box-shadow: 0 6px 16px rgba(16, 185, 129, 0.25);
+          box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
         }
-
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
+        .btn-crop-save:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
       `}</style>
     </div>
   );

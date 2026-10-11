@@ -179,7 +179,7 @@ export default function AdminDashboard() {
         if (stored) {
           try {
             adminId = JSON.parse(stored).id || '';
-          } catch (e) {}
+          } catch (e) { }
         }
         const res = await fetch('/api/events?lastActive=true', {
           headers: adminId ? { 'x-admin-id': adminId } : {},
@@ -386,7 +386,7 @@ export default function AdminDashboard() {
       if (stored) {
         try {
           adminId = JSON.parse(stored).id || '';
-        } catch (e) {}
+        } catch (e) { }
       }
       const res = await fetch('/api/events', {
         headers: adminId ? { 'x-admin-id': adminId } : {}
@@ -405,7 +405,7 @@ export default function AdminDashboard() {
       const res = await fetch('/api/admin/configs');
       if (res.ok) {
         const data = await res.json();
-        
+
         // Event
         const upiId = data.configs.find((c: any) => c.key === 'upi_id')?.value || '';
         const upiName = data.configs.find((c: any) => c.key === 'upi_name')?.value || '';
@@ -505,12 +505,12 @@ export default function AdminDashboard() {
     const newImages = [...resortImages];
     const targetIndex = direction === 'left' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newImages.length) return;
-    
+
     // Swap
     const temp = newImages[index];
     newImages[index] = newImages[targetIndex];
     newImages[targetIndex] = temp;
-    
+
     setResortImages(newImages);
   };
 
@@ -596,11 +596,11 @@ export default function AdminDashboard() {
     const newImages = [...villaImages];
     const targetIndex = direction === 'left' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newImages.length) return;
-    
+
     const temp = newImages[index];
     newImages[index] = newImages[targetIndex];
     newImages[targetIndex] = temp;
-    
+
     setVillaImages(newImages);
   };
 
@@ -969,7 +969,7 @@ export default function AdminDashboard() {
     if (!currentAdminId && stored) {
       try {
         currentAdminId = JSON.parse(stored).id || '';
-      } catch (e) {}
+      } catch (e) { }
     }
 
     if (!currentAdminId) {
@@ -1138,7 +1138,7 @@ export default function AdminDashboard() {
       if (stored) {
         try {
           adminId = JSON.parse(stored).id || '';
-        } catch (e) {}
+        } catch (e) { }
       }
       const res = await fetch('/api/events', {
         method: 'PATCH',
@@ -1180,7 +1180,7 @@ export default function AdminDashboard() {
       if (res.ok) {
         // Remove instantly from list
         setEvents(prev => prev.filter(ev => ev.id !== selectedEventId));
-        
+
         if (editingEventId === selectedEventId) {
           handleCancelEdit();
         }
@@ -1322,9 +1322,9 @@ export default function AdminDashboard() {
       });
       setBookings(updatedList);
 
-      setToastMessage({ 
-        type: failCount === 0 ? 'success' : 'error', 
-        text: `Bulk update complete. Successfully updated ${successCount} entries.${failCount > 0 ? ` Failed to update ${failCount} entries.` : ''}` 
+      setToastMessage({
+        type: failCount === 0 ? 'success' : 'error',
+        text: `Bulk update complete. Successfully updated ${successCount} entries.${failCount > 0 ? ` Failed to update ${failCount} entries.` : ''}`
       });
 
       fetchAdminBookings(adminUser.id);
@@ -1353,7 +1353,7 @@ export default function AdminDashboard() {
           body: formData,
         });
         const uploadData = await uploadRes.json();
-        
+
         if (!uploadRes.ok || !uploadData.url) {
           alert(uploadData.error || 'Failed to upload cropped image');
           return;
@@ -1386,14 +1386,14 @@ export default function AdminDashboard() {
             return b;
           });
           setBookings(updatedBookings);
-          
+
           if (selectedContributionDetail && selectedContributionDetail.id === booking.id) {
             setSelectedContributionDetail({
               ...selectedContributionDetail,
               attendees: updatedAttendees,
             });
           }
-          
+
           alert('Profile image updated successfully.');
         } else {
           const patchData = await patchRes.json();
@@ -1497,7 +1497,7 @@ export default function AdminDashboard() {
 
   // Data extraction for Food and Attendee Lists
   const approvedEventBookings = eventBookings.filter(b => b.status === 'approved');
-  
+
   const allAttendeesList = approvedEventBookings.flatMap(b => {
     if (!b.attendees) return [];
     return Object.entries(b.attendees).filter(([seat, val]: any) => {
@@ -1529,8 +1529,8 @@ export default function AdminDashboard() {
   const uniqueEvents = Array.from(new Set(allAttendeesList.map(a => a.event)));
 
   const currentEventFilter = adminSection === 'foodList' ? selectedFoodEventFilter :
-                             adminSection === 'attendeeList' ? selectedAttendeeEventFilter :
-                             'All';
+    adminSection === 'attendeeList' ? selectedAttendeeEventFilter :
+      'All';
 
   const eventFilteredAttendees = currentEventFilter === 'All'
     ? allAttendeesList
@@ -1566,7 +1566,7 @@ export default function AdminDashboard() {
       headers.map(h => `"${h.toUpperCase()}"`).join(','),
       ...data.map(row => headers.map(h => `"${String(row[h]).replace(/"/g, '""')}"`).join(','))
     ].join('\n');
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -1678,7 +1678,7 @@ export default function AdminDashboard() {
               <Coffee size={16} />
               <span>Food List</span>
             </button>
-             <button
+            <button
               onClick={() => setAdminSection('attendeeList')}
               className={`section-tab ${adminSection === 'attendeeList' ? 'active' : ''}`}
             >
@@ -1712,7 +1712,7 @@ export default function AdminDashboard() {
         {/* List Controls */}
         {adminSection === 'registrations' ? (
           <div className="dashboard-main-area animate-slide-up">
-            
+
             {/* Active Events & Seat Block Section */}
             <div className="events-list-card glass-card" style={{ marginBottom: '2rem' }}>
               <div className="event-manager-header" style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
@@ -1934,12 +1934,12 @@ export default function AdminDashboard() {
                         <h4 className="pane-section-title">
                           <CreditCard size={14} /> Verification Details
                         </h4>
-                        
+
                         <div className="utr-display-box">
                           {b.screenshot && !b.screenshot.startsWith('UTR:') && b.screenshot !== 'DIRECT_BOOKING' && b.screenshot !== 'SCREENSHOT_UPLOADED' ? (
                             <div className="utr-content-wrapper" style={{ flexDirection: 'column', gap: '0.5rem' }}>
                               <span className="utr-label-admin">Payment Screenshot</span>
-                              <div 
+                              <div
                                 style={{ width: '120px', height: '160px', borderRadius: '8px', border: '1px solid #d1d5db', overflow: 'hidden', cursor: 'pointer' }}
                                 onClick={() => setZoomedImage(b.screenshot)}
                               >
@@ -1968,9 +1968,9 @@ export default function AdminDashboard() {
                         <div className="audit-qr-preview-row">
                           <span className="info-label">Audit QR Code</span>
                           <div className="qr-box-wrap">
-                            <img 
-                              src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(b.qrCodePayload || `BOOKING:${b.id}|EVENT:${b.seminarName || b.eventName}|SEATS:${b.seats.join(',')}|VENUE:${b.venue}|DATE:${b.date}|AMOUNT:INR${b.totalPrice}|STATUS:${b.status.toUpperCase()}`)}&qzone=1&format=png&color=16a34a`} 
-                              alt="Audit QR Code" 
+                            <img
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(b.qrCodePayload || `BOOKING:${b.id}|EVENT:${b.seminarName || b.eventName}|SEATS:${b.seats.join(',')}|VENUE:${b.venue}|DATE:${b.date}|AMOUNT:INR${b.totalPrice}|STATUS:${b.status.toUpperCase()}`)}&qzone=1&format=png&color=16a34a`}
+                              alt="Audit QR Code"
                             />
                           </div>
                         </div>
@@ -2275,13 +2275,13 @@ export default function AdminDashboard() {
             </div>
 
             {/* Monthly Contribution Management Controls */}
-            <div 
-              className="monthly-mgmt-toolbar glass-card animate-slide-up" 
-              style={{ 
-                padding: '1rem 1.5rem', 
-                borderRadius: '16px', 
-                background: '#ffffff', 
-                border: '1px solid #e2e8f0', 
+            <div
+              className="monthly-mgmt-toolbar glass-card animate-slide-up"
+              style={{
+                padding: '1rem 1.5rem',
+                borderRadius: '16px',
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
                 marginBottom: '1.5rem',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -2296,10 +2296,10 @@ export default function AdminDashboard() {
                 <select
                   value={selectedMonthFilter}
                   onChange={(e) => setSelectedMonthFilter(e.target.value)}
-                  style={{ 
-                    padding: '0.5rem 1rem', 
-                    borderRadius: '8px', 
-                    border: '1px solid #cbd5e1', 
+                  style={{
+                    padding: '0.5rem 1rem',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
                     outline: 'none',
                     fontSize: '0.88rem',
                     background: '#ffffff',
@@ -2324,11 +2324,11 @@ export default function AdminDashboard() {
                       disabled={isBulkUpdating}
                       onClick={() => handleBulkVisibilityToggle(true)}
                       className="btn btn-show-homepage animate-fade-in"
-                      style={{ 
-                        display: 'inline-flex', 
-                        alignItems: 'center', 
-                        gap: '0.5rem', 
-                        padding: '0.5rem 1.25rem', 
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem 1.25rem',
                         fontSize: '0.85rem',
                         fontWeight: 600,
                         height: '38px',
@@ -2344,11 +2344,11 @@ export default function AdminDashboard() {
                       disabled={isBulkUpdating}
                       onClick={() => handleBulkVisibilityToggle(false)}
                       className="btn btn-hide-homepage animate-fade-in"
-                      style={{ 
-                        display: 'inline-flex', 
-                        alignItems: 'center', 
-                        gap: '0.5rem', 
-                        padding: '0.5rem 1.25rem', 
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem 1.25rem',
                         fontSize: '0.85rem',
                         fontWeight: 600,
                         height: '38px',
@@ -2395,12 +2395,12 @@ export default function AdminDashboard() {
                 const monthItems = contributionsByMonth[monthKey];
                 return (
                   <div key={monthKey} className="month-group-section" style={{ marginBottom: '2.5rem' }}>
-                    <h3 
-                      className="month-group-title" 
-                      style={{ 
-                        fontSize: '1.15rem', 
-                        fontWeight: 700, 
-                        color: '#334155', 
+                    <h3
+                      className="month-group-title"
+                      style={{
+                        fontSize: '1.15rem',
+                        fontWeight: 700,
+                        color: '#334155',
                         marginBottom: '1.25rem',
                         borderBottom: '2px solid #f1f5f9',
                         paddingBottom: '0.5rem',
@@ -2477,7 +2477,7 @@ export default function AdminDashboard() {
                                     <span className="info-label">Contribution Amount</span>
                                     <span className="info-value">₹{totalAmount}</span>
                                   </div>
-                                  
+
                                   <div className="invoice-receipt-block" style={{ marginTop: '1.5rem' }}>
                                     <div className="invoice-receipt-total">
                                       <span>Total Amount Paid</span>
@@ -2492,12 +2492,12 @@ export default function AdminDashboard() {
                                 <h4 className="pane-section-title">
                                   <CreditCard size={14} /> Verification Details
                                 </h4>
-                                
+
                                 <div className="utr-display-box">
                                   {b.screenshot && !b.screenshot.startsWith('UTR:') && b.screenshot !== 'DIRECT_BOOKING' && b.screenshot !== 'SCREENSHOT_UPLOADED' ? (
                                     <div className="utr-content-wrapper" style={{ flexDirection: 'column', gap: '0.5rem' }}>
                                       <span className="utr-label-admin">Payment Screenshot</span>
-                                      <div 
+                                      <div
                                         style={{ width: '120px', height: '160px', borderRadius: '8px', border: '1px solid #d1d5db', overflow: 'hidden', cursor: 'pointer' }}
                                         onClick={() => setZoomedImage(b.screenshot)}
                                       >
@@ -2595,10 +2595,10 @@ export default function AdminDashboard() {
                 <>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
                     {([
-                      { key: 'pv.ced', label: 'CED — TOP 3 PV ACHIEVERS', icon: '📊', color: '#3b82f6' },
-                      { key: 'income.ced', label: 'CED — TOP 3 INCOME ACHIEVERS', icon: '💰', color: '#10b981' },
-                      { key: 'pv.ed', label: 'ED — TOP 3 PV ACHIEVERS', icon: '📈', color: '#8b5cf6' },
-                      { key: 'income.ed', label: 'ED — TOP 3 INCOME ACHIEVERS', icon: '🏆', color: '#f59e0b' },
+                      { key: 'pv.ced', label: 'NCED — TOP 3 ACHIEVERS', icon: '📊', color: '#3b82f6' },
+                      { key: 'income.ced', label: 'SCED — TOP 3 ACHIEVERS', icon: '💰', color: '#10b981' },
+                      { key: 'pv.ed', label: 'NED — TOP 3 ACHIEVERS', icon: '📈', color: '#8b5cf6' },
+                      { key: 'income.ed', label: 'SED — TOP 3 ACHIEVERS', icon: '🏆', color: '#f59e0b' },
                     ] as const).map(({ key, label, icon, color }) => {
                       const [cat, lvl] = key.split('.');
                       const items: any[] = achieversData?.[cat]?.[lvl] || [];
@@ -2623,7 +2623,7 @@ export default function AdminDashboard() {
                                         <User size={28} color="#cbd5e1" />
                                       )}
                                     </div>
-                                    
+
                                     {/* Clear Image Button Removed as per request */}
                                     <label htmlFor={`upload-${uploadKey}`} style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '22px', height: '22px', borderRadius: '50%', background: color, border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                                       {isUploading ? <span style={{ fontSize: '10px', color: 'white' }}>⏳</span> : <Upload size={10} color="white" />}
@@ -2636,24 +2636,38 @@ export default function AdminDashboard() {
                                       disabled={isUploading}
                                       onChange={(e) => {
                                         const file = e.target.files?.[0];
-                                        if (file) {
-                                          const reader = new FileReader();
-                                          reader.onload = () => {
-                                            if (typeof reader.result === 'string') {
-                                              openCropper(reader.result, 0.8, (croppedBlob) => {
-                                                const croppedFile = new File([croppedBlob], file.name || 'cropped_achiever.jpg', { type: 'image/jpeg' });
-                                                handleAchieverImageUpload(uploadKey, croppedFile);
-                                              });
-                                            }
+                                        if (!file) return;
+                                        // Pre-resize to max 1200px so the data URL is tiny and loads instantly
+                                        const reader = new FileReader();
+                                        reader.onload = () => {
+                                          if (typeof reader.result !== 'string') return;
+                                          const img = new window.Image();
+                                          img.onload = () => {
+                                            const MAX = 1200;
+                                            const ratio = Math.min(1, MAX / Math.max(img.width, img.height));
+                                            const w = Math.round(img.width * ratio);
+                                            const h = Math.round(img.height * ratio);
+                                            const canvas = document.createElement('canvas');
+                                            canvas.width = w;
+                                            canvas.height = h;
+                                            const ctx = canvas.getContext('2d');
+                                            if (!ctx) return;
+                                            ctx.drawImage(img, 0, 0, w, h);
+                                            const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+                                            openCropper(resizedDataUrl, 0.8, (croppedBlob) => {
+                                              const croppedFile = new File([croppedBlob], file.name || 'cropped_achiever.jpg', { type: 'image/jpeg' });
+                                              handleAchieverImageUpload(uploadKey, croppedFile);
+                                            });
                                           };
-                                          reader.readAsDataURL(file);
-                                        }
+                                          img.src = reader.result;
+                                        };
+                                        reader.readAsDataURL(file);
                                       }}
                                     />
                                   </div>
                                   <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ fontSize: '0.68rem', color: color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px' }}>Achiever</div>
-                                    
+
                                     {/* User Friendly Name Input */}
                                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                       <input
@@ -2665,7 +2679,7 @@ export default function AdminDashboard() {
                                       />
                                     </div>
                                   </div>
-                                  
+
                                   {/* Reset Card Button Removed */}
                                 </div>
                               );
@@ -2703,7 +2717,7 @@ export default function AdminDashboard() {
           </div>
         ) : adminSection === 'configs' ? (
           <div className="payment-settings-area animate-slide-up" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            
+
             {/* 1. EVENT PAYMENT SETTINGS CARD */}
             <div className="event-form-card glass-card">
               <div className="event-manager-header">
@@ -2980,8 +2994,8 @@ export default function AdminDashboard() {
                 <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Total Attendees: <strong>{eventFilteredAttendees.length}</strong> | Total Vegetarians: <strong>{vegAttendees.length}</strong> | Total Non-Vegetarians: <strong>{nonVegAttendees.length}</strong></p>
               </div>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                <select 
-                  value={selectedFoodEventFilter} 
+                <select
+                  value={selectedFoodEventFilter}
                   onChange={(e) => setSelectedFoodEventFilter(e.target.value)}
                   style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
                 >
@@ -3075,12 +3089,14 @@ export default function AdminDashboard() {
               const supporterName = supporter.name || b.bookerName || 'Unknown';
               const vpName = supporter.vpName || b.bookerVpName || 'N/A';
               const designation = supporter.designation || 'System Supporter';
+              const contactNumber = supporter.mobile || b.bookerPhone || '—';
               const monthLabel = getMonthLabel(b) || 'Unknown';
               return {
                 bookingId: b.id.toUpperCase(),
                 name: supporterName,
                 designation,
                 vpName,
+                contactNumber,
                 amount: b.totalPrice || 0,
                 status: b.status,
                 month: monthLabel,
@@ -3106,6 +3122,7 @@ export default function AdminDashboard() {
               'Contributor Name': r.name,
               'Designation': r.designation,
               'VP Name': r.vpName,
+              'Contact Number': r.contactNumber,
               'Amount (₹)': r.amount,
               'Status': r.status === 'approved' ? 'Confirmed' : r.status === 'denied' ? 'Rejected' : 'Pending',
               'Month': r.month,
@@ -3148,6 +3165,7 @@ export default function AdminDashboard() {
                         <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>Contributor Name</th>
                         <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>Designation</th>
                         <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>VP Name</th>
+                        <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>Contact Number</th>
                         <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>Amount</th>
                         <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>Status</th>
                         <th style={{ padding: '1rem', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>Month</th>
@@ -3156,7 +3174,7 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody>
                       {filteredContribData.length === 0 ? (
-                        <tr><td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No contributors found for the selected month.</td></tr>
+                        <tr><td colSpan={10} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No contributors found for the selected month.</td></tr>
                       ) : (
                         filteredContribData.map((row: any, idx: number) => (
                           <tr key={row.bookingId} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
@@ -3165,6 +3183,7 @@ export default function AdminDashboard() {
                             <td style={{ padding: '1rem', fontWeight: 600, border: '1px solid #e2e8f0' }}>{row.name}</td>
                             <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontSize: '0.85rem', color: '#475569' }}>{row.designation}</td>
                             <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontStyle: 'italic', color: '#64748b' }}>{row.vpName}</td>
+                            <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontFamily: 'monospace', fontSize: '0.88rem', color: '#0369a1' }}>{row.contactNumber}</td>
                             <td style={{ padding: '1rem', border: '1px solid #e2e8f0', fontWeight: 700, color: '#0f172a' }}>₹{Number(row.amount).toLocaleString('en-IN')}</td>
                             <td style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>
                               <span className={`badge ${row.status === 'approved' ? 'badge-approved' : row.status === 'denied' ? 'badge-denied' : 'badge-pending'}`}>
@@ -3190,8 +3209,8 @@ export default function AdminDashboard() {
                 <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Total Registered Attendees: <strong>{eventFilteredAttendees.length}</strong></p>
               </div>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                <select 
-                  value={selectedAttendeeEventFilter} 
+                <select
+                  value={selectedAttendeeEventFilter}
                   onChange={(e) => setSelectedAttendeeEventFilter(e.target.value)}
                   style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
                 >
@@ -3358,13 +3377,13 @@ export default function AdminDashboard() {
 
               <div style={{ marginTop: '1.5rem' }}>
                 <label className="form-label" style={{ fontWeight: 600 }}>Manage Resort Carousel Images (Add, Remove, and Reorder)</label>
-                
+
                 <div className="resort-images-grid">
                   {resortImages.map((imgUrl, index) => (
                     <div key={index} className="resort-image-card">
                       <img src={imgUrl} alt={`Resort ${index + 1}`} />
                       {index === 0 && <span className="resort-cover-badge">Default Cover</span>}
-                      
+
                       <div className="resort-image-actions">
                         <button
                           type="button"
@@ -3397,7 +3416,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   ))}
-                  
+
                   {/* Upload Card */}
                   <label className="resort-upload-card" style={{ cursor: isUploadingResortImg ? 'not-allowed' : 'pointer' }}>
                     <input
@@ -3444,13 +3463,13 @@ export default function AdminDashboard() {
 
               <div style={{ marginTop: '1.5rem' }}>
                 <label className="form-label" style={{ fontWeight: 600 }}>Manage Villa Carousel Images (Add, Remove, and Reorder)</label>
-                
+
                 <div className="resort-images-grid">
                   {villaImages.map((imgUrl, index) => (
                     <div key={index} className="resort-image-card">
                       <img src={imgUrl} alt={`Villa ${index + 1}`} />
                       {index === 0 && <span className="resort-cover-badge">Default Cover</span>}
-                      
+
                       <div className="resort-image-actions">
                         <button
                           type="button"
@@ -3483,7 +3502,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   ))}
-                  
+
                   {/* Upload Card */}
                   <label className="resort-upload-card" style={{ cursor: isUploadingVillaImg ? 'not-allowed' : 'pointer' }}>
                     <input
@@ -3722,8 +3741,8 @@ export default function AdminDashboard() {
           <div className="confirm-modal-card" style={{ maxWidth: '600px', width: '100%', padding: '2rem' }} onClick={(e) => e.stopPropagation()}>
             <div className="confirm-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #f3f4f6', paddingBottom: '0.75rem' }}>
               <h2 className="confirm-modal-title" style={{ margin: 0, fontSize: '1.25rem' }}>Contribution Request Details</h2>
-              <button 
-                onClick={() => setSelectedContributionDetail(null)} 
+              <button
+                onClick={() => setSelectedContributionDetail(null)}
                 style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}
               >
                 &times;
@@ -3741,8 +3760,8 @@ export default function AdminDashboard() {
                     <div><span style={{ color: '#6b7280' }}>VP Name: </span><strong>{selectedContributionDetail.attendees?.SUPPORTER?.vpName || 'N/A'}</strong></div>
                     <div><span style={{ color: '#6b7280' }}>Submitted Date & Time: </span><strong>{new Date(selectedContributionDetail.createdAt).toLocaleString()}</strong></div>
                     <div><span style={{ color: '#6b7280' }}>Status: </span>
-                      <strong style={{ 
-                        color: selectedContributionDetail.status === 'approved' ? '#047857' : selectedContributionDetail.status === 'denied' ? '#b91c1c' : '#d97706' 
+                      <strong style={{
+                        color: selectedContributionDetail.status === 'approved' ? '#047857' : selectedContributionDetail.status === 'denied' ? '#b91c1c' : '#d97706'
                       }}>
                         {selectedContributionDetail.status === 'approved' ? 'Confirmed' : selectedContributionDetail.status === 'denied' ? 'Rejected' : 'Pending'}
                       </strong>
@@ -3751,7 +3770,7 @@ export default function AdminDashboard() {
                 </div>
                 {selectedContributionDetail.attendees?.SUPPORTER?.vpImage && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
-                    <div 
+                    <div
                       style={{ width: '90px', height: '90px', borderRadius: '8px', border: '1px solid #d1d5db', overflow: 'hidden', cursor: 'pointer' }}
                       onClick={() => setZoomedImage(selectedContributionDetail.attendees.SUPPORTER.vpImage)}
                     >
@@ -3788,7 +3807,7 @@ export default function AdminDashboard() {
                     <span style={{ color: '#6b7280', display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Payment Screenshot:</span>
                     {selectedContributionDetail.screenshot && !selectedContributionDetail.screenshot.startsWith('UTR:') ? (
                       <div>
-                        <div 
+                        <div
                           style={{ width: '140px', height: '180px', borderRadius: '8px', border: '1.5px solid #10b981', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 2px 8px rgba(16,185,129,0.15)' }}
                           onClick={() => setZoomedImage(selectedContributionDetail.screenshot)}
                         >
@@ -3805,9 +3824,9 @@ export default function AdminDashboard() {
             </div>
 
             <div className="confirm-modal-actions" style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', borderTop: '1px solid #f3f4f6', paddingTop: '0.75rem' }}>
-              <button 
+              <button
                 type="button"
-                onClick={() => setSelectedContributionDetail(null)} 
+                onClick={() => setSelectedContributionDetail(null)}
                 className="btn-modal-cancel"
                 style={{ margin: 0 }}
               >
@@ -3815,17 +3834,17 @@ export default function AdminDashboard() {
               </button>
               {selectedContributionDetail.status === 'pending' && (
                 <>
-                  <button 
+                  <button
                     type="button"
-                    onClick={() => { handleStatusUpdate(selectedContributionDetail.id, 'denied'); setSelectedContributionDetail(null); }} 
+                    onClick={() => { handleStatusUpdate(selectedContributionDetail.id, 'denied'); setSelectedContributionDetail(null); }}
                     className="btn-modal-delete"
                     style={{ background: '#dc2626', color: 'white', border: '1px solid #dc2626', margin: 0 }}
                   >
                     Reject
                   </button>
-                  <button 
+                  <button
                     type="button"
-                    onClick={() => { handleStatusUpdate(selectedContributionDetail.id, 'approved'); setSelectedContributionDetail(null); }} 
+                    onClick={() => { handleStatusUpdate(selectedContributionDetail.id, 'approved'); setSelectedContributionDetail(null); }}
                     className="btn btn-primary"
                     style={{ height: '40px', padding: '0 1.25rem', margin: 0, fontSize: '0.88rem' }}
                   >
