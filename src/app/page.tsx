@@ -39,7 +39,7 @@ type SeminarEvent = {
   bookedSeatsByTime?: Record<string, string[]>;
 };
 
-type AchieverItem = { rank: number; name: string; image?: string; tier: string };
+type AchieverItem = { rank: number; name: string; image?: string; tier: string; income?: string };
 type AchieversData = {
   pv: { ced: AchieverItem[]; ed: AchieverItem[] };
   income: { ced: AchieverItem[]; ed: AchieverItem[] };
@@ -373,6 +373,43 @@ export default function Home() {
     const hasData = items.some(item => item.image || item.name?.trim());
     const frameMap = isCed ? CED_FRAMES : ED_FRAMES;
 
+    // Split into two rows: rank 1 & 2 side-by-side, rank 3 centered below
+    const topItems = items.filter(item => (item.rank === 1 || item.rank === 2) && (item.image || item.name?.trim()));
+    const bottomItem = items.find(item => item.rank === 3 && (item.image || item.name?.trim()));
+
+    const renderItem = (item: AchieverItem) => {
+      const rank = item.rank as 1 | 2 | 3;
+      const frameSrc = frameMap[rank];
+      return (
+        <div key={`monthly-${categoryClass}-${item.rank}`} className="medal-col" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '160px' }}>
+          {item.image && frameSrc ? (
+            <div className={`monthly-framed-wrapper ${isCed ? 'monthly-framed-ced' : 'monthly-framed-ed'} monthly-rank-${item.rank}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={frameSrc} alt="frame" className="monthly-frame-base" />
+              <div className="monthly-photo-clip">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={item.image} alt={item.name} className="monthly-framed-photo" />
+              </div>
+            </div>
+          ) : item.image ? (
+            <div className={`achiever-pro-image-wrapper rank-${item.rank}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={item.image} alt={item.name} className="achiever-pro-img" />
+            </div>
+          ) : null}
+          {item.name?.trim() && (
+            <span className="medal-achiever-name">{item.name}</span>
+          )}
+          {item.income?.trim() && (
+            <span className="medal-achiever-income">₹{item.income}</span>
+          )}
+          <div className="achiever-rank-badge-wrap" style={{ marginTop: '8px' }}>
+            {item.rank === 1 ? <GoldBadgeIcon /> : item.rank === 2 ? <SilverBadgeIcon /> : <BronzeBadgeIcon />}
+          </div>
+        </div>
+      );
+    };
+
     return (
       <div className="achiever-panel">
         <div className="panel-header">
@@ -386,40 +423,19 @@ export default function Home() {
             <span className="empty-badge-text">No Record Found</span>
           </div>
         ) : (
-          <div className="medals-row" style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-            {items.map((item, i) => {
-              const hasItemData = item.image || item.name?.trim();
-              if (!hasItemData) return null;
-              const rank = item.rank as 1 | 2 | 3;
-              const frameSrc = frameMap[rank];
-              return (
-                <div key={`monthly-${categoryClass}-${item.rank}`} className="medal-col" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '160px' }}>
-                  {item.image && frameSrc ? (
-                    <div className={`monthly-framed-wrapper ${isCed ? 'monthly-framed-ced' : 'monthly-framed-ed'} monthly-rank-${item.rank}`}>
-                      {/* Frame PNG on top — z-index 2 */}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={frameSrc} alt="frame" className="monthly-frame-base" />
-                      {/* Clip container matches the transparent hole exactly */}
-                      <div className="monthly-photo-clip">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={item.image} alt={item.name} className="monthly-framed-photo" />
-                      </div>
-                    </div>
-                  ) : item.image ? (
-                    <div className={`achiever-pro-image-wrapper rank-${item.rank}`}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={item.image} alt={item.name} className="achiever-pro-img" />
-                    </div>
-                  ) : null}
-                  {item.name?.trim() && (
-                    <span className="medal-achiever-name">{item.name}</span>
-                  )}
-                  <div className="achiever-rank-badge-wrap" style={{ marginTop: '8px' }}>
-                    {i === 0 ? <GoldBadgeIcon /> : i === 1 ? <SilverBadgeIcon /> : <BronzeBadgeIcon />}
-                  </div>
-                </div>
-              );
-            })}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem' }}>
+            {/* Row 1: rank 1 & rank 2 side by side */}
+            {topItems.length > 0 && (
+              <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                {topItems.map(renderItem)}
+              </div>
+            )}
+            {/* Row 2: rank 3 centered below */}
+            {bottomItem && (
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                {renderItem(bottomItem)}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1805,6 +1821,15 @@ export default function Home() {
           line-height: 1.25;
           max-width: 110px;
           word-break: break-word;
+        }
+        .medal-achiever-income {
+          display: block;
+          font-size: 0.82rem;
+          font-weight: 700;
+          color: var(--primary);
+          margin-top: 0.2rem;
+          margin-bottom: 0.1rem;
+          letter-spacing: 0.02em;
         }
 
         /* Rank Badge - Gold / Silver / Bronze emoji medal */

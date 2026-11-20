@@ -762,6 +762,18 @@ export default function AdminDashboard() {
     });
   };
 
+  const handleMonthlyAchieverIncomeChange = (key: string, income: string) => {
+    const [category, level, indexStr] = key.split('.');
+    const index = parseInt(indexStr);
+    setMonthlyAchieversData((prev: any) => {
+      const updated = JSON.parse(JSON.stringify(prev));
+      if (updated[category] && updated[category][level] && updated[category][level][index]) {
+        updated[category][level][index].income = income;
+      }
+      return updated;
+    });
+  };
+
   const handleSaveMonthlyAchievers = async () => {
     if (!adminUser?.id || !monthlyAchieversData) return;
     setMonthlyAchieversLoading(true);
@@ -2896,22 +2908,15 @@ export default function AdminDashboard() {
                               const frameSrc = `/frames/${framePrefix} frame-${ordinals[i]}.png`;
                               return (
                                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#fff', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                                  {/* Photo + frame preview */}
+                                  {/* Photo preview — no frame overlay in admin */}
                                   <div style={{ position: 'relative', flexShrink: 0 }}>
-                                    <div style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '14px', border: `2px dashed ${color}`, overflow: 'visible', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '14px', border: `2px dashed ${color}`, overflow: 'hidden', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                       {item.image ? (
                                         // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
+                                        <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                       ) : (
                                         <User size={28} color="#cbd5e1" />
                                       )}
-                                      {/* Frame preview overlay */}
-                                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                                      <img
-                                        src={frameSrc}
-                                        alt="frame preview"
-                                        style={{ position: 'absolute', inset: '-8px', width: 'calc(100% + 16px)', height: 'calc(100% + 16px)', objectFit: 'contain', pointerEvents: 'none', zIndex: 2 }}
-                                      />
                                     </div>
                                     <label htmlFor={`monthly-upload-${uploadKey}`} style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '22px', height: '22px', borderRadius: '50%', background: color, border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', zIndex: 3 }}>
                                       {isUploading ? <span style={{ fontSize: '10px', color: 'white' }}>⏳</span> : <Upload size={10} color="white" />}
@@ -2953,21 +2958,28 @@ export default function AdminDashboard() {
                                     />
                                   </div>
 
-                                  {/* Name + rank info */}
+                                  {/* Name + income + rank info */}
                                   <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ fontSize: '0.68rem', color: color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px' }}>
                                       Rank {i + 1} — {['🥇 Gold', '🥈 Silver', '🥉 Bronze'][i]}
                                     </div>
-                                    <div style={{ fontSize: '0.65rem', color: '#6b7280', marginBottom: '4px' }}>
-                                      Frame: {framePrefix} {ordinals[i]}
-                                    </div>
-                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
                                       <input
                                         type="text"
                                         value={item.name}
                                         onChange={(e) => handleMonthlyAchieverNameChange(uploadKey, e.target.value)}
                                         style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '6px', padding: '5px 8px', fontSize: '0.85rem', fontWeight: 700, color: 'var(--foreground)', background: 'transparent', outline: 'none', boxSizing: 'border-box' }}
                                         placeholder="Achiever Name"
+                                      />
+                                    </div>
+                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                      <span style={{ position: 'absolute', left: '8px', fontSize: '0.85rem', color: 'var(--muted)', fontWeight: 700, pointerEvents: 'none' }}>₹</span>
+                                      <input
+                                        type="text"
+                                        value={item.income || ''}
+                                        onChange={(e) => handleMonthlyAchieverIncomeChange(uploadKey, e.target.value)}
+                                        style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '6px', padding: '5px 8px 5px 20px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)', background: 'transparent', outline: 'none', boxSizing: 'border-box' }}
+                                        placeholder="Income amount"
                                       />
                                     </div>
                                   </div>
