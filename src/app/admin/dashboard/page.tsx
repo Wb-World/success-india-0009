@@ -706,23 +706,40 @@ export default function AdminDashboard() {
   };
 
   const handleMonthlyAchieverImageUpload = async (key: string, file: File) => {
+    if (!adminUser?.id) return;
     setUploadingMonthlyAchieverKey(key);
     const formData = new FormData();
     formData.append('file', file);
     try {
+      // Step 1: upload the image file
       const res = await fetch('/api/bookings/upload-proof', { method: 'POST', body: formData });
       const data = await res.json();
       if (res.ok && data.url) {
         const [category, level, indexStr] = key.split('.');
         const index = parseInt(indexStr);
-        setMonthlyAchieversData((prev: any) => {
-          const updated = JSON.parse(JSON.stringify(prev));
-          if (updated[category] && updated[category][level] && updated[category][level][index]) {
-            updated[category][level][index].image = data.url;
-          }
-          return updated;
+
+        // Step 2: build updated data object directly (don't rely on async setState)
+        const updated = JSON.parse(JSON.stringify(monthlyAchieversData));
+        if (updated[category] && updated[category][level] && updated[category][level][index]) {
+          updated[category][level][index].image = data.url;
+        }
+
+        // Step 3: update local state so admin sees change immediately
+        setMonthlyAchieversData(updated);
+
+        // Step 4: auto-save to database so home page reflects update instantly
+        setMonthlyAchieversMessage('Saving to database…');
+        const saveRes = await fetch('/api/admin/monthly-achievers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-id': adminUser.id },
+          body: JSON.stringify({ achievers: updated }),
         });
-        setMonthlyAchieversMessage('Image uploaded. Click Save Monthly Achievers to persist.');
+        if (saveRes.ok) {
+          setMonthlyAchieversMessage('✓ Photo saved! Home page updated automatically.');
+        } else {
+          const saveData = await saveRes.json();
+          setMonthlyAchieversMessage(`Photo uploaded but save failed: ${saveData.error || 'unknown error'}`);
+        }
       } else {
         setMonthlyAchieversMessage(data.error || 'Failed to upload image');
       }
