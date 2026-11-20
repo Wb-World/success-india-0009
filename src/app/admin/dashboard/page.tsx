@@ -37,7 +37,7 @@ export default function AdminDashboard() {
   const [selectedContributionDetail, setSelectedContributionDetail] = useState<any | null>(null);
   const [mounted, setMounted] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions' | 'achievers' | 'foodList' | 'attendeeList' | 'resortBookings' | 'resortSettings' | 'seatBlock' | 'contributorsData'>('registrations');
+  const [adminSection, setAdminSection] = useState<'registrations' | 'events' | 'configs' | 'contributions' | 'achievers' | 'monthlyAchievers' | 'foodList' | 'attendeeList' | 'resortBookings' | 'resortSettings' | 'seatBlock' | 'contributorsData'>('registrations');
   const [selectedContribDataMonth, setSelectedContribDataMonth] = useState<string>('All');
   const [resortBookings, setResortBookings] = useState<any[]>([]);
   const [resortLoading, setResortLoading] = useState(false);
@@ -110,6 +110,12 @@ export default function AdminDashboard() {
   const [achieversLoading, setAchieversLoading] = useState(false);
   const [achieversMessage, setAchieversMessage] = useState('');
   const [uploadingAchieverKey, setUploadingAchieverKey] = useState<string | null>(null);
+
+  // Monthly Achievers state
+  const [monthlyAchieversData, setMonthlyAchieversData] = useState<any>(null);
+  const [monthlyAchieversLoading, setMonthlyAchieversLoading] = useState(false);
+  const [monthlyAchieversMessage, setMonthlyAchieversMessage] = useState('');
+  const [uploadingMonthlyAchieverKey, setUploadingMonthlyAchieverKey] = useState<string | null>(null);
 
   // Image cropping state
   const [cropperOpen, setCropperOpen] = useState(false);
@@ -231,6 +237,7 @@ export default function AdminDashboard() {
       fetchAdminEvents();
       fetchAdminConfigs();
       fetchAdminAchievers();
+      fetchAdminMonthlyAchievers();
       fetchResortImages();
       fetchVillaImages();
     } catch (e) {
@@ -682,6 +689,82 @@ export default function AdminDashboard() {
       setAchieversMessage('Network error saving achievers');
     } finally {
       setAchieversLoading(false);
+    }
+  };
+
+  // ── Monthly Achievers helpers ──
+  const fetchAdminMonthlyAchievers = async () => {
+    try {
+      const res = await fetch('/api/admin/monthly-achievers', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setMonthlyAchieversData(data.achievers || null);
+      }
+    } catch (err) {
+      console.error('Error fetching monthly achievers:', err);
+    }
+  };
+
+  const handleMonthlyAchieverImageUpload = async (key: string, file: File) => {
+    setUploadingMonthlyAchieverKey(key);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('/api/bookings/upload-proof', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        const [category, level, indexStr] = key.split('.');
+        const index = parseInt(indexStr);
+        setMonthlyAchieversData((prev: any) => {
+          const updated = JSON.parse(JSON.stringify(prev));
+          if (updated[category] && updated[category][level] && updated[category][level][index]) {
+            updated[category][level][index].image = data.url;
+          }
+          return updated;
+        });
+        setMonthlyAchieversMessage('Image uploaded. Click Save Monthly Achievers to persist.');
+      } else {
+        setMonthlyAchieversMessage(data.error || 'Failed to upload image');
+      }
+    } catch (err) {
+      setMonthlyAchieversMessage('Upload error');
+    } finally {
+      setUploadingMonthlyAchieverKey(null);
+    }
+  };
+
+  const handleMonthlyAchieverNameChange = (key: string, name: string) => {
+    const [category, level, indexStr] = key.split('.');
+    const index = parseInt(indexStr);
+    setMonthlyAchieversData((prev: any) => {
+      const updated = JSON.parse(JSON.stringify(prev));
+      if (updated[category] && updated[category][level] && updated[category][level][index]) {
+        updated[category][level][index].name = name;
+      }
+      return updated;
+    });
+  };
+
+  const handleSaveMonthlyAchievers = async () => {
+    if (!adminUser?.id || !monthlyAchieversData) return;
+    setMonthlyAchieversLoading(true);
+    setMonthlyAchieversMessage('');
+    try {
+      const res = await fetch('/api/admin/monthly-achievers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-id': adminUser.id },
+        body: JSON.stringify({ achievers: monthlyAchieversData }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMonthlyAchieversMessage('✓ Monthly Achievers saved successfully!');
+      } else {
+        setMonthlyAchieversMessage(data.error || 'Failed to save');
+      }
+    } catch (err) {
+      setMonthlyAchieversMessage('Network error saving monthly achievers');
+    } finally {
+      setMonthlyAchieversLoading(false);
     }
   };
 
@@ -1670,6 +1753,13 @@ export default function AdminDashboard() {
             >
               <Trophy size={16} />
               <span>Top Achievers</span>
+            </button>
+            <button
+              onClick={() => setAdminSection('monthlyAchievers')}
+              className={`section-tab ${adminSection === 'monthlyAchievers' ? 'active' : ''}`}
+            >
+              <Award size={16} />
+              <span>Monthly Achievers</span>
             </button>
             <button
               onClick={() => setAdminSection('foodList')}
@@ -2724,7 +2814,182 @@ export default function AdminDashboard() {
               )}
             </form>
           </div>
+        ) : adminSection === 'monthlyAchievers' ? (
+          <div className="payment-settings-area animate-slide-up">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSaveMonthlyAchievers();
+              }}
+              className="event-form-card glass-card"
+            >
+              <div className="event-manager-header">
+                <div>
+                  <h2 className="heading-md">📅 Monthly Top Achievers</h2>
+                  <p style={{ color: 'var(--muted)', fontSize: '0.88rem', margin: '0.25rem 0 0' }}>
+                    Set the month/year label, upload face photos, and update names. Photos will display with decorative frames on the home page.
+                  </p>
+                </div>
+              </div>
+
+              {/* Month / Year Label */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--foreground)', display: 'block', marginBottom: '6px' }}>
+                  📌 Month & Year Label (shown on homepage)
+                </label>
+                <input
+                  type="text"
+                  value={monthlyAchieversData?.monthLabel || ''}
+                  onChange={(e) => setMonthlyAchieversData((prev: any) => ({ ...prev, monthLabel: e.target.value }))}
+                  placeholder="e.g. November 2026"
+                  style={{ width: '100%', maxWidth: '320px', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 12px', fontSize: '0.9rem', fontWeight: 600, color: 'var(--foreground)', background: 'var(--surface)', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              {monthlyAchieversMessage && (
+                <div style={{ padding: '0.75rem 1rem', borderRadius: '8px', background: monthlyAchieversMessage.startsWith('✓') ? '#d1fae5' : '#fee2e2', color: monthlyAchieversMessage.startsWith('✓') ? '#065f46' : '#991b1b', fontSize: '0.88rem', marginBottom: '1.5rem', fontWeight: 600 }}>
+                  {monthlyAchieversMessage}
+                </div>
+              )}
+
+              {!monthlyAchieversData ? (
+                <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '2rem' }}>Loading monthly achievers...</p>
+              ) : (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+                    {([
+                      { key: 'pv.ced', label: 'NCED — TOP 3 ACHIEVERS (Chief Exec.)', icon: '📊', color: '#3b82f6', framePrefix: 'chief executive director' },
+                      { key: 'income.ced', label: 'SCED — TOP 3 ACHIEVERS (Chief Exec.)', icon: '💰', color: '#10b981', framePrefix: 'chief executive director' },
+                      { key: 'pv.ed', label: 'NED — TOP 3 ACHIEVERS (Executive Dir.)', icon: '📈', color: '#8b5cf6', framePrefix: 'executive director' },
+                      { key: 'income.ed', label: 'SED — TOP 3 ACHIEVERS (Executive Dir.)', icon: '🏆', color: '#f59e0b', framePrefix: 'executive director' },
+                    ] as const).map(({ key, label, icon, color, framePrefix }) => {
+                      const [cat, lvl] = key.split('.');
+                      const items: any[] = monthlyAchieversData?.[cat]?.[lvl] || [];
+                      const ordinals = ['1st', '2nd', '3rd'];
+                      return (
+                        <div key={key} style={{ background: 'var(--surface)', borderRadius: '16px', border: '1px solid var(--border)', overflow: 'hidden' }}>
+                          <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)', background: `${color}10`, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ fontSize: '1.2rem' }}>{icon}</span>
+                            <span style={{ fontWeight: 800, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.05em', color }}>{label}</span>
+                          </div>
+                          <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {items.map((item: any, i: number) => {
+                              const uploadKey = `${cat}.${lvl}.${i}`;
+                              const isUploading = uploadingMonthlyAchieverKey === uploadKey;
+                              const frameSrc = `/frames/${framePrefix} frame-${ordinals[i]}.png`;
+                              return (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#fff', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                                  {/* Photo + frame preview */}
+                                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                                    <div style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '14px', border: `2px dashed ${color}`, overflow: 'visible', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      {item.image ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
+                                      ) : (
+                                        <User size={28} color="#cbd5e1" />
+                                      )}
+                                      {/* Frame preview overlay */}
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img
+                                        src={frameSrc}
+                                        alt="frame preview"
+                                        style={{ position: 'absolute', inset: '-8px', width: 'calc(100% + 16px)', height: 'calc(100% + 16px)', objectFit: 'contain', pointerEvents: 'none', zIndex: 2 }}
+                                      />
+                                    </div>
+                                    <label htmlFor={`monthly-upload-${uploadKey}`} style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '22px', height: '22px', borderRadius: '50%', background: color, border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', zIndex: 3 }}>
+                                      {isUploading ? <span style={{ fontSize: '10px', color: 'white' }}>⏳</span> : <Upload size={10} color="white" />}
+                                    </label>
+                                    <input
+                                      type="file"
+                                      id={`monthly-upload-${uploadKey}`}
+                                      accept=".jpg,.jpeg,.png,.webp"
+                                      style={{ display: 'none' }}
+                                      disabled={isUploading}
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        const reader = new FileReader();
+                                        reader.onload = () => {
+                                          if (typeof reader.result !== 'string') return;
+                                          const img = new window.Image();
+                                          img.onload = () => {
+                                            const MAX = 1200;
+                                            const ratio = Math.min(1, MAX / Math.max(img.width, img.height));
+                                            const w = Math.round(img.width * ratio);
+                                            const h = Math.round(img.height * ratio);
+                                            const canvas = document.createElement('canvas');
+                                            canvas.width = w;
+                                            canvas.height = h;
+                                            const ctx = canvas.getContext('2d');
+                                            if (!ctx) return;
+                                            ctx.drawImage(img, 0, 0, w, h);
+                                            const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+                                            openCropper(resizedDataUrl, 0.8, (croppedBlob) => {
+                                              const croppedFile = new File([croppedBlob], file.name || 'cropped_monthly.jpg', { type: 'image/jpeg' });
+                                              handleMonthlyAchieverImageUpload(uploadKey, croppedFile);
+                                            });
+                                          };
+                                          img.src = reader.result;
+                                        };
+                                        reader.readAsDataURL(file);
+                                      }}
+                                    />
+                                  </div>
+
+                                  {/* Name + rank info */}
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: '0.68rem', color: color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px' }}>
+                                      Rank {i + 1} — {['🥇 Gold', '🥈 Silver', '🥉 Bronze'][i]}
+                                    </div>
+                                    <div style={{ fontSize: '0.65rem', color: '#6b7280', marginBottom: '4px' }}>
+                                      Frame: {framePrefix} {ordinals[i]}
+                                    </div>
+                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                      <input
+                                        type="text"
+                                        value={item.name}
+                                        onChange={(e) => handleMonthlyAchieverNameChange(uploadKey, e.target.value)}
+                                        style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '6px', padding: '5px 8px', fontSize: '0.85rem', fontWeight: 700, color: 'var(--foreground)', background: 'transparent', outline: 'none', boxSizing: 'border-box' }}
+                                        placeholder="Achiever Name"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Save button */}
+                  <div style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={monthlyAchieversLoading}
+                      style={{
+                        height: '46px',
+                        minWidth: '240px',
+                        fontSize: '0.95rem',
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
+                      }}
+                    >
+                      {monthlyAchieversLoading ? 'Saving...' : '💾 Save Monthly Achievers'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </form>
+          </div>
         ) : adminSection === 'configs' ? (
+
           <div className="payment-settings-area animate-slide-up" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
             {/* 1. EVENT PAYMENT SETTINGS CARD */}

@@ -44,6 +44,7 @@ type AchieversData = {
   pv: { ced: AchieverItem[]; ed: AchieverItem[] };
   income: { ced: AchieverItem[]; ed: AchieverItem[] };
 };
+type MonthlyAchieversData = AchieversData & { monthLabel?: string };
 
 const DEFAULT_ACHIEVERS: AchieversData = {
   pv: {
@@ -70,6 +71,47 @@ const DEFAULT_ACHIEVERS: AchieversData = {
       { rank: 3, name: '', image: '', tier: 'bronze' }
     ]
   }
+};
+
+const DEFAULT_MONTHLY_ACHIEVERS: MonthlyAchieversData = {
+  pv: {
+    ced: [
+      { rank: 1, name: '', image: '/success-india-logo.jpeg', tier: 'gold' },
+      { rank: 2, name: '', image: '/success-india-logo.jpeg', tier: 'silver' },
+      { rank: 3, name: '', image: '/success-india-logo.jpeg', tier: 'bronze' }
+    ],
+    ed: [
+      { rank: 1, name: '', image: '/success-india-logo.jpeg', tier: 'gold' },
+      { rank: 2, name: '', image: '/success-india-logo.jpeg', tier: 'silver' },
+      { rank: 3, name: '', image: '/success-india-logo.jpeg', tier: 'bronze' }
+    ]
+  },
+  income: {
+    ced: [
+      { rank: 1, name: '', image: '/success-india-logo.jpeg', tier: 'gold' },
+      { rank: 2, name: '', image: '/success-india-logo.jpeg', tier: 'silver' },
+      { rank: 3, name: '', image: '/success-india-logo.jpeg', tier: 'bronze' }
+    ],
+    ed: [
+      { rank: 1, name: '', image: '/success-india-logo.jpeg', tier: 'gold' },
+      { rank: 2, name: '', image: '/success-india-logo.jpeg', tier: 'silver' },
+      { rank: 3, name: '', image: '/success-india-logo.jpeg', tier: 'bronze' }
+    ]
+  },
+  monthLabel: 'November 2026'
+};
+
+
+// Frame PNG maps — rank (1/2/3) → public path
+const CED_FRAMES: Record<number, string> = {
+  1: '/frames/chief executive director frame-1st.png',
+  2: '/frames/chief executive director frame-2nd.png',
+  3: '/frames/chief executive director frame-3rd.png',
+};
+const ED_FRAMES: Record<number, string> = {
+  1: '/frames/executive director frame-1st.png',
+  2: '/frames/executive director frame-2nd.png',
+  3: '/frames/executive director frame-3rd.png',
 };
 
 const GoldBadgeIcon = () => (
@@ -169,6 +211,7 @@ export default function Home() {
   const [seminar, setSeminar] = useState(fallbackEventCategories[0]);
   const [selectedEventId, setSelectedEventId] = useState('');
   const [achieversData, setAchieversData] = useState<AchieversData>(DEFAULT_ACHIEVERS);
+  const [monthlyAchieversData, setMonthlyAchieversData] = useState<MonthlyAchieversData>(DEFAULT_MONTHLY_ACHIEVERS);
   const [date, setDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() + 7);
@@ -285,6 +328,21 @@ export default function Home() {
     fetchAchievers();
   }, []);
 
+  useEffect(() => {
+    const fetchMonthlyAchievers = async () => {
+      try {
+        const res = await fetch('/api/admin/monthly-achievers', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.achievers) setMonthlyAchieversData(data.achievers);
+        }
+      } catch (err) {
+        console.error('Error fetching monthly achievers:', err);
+      }
+    };
+    fetchMonthlyAchievers();
+  }, []);
+
   const vicePresidents = supporters.filter((s) => s.designation === 'Vice Presidents');
   const chiefDirectors = supporters.filter((s) => s.designation === 'Chief Executive Directors');
   const executiveDirectors = supporters.filter((s) => s.designation === 'Executive Directors');
@@ -296,6 +354,77 @@ export default function Home() {
     achieversData?.income?.ced?.some((a) => a.name?.trim() || a.image) ||
     achieversData?.income?.ed?.some((a) => a.name?.trim() || a.image)
   );
+
+  const hasMonthlyAchievers = !!(
+    monthlyAchieversData?.pv?.ced?.some((a) => a.name?.trim() || a.image) ||
+    monthlyAchieversData?.pv?.ed?.some((a) => a.name?.trim() || a.image) ||
+    monthlyAchieversData?.income?.ced?.some((a) => a.name?.trim() || a.image) ||
+    monthlyAchieversData?.income?.ed?.some((a) => a.name?.trim() || a.image)
+  );
+
+  // Helper: render a monthly achiever panel (with frame PNG overlay)
+  const renderMonthlyAchieverPanel = (
+    items: AchieverItem[],
+    designation: string,
+    categoryLabel: string,
+    categoryClass: string,
+    isCed: boolean
+  ) => {
+    const hasData = items.some(item => item.image || item.name?.trim());
+    const frameMap = isCed ? CED_FRAMES : ED_FRAMES;
+
+    return (
+      <div className="achiever-panel">
+        <div className="panel-header">
+          <h3 className="panel-designation">{designation}</h3>
+          <h4 className={`panel-category ${categoryClass}`} style={{ color: 'red', fontWeight: 'bold' }}>{categoryLabel}</h4>
+        </div>
+
+        {!hasData ? (
+          <div className="achiever-panel-empty-state">
+            <div className="empty-badge-circle">🏆</div>
+            <span className="empty-badge-text">No Record Found</span>
+          </div>
+        ) : (
+          <div className="medals-row" style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+            {items.map((item, i) => {
+              const hasItemData = item.image || item.name?.trim();
+              if (!hasItemData) return null;
+              const rank = item.rank as 1 | 2 | 3;
+              const frameSrc = frameMap[rank];
+              return (
+                <div key={`monthly-${categoryClass}-${item.rank}`} className="medal-col" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '160px' }}>
+                  {item.image && frameSrc ? (
+                    <div className={`monthly-framed-wrapper ${isCed ? 'monthly-framed-ced' : 'monthly-framed-ed'} monthly-rank-${item.rank}`}>
+                      {/* Frame PNG on top — z-index 2 */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={frameSrc} alt="frame" className="monthly-frame-base" />
+                      {/* Clip container matches the transparent hole exactly */}
+                      <div className="monthly-photo-clip">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={item.image} alt={item.name} className="monthly-framed-photo" />
+                      </div>
+                    </div>
+                  ) : item.image ? (
+                    <div className={`achiever-pro-image-wrapper rank-${item.rank}`}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={item.image} alt={item.name} className="achiever-pro-img" />
+                    </div>
+                  ) : null}
+                  {item.name?.trim() && (
+                    <span className="medal-achiever-name">{item.name}</span>
+                  )}
+                  <div className="achiever-rank-badge-wrap" style={{ marginTop: '8px' }}>
+                    {i === 0 ? <GoldBadgeIcon /> : i === 1 ? <SilverBadgeIcon /> : <BronzeBadgeIcon />}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const eventLocations = events.length
     ? (Array.from(new Set(events.map((event) => event.venue || event.legacySource).filter(Boolean))) as string[])
@@ -528,6 +657,54 @@ export default function Home() {
                 {renderAchieverPanel(achieversData.pv.ed, "NORTH TEAM EXECUTIVE DIRECTOR", "TOP 3 ACHIEVERS", "pv-color")}
                 {renderAchieverPanel(achieversData.income.ed, "SOUTH TEAM EXECUTIVE DIRECTOR", "TOP 3 ACHIEVERS", "income-color")}
                 <div className="achievers-center-badge">🏆</div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ── Monthly Achievers Section ── */}
+        <section className="achievers-section monthly-achievers-section">
+          <div className="container">
+            <div className="section-header" style={{ marginBottom: '3.5rem' }}>
+              <span className="section-eyebrow">Monthly Excellence</span>
+              <h2 className="heading-lg">
+                {monthlyAchieversData?.monthLabel
+                  ? monthlyAchieversData.monthLabel.toUpperCase()
+                  : currentMonthUpper} MONTH TOP ACHIEVERS
+              </h2>
+              <div
+                style={{
+                  textAlign: 'center',
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  color: 'var(--primary)',
+                  marginTop: '0.5rem',
+                  marginBottom: '0.75rem',
+                  fontFamily: 'var(--font-heading)'
+                }}
+              >
+                📅 Monthly Achievers
+              </div>
+              <p className="section-subtitle">
+                Celebrating outstanding monthly milestones, PV achievements, and income breakthroughs of our Star Directors.
+              </p>
+            </div>
+
+            {!hasMonthlyAchievers ? (
+              <div className="no-records-card animate-fade-in">
+                <div className="no-records-icon">🏆</div>
+                <h3 className="no-records-title">No Record Found</h3>
+                <p className="no-records-desc">
+                  Monthly top achiever standings are currently empty. Check back for updates!
+                </p>
+              </div>
+            ) : (
+              <div className="achievers-grid">
+                {renderMonthlyAchieverPanel(monthlyAchieversData.pv.ced, "NORTH TEAM CHIEF EXECUTIVE DIRECTOR", "TOP 3 ACHIEVERS", "pv-color", true)}
+                {renderMonthlyAchieverPanel(monthlyAchieversData.income.ced, "SOUTH TEAM CHIEF EXECUTIVE DIRECTOR", "TOP 3 ACHIEVERS", "income-color", true)}
+                {renderMonthlyAchieverPanel(monthlyAchieversData.pv.ed, "NORTH TEAM EXECUTIVE DIRECTOR", "TOP 3 ACHIEVERS", "pv-color", false)}
+                {renderMonthlyAchieverPanel(monthlyAchieversData.income.ed, "SOUTH TEAM EXECUTIVE DIRECTOR", "TOP 3 ACHIEVERS", "income-color", false)}
+                <div className="achievers-center-badge">🏅</div>
               </div>
             )}
           </div>
@@ -1871,6 +2048,190 @@ export default function Home() {
         .achiever-pro-image-wrapper.rank-3 {
           border: 3px solid #b45309 !important;
           box-shadow: 0 0 15px rgba(180, 83, 9, 0.2), 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* ── Monthly Achievers Frame Overlay ── */
+        .monthly-achievers-section {
+          background: linear-gradient(135deg, #fff8f0 0%, #fffdf5 50%, #f0fff4 100%);
+          border-top: 4px solid transparent;
+          border-image: linear-gradient(90deg, #f59e0b, #10b981, #3b82f6) 1;
+        }
+
+        /* ═══ Monthly Achievers — Frame-as-base, clip-div approach ═══
+           Structure:
+             .monthly-framed-wrapper  (position:relative, sized by frame PNG)
+               └─ .monthly-frame-base  (block img, defines wrapper size, z-index 2)
+               └─ .monthly-photo-clip  (absolute, overflow:hidden clips the photo, z-index 1)
+                    └─ .monthly-framed-photo  (100% × 100%, object-fit:cover)
+        */
+        .monthly-framed-wrapper {
+          position: relative;
+          display: inline-block;
+          margin-bottom: 8px;
+        }
+
+        /* Frame PNG: rendered at a fixed width; height is auto (preserves ratio) */
+        .monthly-frame-base {
+          display: block;
+          height: auto;
+          position: relative;
+          z-index: 2;
+          pointer-events: none;
+          filter: drop-shadow(0 6px 20px rgba(0,0,0,0.28));
+        }
+
+        /* Clip container: positioned inside the transparent hole, clips the photo */
+        .monthly-photo-clip {
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1;
+          overflow: hidden;
+          border-radius: 50%;
+          /* photo fills it 100% */
+        }
+
+        .monthly-framed-photo {
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        /*
+         * ══════════════════════════════════════════════════
+         * Monthly Achievers — exact hole measurements
+         * (measured with Pillow from actual frame PNGs)
+         *
+         * CED shield frames (385×648 and 378×659):
+         *   1st: hole top=26% bot=53% (height=26%, width=60%)
+         *   2nd: hole top=30% bot=58% (height=27%, width=58%)
+         *   3rd: hole top=31% bot=59% (height=27%, width=58%)
+         *   Average used: top=29%, height=27%, center-x=49%
+         *
+         * ED rounded-square frames (477×523 and 500×500):
+         *   1st: hole top=12% bot=48% (height=35%, width=56%)
+         *   2nd: hole top=14% bot=49% (height=35%, width=51%)
+         *   3rd: hole top=14% bot=49% (height=35%, width=52%)
+         *   Average used: top=13%, height=35%, center-x=50%
+         * ══════════════════════════════════════════════════
+         */
+
+        /* frame PNG: block img that sizes the wrapper */
+        .monthly-frame-base {
+          display: block;
+          height: auto;
+          position: relative;
+          z-index: 2;
+          pointer-events: none;
+          filter: drop-shadow(0 6px 20px rgba(0,0,0,0.3));
+        }
+
+        /* clip div: overflow:hidden circles the photo to the hole */
+        .monthly-photo-clip {
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1;
+          overflow: hidden;
+          border-radius: 50%;
+        }
+
+        /* photo fills the clip 100% */
+        .monthly-framed-photo {
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        /*
+         * ════════════════════════════════════════════════════
+         * EXACT hole fill — width% and height% both set
+         * so the clip div fills the full hole rectangle.
+         *
+         * All measurements from Pillow pixel scan of each PNG.
+         * Scale factors applied for the display widths below.
+         *
+         * CED (385×648 and 378×659) displayed at 220px wide:
+         *   scale = 220/385 = 0.5714  → display height ≈ 370px
+         *   scale = 220/378 = 0.5820  → display height ≈ 384px
+         *
+         *   rank-1: hole 173→344px tall (171px), 76→308px wide (232px)
+         *           displayed: h=171×0.5714=97px   → height% = 97/370  = 26%
+         *                      w=232×0.5714=132px  → width%  = 132/220 = 60%
+         *           top = 173/648×370 = 99px       → top%    = 99/370  = 26%
+         *
+         *   rank-2: hole 199→379px tall (180px), 79→303px wide (224px)
+         *           displayed: h=180×0.5714=103px  → height% = 103/370 = 28%
+         *                      w=224×0.5714=128px  → width%  = 128/220 = 58%
+         *           top = 199/648×370 = 114px      → top%    = 114/370 = 31%
+         *
+         *   rank-3: hole 210→392px tall (182px), 75→298px wide (223px)
+         *     scale=0.582: display h=384px
+         *           displayed: h=182×0.582=106px   → height% = 106/384 = 28%
+         *                      w=223×0.582=130px   → width%  = 130/220 = 59%
+         *           top = 210/659×384 = 122px      → top%    = 122/384 = 32%
+         *
+         * ED (477×523) displayed at 260px wide:
+         *   scale = 260/477 = 0.545 → display height ≈ 285px
+         *   rank-1: hole 67→253px tall (186px), 112→380px wide (268px)
+         *           displayed: h=186×0.545=101px   → height% = 101/285 = 35%
+         *                      w=268×0.545=146px   → width%  = 146/260 = 56%
+         *           top = 67/523×285 = 36px        → top%    = 36/285  = 13%
+         *
+         * ED (500×500) displayed at 260px wide:
+         *   scale = 260/500 = 0.52 → display height = 260px
+         *   rank-2: hole 70→246px tall (176px), 120→379px wide (259px)
+         *           displayed: h=176×0.52=91px     → height% = 91/260  = 35%
+         *                      w=259×0.52=135px    → width%  = 135/260 = 52%
+         *           top = 70/500×260 = 36px        → top%    = 36/260  = 14%
+         *   rank-3: same as rank-2
+         * ════════════════════════════════════════════════════
+         */
+
+        /* ── CED shield, displayed at 220px wide ── */
+        .monthly-framed-ced .monthly-frame-base { width: 220px; }
+
+        /* rank-1: fills hole exactly — 132px wide, extended bottom */
+        /* No border-radius: frame PNG on top masks corners into shield shape */
+        .monthly-framed-ced.monthly-rank-1 .monthly-photo-clip {
+          top: 27%; width: 60%; height: 32%; border-radius: 0;
+        }
+        /* rank-2: fills hole exactly — 128px wide × 103px tall */
+        .monthly-framed-ced.monthly-rank-2 .monthly-photo-clip {
+          top: 31%; width: 58%; height: 30%; border-radius: 0;
+        }
+        /* rank-3: fills hole exactly — 130px wide × 106px tall */
+        .monthly-framed-ced.monthly-rank-3 .monthly-photo-clip {
+          top: 32%; width: 59%; height: 30%; border-radius: 0;
+        }
+
+        /* ── ED rounded-square, displayed at 260px wide ── */
+        .monthly-framed-ed .monthly-frame-base { width: 260px; }
+
+        /* rank-1: match ED rounded-square shape, extended bottom */
+        /* border-radius:20px matches the rounded corners of the ED hole */
+        .monthly-framed-ed.monthly-rank-1 .monthly-photo-clip {
+          top: 13%; width: 56%; height: 42%; border-radius: 20px;
+        }
+        /* rank-2: match ED rounded-square shape, extended bottom */
+        .monthly-framed-ed.monthly-rank-2 .monthly-photo-clip {
+          top: 14%; width: 52%; height: 42%; border-radius: 20px;
+        }
+        /* rank-3: same hole dimensions as rank-2 */
+        .monthly-framed-ed.monthly-rank-3 .monthly-photo-clip {
+          top: 14%; width: 52%; height: 42%; border-radius: 20px;
+        }
+
+        /* ── responsive ── */
+        @media (max-width: 600px) {
+          .monthly-framed-ced .monthly-frame-base { width: 170px; }
+          .monthly-framed-ed  .monthly-frame-base { width: 200px; }
+        }
+        @media (max-width: 400px) {
+          .monthly-framed-ced .monthly-frame-base { width: 135px; }
+          .monthly-framed-ed  .monthly-frame-base { width: 160px; }
         }
       `}</style>
     </div>
