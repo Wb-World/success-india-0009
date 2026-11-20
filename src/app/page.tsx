@@ -2232,8 +2232,8 @@ export default function Home() {
           top: 32%; width: 59%; height: 30%; border-radius: 0;
         }
 
-        /* ── ED rounded-square, displayed at 260px wide ── */
-        .monthly-framed-ed .monthly-frame-base { width: 260px; }
+        /* ── ED rounded-square, displayed at 200px wide (fits 2 side-by-side in panel) ── */
+        .monthly-framed-ed .monthly-frame-base { width: 200px; }
 
         /* rank-1: match ED rounded-square shape, extended bottom */
         /* border-radius:20px matches the rounded corners of the ED hole */
@@ -2251,12 +2251,12 @@ export default function Home() {
 
         /* ── responsive ── */
         @media (max-width: 600px) {
-          .monthly-framed-ced .monthly-frame-base { width: 170px; }
-          .monthly-framed-ed  .monthly-frame-base { width: 200px; }
+          .monthly-framed-ced .monthly-frame-base { width: 155px; }
+          .monthly-framed-ed  .monthly-frame-base { width: 155px; }
         }
         @media (max-width: 400px) {
-          .monthly-framed-ced .monthly-frame-base { width: 135px; }
-          .monthly-framed-ed  .monthly-frame-base { width: 160px; }
+          .monthly-framed-ced .monthly-frame-base { width: 125px; }
+          .monthly-framed-ed  .monthly-frame-base { width: 125px; }
         }
       `}</style>
     </div>
